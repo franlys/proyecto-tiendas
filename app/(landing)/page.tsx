@@ -129,15 +129,13 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Link href="/estetica-lola">
-                  <Button size="lg">
-                    Ver Demo en Vivo
-                    <ArrowRight className="w-5 h-5" />
-                  </Button>
-                </Link>
+                <Button size="lg" onClick={() => setShowContactModal(true)}>
+                  <MessageCircle className="w-5 h-5 mr-2" />
+                  Quiero mi NEXO
+                </Button>
                 <Link href="/login">
                   <Button variant="outline" size="lg">
-                    Acceso Clientes
+                    Ya soy cliente
                   </Button>
                 </Link>
               </div>
@@ -586,14 +584,19 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
 
           {/* CTA */}
           <div className="text-center mt-16">
-            <Link href="/login">
-              <Button size="lg" className="bg-gradient-to-r from-cyan-500 to-cyan-600">
-                Comenzar Ahora
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </Link>
+            <Button
+              size="lg"
+              className="bg-gradient-to-r from-cyan-500 to-cyan-600"
+              onClick={() => setShowContactModal(true)}
+            >
+              <MessageCircle className="w-5 h-5 mr-2" />
+              Solicitar mi NEXO
+            </Button>
             <p className="text-slate-500 text-sm mt-4">
-              Ya tienes cuenta? Accede a tu panel de negocio
+              ¿Ya tienes cuenta?{" "}
+              <Link href="/login" className="text-cyan-400 hover:text-cyan-300">
+                Accede aquí
+              </Link>
             </p>
           </div>
         </div>
