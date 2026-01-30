@@ -370,75 +370,231 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
         </div>
       </section>
 
-      {/* Demo Section */}
+      {/* Demo Section - Guided Tour */}
       <section id="demo" className="py-24 border-t border-white/10">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
+          <div className="text-center mb-16">
             <span className="text-gold text-sm font-medium uppercase tracking-wider">
-              Demos en Vivo
+              Tour Guiado
             </span>
             <h2 className="font-display text-4xl md:text-5xl font-bold text-white mt-4 mb-4">
-              Pruébalo <span className="text-gradient-gold">ahora mismo</span>
+              Conoce <span className="text-gradient-gold">todo lo que puedes hacer</span>
             </h2>
-            <p className="text-lg text-slate-400">
-              Explora nuestras tiendas de demostración y el panel de administración
+            <p className="text-lg text-slate-400 max-w-2xl mx-auto">
+              Descubre paso a paso cómo NEXO transformará la gestión de tu negocio
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            <Link
-              href="/estetica-lola"
-              className="glass-panel-hover rounded-2xl p-8 text-center group"
-            >
-              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-rose-500 to-orange-400 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                <span className="text-white font-bold text-2xl">E</span>
+          {/* Feature Tour Cards */}
+          <div className="space-y-16 max-w-5xl mx-auto">
+            {/* 1. Catálogo Digital */}
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div className="glass-panel rounded-2xl p-6 aspect-video flex items-center justify-center bg-gradient-to-br from-cyan-500/10 to-blue-500/10">
+                <div className="text-center">
+                  <Store className="w-16 h-16 text-cyan-400 mx-auto mb-4" />
+                  <div className="grid grid-cols-3 gap-2 max-w-xs mx-auto">
+                    {[1,2,3,4,5,6].map(i => (
+                      <div key={i} className="aspect-square rounded-lg bg-white/10" />
+                    ))}
+                  </div>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">
-                Estética Lola
-              </h3>
-              <p className="text-slate-400 text-sm mb-4">
-                Centro de belleza con servicios de cabello, uñas y spa
-              </p>
-              <span className="text-primary text-sm font-medium">
-                Ver tienda →
-              </span>
-            </Link>
+              <div>
+                <span className="text-cyan-400 text-sm font-medium">01</span>
+                <h3 className="text-2xl font-bold text-white mt-2 mb-4">
+                  Catálogo Digital Profesional
+                </h3>
+                <p className="text-slate-400 mb-4">
+                  Muestra tus servicios y productos con fotos de alta calidad. Tus clientes pueden ver precios, descripciones y agregar al carrito desde su celular.
+                </p>
+                <ul className="space-y-2 text-sm text-slate-300">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Fotos y descripciones profesionales
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Categorías organizadas
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Precios actualizables al instante
+                  </li>
+                </ul>
+              </div>
+            </div>
 
-            <Link
-              href="/barberia-classic"
-              className="glass-panel-hover rounded-2xl p-8 text-center group"
-            >
-              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-gold to-amber-500 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                <span className="text-background font-bold text-2xl">B</span>
+            {/* 2. Reservas por WhatsApp */}
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div className="md:order-2 glass-panel rounded-2xl p-6 aspect-video flex items-center justify-center bg-gradient-to-br from-green-500/10 to-emerald-500/10">
+                <div className="text-center">
+                  <MessageCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
+                  <div className="glass-panel rounded-xl p-4 max-w-xs mx-auto">
+                    <p className="text-xs text-slate-400 mb-2">Vista previa del mensaje:</p>
+                    <p className="text-sm text-white">
+                      &quot;Hola! Quiero agendar: Corte + Barba para el Lunes 3pm&quot;
+                    </p>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">
-                Barbería Classic
-              </h3>
-              <p className="text-slate-400 text-sm mb-4">
-                Barbería tradicional con cortes y afeitados premium
-              </p>
-              <span className="text-gold text-sm font-medium">
-                Ver tienda →
-              </span>
-            </Link>
+              <div className="md:order-1">
+                <span className="text-green-400 text-sm font-medium">02</span>
+                <h3 className="text-2xl font-bold text-white mt-2 mb-4">
+                  Reservas Directas por WhatsApp
+                </h3>
+                <p className="text-slate-400 mb-4">
+                  Sin apps complicadas. Tu cliente selecciona servicios y con un click te llega todo el pedido formateado a tu WhatsApp Business.
+                </p>
+                <ul className="space-y-2 text-sm text-slate-300">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Mensaje pre-formateado automático
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Fecha y hora incluidas
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Sin comisiones por reserva
+                  </li>
+                </ul>
+              </div>
+            </div>
 
-            <Link
-              href="/login"
-              className="glass-panel-hover rounded-2xl p-8 text-center group"
-            >
-              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-cyan-500 to-cyan-600 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                <BarChart3 className="w-8 h-8 text-white" />
+            {/* 3. Dashboard Analytics */}
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div className="glass-panel rounded-2xl p-6 aspect-video flex items-center justify-center bg-gradient-to-br from-purple-500/10 to-pink-500/10">
+                <div className="text-center w-full px-4">
+                  <BarChart3 className="w-16 h-16 text-purple-400 mx-auto mb-4" />
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="glass-panel rounded-lg p-3">
+                      <p className="text-2xl font-bold text-white">$12,450</p>
+                      <p className="text-xs text-slate-400">Ventas Hoy</p>
+                    </div>
+                    <div className="glass-panel rounded-lg p-3">
+                      <p className="text-2xl font-bold text-white">24</p>
+                      <p className="text-xs text-slate-400">Citas</p>
+                    </div>
+                    <div className="glass-panel rounded-lg p-3">
+                      <p className="text-2xl font-bold text-white">$518</p>
+                      <p className="text-xs text-slate-400">Ticket Prom.</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">
-                Mi Negocio
-              </h3>
-              <p className="text-slate-400 text-sm mb-4">
-                Dashboard, CRM, promos y configuración de tienda
-              </p>
-              <span className="text-cyan-400 text-sm font-medium">
-                Acceder →
-              </span>
+              <div>
+                <span className="text-purple-400 text-sm font-medium">03</span>
+                <h3 className="text-2xl font-bold text-white mt-2 mb-4">
+                  Dashboard con Métricas en Tiempo Real
+                </h3>
+                <p className="text-slate-400 mb-4">
+                  Visualiza las ventas del día, ticket promedio, servicio más vendido y más. Todo en un panel elegante que puedes ver desde cualquier dispositivo.
+                </p>
+                <ul className="space-y-2 text-sm text-slate-300">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Ventas diarias, semanales y mensuales
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Top servicios y productos
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Cierre de caja con un click
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* 4. CRM Clientes */}
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div className="md:order-2 glass-panel rounded-2xl p-6 aspect-video flex items-center justify-center bg-gradient-to-br from-blue-500/10 to-cyan-500/10">
+                <div className="text-center w-full px-4">
+                  <Users className="w-16 h-16 text-blue-400 mx-auto mb-4" />
+                  <div className="glass-panel rounded-xl p-4 max-w-xs mx-auto text-left">
+                    <p className="text-white font-medium">María García</p>
+                    <p className="text-xs text-slate-400">12 visitas • Cliente VIP</p>
+                    <p className="text-xs text-gold mt-2">★★★★★ 8/10 sellos</p>
+                    <p className="text-xs text-slate-500 mt-2 italic">&quot;Le gusta el café sin azúcar&quot;</p>
+                  </div>
+                </div>
+              </div>
+              <div className="md:order-1">
+                <span className="text-blue-400 text-sm font-medium">04</span>
+                <h3 className="text-2xl font-bold text-white mt-2 mb-4">
+                  CRM con Historial y Notas Privadas
+                </h3>
+                <p className="text-slate-400 mb-4">
+                  Conoce a tus clientes como nunca. Historial de visitas, preferencias, notas privadas y programa de lealtad integrado.
+                </p>
+                <ul className="space-y-2 text-sm text-slate-300">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Historial completo de cada cliente
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Notas privadas (gustos, alergias, etc.)
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Tarjeta de fidelidad digital
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* 5. Generador de Promos */}
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div className="glass-panel rounded-2xl p-6 aspect-video flex items-center justify-center bg-gradient-to-br from-rose-500/10 to-orange-500/10">
+                <div className="text-center">
+                  <Gift className="w-16 h-16 text-rose-400 mx-auto mb-4" />
+                  <div className="glass-panel rounded-xl p-4 max-w-xs mx-auto bg-gradient-to-br from-rose-500/20 to-orange-500/20">
+                    <p className="text-lg font-bold text-white">2x1 en Manicure</p>
+                    <p className="text-sm text-slate-300">Solo este fin de semana</p>
+                    <p className="text-xs text-gold mt-2">Listo para Instagram Stories</p>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <span className="text-rose-400 text-sm font-medium">05</span>
+                <h3 className="text-2xl font-bold text-white mt-2 mb-4">
+                  Generador de Promociones para Redes
+                </h3>
+                <p className="text-slate-400 mb-4">
+                  Crea imágenes profesionales para Instagram Stories en segundos. Sin Canva, sin Photoshop. Solo selecciona, personaliza y comparte.
+                </p>
+                <ul className="space-y-2 text-sm text-slate-300">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Templates profesionales incluidos
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Exporta en formato Stories
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Comparte directo a WhatsApp
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div className="text-center mt-16">
+            <Link href="/login">
+              <Button size="lg" className="bg-gradient-to-r from-cyan-500 to-cyan-600">
+                Comenzar Ahora
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
             </Link>
+            <p className="text-slate-500 text-sm mt-4">
+              Ya tienes cuenta? Accede a tu panel de negocio
+            </p>
           </div>
         </div>
       </section>
