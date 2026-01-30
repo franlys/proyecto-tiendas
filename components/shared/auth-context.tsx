@@ -76,33 +76,26 @@ const SHOP_SESSIONS_KEY = "nexo-shop-sessions";
 
 // Admin/Owner users (login at /login)
 const ADMIN_USERS_DB: Record<string, { password: string; user: User }> = {
-  admin: {
-    password: "admin",
+  // Real Super Admin
+  "franlysgonzaleztejeda@gmail.com": {
+    password: "Progreso070901*",
     user: {
-      id: "super-1",
-      username: "admin",
-      name: "Super Admin",
+      id: "super-admin-1",
+      username: "franlysgonzaleztejeda@gmail.com",
+      name: "Franlys González",
       role: "SUPER_ADMIN",
+      email: "franlysgonzaleztejeda@gmail.com",
     },
   },
-  lola: {
-    password: "123",
+  // Demo shop owners (for testing - can be removed later)
+  demo_owner: {
+    password: "demo2024",
     user: {
-      id: "owner-1",
-      username: "lola",
-      name: "María Dolores",
+      id: "demo-owner-1",
+      username: "demo_owner",
+      name: "Usuario Demo",
       role: "SHOP_OWNER",
       shopId: "estetica-lola",
-    },
-  },
-  carlos: {
-    password: "123",
-    user: {
-      id: "owner-2",
-      username: "carlos",
-      name: "Carlos García",
-      role: "SHOP_OWNER",
-      shopId: "barberia-classic",
     },
   },
 };

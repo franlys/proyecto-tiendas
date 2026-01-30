@@ -203,23 +203,6 @@ function StaffLoginForm() {
             </Button>
           </form>
 
-          {/* Demo credentials */}
-          <div className="mt-6 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
-            <p className="text-blue-400 text-xs font-medium mb-2">
-              Credenciales de prueba:
-            </p>
-            <div className="space-y-1 text-xs text-slate-400">
-              <p>
-                <span className="text-slate-500">Tienda:</span> estetica-lola
-              </p>
-              <p>
-                <span className="text-slate-500">Usuario:</span> maria.rodriguez
-              </p>
-              <p>
-                <span className="text-slate-500">Contraseña:</span> 1234
-              </p>
-            </div>
-          </div>
         </div>
 
         {/* Footer */}

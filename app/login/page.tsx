@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Lock, User, Eye, EyeOff, Loader2, Shield, Store } from "lucide-react";
+import { Lock, User, Eye, EyeOff, Loader2, Shield } from "lucide-react";
 import { useAuth, AuthProvider } from "@/components/shared";
 import { Button } from "@/components/ui";
 
@@ -225,49 +225,13 @@ function LoginForm() {
               </Button>
             </form>
 
-            {/* Demo Credentials */}
-            <div className="mt-8 pt-6 border-t border-white/10">
-              <p className="text-xs text-slate-500 text-center mb-4">
-                Credenciales de demostración
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUsername("admin");
-                    setPassword("admin123");
-                  }}
-                  className="flex items-center gap-2 p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-sm hover:bg-cyan-500/20 transition-colors"
-                >
-                  <Shield className="w-4 h-4" />
-                  <div className="text-left">
-                    <p className="font-medium">Super Admin</p>
-                    <p className="text-xs text-slate-500">admin / admin123</p>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUsername("lola");
-                    setPassword("123");
-                  }}
-                  className="flex items-center gap-2 p-3 rounded-lg bg-primary/10 border border-primary/20 text-primary text-sm hover:bg-primary/20 transition-colors"
-                >
-                  <Store className="w-4 h-4" />
-                  <div className="text-left">
-                    <p className="font-medium">Shop Owner</p>
-                    <p className="text-xs text-slate-500">lola / 123</p>
-                  </div>
-                </button>
-              </div>
-            </div>
           </div>
 
           {/* Footer */}
           <p className="text-center text-slate-500 text-sm mt-8">
             Powered by{" "}
             <span className="text-gradient-primary font-semibold">
-              Proyecto Tiendas
+              Nexo
             </span>
           </p>
         </div>
