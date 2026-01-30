@@ -208,7 +208,7 @@ export function SubscriptionLock({ shop, onContactSupport }: SubscriptionLockPro
         <p className="text-center text-slate-500 text-sm mt-6">
           Powered by{" "}
           <span className="text-gradient-primary font-semibold">
-            Proyecto Tiendas
+            NEXO
           </span>
         </p>
       </div>

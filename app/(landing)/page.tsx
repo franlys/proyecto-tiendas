@@ -29,10 +29,10 @@ import { AuthProvider, useAuth } from "@/components/shared";
 
 // Información de contacto del administrador
 const ADMIN_CONTACT = {
-  name: "Proyecto Tiendas",
+  name: "NEXO",
   phone: "+52 1 55 1234 5678",
   whatsapp: "5215512345678",
-  email: "contacto@proyectotiendas.com",
+  email: "contacto@nexoapp.com",
   location: "Ciudad de México, México",
 };
 
@@ -79,11 +79,11 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-rose-500 to-orange-400 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-600 flex items-center justify-center">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
               <span className="font-display text-xl font-bold text-white">
-                Proyecto Tiendas
+                NEXO
               </span>
             </div>
 
@@ -135,9 +135,9 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
                     <ArrowRight className="w-5 h-5" />
                   </Button>
                 </Link>
-                <Link href="/admin">
+                <Link href="/login">
                   <Button variant="outline" size="lg">
-                    Panel Admin
+                    Acceso Clientes
                   </Button>
                 </Link>
               </div>
@@ -423,20 +423,20 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
             </Link>
 
             <Link
-              href="/admin"
+              href="/login"
               className="glass-panel-hover rounded-2xl p-8 text-center group"
             >
-              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-cyan-500 to-cyan-600 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                 <BarChart3 className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-white mb-2">
-                Panel Admin
+                Mi Negocio
               </h3>
               <p className="text-slate-400 text-sm mb-4">
                 Dashboard, CRM, promos y configuración de tienda
               </p>
-              <span className="text-purple-400 text-sm font-medium">
-                Ver admin →
+              <span className="text-cyan-400 text-sm font-medium">
+                Acceder →
               </span>
             </Link>
           </div>
@@ -490,11 +490,11 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-rose-500 to-orange-400 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-600 flex items-center justify-center">
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
               <span className="font-display text-lg font-bold text-white">
-                Proyecto Tiendas
+                NEXO
               </span>
             </div>
 
@@ -517,7 +517,7 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
             </div>
 
             <p className="text-slate-500 text-sm">
-              © {new Date().getFullYear()} Proyecto Tiendas
+              © {new Date().getFullYear()} NEXO
             </p>
           </div>
         </div>
@@ -544,7 +544,7 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
 
             {/* Header */}
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-r from-rose-500 to-orange-400 mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-r from-cyan-500 to-cyan-600 mb-4">
                 <Sparkles className="w-8 h-8 text-white" />
               </div>
               <h3 className="font-display text-2xl font-bold text-white mb-2">
@@ -559,7 +559,7 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
             <div className="space-y-4">
               {/* WhatsApp - Primary CTA */}
               <a
-                href={`https://wa.me/${ADMIN_CONTACT.whatsapp}?text=${encodeURIComponent("¡Hola! Me interesa unirme a Proyecto Tiendas")}`}
+                href={`https://wa.me/${ADMIN_CONTACT.whatsapp}?text=${encodeURIComponent("¡Hola! Me interesa unirme a NEXO")}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-4 p-4 rounded-xl bg-green-500/20 border border-green-500/30 hover:bg-green-500/30 transition-colors group"
@@ -590,7 +590,7 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
 
               {/* Email */}
               <a
-                href={`mailto:${ADMIN_CONTACT.email}?subject=${encodeURIComponent("Interesado en Proyecto Tiendas")}`}
+                href={`mailto:${ADMIN_CONTACT.email}?subject=${encodeURIComponent("Interesado en NEXO")}`}
                 className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
               >
                 <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">

@@ -47,7 +47,7 @@ interface CreateShopData {
 
 const ShopsContext = createContext<ShopsContextType | undefined>(undefined);
 
-const SHOPS_STORAGE_KEY = "proyecto-tiendas-managed-shops";
+const SHOPS_STORAGE_KEY = "nexo-managed-shops";
 
 // Helper to get next month date
 function getNextMonthDate(): string {

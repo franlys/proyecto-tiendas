@@ -9,22 +9,24 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Premium Dark Palette
-        background: "#0F172A",
+        // NEXO Premium Dark Palette
+        background: "#0F172A", // Deep Navy Blue
         surface: "#1E293B",
         primary: {
-          DEFAULT: "#F43F5E",
-          50: "#FEF2F3",
-          100: "#FEE2E5",
-          200: "#FFC9CF",
-          300: "#FDA4AF",
-          400: "#FB7185",
-          500: "#F43F5E",
-          600: "#E11D48",
-          700: "#BE123C",
-          800: "#9F1239",
-          900: "#881337",
+          DEFAULT: "#06B6D4", // Electric Cyan
+          50: "#ECFEFF",
+          100: "#CFFAFE",
+          200: "#A5F3FC",
+          300: "#67E8F9",
+          400: "#22D3EE",
+          500: "#06B6D4",
+          600: "#0891B2",
+          700: "#0E7490",
+          800: "#155E75",
+          900: "#164E63",
         },
+        // Clean White / Silver for text
+        silver: "#F8FAFC",
         gold: {
           DEFAULT: "#D4AF37",
           light: "#E5C654",
@@ -36,12 +38,12 @@ const config: Config = {
         display: ["var(--font-playfair)", "Georgia", "serif"],
       },
       backgroundImage: {
-        "gradient-primary": "linear-gradient(135deg, #F43F5E 0%, #FB923C 100%)",
+        "gradient-primary": "linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)",
         "gradient-gold": "linear-gradient(135deg, #D4AF37 0%, #E5C654 100%)",
         "gradient-dark": "linear-gradient(180deg, #0F172A 0%, #1E293B 100%)",
       },
       boxShadow: {
-        glow: "0 0 20px rgba(244, 63, 94, 0.3)",
+        glow: "0 0 20px rgba(6, 182, 212, 0.3)",
         "glow-gold": "0 0 20px rgba(212, 175, 55, 0.3)",
       },
     },

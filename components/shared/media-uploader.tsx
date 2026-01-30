@@ -93,7 +93,7 @@ export function MediaUploader({
     formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET!);
 
     // Add folder based on preset
-    const folder = `proyecto-tiendas/${preset}s`;
+    const folder = `nexo/${preset}s`;
     formData.append("folder", folder);
 
     return new Promise((resolve, reject) => {

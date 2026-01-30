@@ -71,7 +71,7 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {/* Logo placeholder */}
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-rose-500 to-orange-400 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-cyan-500 to-cyan-600 flex items-center justify-center">
                     <span className="text-white font-bold text-lg">
                       {shop.name.charAt(0)}
                     </span>
@@ -92,7 +92,7 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
                   <a href={`/${shopId}#servicios`} className="text-slate-300 hover:text-white transition-colors">
                     Servicios
                   </a>
-                  <a href={`/${shopId}/book`} className="px-4 py-2 bg-gradient-to-r from-rose-500 to-orange-400 text-white rounded-lg hover:shadow-lg transition-all">
+                  <a href={`/${shopId}/book`} className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-lg hover:shadow-lg transition-all">
                     Reservar
                   </a>
                 </nav>
@@ -108,7 +108,7 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
             <div className="container mx-auto px-4 text-center text-slate-400">
               <p>&copy; {new Date().getFullYear()} {shop.name}. Todos los derechos reservados.</p>
               <p className="text-sm mt-2">
-                Powered by <span className="text-gradient-primary font-semibold">Proyecto Tiendas</span>
+                Powered by <span className="text-gradient-primary font-semibold">NEXO</span>
               </p>
             </div>
           </footer>

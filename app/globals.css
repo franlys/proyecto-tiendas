@@ -53,7 +53,7 @@
 
   /* Gradient Text Utility */
   .text-gradient-primary {
-    @apply bg-gradient-to-r from-rose-500 to-orange-400 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-cyan-400 to-cyan-600 bg-clip-text text-transparent;
   }
 
   .text-gradient-gold {
