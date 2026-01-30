@@ -1,0 +1,31 @@
+{
+  "name": "Nexo",
+  "short_name": "Nexo",
+  "description": "Nexo: La plataforma universal para conectar tu negocio con tus clientes.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F172A",
+  "theme_color": "#0F172A",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "business",
+    "lifestyle",
+    "shopping"
+  ],
+  "lang": "es",
+  "dir": "ltr"
+}

@@ -1,0 +1,735 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import {
+  Shield,
+  Store,
+  Plus,
+  Power,
+  Settings,
+  Eye,
+  Key,
+  LogOut,
+  Loader2,
+  X,
+  Check,
+  Copy,
+  ExternalLink,
+  Users,
+  TrendingUp,
+  CreditCard,
+  AlertTriangle,
+  DollarSign,
+  Calendar,
+  Sparkles,
+  Ban,
+  Building2,
+} from "lucide-react";
+import {
+  AuthProvider,
+  useAuth,
+  ShopsProvider,
+  useShops,
+  type ManagedShop,
+  type SubscriptionStatus,
+} from "@/components/shared";
+import { Button } from "@/components/ui";
+import { cn } from "@/lib/utils";
+
+function CreateShopModal({
+  isOpen,
+  onClose,
+  onCreate,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onCreate: (data: { name: string; slug: string; description: string; phone: string }) => void;
+}) {
+  const [name, setName] = useState("");
+  const [slug, setSlug] = useState("");
+  const [description, setDescription] = useState("");
+  const [phone, setPhone] = useState("");
+
+  // Auto-generar slug desde nombre
+  useEffect(() => {
+    const generatedSlug = name
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+    setSlug(generatedSlug);
+  }, [name]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (name && slug && phone) {
+      onCreate({ name, slug, description, phone });
+      setName("");
+      setSlug("");
+      setDescription("");
+      setPhone("");
+      onClose();
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div className="relative w-full max-w-md glass-panel rounded-2xl p-6 border border-cyan-500/20">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+            <Store className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-white">Nueva Tienda</h2>
+            <p className="text-sm text-slate-400">
+              Crea una tienda para tu cliente
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Nombre del Negocio
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ej: Peluquería María"
+              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              URL (slug)
+            </label>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500 text-sm">/</span>
+              <input
+                type="text"
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                placeholder="peluqueria-maria"
+                className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Descripción
+            </label>
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Ej: Salón de belleza profesional"
+              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              WhatsApp
+            </label>
+            <input
+              type="text"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+34 600 000 000"
+              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
+              required
+            />
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <Button
+              type="button"
+              variant="ghost"
+              className="flex-1"
+              onClick={onClose}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Crear Tienda
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// Payment status configuration
+const SUBSCRIPTION_STATUS_CONFIG: Record<SubscriptionStatus, {
+  label: string;
+  color: string;
+  icon: typeof Check;
+}> = {
+  active: { label: "Al día", color: "green", icon: Check },
+  trial: { label: "Prueba", color: "blue", icon: Sparkles },
+  past_due: { label: "Vencido", color: "amber", icon: AlertTriangle },
+  canceled: { label: "Cancelado", color: "red", icon: Ban },
+};
+
+function ShopRow({ shop, onPaymentAction }: { shop: ManagedShop; onPaymentAction: (shop: ManagedShop) => void }) {
+  const { toggleShopStatus, registerPayment, updateSubscriptionStatus } = useShops();
+  const [copied, setCopied] = useState(false);
+
+  const copyCredentials = () => {
+    const text = `Usuario: ${shop.ownerUsername}\nContraseña: ${shop.ownerPassword}`;
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const statusConfig = SUBSCRIPTION_STATUS_CONFIG[shop.subscriptionStatus] || SUBSCRIPTION_STATUS_CONFIG.trial;
+  const StatusIcon = statusConfig.icon;
+
+  return (
+    <tr className="border-b border-white/5 hover:bg-white/5 transition-colors">
+      {/* Shop Info */}
+      <td className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-orange-400 flex items-center justify-center">
+            <span className="text-white font-bold">
+              {shop.name.charAt(0).toUpperCase()}
+            </span>
+          </div>
+          <div>
+            <p className="font-medium text-white">{shop.name}</p>
+            <p className="text-sm text-slate-400">/{shop.slug}</p>
+          </div>
+        </div>
+      </td>
+
+      {/* Shop Status */}
+      <td className="px-6 py-4">
+        <button
+          onClick={() => toggleShopStatus(shop.slug)}
+          className={cn(
+            "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all",
+            shop.isActive
+              ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
+              : "bg-red-500/20 text-red-400 hover:bg-red-500/30"
+          )}
+        >
+          <Power className="w-4 h-4" />
+          {shop.isActive ? "Activa" : "Inactiva"}
+        </button>
+      </td>
+
+      {/* Payment Status */}
+      <td className="px-6 py-4">
+        <div className="space-y-1">
+          <span
+            className={cn(
+              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium",
+              statusConfig.color === "green" && "bg-green-500/20 text-green-400",
+              statusConfig.color === "blue" && "bg-blue-500/20 text-blue-400",
+              statusConfig.color === "amber" && "bg-amber-500/20 text-amber-400",
+              statusConfig.color === "red" && "bg-red-500/20 text-red-400"
+            )}
+          >
+            <StatusIcon className="w-3 h-3" />
+            {statusConfig.label}
+          </span>
+          <p className="text-xs text-slate-500">
+            ${shop.monthlyPrice}/mes
+          </p>
+        </div>
+      </td>
+
+      {/* Next Payment */}
+      <td className="px-6 py-4">
+        <div className="text-sm">
+          <p className="text-slate-300">
+            {new Date(shop.nextPaymentDate).toLocaleDateString("es-MX", {
+              day: "numeric",
+              month: "short",
+            })}
+          </p>
+          <p className="text-xs text-slate-500">
+            {shop.lastPaymentDate
+              ? `Último: ${new Date(shop.lastPaymentDate).toLocaleDateString("es-MX", { day: "numeric", month: "short" })}`
+              : "Sin pagos"}
+          </p>
+        </div>
+      </td>
+
+      {/* Credentials */}
+      <td className="px-6 py-4">
+        <div className="flex items-center gap-2">
+          <code className="px-2 py-1 rounded bg-white/5 text-sm text-slate-300">
+            {shop.ownerUsername}
+          </code>
+          <button
+            onClick={copyCredentials}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+            title="Copiar credenciales"
+          >
+            {copied ? (
+              <Check className="w-4 h-4 text-green-400" />
+            ) : (
+              <Copy className="w-4 h-4" />
+            )}
+          </button>
+        </div>
+      </td>
+
+      {/* Actions */}
+      <td className="px-6 py-4">
+        <div className="flex items-center gap-1">
+          {/* Payment Action */}
+          {shop.subscriptionStatus === "past_due" ? (
+            <button
+              onClick={() => registerPayment(shop.slug)}
+              className="p-2 rounded-lg text-green-400 hover:bg-green-500/20 transition-colors"
+              title="Registrar Pago"
+            >
+              <DollarSign className="w-4 h-4" />
+            </button>
+          ) : shop.subscriptionStatus === "active" ? (
+            <button
+              onClick={() => updateSubscriptionStatus(shop.slug, "past_due")}
+              className="p-2 rounded-lg text-amber-400 hover:bg-amber-500/20 transition-colors"
+              title="Marcar como Vencido"
+            >
+              <AlertTriangle className="w-4 h-4" />
+            </button>
+          ) : null}
+
+          <Link
+            href={`/${shop.slug}`}
+            target="_blank"
+            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+            title="Ver tienda"
+          >
+            <Eye className="w-4 h-4" />
+          </Link>
+          <Link
+            href={`/admin?shop=${shop.slug}`}
+            className="p-2 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors"
+            title="Configurar tienda"
+          >
+            <Settings className="w-4 h-4" />
+          </Link>
+          <button
+            onClick={() => onPaymentAction(shop)}
+            className="p-2 rounded-lg text-slate-400 hover:text-gold hover:bg-gold/10 transition-colors"
+            title="Gestionar Pago"
+          >
+            <CreditCard className="w-4 h-4" />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+function PaymentModal({
+  shop,
+  onClose,
+}: {
+  shop: ManagedShop | null;
+  onClose: () => void;
+}) {
+  const { registerPayment, updateSubscriptionStatus, updatePaymentLink } = useShops();
+  const [paymentLink, setPaymentLink] = useState(shop?.paymentLink || "");
+
+  if (!shop) return null;
+
+  const handleRegisterPayment = () => {
+    registerPayment(shop.slug);
+    onClose();
+  };
+
+  const handleSaveLink = () => {
+    updatePaymentLink(shop.slug, paymentLink);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-md glass-panel rounded-2xl p-6 border border-gold/20">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gold to-amber-500 flex items-center justify-center">
+            <CreditCard className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-white">Gestionar Pago</h2>
+            <p className="text-sm text-slate-400">{shop.name}</p>
+          </div>
+        </div>
+
+        {/* Current Status */}
+        <div className="p-4 rounded-xl bg-white/5 mb-6">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-slate-400">Estado actual</span>
+            <span
+              className={cn(
+                "px-2 py-1 rounded-full text-xs font-medium",
+                shop.subscriptionStatus === "active" && "bg-green-500/20 text-green-400",
+                shop.subscriptionStatus === "trial" && "bg-blue-500/20 text-blue-400",
+                shop.subscriptionStatus === "past_due" && "bg-amber-500/20 text-amber-400",
+                shop.subscriptionStatus === "canceled" && "bg-red-500/20 text-red-400"
+              )}
+            >
+              {(SUBSCRIPTION_STATUS_CONFIG[shop.subscriptionStatus] || SUBSCRIPTION_STATUS_CONFIG.trial).label}
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-slate-400">Monto mensual</span>
+            <span className="text-white font-bold">${shop.monthlyPrice} MXN</span>
+          </div>
+        </div>
+
+        {/* Payment Link */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-slate-300 mb-2">
+            Link de Pago (Stripe/MercadoPago)
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="url"
+              value={paymentLink}
+              onChange={(e) => setPaymentLink(e.target.value)}
+              placeholder="https://checkout.stripe.com/..."
+              className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-gold/50 text-sm"
+            />
+            <Button variant="outline" size="sm" onClick={handleSaveLink}>
+              <Check className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="space-y-3">
+          {shop.subscriptionStatus === "past_due" && (
+            <Button
+              onClick={handleRegisterPayment}
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400"
+            >
+              <DollarSign className="w-4 h-4 mr-2" />
+              Registrar Pago Manual
+            </Button>
+          )}
+
+          {shop.subscriptionStatus === "active" && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                updateSubscriptionStatus(shop.slug, "past_due");
+                onClose();
+              }}
+              className="w-full border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+            >
+              <AlertTriangle className="w-4 h-4 mr-2" />
+              Marcar como Vencido
+            </Button>
+          )}
+
+          {shop.subscriptionStatus === "canceled" && (
+            <Button
+              onClick={() => {
+                updateSubscriptionStatus(shop.slug, "active");
+                onClose();
+              }}
+              className="w-full"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Reactivar Suscripción
+            </Button>
+          )}
+
+          {shop.subscriptionStatus !== "canceled" && (
+            <Button
+              variant="ghost"
+              onClick={() => {
+                updateSubscriptionStatus(shop.slug, "canceled");
+                onClose();
+              }}
+              className="w-full text-red-400 hover:bg-red-500/10"
+            >
+              <Ban className="w-4 h-4 mr-2" />
+              Cancelar Suscripción
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AgencyContent() {
+  const router = useRouter();
+  const { user, logout, isAuthenticated, isSuperAdmin, isLoading } = useAuth();
+  const { shops, createShop } = useShops();
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedShopForPayment, setSelectedShopForPayment] = useState<ManagedShop | null>(null);
+
+  // Proteger ruta
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.push("/login");
+      } else if (!isSuperAdmin) {
+        router.push("/admin");
+      }
+    }
+  }, [isAuthenticated, isSuperAdmin, isLoading, router]);
+
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
+
+  if (isLoading || !isAuthenticated || !isSuperAdmin) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" />
+      </div>
+    );
+  }
+
+  const activeShops = shops.filter((s) => s.isActive).length;
+  const totalShops = shops.length;
+  const paidShops = shops.filter((s) => s.subscriptionStatus === "active").length;
+  const pastDueShops = shops.filter((s) => s.subscriptionStatus === "past_due").length;
+  const monthlyRevenue = shops
+    .filter((s) => s.subscriptionStatus === "active" || s.subscriptionStatus === "trial")
+    .reduce((sum, s) => sum + s.monthlyPrice, 0);
+  const pendingRevenue = shops
+    .filter((s) => s.subscriptionStatus === "past_due")
+    .reduce((sum, s) => sum + s.monthlyPrice, 0);
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Background Effects */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
+      </div>
+
+      {/* Header */}
+      <header className="relative z-10 border-b border-white/10 glass-panel">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+                <Shield className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="font-display text-2xl font-bold text-white">
+                  Agency Panel
+                </h1>
+                <p className="text-slate-400 text-sm">
+                  Centro de Control · {user?.name}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {/* Phase 24: Agency Profile Link */}
+              <Link href="/agency/profile">
+                <Button variant="ghost" size="sm">
+                  <Building2 className="w-4 h-4" />
+                  Mi Agencia
+                </Button>
+              </Link>
+              <Link href="/">
+                <Button variant="ghost" size="sm">
+                  <ExternalLink className="w-4 h-4" />
+                  Landing
+                </Button>
+              </Link>
+              <Button variant="ghost" size="sm" onClick={handleLogout}>
+                <LogOut className="w-4 h-4" />
+                Salir
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="relative z-10 container mx-auto px-4 py-8">
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="glass-panel rounded-xl p-5 border border-cyan-500/20">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
+                <Store className="w-5 h-5 text-cyan-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-white">{totalShops}</p>
+                <p className="text-xs text-slate-400">Tiendas</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="glass-panel rounded-xl p-5 border border-green-500/20">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
+                <DollarSign className="w-5 h-5 text-green-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-green-400">${monthlyRevenue}</p>
+                <p className="text-xs text-slate-400">MRR Activo</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="glass-panel rounded-xl p-5 border border-amber-500/20">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-amber-400">{pastDueShops}</p>
+                <p className="text-xs text-slate-400">Vencidos</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="glass-panel rounded-xl p-5 border border-gold/20">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gold/20 flex items-center justify-center">
+                <CreditCard className="w-5 h-5 text-gold" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gold">${pendingRevenue}</p>
+                <p className="text-xs text-slate-400">Por Cobrar</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Shops Table */}
+        <div className="glass-panel rounded-2xl border border-white/10 overflow-hidden">
+          <div className="flex items-center justify-between p-6 border-b border-white/10">
+            <div>
+              <h2 className="text-xl font-bold text-white">Tiendas</h2>
+              <p className="text-sm text-slate-400">
+                Gestiona las tiendas de tus clientes
+              </p>
+            </div>
+            <Button
+              onClick={() => setShowCreateModal(true)}
+              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nueva Tienda
+            </Button>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-white/10 text-left">
+                  <th className="px-6 py-4 text-sm font-medium text-slate-400">
+                    Tienda
+                  </th>
+                  <th className="px-6 py-4 text-sm font-medium text-slate-400">
+                    Estado
+                  </th>
+                  <th className="px-6 py-4 text-sm font-medium text-slate-400">
+                    Pago
+                  </th>
+                  <th className="px-6 py-4 text-sm font-medium text-slate-400">
+                    Próximo Cobro
+                  </th>
+                  <th className="px-6 py-4 text-sm font-medium text-slate-400">
+                    Usuario
+                  </th>
+                  <th className="px-6 py-4 text-sm font-medium text-slate-400">
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {shops.map((shop) => (
+                  <ShopRow
+                    key={shop.id}
+                    shop={shop}
+                    onPaymentAction={setSelectedShopForPayment}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {shops.length === 0 && (
+            <div className="text-center py-12">
+              <Store className="w-12 h-12 text-slate-500 mx-auto mb-4" />
+              <p className="text-slate-400">No hay tiendas aún</p>
+              <p className="text-sm text-slate-500">
+                Crea tu primera tienda para comenzar
+              </p>
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Create Shop Modal */}
+      <CreateShopModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onCreate={createShop}
+      />
+
+      {/* Payment Modal */}
+      {selectedShopForPayment && (
+        <PaymentModal
+          shop={selectedShopForPayment}
+          onClose={() => setSelectedShopForPayment(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+export default function AgencyPage() {
+  return (
+    <AuthProvider>
+      <ShopsProvider>
+        <AgencyContent />
+      </ShopsProvider>
+    </AuthProvider>
+  );
+}
