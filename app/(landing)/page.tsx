@@ -580,6 +580,145 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
                 </ul>
               </div>
             </div>
+
+            {/* 6. Categorías de Productos */}
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div className="md:order-2 glass-panel rounded-2xl p-6 aspect-video flex items-center justify-center bg-gradient-to-br from-amber-500/10 to-yellow-500/10">
+                <div className="text-center w-full px-4">
+                  <Palette className="w-16 h-16 text-amber-400 mx-auto mb-4" />
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <span className="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-400 text-xs">Cabello</span>
+                    <span className="px-3 py-1 rounded-full bg-rose-500/20 text-rose-400 text-xs">Uñas</span>
+                    <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-400 text-xs">Spa</span>
+                    <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">Facial</span>
+                    <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs">Maquillaje</span>
+                    <span className="px-3 py-1 rounded-full bg-gold/20 text-gold text-xs">Premium</span>
+                  </div>
+                </div>
+              </div>
+              <div className="md:order-1">
+                <span className="text-amber-400 text-sm font-medium">06</span>
+                <h3 className="text-2xl font-bold text-white mt-2 mb-4">
+                  Categorías Organizadas
+                </h3>
+                <p className="text-slate-400 mb-4">
+                  Organiza tus servicios y productos en categorías personalizables. Tus clientes encuentran lo que buscan en segundos con filtros intuitivos.
+                </p>
+                <ul className="space-y-2 text-sm text-slate-300">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Categorías ilimitadas personalizables
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Filtros rápidos para clientes
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Ordena por popularidad o precio
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* 7. Variantes y Calidades */}
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div className="glass-panel rounded-2xl p-6 aspect-video flex items-center justify-center bg-gradient-to-br from-indigo-500/10 to-violet-500/10">
+                <div className="text-center w-full px-4">
+                  <Star className="w-16 h-16 text-indigo-400 mx-auto mb-4" />
+                  <div className="glass-panel rounded-xl p-4 max-w-xs mx-auto">
+                    <p className="text-white font-medium mb-3">Corte de Cabello</p>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center p-2 rounded-lg bg-white/5">
+                        <span className="text-sm text-slate-300">Básico</span>
+                        <span className="text-sm text-gold">$150</span>
+                      </div>
+                      <div className="flex justify-between items-center p-2 rounded-lg bg-white/5 border border-cyan-500/30">
+                        <span className="text-sm text-white">Premium</span>
+                        <span className="text-sm text-gold">$250</span>
+                      </div>
+                      <div className="flex justify-between items-center p-2 rounded-lg bg-white/5">
+                        <span className="text-sm text-slate-300">VIP + Tratamiento</span>
+                        <span className="text-sm text-gold">$400</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <span className="text-indigo-400 text-sm font-medium">07</span>
+                <h3 className="text-2xl font-bold text-white mt-2 mb-4">
+                  Variantes y Calidades por Producto
+                </h3>
+                <p className="text-slate-400 mb-4">
+                  Un mismo servicio puede tener diferentes niveles de calidad o variantes. El cliente elige la opción que mejor se adapta a su presupuesto.
+                </p>
+                <ul className="space-y-2 text-sm text-slate-300">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Múltiples variantes por producto
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Precios diferenciados por calidad
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Descripciones claras de cada opción
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* 8. Inventario y Stock */}
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div className="md:order-2 glass-panel rounded-2xl p-6 aspect-video flex items-center justify-center bg-gradient-to-br from-teal-500/10 to-emerald-500/10">
+                <div className="text-center w-full px-4">
+                  <TrendingUp className="w-16 h-16 text-teal-400 mx-auto mb-4" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="glass-panel rounded-lg p-3 text-left">
+                      <p className="text-xs text-slate-400">Shampoo Pro</p>
+                      <p className="text-lg font-bold text-white">24 <span className="text-xs text-green-400">+5</span></p>
+                    </div>
+                    <div className="glass-panel rounded-lg p-3 text-left">
+                      <p className="text-xs text-slate-400">Tinte L&apos;Oreal</p>
+                      <p className="text-lg font-bold text-amber-400">3 <span className="text-xs text-red-400">bajo</span></p>
+                    </div>
+                    <div className="glass-panel rounded-lg p-3 text-left">
+                      <p className="text-xs text-slate-400">Gel Fijador</p>
+                      <p className="text-lg font-bold text-white">18</p>
+                    </div>
+                    <div className="glass-panel rounded-lg p-3 text-left">
+                      <p className="text-xs text-slate-400">Aceite Argán</p>
+                      <p className="text-lg font-bold text-white">12</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="md:order-1">
+                <span className="text-teal-400 text-sm font-medium">08</span>
+                <h3 className="text-2xl font-bold text-white mt-2 mb-4">
+                  Control de Inventario
+                </h3>
+                <p className="text-slate-400 mb-4">
+                  Mantén el control de tus productos físicos. Alertas de stock bajo, historial de movimientos y reportes de inventario.
+                </p>
+                <ul className="space-y-2 text-sm text-slate-300">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Alertas automáticas de stock bajo
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Historial de entradas y salidas
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    Reportes de productos más vendidos
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
 
           {/* CTA */}
@@ -628,12 +767,12 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
                   <MessageCircle className="w-5 h-5 mr-2" />
                   Quiero Unirme
                 </Button>
-                <Link href="/estetica-lola">
+                <a href="#demo">
                   <Button variant="outline" size="lg">
-                    Ver Demo en Vivo
+                    Ver Tour Guiado
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
-                </Link>
+                </a>
               </div>
 
               <p className="text-sm text-slate-500 mt-6">
@@ -658,14 +797,14 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
             </div>
 
             <div className="flex items-center gap-6 text-sm text-slate-400">
-              <Link href="/profile" className="hover:text-white transition-colors">
-                Mi Perfil
-              </Link>
+              <a href="#features" className="hover:text-white transition-colors">
+                Características
+              </a>
+              <a href="#demo" className="hover:text-white transition-colors">
+                Tour
+              </a>
               <Link href="/login" className="hover:text-white transition-colors">
                 Acceso
-              </Link>
-              <Link href="/estetica-lola" className="hover:text-white transition-colors">
-                Demo
               </Link>
               <button
                 onClick={() => setShowContactModal(true)}
