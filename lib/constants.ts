@@ -58,6 +58,20 @@ export interface ShopSocialMedia {
   website?: string;
 }
 
+export type BackgroundType = "solid" | "image" | "video";
+
+export interface ShopBackground {
+  type: BackgroundType;
+  color?: string;
+  image?: string;
+  video?: string;
+  // Section-specific backgrounds
+  hero?: string;
+  services?: string;
+  products?: string;
+  contact?: string;
+}
+
 export interface ShopSchedule {
   monday?: { open: string; close: string; closed?: boolean };
   tuesday?: { open: string; close: string; closed?: boolean };
@@ -77,6 +91,7 @@ export interface ShopConfig {
   banner?: string; // Cover/header image
   slogan?: string; // Short tagline
   theme: ShopTheme;
+  background?: ShopBackground; // Background configuration
   contact: {
     phone?: string;
     email?: string;

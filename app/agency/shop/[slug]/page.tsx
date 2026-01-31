@@ -33,6 +33,9 @@ import {
     MapPin,
     Mail,
     Type,
+    Video,
+    Layers,
+    MonitorPlay,
 } from "lucide-react";
 import {
     AuthProvider,
@@ -147,6 +150,16 @@ function ShopDetailContent() {
     const [website, setWebsite] = useState("");
     const [savingAppearance, setSavingAppearance] = useState(false);
     const [appearanceSaveSuccess, setAppearanceSaveSuccess] = useState(false);
+
+    // Background Configuration States
+    const [backgroundType, setBackgroundType] = useState<"solid" | "image" | "video">("solid");
+    const [backgroundColor, setBackgroundColor] = useState("#0F172A");
+    const [backgroundImage, setBackgroundImage] = useState("");
+    const [backgroundVideo, setBackgroundVideo] = useState("");
+    const [heroBackground, setHeroBackground] = useState("");
+    const [servicesBackground, setServicesBackground] = useState("");
+    const [productsBackground, setProductsBackground] = useState("");
+    const [contactBackground, setContactBackground] = useState("");
 
     // Security State
     const [newPassword, setNewPassword] = useState("");
@@ -424,6 +437,15 @@ function ShopDetailContent() {
                 setFacebook(foundShop.social?.facebook || "");
                 setTiktok(foundShop.social?.tiktok || "");
                 setWebsite(foundShop.social?.website || "");
+                // Load background configuration
+                setBackgroundType(foundShop.background?.type || "solid");
+                setBackgroundColor(foundShop.background?.color || "#0F172A");
+                setBackgroundImage(foundShop.background?.image || "");
+                setBackgroundVideo(foundShop.background?.video || "");
+                setHeroBackground(foundShop.background?.hero || "");
+                setServicesBackground(foundShop.background?.services || "");
+                setProductsBackground(foundShop.background?.products || "");
+                setContactBackground(foundShop.background?.contact || "");
                 setLoading(false);
             } else {
                 router.push("/agency");
@@ -985,6 +1007,207 @@ function ShopDetailContent() {
                                     </div>
                                 </div>
 
+                                {/* Configuración de Fondos */}
+                                <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-6">
+                                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                        <Layers className="w-5 h-5 text-indigo-400" />
+                                        Fondos de la Página
+                                    </h3>
+
+                                    {/* Tipo de Fondo Principal */}
+                                    <div className="space-y-3">
+                                        <label className="block text-sm font-medium text-slate-300">
+                                            Tipo de Fondo Principal
+                                        </label>
+                                        <div className="grid grid-cols-3 gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => setBackgroundType("solid")}
+                                                className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
+                                                    backgroundType === "solid"
+                                                        ? "border-cyan-500 bg-cyan-500/10"
+                                                        : "border-white/10 bg-black/20 hover:border-white/20"
+                                                }`}
+                                            >
+                                                <Palette className="w-6 h-6 text-cyan-400" />
+                                                <span className="text-sm text-white">Color Sólido</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setBackgroundType("image")}
+                                                className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
+                                                    backgroundType === "image"
+                                                        ? "border-pink-500 bg-pink-500/10"
+                                                        : "border-white/10 bg-black/20 hover:border-white/20"
+                                                }`}
+                                            >
+                                                <Image className="w-6 h-6 text-pink-400" />
+                                                <span className="text-sm text-white">Imagen</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setBackgroundType("video")}
+                                                className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
+                                                    backgroundType === "video"
+                                                        ? "border-purple-500 bg-purple-500/10"
+                                                        : "border-white/10 bg-black/20 hover:border-white/20"
+                                                }`}
+                                            >
+                                                <Video className="w-6 h-6 text-purple-400" />
+                                                <span className="text-sm text-white">Video</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Configuración según tipo */}
+                                    {backgroundType === "solid" && (
+                                        <div className="space-y-3">
+                                            <label className="block text-sm font-medium text-slate-300">
+                                                Color de Fondo
+                                            </label>
+                                            <div className="flex items-center gap-3">
+                                                <input
+                                                    type="color"
+                                                    value={backgroundColor}
+                                                    onChange={(e) => setBackgroundColor(e.target.value)}
+                                                    className="w-12 h-12 rounded-xl border-2 border-white/20 cursor-pointer"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    value={backgroundColor}
+                                                    onChange={(e) => setBackgroundColor(e.target.value)}
+                                                    className="flex-1 px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white font-mono text-sm"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {backgroundType === "image" && (
+                                        <div className="space-y-3">
+                                            <label className="block text-sm font-medium text-slate-300">
+                                                URL de Imagen de Fondo
+                                            </label>
+                                            <div className="space-y-2">
+                                                <div className="w-full h-24 rounded-xl bg-black/30 border border-white/10 flex items-center justify-center overflow-hidden">
+                                                    {backgroundImage ? (
+                                                        <img src={backgroundImage} alt="Background" className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <Image className="w-8 h-8 text-slate-600" />
+                                                    )}
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    value={backgroundImage}
+                                                    onChange={(e) => setBackgroundImage(e.target.value)}
+                                                    placeholder="https://ejemplo.com/fondo.jpg"
+                                                    className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white text-sm"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {backgroundType === "video" && (
+                                        <div className="space-y-3">
+                                            <label className="block text-sm font-medium text-slate-300">
+                                                URL del Video de Fondo
+                                            </label>
+                                            <div className="flex gap-2">
+                                                <div className="px-3 py-3 bg-purple-500/20 border border-purple-500/20 rounded-xl text-purple-400">
+                                                    <MonitorPlay className="w-5 h-5" />
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    value={backgroundVideo}
+                                                    onChange={(e) => setBackgroundVideo(e.target.value)}
+                                                    placeholder="https://ejemplo.com/video.mp4"
+                                                    className="flex-1 px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white text-sm"
+                                                />
+                                            </div>
+                                            <p className="text-xs text-slate-500">
+                                                Formatos soportados: MP4, WebM. El video se reproducirá en loop sin sonido.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Fondos por Sección */}
+                                <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-6">
+                                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                        <Layers className="w-5 h-5 text-amber-400" />
+                                        Fondos por Sección
+                                        <span className="text-xs font-normal text-slate-400 ml-2">(Opcional)</span>
+                                    </h3>
+                                    <p className="text-sm text-slate-400 mb-4">
+                                        Personaliza el fondo de cada sección individualmente. Deja vacío para usar el fondo principal.
+                                    </p>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {/* Hero */}
+                                        <div className="space-y-2">
+                                            <label className="block text-sm font-medium text-slate-300">
+                                                Sección Hero / Portada
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={heroBackground}
+                                                onChange={(e) => setHeroBackground(e.target.value)}
+                                                placeholder="URL imagen o video"
+                                                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white text-sm"
+                                            />
+                                        </div>
+
+                                        {/* Servicios */}
+                                        <div className="space-y-2">
+                                            <label className="block text-sm font-medium text-slate-300">
+                                                Sección Servicios
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={servicesBackground}
+                                                onChange={(e) => setServicesBackground(e.target.value)}
+                                                placeholder="URL imagen o video"
+                                                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white text-sm"
+                                            />
+                                        </div>
+
+                                        {/* Productos */}
+                                        <div className="space-y-2">
+                                            <label className="block text-sm font-medium text-slate-300">
+                                                Sección Productos
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={productsBackground}
+                                                onChange={(e) => setProductsBackground(e.target.value)}
+                                                placeholder="URL imagen o video"
+                                                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white text-sm"
+                                            />
+                                        </div>
+
+                                        {/* Contacto */}
+                                        <div className="space-y-2">
+                                            <label className="block text-sm font-medium text-slate-300">
+                                                Sección Contacto
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={contactBackground}
+                                                onChange={(e) => setContactBackground(e.target.value)}
+                                                placeholder="URL imagen o video"
+                                                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white text-sm"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Tip */}
+                                    <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                                        <p className="text-xs text-amber-300">
+                                            <strong>Tip:</strong> Usa imágenes optimizadas (menos de 500KB) para mejor rendimiento.
+                                            Para videos, usa formatos comprimidos MP4 con resolución 720p o menor.
+                                        </p>
+                                    </div>
+                                </div>
+
                                 {/* Botón Guardar */}
                                 <div className="flex justify-end gap-3">
                                     {appearanceSaveSuccess && (
@@ -1006,6 +1229,16 @@ function ShopDetailContent() {
                                                     primaryColor,
                                                     accentColor,
                                                 },
+                                                background: {
+                                                    type: backgroundType,
+                                                    color: backgroundColor,
+                                                    image: backgroundImage,
+                                                    video: backgroundVideo,
+                                                    hero: heroBackground,
+                                                    services: servicesBackground,
+                                                    products: productsBackground,
+                                                    contact: contactBackground,
+                                                },
                                                 email,
                                                 address,
                                                 city,
@@ -1024,6 +1257,16 @@ function ShopDetailContent() {
                                                 slogan,
                                                 description,
                                                 theme: { ...prev.theme, primaryColor, accentColor },
+                                                background: {
+                                                    type: backgroundType,
+                                                    color: backgroundColor,
+                                                    image: backgroundImage,
+                                                    video: backgroundVideo,
+                                                    hero: heroBackground,
+                                                    services: servicesBackground,
+                                                    products: productsBackground,
+                                                    contact: contactBackground,
+                                                },
                                                 contact: { ...prev.contact, email, address, city },
                                                 social: { instagram, facebook, tiktok, website },
                                             } : prev);

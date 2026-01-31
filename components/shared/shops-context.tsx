@@ -7,7 +7,7 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
-import { MOCK_SHOPS, type ShopConfig, type ShopTheme, type ShopSocialMedia, type ShopSchedule, DEFAULT_THEME } from "@/lib/constants";
+import { MOCK_SHOPS, type ShopConfig, type ShopTheme, type ShopSocialMedia, type ShopSchedule, type ShopBackground, DEFAULT_THEME } from "@/lib/constants";
 
 // ============================================
 // DEBUG LOGGING - SHOPS CONTEXT
@@ -75,6 +75,8 @@ interface UpdateShopData {
   slogan?: string;
   // Theme
   theme?: ShopTheme;
+  // Background
+  background?: ShopBackground;
   // Contact extended
   email?: string;
   address?: string;
@@ -262,6 +264,10 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
           if (data.slogan !== undefined) updated.slogan = data.slogan;
           // Theme
           if (data.theme !== undefined) updated.theme = { ...updated.theme, ...data.theme };
+          // Background
+          if (data.background !== undefined) {
+            updated.background = { ...updated.background, ...data.background };
+          }
           // Contact extended
           if (data.email !== undefined) {
             updated.contact = { ...updated.contact, email: data.email };
