@@ -43,6 +43,7 @@ export {
   useShops,
   type ManagedShop,
   type SubscriptionStatus,
+  type ShopCategory,
 } from "./shops-context";
 export { InventoryProvider, useInventory } from "./inventory-context";
 export {

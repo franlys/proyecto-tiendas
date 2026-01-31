@@ -1,0 +1,9 @@
+export { ShopFrontendMockup } from "./ShopFrontendMockup";
+export { CartWhatsAppMockup } from "./CartWhatsAppMockup";
+export { DashboardMockup } from "./DashboardMockup";
+export { InventoryMockup } from "./InventoryMockup";
+export { CRMMockup } from "./CRMMockup";
+export { OrdersKanbanMockup } from "./OrdersKanbanMockup";
+export { MarketingMockup } from "./MarketingMockup";
+export { PromoGeneratorMockup } from "./PromoGeneratorMockup";
+export { SettingsMockup } from "./SettingsMockup";

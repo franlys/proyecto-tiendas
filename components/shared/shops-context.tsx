@@ -11,8 +11,11 @@ import { MOCK_SHOPS, type ShopConfig, DEFAULT_THEME } from "@/lib/constants";
 
 export type SubscriptionStatus = "active" | "past_due" | "canceled" | "trial";
 
+export type ShopCategory = "beauty" | "retail" | "repair" | "restaurant" | "technology";
+
 export interface ManagedShop extends ShopConfig {
   isActive: boolean;
+  category: ShopCategory;
   createdAt: string;
   ownerUsername?: string;
   ownerPassword?: string;
@@ -21,6 +24,7 @@ export interface ManagedShop extends ShopConfig {
   nextPaymentDate: string; // ISO date string
   monthlyPrice: number;
   paymentLink?: string; // Stripe/MercadoPago link
+  paymentMethod?: "stripe" | "manual";
   lastPaymentDate?: string;
 }
 
@@ -31,9 +35,10 @@ interface ShopsContextType {
   toggleShopStatus: (shopId: string) => void;
   updateShopCredentials: (shopId: string, username: string, password: string) => void;
   isShopActive: (shopId: string) => boolean;
+  deleteShop: (shopId: string) => void;
   // Subscription management
   updateSubscriptionStatus: (shopId: string, status: SubscriptionStatus) => void;
-  registerPayment: (shopId: string) => void;
+  registerPayment: (shopId: string, method?: "stripe" | "manual") => void;
   updatePaymentLink: (shopId: string, link: string) => void;
   isSubscriptionActive: (shopId: string) => boolean;
 }
@@ -41,8 +46,10 @@ interface ShopsContextType {
 interface CreateShopData {
   name: string;
   slug: string;
+  category: ShopCategory;
   description: string;
   phone: string;
+  wholesale: boolean;
 }
 
 const ShopsContext = createContext<ShopsContextType | undefined>(undefined);
@@ -61,6 +68,7 @@ function initializeShops(): ManagedShop[] {
   const initialShops: ManagedShop[] = Object.values(MOCK_SHOPS).map((shop, index) => ({
     ...shop,
     isActive: true,
+    category: "beauty", // Default legacy
     createdAt: new Date().toISOString(),
     ownerUsername: shop.slug === "estetica-lola" ? "lola" : "carlos",
     ownerPassword: "123",
@@ -108,11 +116,16 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
       id: `shop-${Date.now()}`,
       name: data.name,
       slug: data.slug,
+      category: data.category,
       description: data.description,
       theme: { ...DEFAULT_THEME, id: `theme-${data.slug}`, name: `${data.name} Theme` },
       contact: {
         phone: data.phone,
       },
+      // Business Logic
+      businessType: data.category === "beauty" ? "beauty" : data.category === "repair" ? "repair" : "retail",
+      wholesaleEnabled: data.wholesale,
+
       isActive: true,
       createdAt: new Date().toISOString(),
       ownerUsername: data.slug,
@@ -163,16 +176,21 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  const registerPayment = (shopId: string) => {
+  const deleteShop = (shopId: string) => {
+    setShops((prev) => prev.filter((shop) => shop.slug !== shopId));
+  };
+
+  const registerPayment = (shopId: string, method: "stripe" | "manual" = "manual") => {
     setShops((prev) =>
       prev.map((shop) =>
         shop.slug === shopId
           ? {
-              ...shop,
-              subscriptionStatus: "active" as SubscriptionStatus,
-              lastPaymentDate: new Date().toISOString(),
-              nextPaymentDate: getNextMonthDate(),
-            }
+            ...shop,
+            subscriptionStatus: "active" as SubscriptionStatus,
+            lastPaymentDate: new Date().toISOString(),
+            nextPaymentDate: getNextMonthDate(),
+            paymentMethod: method,
+          }
           : shop
       )
     );
@@ -198,6 +216,7 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
         shops,
         getShop,
         createShop,
+        deleteShop,
         toggleShopStatus,
         updateShopCredentials,
         isShopActive,

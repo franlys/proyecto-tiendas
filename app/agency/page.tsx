@@ -38,6 +38,8 @@ import {
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
+import { ShopCategory } from "@/components/shared";
+
 function CreateShopModal({
   isOpen,
   onClose,
@@ -45,147 +47,172 @@ function CreateShopModal({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (data: { name: string; slug: string; description: string; phone: string }) => void;
+  onCreate: (data: { name: string; slug: string; category: ShopCategory; description: string; phone: string; wholesale: boolean }) => void;
 }) {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
+  const [category, setCategory] = useState<ShopCategory>("technology");
   const [description, setDescription] = useState("");
   const [phone, setPhone] = useState("");
+  const [wholesale, setWholesale] = useState(false);
 
   // Auto-generar slug desde nombre
   useEffect(() => {
     const generatedSlug = name
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
-    setSlug(generatedSlug);
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+  setSlug(generatedSlug);
   }, [name]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (name && slug && phone) {
-      onCreate({ name, slug, description, phone });
-      setName("");
-      setSlug("");
-      setDescription("");
-      setPhone("");
-      onClose();
-    }
-  };
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+  if (name && slug && phone) {
+    onCreate({ name, slug, category, description, phone, wholesale });
+    setName("");
+    setSlug("");
+    setCategory("technology");
+    setDescription("");
+    setPhone("");
+    setWholesale(false);
+    onClose();
+  }
+};
 
-  if (!isOpen) return null;
+if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+return (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    {/* Backdrop */}
+    <div
+      className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+      onClick={onClose}
+    />
+
+    {/* Modal */}
+    <div className="relative w-full max-w-md glass-panel rounded-2xl p-6 border border-cyan-500/20">
+      <button
         onClick={onClose}
-      />
+        className="absolute top-4 right-4 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+      >
+        <X className="w-5 h-5" />
+      </button>
 
-      {/* Modal */}
-      <div className="relative w-full max-w-md glass-panel rounded-2xl p-6 border border-cyan-500/20">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+          <Store className="w-6 h-6 text-white" />
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-white">Nueva Tienda</h2>
+          <p className="text-sm text-slate-400">
+            Crea una tienda para tu cliente
+          </p>
+        </div>
+      </div>
 
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
-            <Store className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-white">Nueva Tienda</h2>
-            <p className="text-sm text-slate-400">
-              Crea una tienda para tu cliente
-            </p>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-2">
+            Nombre del Negocio
+          </label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Ej: Fix It Center"
+            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-2">
+            Categoría
+          </label>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value as ShopCategory)}
+            className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white"
+          >
+            <option value="technology">Tecnología / Celulares</option>
+            <option value="beauty">Belleza / Spa</option>
+            <option value="retail">Retail / Tienda</option>
+            <option value="repair">Taller / Reparación</option>
+            <option value="restaurant">Restaurante</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
+            <div className="relative flex items-center">
+              <input
+                type="checkbox"
+                checked={wholesale}
+                onChange={(e) => setWholesale(e.target.checked)}
+                className="w-5 h-5 rounded border-white/20 bg-black/20 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-0"
+              />
+            </div>
+            <div>
+              <span className="block text-sm font-medium text-white">Ventas al Por Mayor</span>
+              <span className="block text-xs text-slate-400">Habilita precios de mayoreo y registro B2B</span>
+            </div>
+          </label>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-2">
+            URL (slug)
+          </label>
+          <div className="flex items-center gap-2">
+            <span className="text-slate-500 text-sm">/</span>
+            <input
+              type="text"
+              value={slug}
+              onChange={(e) => setSlug(e.target.value)}
+              placeholder="fix-it-center"
+              className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
+              required
+            />
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Nombre del Negocio
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Ej: Peluquería María"
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
-              required
-            />
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-2">
+            WhatsApp
+          </label>
+          <input
+            type="text"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="+52 1 55 0000 0000"
+            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
+            required
+          />
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              URL (slug)
-            </label>
-            <div className="flex items-center gap-2">
-              <span className="text-slate-500 text-sm">/</span>
-              <input
-                type="text"
-                value={slug}
-                onChange={(e) => setSlug(e.target.value)}
-                placeholder="peluqueria-maria"
-                className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
-                required
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Descripción
-            </label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Ej: Salón de belleza profesional"
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              WhatsApp
-            </label>
-            <input
-              type="text"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+34 600 000 000"
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
-              required
-            />
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <Button
-              type="button"
-              variant="ghost"
-              className="flex-1"
-              onClick={onClose}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Crear Tienda
-            </Button>
-          </div>
-        </form>
-      </div>
+        <div className="flex gap-3 pt-4">
+          <Button
+            type="button"
+            variant="ghost"
+            className="flex-1"
+            onClick={onClose}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Crear Tienda
+          </Button>
+        </div>
+      </form>
     </div>
-  );
+  </div>
+);
 }
 
 // Payment status configuration
@@ -226,7 +253,17 @@ function ShopRow({ shop, onPaymentAction }: { shop: ManagedShop; onPaymentAction
           </div>
           <div>
             <p className="font-medium text-white">{shop.name}</p>
-            <p className="text-sm text-slate-400">/{shop.slug}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-slate-400">/{shop.slug}</p>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-slate-300 border border-white/5 uppercase tracking-wider">
+                {shop.category || "beauty"}
+              </span>
+              {shop.wholesaleEnabled && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 border border-cyan-500/20 uppercase tracking-wider font-bold">
+                  MAYOREO
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </td>
@@ -307,51 +344,117 @@ function ShopRow({ shop, onPaymentAction }: { shop: ManagedShop; onPaymentAction
 
       {/* Actions */}
       <td className="px-6 py-4">
-        <div className="flex items-center gap-1">
-          {/* Payment Action */}
-          {shop.subscriptionStatus === "past_due" ? (
-            <button
-              onClick={() => registerPayment(shop.slug)}
-              className="p-2 rounded-lg text-green-400 hover:bg-green-500/20 transition-colors"
-              title="Registrar Pago"
-            >
-              <DollarSign className="w-4 h-4" />
-            </button>
-          ) : shop.subscriptionStatus === "active" ? (
-            <button
-              onClick={() => updateSubscriptionStatus(shop.slug, "past_due")}
-              className="p-2 rounded-lg text-amber-400 hover:bg-amber-500/20 transition-colors"
-              title="Marcar como Vencido"
-            >
-              <AlertTriangle className="w-4 h-4" />
-            </button>
-          ) : null}
+      <div className="flex items-center gap-1">
+        {/* Payment Action */}
+        <button
+          onClick={() => onPaymentAction(shop)}
+          className={cn(
+            "p-2 rounded-lg transition-colors",
+            shop.subscriptionStatus === "past_due"
+              ? "text-green-400 hover:bg-green-500/20 animate-pulse"
+              : "text-slate-400 hover:text-gold hover:bg-gold/10"
+          )}
+          title="Gestionar Pago"
+        >
+          <DollarSign className="w-4 h-4" />
+        </button>
 
-          <Link
-            href={`/${shop.slug}`}
-            target="_blank"
-            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-            title="Ver tienda"
-          >
-            <Eye className="w-4 h-4" />
-          </Link>
-          <Link
-            href={`/admin?shop=${shop.slug}`}
-            className="p-2 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors"
-            title="Configurar tienda"
-          >
-            <Settings className="w-4 h-4" />
-          </Link>
-          <button
-            onClick={() => onPaymentAction(shop)}
-            className="p-2 rounded-lg text-slate-400 hover:text-gold hover:bg-gold/10 transition-colors"
-            title="Gestionar Pago"
-          >
-            <CreditCard className="w-4 h-4" />
-          </button>
+        <Link
+          href={`/${shop.slug}`}
+          target="_blank"
+          className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+          title="Ver tienda"
+        >
+          <Eye className="w-4 h-4" />
+        </Link>
+        <Link
+          href={`/agency/shop/${shop.slug}`}
+          className="p-2 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors"
+          title="Configurar tienda"
+        >
+          <Settings className="w-4 h-4" />
+        </Link>
+      </div>
+    </td>
+    </tr >
+  );
+}
+
+function DeleteShopModal({
+  shop,
+  onClose,
+}: {
+  shop: ManagedShop | null;
+  onClose: () => void;
+}) {
+  const { deleteShop } = useShops();
+  const [confirmName, setConfirmName] = useState("");
+
+  if (!shop) return null;
+
+  const handleDelete = () => {
+    if (confirmName === shop.name) {
+      deleteShop(shop.slug);
+      onClose();
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-md glass-panel rounded-2xl p-6 border border-red-500/20">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center">
+            <AlertTriangle className="w-6 h-6 text-red-500" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-white">Eliminar Tienda</h2>
+            <p className="text-sm text-slate-400">Esta acción no se puede deshacer</p>
+          </div>
         </div>
-      </td>
-    </tr>
+
+        <div className="space-y-4">
+          <p className="text-slate-300 text-sm">
+            Estás a punto de eliminar permanentemente la tienda <strong className="text-white">{shop.name}</strong>.
+            Todos los datos, inventario y usuarios asociados serán borrados.
+          </p>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-400 mb-2">
+              Escribe <span className="text-white select-all font-mono bg-white/10 px-1 rounded">{shop.name}</span> para confirmar:
+            </label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-red-500/50"
+              placeholder={shop.name}
+              value={confirmName}
+              onChange={(e) => setConfirmName(e.target.value)}
+            />
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <Button variant="ghost" className="flex-1" onClick={onClose}>Cancelar</Button>
+            <Button
+              className="flex-1 bg-red-500 hover:bg-red-600 text-white"
+              disabled={confirmName !== shop.name}
+              onClick={handleDelete}
+            >
+              <span className="flex items-center gap-2">
+                <LogOut className="w-4 h-4" />
+                Eliminar
+              </span>
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -441,13 +544,18 @@ function PaymentModal({
         {/* Actions */}
         <div className="space-y-3">
           {shop.subscriptionStatus === "past_due" && (
-            <Button
-              onClick={handleRegisterPayment}
-              className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400"
-            >
-              <DollarSign className="w-4 h-4 mr-2" />
-              Registrar Pago Manual
-            </Button>
+            <div className="space-y-2">
+              <Button
+                onClick={() => handleRegisterPayment()}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400"
+              >
+                <DollarSign className="w-4 h-4 mr-2" />
+                Confirmar Pago (Efectivo/Transferencia)
+              </Button>
+              <p className="text-xs text-center text-slate-400">
+                Al hacer clic, activas la tienda manualmente por 30 días.
+              </p>
+            </div>
           )}
 
           {shop.subscriptionStatus === "active" && (
@@ -502,6 +610,7 @@ function AgencyContent() {
   const { shops, createShop } = useShops();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedShopForPayment, setSelectedShopForPayment] = useState<ManagedShop | null>(null);
+  const [shopToDelete, setShopToDelete] = useState<ManagedShop | null>(null);
 
   // Proteger ruta
   useEffect(() => {
@@ -720,6 +829,11 @@ function AgencyContent() {
           onClose={() => setSelectedShopForPayment(null)}
         />
       )}
+
+      <DeleteShopModal
+        shop={shopToDelete}
+        onClose={() => setShopToDelete(null)}
+      />
     </div>
   );
 }
