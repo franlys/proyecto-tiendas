@@ -77,7 +77,8 @@ export async function POST(req: NextRequest) {
       description: body.description,
       phone: body.phone,
       wholesaleEnabled: body.wholesaleEnabled || false,
-      planId: body.planId || "basic",
+      enabledFeatures: body.enabledFeatures,
+      monthlyPrice: body.monthlyPrice,
     };
 
     const shop = await createShop(input);

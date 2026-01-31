@@ -4,10 +4,10 @@ import {
   errorResponse,
   successResponse,
 } from "@/lib/middleware/admin-auth";
-import { DEFAULT_PLANS } from "@/types/plan.types";
-import { SYSTEM_FEATURES } from "@/types/feature.types";
+import { SYSTEM_FEATURES, getFeaturesByCategory } from "@/types/feature.types";
 
-// GET /api/admin/plans - Listar todos los planes
+// GET /api/admin/features - Listar todos los features disponibles
+// (mantenemos la ruta /plans por compatibilidad pero ahora solo devuelve features)
 export async function GET(req: NextRequest) {
   const authResult = await requireSuperAdmin(req);
 
@@ -16,25 +16,27 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Convertir DEFAULT_PLANS a array y añadir timestamps
-    const plans = Object.values(DEFAULT_PLANS).map((plan) => ({
-      ...plan,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }));
-
-    // También devolver la lista de features disponibles
+    // Devolver la lista de features disponibles organizada por categoría
     const features = Object.values(SYSTEM_FEATURES);
 
+    const featuresByCategory = {
+      inventory: getFeaturesByCategory("inventory"),
+      sales: getFeaturesByCategory("sales"),
+      clients: getFeaturesByCategory("clients"),
+      marketing: getFeaturesByCategory("marketing"),
+      staff: getFeaturesByCategory("staff"),
+      advanced: getFeaturesByCategory("advanced"),
+    };
+
     return successResponse({
-      plans,
       features,
-      total: plans.length,
+      featuresByCategory,
+      total: features.length,
     });
   } catch (error) {
-    console.error("Error listing plans:", error);
+    console.error("Error listing features:", error);
     return errorResponse(
-      error instanceof Error ? error.message : "Error al listar planes",
+      error instanceof Error ? error.message : "Error al listar features",
       500
     );
   }

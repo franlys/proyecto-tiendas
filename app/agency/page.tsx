@@ -227,8 +227,16 @@ const SUBSCRIPTION_STATUS_CONFIG: Record<SubscriptionStatus, {
   canceled: { label: "Cancelado", color: "red", icon: Ban },
 };
 
-function ShopRow({ shop, onPaymentAction }: { shop: ManagedShop; onPaymentAction: (shop: ManagedShop) => void }) {
-  const { toggleShopStatus, registerPayment, updateSubscriptionStatus } = useShops();
+function ShopRow({
+  shop,
+  onPaymentAction,
+  onDeleteClick
+}: {
+  shop: ManagedShop;
+  onPaymentAction: (shop: ManagedShop) => void;
+  onDeleteClick: (shop: ManagedShop) => void;
+}) {
+  const { toggleShopStatus } = useShops();
   const [copied, setCopied] = useState(false);
 
   const copyCredentials = () => {
@@ -374,9 +382,16 @@ function ShopRow({ shop, onPaymentAction }: { shop: ManagedShop; onPaymentAction
         >
           <Settings className="w-4 h-4" />
         </Link>
+        <button
+          onClick={() => onDeleteClick(shop)}
+          className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+          title="Eliminar tienda"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
     </td>
-    </tr >
+    </tr>
   );
 }
 
@@ -797,6 +812,7 @@ function AgencyContent() {
                     key={shop.id}
                     shop={shop}
                     onPaymentAction={setSelectedShopForPayment}
+                    onDeleteClick={setShopToDelete}
                   />
                 ))}
               </tbody>

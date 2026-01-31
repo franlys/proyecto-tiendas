@@ -20,9 +20,8 @@ import type {
   UpdateShopInput,
   ShopTheme,
   SubscriptionStatus,
-  PlanId,
 } from "@/types";
-import { DEFAULT_PLANS } from "@/types/plan.types";
+import type { FeatureId } from "@/types/feature.types";
 
 const COLLECTION = "shops";
 
@@ -33,6 +32,17 @@ const DEFAULT_THEME: ShopTheme = {
   primaryColor: "#06b6d4",
   backgroundColor: "#0f172a",
 };
+
+// Features básicos que todas las tiendas nuevas tienen
+const DEFAULT_FEATURES: FeatureId[] = [
+  "inventory",
+  "orders",
+  "crm",
+  "clientHistory",
+];
+
+// Precio mensual por defecto
+const DEFAULT_MONTHLY_PRICE = 299;
 
 // Convertir Firestore doc a Shop
 function docToShop(id: string, data: FirestoreShop): Shop {
@@ -47,8 +57,8 @@ function docToShop(id: string, data: FirestoreShop): Shop {
     theme: data.theme,
     contact: data.contact,
     subscription: data.subscription,
-    customFeatures: data.customFeatures || [],
-    disabledFeatures: data.disabledFeatures || [],
+    enabledFeatures: data.enabledFeatures || [],
+    limits: data.limits,
     wholesaleEnabled: data.wholesaleEnabled,
     ownerUsername: data.ownerUsername,
     ownerPassword: data.ownerPassword,
@@ -116,9 +126,6 @@ export async function createShop(input: CreateShopInput): Promise<Shop> {
     throw new Error("El slug ya está en uso");
   }
 
-  const planId = input.planId || "basic";
-  const plan = DEFAULT_PLANS[planId];
-
   const shopData: Omit<FirestoreShop, "createdAt" | "updatedAt"> & {
     createdAt: ReturnType<typeof serverTimestamp>;
     updatedAt: ReturnType<typeof serverTimestamp>;
@@ -144,13 +151,10 @@ export async function createShop(input: CreateShopInput): Promise<Shop> {
     },
     subscription: {
       status: "trial",
-      planId,
       nextPaymentDate: getNextMonthDate(),
-      monthlyPrice: plan.monthlyPrice,
-      trialEndsAt: getNextMonthDate(),
+      monthlyPrice: input.monthlyPrice || DEFAULT_MONTHLY_PRICE,
     },
-    customFeatures: [],
-    disabledFeatures: [],
+    enabledFeatures: input.enabledFeatures || DEFAULT_FEATURES,
     wholesaleEnabled: input.wholesaleEnabled || false,
     ownerUsername: input.slug,
     ownerPassword: "123456",
@@ -206,6 +210,9 @@ export async function updateShop(
   }
   if (input.address !== undefined) {
     updateData["contact.address"] = input.address;
+  }
+  if (input.monthlyPrice !== undefined) {
+    updateData["subscription.monthlyPrice"] = input.monthlyPrice;
   }
   if (input.theme !== undefined) {
     const existingData = existing.data() as FirestoreShop;
@@ -293,10 +300,10 @@ export async function updateSubscriptionStatus(
   return docToShop(updated.id, updated.data() as FirestoreShop);
 }
 
-// Registrar pago
+// Registrar pago (cobro manual)
 export async function registerPayment(
   shopId: string,
-  method: "stripe" | "mercadopago" | "manual" = "manual"
+  notes?: string
 ): Promise<Shop> {
   const docRef = doc(db, COLLECTION, shopId);
   const existing = await getDoc(docRef);
@@ -305,22 +312,27 @@ export async function registerPayment(
     throw new Error("Shop no encontrada");
   }
 
-  await updateDoc(docRef, {
+  const updateData: Record<string, unknown> = {
     "subscription.status": "active",
     "subscription.lastPaymentDate": new Date().toISOString(),
     "subscription.nextPaymentDate": getNextMonthDate(),
-    "subscription.paymentMethod": method,
     updatedAt: serverTimestamp(),
-  });
+  };
+
+  if (notes) {
+    updateData["subscription.notes"] = notes;
+  }
+
+  await updateDoc(docRef, updateData);
 
   const updated = await getDoc(docRef);
   return docToShop(updated.id, updated.data() as FirestoreShop);
 }
 
-// Actualizar link de pago
-export async function updatePaymentLink(
+// Actualizar precio mensual
+export async function updateMonthlyPrice(
   shopId: string,
-  link: string
+  price: number
 ): Promise<Shop> {
   const docRef = doc(db, COLLECTION, shopId);
   const existing = await getDoc(docRef);
@@ -330,7 +342,7 @@ export async function updatePaymentLink(
   }
 
   await updateDoc(docRef, {
-    "subscription.paymentLink": link,
+    "subscription.monthlyPrice": price,
     updatedAt: serverTimestamp(),
   });
 
@@ -338,29 +350,3 @@ export async function updatePaymentLink(
   return docToShop(updated.id, updated.data() as FirestoreShop);
 }
 
-// Cambiar plan de una shop
-export async function changeShopPlan(
-  shopId: string,
-  planId: PlanId
-): Promise<Shop> {
-  const docRef = doc(db, COLLECTION, shopId);
-  const existing = await getDoc(docRef);
-
-  if (!existing.exists()) {
-    throw new Error("Shop no encontrada");
-  }
-
-  const plan = DEFAULT_PLANS[planId];
-  if (!plan) {
-    throw new Error("Plan no válido");
-  }
-
-  await updateDoc(docRef, {
-    "subscription.planId": planId,
-    "subscription.monthlyPrice": plan.monthlyPrice,
-    updatedAt: serverTimestamp(),
-  });
-
-  const updated = await getDoc(docRef);
-  return docToShop(updated.id, updated.data() as FirestoreShop);
-}

@@ -8,10 +8,8 @@ import { getShopById } from "@/lib/services/shops.service";
 import {
   getShopFeatures,
   updateShopFeatures,
-  addCustomFeature,
-  removeCustomFeature,
-  disableFeature,
   enableFeature,
+  disableFeature,
 } from "@/lib/services/features.service";
 import { SYSTEM_FEATURES, type FeatureId } from "@/types/feature.types";
 
@@ -48,7 +46,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
   }
 }
 
-// PUT /api/admin/shops/[shopId]/features - Actualizar features de una shop
+// PUT /api/admin/shops/[shopId]/features - Actualizar todos los features de una shop
 export async function PUT(req: NextRequest, { params }: RouteParams) {
   const authResult = await requireSuperAdmin(req);
 
@@ -66,30 +64,20 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       return errorResponse("Tienda no encontrada", 404);
     }
 
+    // Validar que enabledFeatures es un array
+    if (!body.enabledFeatures || !Array.isArray(body.enabledFeatures)) {
+      return errorResponse("enabledFeatures debe ser un array");
+    }
+
     // Validar features
     const validFeatureIds = Object.keys(SYSTEM_FEATURES);
-
-    if (body.customFeatures) {
-      for (const featureId of body.customFeatures) {
-        if (!validFeatureIds.includes(featureId)) {
-          return errorResponse(`Feature inválido: ${featureId}`);
-        }
+    for (const featureId of body.enabledFeatures) {
+      if (!validFeatureIds.includes(featureId)) {
+        return errorResponse(`Feature inválido: ${featureId}`);
       }
     }
 
-    if (body.disabledFeatures) {
-      for (const featureId of body.disabledFeatures) {
-        if (!validFeatureIds.includes(featureId)) {
-          return errorResponse(`Feature inválido: ${featureId}`);
-        }
-      }
-    }
-
-    const shop = await updateShopFeatures(shopId, {
-      customFeatures: body.customFeatures,
-      disabledFeatures: body.disabledFeatures,
-    });
-
+    const shop = await updateShopFeatures(shopId, body.enabledFeatures);
     const features = await getShopFeatures(shopId);
 
     return successResponse({
@@ -106,7 +94,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
   }
 }
 
-// POST /api/admin/shops/[shopId]/features - Acciones específicas sobre features
+// POST /api/admin/shops/[shopId]/features - Habilitar o deshabilitar un feature
 export async function POST(req: NextRequest, { params }: RouteParams) {
   const authResult = await requireSuperAdmin(req);
 
@@ -125,7 +113,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     }
 
     // Validar action y featureId
-    const validActions = ["add", "remove", "disable", "enable"];
+    const validActions = ["enable", "disable"];
     if (!body.action || !validActions.includes(body.action)) {
       return errorResponse(
         `Acción requerida. Opciones: ${validActions.join(", ")}`
@@ -145,23 +133,12 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     let shop;
     let message;
 
-    switch (body.action) {
-      case "add":
-        shop = await addCustomFeature(shopId, featureId);
-        message = `Feature "${SYSTEM_FEATURES[featureId].name}" añadido`;
-        break;
-      case "remove":
-        shop = await removeCustomFeature(shopId, featureId);
-        message = `Feature "${SYSTEM_FEATURES[featureId].name}" removido`;
-        break;
-      case "disable":
-        shop = await disableFeature(shopId, featureId);
-        message = `Feature "${SYSTEM_FEATURES[featureId].name}" deshabilitado`;
-        break;
-      case "enable":
-        shop = await enableFeature(shopId, featureId);
-        message = `Feature "${SYSTEM_FEATURES[featureId].name}" habilitado`;
-        break;
+    if (body.action === "enable") {
+      shop = await enableFeature(shopId, featureId);
+      message = `Feature "${SYSTEM_FEATURES[featureId].name}" habilitado`;
+    } else {
+      shop = await disableFeature(shopId, featureId);
+      message = `Feature "${SYSTEM_FEATURES[featureId].name}" deshabilitado`;
     }
 
     const features = await getShopFeatures(shopId);

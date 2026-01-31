@@ -181,43 +181,10 @@ export function getFeaturesByCategory(category: FeatureCategory): FeatureDefinit
   return Object.values(SYSTEM_FEATURES).filter((f) => f.category === category);
 }
 
-// Verificar si una shop tiene acceso a un feature
-export interface ShopFeatureAccess {
-  planFeatures: FeatureId[];      // Features del plan
-  customFeatures: FeatureId[];    // Features extra añadidos
-  disabledFeatures: FeatureId[];  // Features del plan deshabilitados
-}
-
+// Verificar si una shop tiene acceso a un feature (simplificado)
 export function hasFeatureAccess(
   featureId: FeatureId,
-  access: ShopFeatureAccess
+  enabledFeatures: FeatureId[]
 ): boolean {
-  // Si está deshabilitado explícitamente, no tiene acceso
-  if (access.disabledFeatures.includes(featureId)) {
-    return false;
-  }
-
-  // Si está en features custom, tiene acceso
-  if (access.customFeatures.includes(featureId)) {
-    return true;
-  }
-
-  // Si está en el plan, tiene acceso
-  return access.planFeatures.includes(featureId);
-}
-
-// Input para actualizar features de una shop
-export interface UpdateShopFeaturesInput {
-  customFeatures?: FeatureId[];
-  disabledFeatures?: FeatureId[];
-}
-
-// Respuesta de features de una shop
-export interface ShopFeaturesResponse {
-  shopId: string;
-  planId: string;
-  planFeatures: FeatureId[];
-  customFeatures: FeatureId[];
-  disabledFeatures: FeatureId[];
-  effectiveFeatures: FeatureId[];  // Features finales con acceso
+  return enabledFeatures.includes(featureId);
 }

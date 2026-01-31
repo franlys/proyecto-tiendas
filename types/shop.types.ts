@@ -1,10 +1,11 @@
 import { Timestamp } from "firebase/firestore";
-import type { PlanId } from "./plan.types";
+import type { ShopLimits } from "./plan.types";
+import type { FeatureId } from "./feature.types";
 
 // Categorías de negocio soportadas
 export type ShopCategory = "beauty" | "retail" | "repair" | "restaurant" | "technology";
 
-// Estados de suscripción
+// Estados de suscripción (simplificado - cobro manual)
 export type SubscriptionStatus = "active" | "trial" | "past_due" | "canceled";
 
 // Configuración de tema
@@ -25,16 +26,13 @@ export interface ShopContact {
   whatsapp?: string;
 }
 
-// Información de suscripción
+// Información de suscripción (simplificada para cobro manual)
 export interface ShopSubscription {
   status: SubscriptionStatus;
-  planId: PlanId;
   nextPaymentDate: string;
   monthlyPrice: number;
-  paymentLink?: string;
-  paymentMethod?: "stripe" | "mercadopago" | "manual";
   lastPaymentDate?: string;
-  trialEndsAt?: string;
+  notes?: string;  // Notas de pago (ej: "Pagó por transferencia el 15/01")
 }
 
 // Shop en Firestore
@@ -57,12 +55,14 @@ export interface FirestoreShop {
   // Contacto
   contact: ShopContact;
 
-  // Suscripción
+  // Suscripción (cobro manual)
   subscription: ShopSubscription;
 
-  // Features personalizadas
-  customFeatures: string[];    // Features extra añadidos
-  disabledFeatures: string[];  // Features del plan que están deshabilitados
+  // Features habilitados (el super admin activa/desactiva individualmente)
+  enabledFeatures: string[];
+
+  // Límites personalizados (opcional)
+  limits?: ShopLimits;
 
   // Configuración de negocio
   wholesaleEnabled: boolean;
@@ -91,7 +91,8 @@ export interface CreateShopInput {
   category: ShopCategory;
   phone: string;
   wholesaleEnabled?: boolean;
-  planId?: PlanId;
+  enabledFeatures?: FeatureId[];  // Features iniciales
+  monthlyPrice?: number;
 }
 
 // Input para actualizar shop
@@ -104,6 +105,7 @@ export interface UpdateShopInput {
   address?: string;
   wholesaleEnabled?: boolean;
   theme?: Partial<ShopTheme>;
+  monthlyPrice?: number;
 }
 
 // Respuesta de API
