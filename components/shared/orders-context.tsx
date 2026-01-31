@@ -27,6 +27,10 @@ export interface Order {
   // Phase 9: Customer Data
   customerName?: string;
   customerPhone?: string;
+
+  // Phase 26: Restaurant
+  tableId?: string;
+  orderType?: "dine-in" | "takeout" | "delivery";
 }
 
 interface OrdersContextValue {
@@ -48,6 +52,7 @@ interface OrdersContextValue {
     orders: number;
   }>;
   clearOrders: () => void;
+  updateStatus: (orderId: string, status: Order["status"]) => void;
 }
 
 const STORAGE_KEY = "shop-orders";
@@ -111,6 +116,8 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
         id: generateOrderId(),
         date: new Date().toISOString(),
         status: "completed", // For demo, assume completed
+        tableId: orderData.tableId,
+        orderType: orderData.orderType || "takeout",
       };
 
       setOrders((prev) => [...prev, newOrder]);
@@ -197,6 +204,14 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
     setOrders([]);
   }, []);
 
+  const updateStatus = useCallback((orderId: string, status: Order["status"]) => {
+    setOrders((prev) =>
+      prev.map((order) =>
+        order.id === orderId ? { ...order, status } : order
+      )
+    );
+  }, []);
+
   return (
     <OrdersContext.Provider
       value={{
@@ -208,6 +223,7 @@ export function OrdersProvider({ children }: OrdersProviderProps) {
         getTodayStats,
         getLast7DaysStats,
         clearOrders,
+        updateStatus,
       }}
     >
       {children}
