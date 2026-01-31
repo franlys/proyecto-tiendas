@@ -15,12 +15,15 @@ import {
   useOrders,
   ClientsProvider,
   useClients,
+  AuthProvider,
+  useAuth,
   type Client,
 } from "@/components/shared";
 import { ClientList, ClientDetail } from "@/components/admin";
 import { Button } from "@/components/ui";
 
 function CRMContent() {
+  const { user } = useAuth();
   const { orders } = useOrders();
   const { clients, addNote, deleteNote, toggleVIP } = useClients();
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -150,8 +153,8 @@ function CRMContent() {
         <div className="text-center py-8">
           <p className="text-slate-400 text-sm">
             💡 <strong>Tip:</strong> Ve a{" "}
-            <Link href="/estetica-lola" className="text-primary hover:underline">
-              /estetica-lola
+            <Link href={`/${user?.shopId || "tu-tienda"}`} className="text-primary hover:underline">
+              tu tienda
             </Link>
             , selecciona servicios y agenda para ver clientes aquí.
           </p>
@@ -173,6 +176,7 @@ function CRMWrapper() {
 
 export default function AdminClientsPage() {
   return (
+    <AuthProvider>
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-white/10 py-6">
@@ -222,5 +226,6 @@ export default function AdminClientsPage() {
         </OrdersProvider>
       </main>
     </div>
+    </AuthProvider>
   );
 }

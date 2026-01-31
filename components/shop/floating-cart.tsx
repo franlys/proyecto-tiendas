@@ -13,6 +13,7 @@ export function FloatingCart() {
     totalItems,
     totalPrice,
     totalDuration,
+    tableId,
     clearCart
   } = useCart();
   const shop = useShop();
@@ -62,10 +63,17 @@ export function FloatingCart() {
         })),
       ],
       total: totalPrice,
+      tableId: tableId || undefined,
+      orderType: tableId ? "dine-in" : "takeout",
     });
 
     // Build the WhatsApp message with separate sections
     let message = `Hola, quiero hacer un pedido en *${shop.name}*:\n\n`;
+
+    // Add Table Info if exists
+    if (tableId) {
+      message += `📍 *Mesa ${tableId}*\n\n`; // High visibility
+    }
 
     // Services section (for mixed orders)
     if (hasServices) {

@@ -18,6 +18,12 @@ function LoginForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [forceLogout, setForceLogout] = useState(false);
   const [showExpiredBanner, setShowExpiredBanner] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Evitar hydration mismatch - solo renderizar después de montar
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Phase 23: Show session expired banner
   useEffect(() => {
@@ -61,7 +67,8 @@ function LoginForm() {
     }
   };
 
-  if (isLoading) {
+  // Mostrar loading hasta que esté montado y auth haya cargado
+  if (!mounted || isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />

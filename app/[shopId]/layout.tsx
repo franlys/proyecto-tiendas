@@ -1,16 +1,56 @@
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { ThemeProvider, CartProvider, OrdersProvider } from "@/components/shared";
 import { FloatingCart, ShopLayoutClient } from "@/components/shop";
-import { MOCK_SHOPS } from "@/lib/constants";
+import { MOCK_SHOPS, DEFAULT_THEME, type ShopConfig } from "@/lib/constants";
 
 interface ShopLayoutProps {
   children: React.ReactNode;
   params: Promise<{ shopId: string }>;
 }
 
+// Helper para obtener tienda de múltiples fuentes
+async function getShopData(shopId: string): Promise<ShopConfig | null> {
+  // 1. Buscar en MOCK_SHOPS (tiendas demo/legacy)
+  const mockShop = MOCK_SHOPS[shopId];
+  if (mockShop) {
+    return mockShop;
+  }
+
+  // 2. Buscar en cookies (tiendas creadas dinámicamente desde el panel de agencia)
+  try {
+    const cookieStore = await cookies();
+    const managedShopsCookie = cookieStore.get("nexo-managed-shops");
+
+    if (managedShopsCookie?.value) {
+      const decodedValue = decodeURIComponent(managedShopsCookie.value);
+      const managedShops = JSON.parse(decodedValue);
+      const shop = managedShops.find((s: { slug: string }) => s.slug === shopId);
+
+      if (shop) {
+        // Convertir ManagedShop a ShopConfig
+        return {
+          id: shop.id,
+          name: shop.name,
+          slug: shop.slug,
+          description: shop.description || "",
+          theme: shop.theme || DEFAULT_THEME,
+          contact: shop.contact || {},
+          businessType: shop.businessType || (shop.category === "beauty" ? "beauty" : shop.category === "repair" ? "repair" : "retail"),
+          wholesaleEnabled: shop.wholesaleEnabled || false,
+        };
+      }
+    }
+  } catch (error) {
+    console.error("Error reading managed shops from cookie:", error);
+  }
+
+  return null;
+}
+
 export async function generateMetadata({ params }: ShopLayoutProps) {
   const { shopId } = await params;
-  const shop = MOCK_SHOPS[shopId];
+  const shop = await getShopData(shopId);
 
   if (!shop) {
     return {
@@ -52,8 +92,8 @@ export async function generateMetadata({ params }: ShopLayoutProps) {
 export default async function ShopLayout({ children, params }: ShopLayoutProps) {
   const { shopId } = await params;
 
-  // Simulate fetching shop data (hardcoded for Phase 1)
-  const shop = MOCK_SHOPS[shopId];
+  // Buscar tienda en múltiples fuentes (MOCK_SHOPS y cookies)
+  const shop = await getShopData(shopId);
 
   if (!shop) {
     notFound();

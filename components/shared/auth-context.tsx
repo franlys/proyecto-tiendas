@@ -10,6 +10,23 @@ import {
 } from "react";
 
 // ============================================
+// DEBUG LOGGING - SUPER ADMIN
+// ============================================
+const DEBUG_PREFIX = "🔐 [AUTH-DEBUG]";
+
+function debugLog(action: string, data?: unknown) {
+  console.log(`${DEBUG_PREFIX} ${action}`, data ?? "");
+}
+
+function debugWarn(action: string, data?: unknown) {
+  console.warn(`${DEBUG_PREFIX} ⚠️ ${action}`, data ?? "");
+}
+
+function debugError(action: string, data?: unknown) {
+  console.error(`${DEBUG_PREFIX} ❌ ${action}`, data ?? "");
+}
+
+// ============================================
 // ROLES DEL SISTEMA
 // ============================================
 // SUPER_ADMIN: Agencia - configura WhatsApp, gestiona todas las tiendas
@@ -242,22 +259,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Load session and shop configs from localStorage on init
   useEffect(() => {
+    debugLog("INIT - Loading session from localStorage");
+
     // Load shop session configs
     const storedSessions = localStorage.getItem(SHOP_SESSIONS_KEY);
     if (storedSessions) {
       try {
         setShopSessions({ ...DEFAULT_SHOP_SESSIONS, ...JSON.parse(storedSessions) });
+        debugLog("Shop sessions loaded", JSON.parse(storedSessions));
       } catch {
-        // Use defaults
+        debugWarn("Failed to parse shop sessions, using defaults");
       }
     }
 
     // Load auth session
     const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+    debugLog("Stored auth data found", { hasStoredAuth: !!stored });
+
     if (stored) {
       try {
         // First parse to get user info for timeout calculation
         const parsed = JSON.parse(stored);
+        debugLog("Parsed stored user", {
+          userId: parsed.id,
+          role: parsed.role,
+          name: parsed.name,
+          isSuperAdmin: parsed.role === "SUPER_ADMIN",
+        });
 
         // Check expiration based on user type
         const lastActivity = localStorage.getItem(ACTIVITY_STORAGE_KEY);
@@ -274,20 +302,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           }
 
+          debugLog("Session timeout check", {
+            elapsed: Math.round(elapsed / 1000) + "s",
+            timeout: Math.round(timeout / 1000) + "s",
+            expired: elapsed > timeout
+          });
+
           if (elapsed > timeout) {
+            debugWarn("SESSION EXPIRED - clearing");
             clearSession();
             setSessionExpired(true);
           } else {
+            debugLog("SESSION RESTORED ✅", {
+              role: parsed.role,
+              isSuperAdmin: parsed.role === "SUPER_ADMIN",
+            });
             setUser(parsed);
             updateActivity();
           }
         } else {
+          debugLog("No last activity, restoring session", { role: parsed.role });
           setUser(parsed);
           updateActivity();
         }
       } catch {
+        debugError("Failed to parse stored auth, removing");
         localStorage.removeItem(AUTH_STORAGE_KEY);
       }
+    } else {
+      debugLog("No stored session found - user needs to login");
     }
     setIsLoading(false);
   }, [clearSession, updateActivity]);
@@ -330,16 +373,75 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Admin/Owner login
   const login = async (username: string, password: string): Promise<boolean> => {
+    debugLog("LOGIN ATTEMPT", { username, passwordLength: password.length });
+    debugLog("Available users in DB", Object.keys(ADMIN_USERS_DB));
+
     await new Promise((resolve) => setTimeout(resolve, 500));
 
+    // 1. First check static ADMIN_USERS_DB
     const userRecord = ADMIN_USERS_DB[username.toLowerCase()];
+    debugLog("User lookup result", { found: !!userRecord, username: username.toLowerCase() });
+
     if (userRecord && userRecord.password === password) {
+      debugLog("LOGIN SUCCESS ✅", {
+        userId: userRecord.user.id,
+        role: userRecord.user.role,
+        name: userRecord.user.name,
+        isSuperAdmin: userRecord.user.role === "SUPER_ADMIN",
+        canConfigureWhatsApp: userRecord.user.role === "SUPER_ADMIN",
+      });
       setUser(userRecord.user);
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userRecord.user));
       updateActivity();
       setSessionExpired(false);
       return true;
     }
+
+    // 2. Check managed shops in localStorage (dynamic shop owners)
+    debugLog("Checking managed shops for dynamic login...");
+    try {
+      const storedShops = localStorage.getItem("nexo-managed-shops");
+      if (storedShops) {
+        const managedShops = JSON.parse(storedShops);
+        debugLog("Found managed shops", { count: managedShops.length });
+
+        const matchingShop = managedShops.find(
+          (shop: { ownerUsername?: string; ownerPassword?: string }) =>
+            shop.ownerUsername?.toLowerCase() === username.toLowerCase() &&
+            shop.ownerPassword === password
+        );
+
+        if (matchingShop) {
+          const dynamicUser: User = {
+            id: `shop-owner-${matchingShop.slug}`,
+            username: matchingShop.ownerUsername,
+            name: matchingShop.name,
+            role: "SHOP_OWNER",
+            shopId: matchingShop.slug,
+          };
+
+          debugLog("DYNAMIC SHOP OWNER LOGIN SUCCESS ✅", {
+            userId: dynamicUser.id,
+            role: dynamicUser.role,
+            shopId: dynamicUser.shopId,
+            shopName: matchingShop.name,
+          });
+
+          setUser(dynamicUser);
+          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(dynamicUser));
+          updateActivity();
+          setSessionExpired(false);
+          return true;
+        }
+      }
+    } catch (error) {
+      debugError("Error checking managed shops", error);
+    }
+
+    debugWarn("LOGIN FAILED", {
+      reason: !userRecord ? "Usuario no encontrado en DB ni en tiendas gestionadas" : "Contraseña incorrecta",
+      attemptedUsername: username.toLowerCase()
+    });
     return false;
   };
 
@@ -400,10 +502,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Only SUPER_ADMIN can configure WhatsApp
   const canConfigureWhatsApp = isSuperAdmin;
 
+  // Log permission state whenever user changes
+  useEffect(() => {
+    if (user) {
+      debugLog("PERMISSIONS STATE", {
+        user: user.name,
+        role: user.role,
+        isAuthenticated,
+        isSuperAdmin,
+        isShopOwner,
+        isStaff,
+        canConfigureWhatsApp,
+        shopId: user.shopId || "N/A (Super Admin tiene acceso a todas)",
+      });
+    }
+  }, [user, isAuthenticated, isSuperAdmin, isShopOwner, isStaff, canConfigureWhatsApp]);
+
   const canAccessShop = (shopId: string): boolean => {
-    if (!user) return false;
-    if (user.role === "SUPER_ADMIN") return true;
-    return user.shopId === shopId;
+    const hasAccess = !user ? false : user.role === "SUPER_ADMIN" ? true : user.shopId === shopId;
+    debugLog("canAccessShop check", { shopId, hasAccess, userRole: user?.role });
+    return hasAccess;
   };
 
   return (

@@ -54,6 +54,10 @@ interface CartContextValue {
   totalItems: number;
   totalPrice: number;
   totalDuration: number; // For services
+
+  // Phase 26: Restaurant Table Management
+  tableId: string | null;
+  setTableId: (id: string | null) => void;
 }
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
@@ -64,6 +68,7 @@ interface CartProviderProps {
 
 export function CartProvider({ children }: CartProviderProps) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [tableId, setTableId] = useState<string | null>(null);
 
   // Load from local storage on mount (Optional persistence)
   useEffect(() => {
@@ -245,6 +250,8 @@ export function CartProvider({ children }: CartProviderProps) {
         totalItems,
         totalPrice,
         totalDuration,
+        tableId,
+        setTableId,
       }}
     >
       {children}

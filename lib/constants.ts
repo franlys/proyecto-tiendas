@@ -51,18 +51,40 @@ export const BUSINESS_TYPE_CONFIG: Record<BusinessType, {
   },
 };
 
+export interface ShopSocialMedia {
+  instagram?: string;
+  facebook?: string;
+  tiktok?: string;
+  website?: string;
+}
+
+export interface ShopSchedule {
+  monday?: { open: string; close: string; closed?: boolean };
+  tuesday?: { open: string; close: string; closed?: boolean };
+  wednesday?: { open: string; close: string; closed?: boolean };
+  thursday?: { open: string; close: string; closed?: boolean };
+  friday?: { open: string; close: string; closed?: boolean };
+  saturday?: { open: string; close: string; closed?: boolean };
+  sunday?: { open: string; close: string; closed?: boolean };
+}
+
 export interface ShopConfig {
   id: string;
   name: string;
   slug: string;
   description: string;
   logo?: string;
+  banner?: string; // Cover/header image
+  slogan?: string; // Short tagline
   theme: ShopTheme;
   contact: {
     phone?: string;
     email?: string;
     address?: string;
+    city?: string;
   };
+  social?: ShopSocialMedia;
+  schedule?: ShopSchedule;
   // Phase 13: Business Type & Wholesale
   businessType?: BusinessType;
   wholesaleCode?: string;

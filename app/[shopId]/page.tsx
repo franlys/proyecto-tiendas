@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   useShop,
+  useCart,
   LoyaltyCard,
   ScrollReveal,
   StaggerContainer,
@@ -25,6 +26,7 @@ type TabType = "servicios" | "productos";
 
 export default function ShopHomePage() {
   const shop = useShop();
+  const { setTableId, tableId } = useCart();
   const params = useParams();
   const searchParams = useSearchParams();
   const shopId = params.shopId as string;
@@ -32,6 +34,18 @@ export default function ShopHomePage() {
   // Get initial tab from URL or default to "servicios"
   const initialTab = (searchParams.get("tab") as TabType) || "servicios";
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
+
+  // Table Detection Logic
+  const queryTable = searchParams.get("table");
+
+  useEffect(() => {
+    if (queryTable) {
+      setTableId(queryTable);
+    }
+  }, [queryTable, setTableId]);
+
+  // Use the one from context (persistent) or query (fresh)
+  const currentTable = tableId || queryTable;
 
   // Get services and products for this shop
   const services = MOCK_SERVICES[shopId] || [];
@@ -57,6 +71,17 @@ export default function ShopHomePage() {
 
   return (
     <div className="relative">
+      {/* Table Banner */}
+      {currentTable && (
+        <div className="fixed top-[70px] left-0 right-0 z-40 flex justify-center pointer-events-none">
+          <div className="bg-black/80 backdrop-blur-md border border-gold/30 text-gold px-6 py-2 rounded-full shadow-lg flex items-center gap-2 animate-bounce-slow">
+            <MapPin className="w-4 h-4 text-gold fill-gold/20" />
+            <span className="font-bold">Mesa {currentTable}</span>
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse ml-2" />
+          </div>
+        </div>
+      )}
+
       {/* Hero Section */}
       <SectionObserver id="hero" className="relative py-16 lg:py-24 overflow-hidden">
         <div className="container mx-auto px-4 relative z-10">

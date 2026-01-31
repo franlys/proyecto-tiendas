@@ -47,7 +47,7 @@ function generateDemoData() {
   return data;
 }
 
-function DashboardContent({ isSuperAdmin }: { isSuperAdmin: boolean }) {
+function DashboardContent({ isSuperAdmin, shop }: { isSuperAdmin: boolean; shop?: { slug: string; name: string } | null }) {
   const { getTodayStats, getLast7DaysStats, getTodayOrders, orders } = useOrders();
   const [isClient, setIsClient] = useState(false);
 
@@ -100,7 +100,7 @@ function DashboardContent({ isSuperAdmin }: { isSuperAdmin: boolean }) {
             {/* Daily Report */}
             <div>
               <DailyReportCard
-                shopName="Mi Tienda"
+                shopName={shop?.name || "Mi Tienda"}
                 orders={todayOrders}
                 totalSales={todayStats.totalSales}
                 totalOrders={todayStats.totalOrders}
@@ -135,7 +135,7 @@ function DashboardContent({ isSuperAdmin }: { isSuperAdmin: boolean }) {
         <h3 className="text-lg font-semibold text-white mb-4">Acciones Rápidas</h3>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Link
-            href="/estetica-lola"
+            href={`/${shop?.slug || "demo"}`}
             className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
           >
             <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
@@ -143,7 +143,7 @@ function DashboardContent({ isSuperAdmin }: { isSuperAdmin: boolean }) {
             </div>
             <div className="flex-1">
               <p className="text-white font-medium">Ver Tienda</p>
-              <p className="text-xs text-slate-400">Estética Lola</p>
+              <p className="text-xs text-slate-400">{shop?.name || "Mi Tienda"}</p>
             </div>
             <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
           </Link>
@@ -193,22 +193,37 @@ function DashboardContent({ isSuperAdmin }: { isSuperAdmin: boolean }) {
             </Link>
           )}
 
-          <button
-            onClick={() => {
-              // Demo: Add a fake order for testing
-              alert("💡 Tip: Ve a /estetica-lola, selecciona servicios y haz clic en 'Agendar' para ver datos reales aquí.");
-            }}
-            className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group text-left"
-          >
-            <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
-              <Plus className="w-5 h-5 text-green-400" />
-            </div>
-            <div className="flex-1">
-              <p className="text-white font-medium">Probar Sistema</p>
-              <p className="text-xs text-slate-400">Simular venta</p>
-            </div>
-            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
-          </button>
+          {!isSuperAdmin ? (
+            <Link
+              href="/admin/profile"
+              className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                <Settings className="w-5 h-5 text-purple-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-white font-medium">Mi Negocio</p>
+                <p className="text-xs text-slate-400">Logo, horarios, redes</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+            </Link>
+          ) : (
+            <button
+              onClick={() => {
+                alert(`💡 Tip: Ve a /${shop?.slug || "tu-tienda"}, selecciona servicios y haz clic en 'Agendar' para ver datos reales aquí.`);
+              }}
+              className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group text-left"
+            >
+              <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                <Plus className="w-5 h-5 text-green-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-white font-medium">Probar Sistema</p>
+                <p className="text-xs text-slate-400">Simular venta</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -297,6 +312,15 @@ function AdminDashboardWithSubscription() {
                   </Button>
                 </Link>
               )}
+              {/* Shop Profile for Shop Owners */}
+              {!isSuperAdmin && (
+                <Link href="/admin/profile">
+                  <Button variant="ghost" size="sm">
+                    <Store className="w-4 h-4" />
+                    Mi Negocio
+                  </Button>
+                </Link>
+              )}
               {/* Phase 21: Billing redirects based on role */}
               <Link href={isSuperAdmin ? "/agency" : "/admin/billing"}>
                 <Button variant="ghost" size="sm">
@@ -315,7 +339,7 @@ function AdminDashboardWithSubscription() {
 
       <main className="container mx-auto px-4 py-8">
         <OrdersProvider>
-          <DashboardContent isSuperAdmin={isSuperAdmin} />
+          <DashboardContent isSuperAdmin={isSuperAdmin} shop={shop} />
         </OrdersProvider>
       </main>
 

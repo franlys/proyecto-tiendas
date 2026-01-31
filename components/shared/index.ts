@@ -41,9 +41,11 @@ export {
 export {
   ShopsProvider,
   useShops,
+  DEFAULT_FEATURES,
   type ManagedShop,
   type SubscriptionStatus,
   type ShopCategory,
+  type FeatureId,
 } from "./shops-context";
 export { InventoryProvider, useInventory } from "./inventory-context";
 export {

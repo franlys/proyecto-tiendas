@@ -60,7 +60,7 @@ const BACKGROUND_OPTIONS: { id: BackgroundEffect; name: string; description: str
 ];
 
 export default function AdminSettingsPage() {
-  const { isSuperAdmin, isLoading: authLoading } = useAuth();
+  const { user, isSuperAdmin, isLoading: authLoading } = useAuth();
   const [config, setConfig] = useState<ShopConfig>({
     shopName: "Mi Tienda",
     primaryColor: "#F43F5E",
@@ -757,11 +757,11 @@ export default function AdminSettingsPage() {
               <p className="text-slate-400 text-sm mb-3">Acciones rápidas</p>
               <div className="space-y-2">
                 <a
-                  href="/estetica-lola"
+                  href={`/${user?.shopId || "demo"}`}
                   target="_blank"
                   className="block w-full px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm text-center transition-colors"
                 >
-                  Ver Tienda Demo →
+                  Ver Mi Tienda →
                 </a>
                 <a
                   href="/admin/promos"

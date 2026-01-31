@@ -3,6 +3,15 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+
+// ============================================
+// DEBUG LOGGING - AGENCY PAGE
+// ============================================
+const DEBUG_PREFIX = "🏢 [AGENCY-DEBUG]";
+
+function debugLog(action: string, data?: unknown) {
+  console.log(`${DEBUG_PREFIX} ${action}`, data ?? "");
+}
 import {
   Shield,
   Store,
@@ -408,9 +417,23 @@ function DeleteShopModal({
   if (!shop) return null;
 
   const handleDelete = () => {
+    debugLog("DELETE MODAL - Attempting delete", {
+      shopSlug: shop.slug,
+      shopName: shop.name,
+      confirmName,
+      matches: confirmName === shop.name,
+    });
+
     if (confirmName === shop.name) {
+      debugLog("DELETE MODAL - Confirmation matched, calling deleteShop");
       deleteShop(shop.slug);
+      debugLog("DELETE MODAL - deleteShop called, closing modal");
       onClose();
+    } else {
+      debugLog("DELETE MODAL - Confirmation did NOT match", {
+        expected: shop.name,
+        received: confirmName,
+      });
     }
   };
 
@@ -482,6 +505,7 @@ function PaymentModal({
 }) {
   const { registerPayment, updateSubscriptionStatus, updatePaymentLink } = useShops();
   const [paymentLink, setPaymentLink] = useState(shop?.paymentLink || "");
+  const [showLinkField, setShowLinkField] = useState(false);
 
   if (!shop) return null;
 
@@ -492,7 +516,11 @@ function PaymentModal({
 
   const handleSaveLink = () => {
     updatePaymentLink(shop.slug, paymentLink);
+    setShowLinkField(false);
   };
+
+  // Mostrar botón de confirmar pago si está en trial o past_due
+  const canConfirmPayment = shop.subscriptionStatus === "past_due" || shop.subscriptionStatus === "trial";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -531,44 +559,34 @@ function PaymentModal({
               {(SUBSCRIPTION_STATUS_CONFIG[shop.subscriptionStatus] || SUBSCRIPTION_STATUS_CONFIG.trial).label}
             </span>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center mb-2">
             <span className="text-slate-400">Monto mensual</span>
             <span className="text-white font-bold">${shop.monthlyPrice} MXN</span>
           </div>
-        </div>
-
-        {/* Payment Link */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-slate-300 mb-2">
-            Link de Pago (Stripe/MercadoPago)
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="url"
-              value={paymentLink}
-              onChange={(e) => setPaymentLink(e.target.value)}
-              placeholder="https://checkout.stripe.com/..."
-              className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-gold/50 text-sm"
-            />
-            <Button variant="outline" size="sm" onClick={handleSaveLink}>
-              <Check className="w-4 h-4" />
-            </Button>
-          </div>
+          {shop.lastPaymentDate && (
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-slate-500">Último pago</span>
+              <span className="text-slate-400">
+                {new Date(shop.lastPaymentDate).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Actions */}
         <div className="space-y-3">
-          {shop.subscriptionStatus === "past_due" && (
+          {/* Botón principal: Confirmar pago manual */}
+          {canConfirmPayment && (
             <div className="space-y-2">
               <Button
                 onClick={() => handleRegisterPayment()}
                 className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400"
               >
                 <DollarSign className="w-4 h-4 mr-2" />
-                Confirmar Pago (Efectivo/Transferencia)
+                {shop.subscriptionStatus === "trial" ? "Confirmar Primer Pago" : "Confirmar Pago Recibido"}
               </Button>
               <p className="text-xs text-center text-slate-400">
-                Al hacer clic, activas la tienda manualmente por 30 días.
+                Registra un pago en efectivo o transferencia. Activa la tienda por 30 días.
               </p>
             </div>
           )}
@@ -600,6 +618,30 @@ function PaymentModal({
             </Button>
           )}
 
+          {/* Link de pago opcional (colapsable) */}
+          <div className="pt-2 border-t border-white/10">
+            <button
+              onClick={() => setShowLinkField(!showLinkField)}
+              className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+            >
+              {showLinkField ? "▼ Ocultar link de pago online" : "▶ Agregar link de pago online (opcional)"}
+            </button>
+            {showLinkField && (
+              <div className="mt-3 flex gap-2">
+                <input
+                  type="url"
+                  value={paymentLink}
+                  onChange={(e) => setPaymentLink(e.target.value)}
+                  placeholder="https://checkout.stripe.com/..."
+                  className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-gold/50 text-sm"
+                />
+                <Button variant="outline" size="sm" onClick={handleSaveLink}>
+                  <Check className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+
           {shop.subscriptionStatus !== "canceled" && (
             <Button
               variant="ghost"
@@ -627,20 +669,54 @@ function AgencyContent() {
   const [selectedShopForPayment, setSelectedShopForPayment] = useState<ManagedShop | null>(null);
   const [shopToDelete, setShopToDelete] = useState<ManagedShop | null>(null);
 
+  // Debug: Log auth state on mount and changes
+  useEffect(() => {
+    debugLog("AUTH STATE CHECK", {
+      isLoading,
+      isAuthenticated,
+      isSuperAdmin,
+      user: user ? { name: user.name, role: user.role, id: user.id } : null,
+    });
+  }, [isLoading, isAuthenticated, isSuperAdmin, user]);
+
+  // Debug: Log shops when they change
+  useEffect(() => {
+    debugLog("SHOPS LOADED", {
+      count: shops.length,
+      shops: shops.map(s => ({ slug: s.slug, name: s.name, isActive: s.isActive })),
+    });
+  }, [shops]);
+
   // Proteger ruta
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated) {
+        debugLog("REDIRECT - Not authenticated, going to /login");
         router.push("/login");
       } else if (!isSuperAdmin) {
+        debugLog("REDIRECT - Not super admin, going to /admin", { role: user?.role });
         router.push("/admin");
+      } else {
+        debugLog("ACCESS GRANTED ✅ - Super Admin verified");
       }
     }
-  }, [isAuthenticated, isSuperAdmin, isLoading, router]);
+  }, [isAuthenticated, isSuperAdmin, isLoading, router, user?.role]);
 
   const handleLogout = () => {
+    debugLog("LOGOUT - User logging out", { user: user?.name });
     logout();
     router.push("/login");
+  };
+
+  const handleDeleteClick = (shop: ManagedShop) => {
+    debugLog("DELETE CLICK - Opening delete modal", { shopSlug: shop.slug, shopName: shop.name });
+    setShopToDelete(shop);
+  };
+
+  const handleCreateShop = (data: { name: string; slug: string; category: ShopCategory; description: string; phone: string; wholesale: boolean }) => {
+    debugLog("CREATE SHOP - Form submitted", data);
+    const newShop = createShop(data);
+    debugLog("CREATE SHOP - Result", { success: !!newShop, shopId: newShop?.id });
   };
 
   if (isLoading || !isAuthenticated || !isSuperAdmin) {
@@ -812,7 +888,7 @@ function AgencyContent() {
                     key={shop.id}
                     shop={shop}
                     onPaymentAction={setSelectedShopForPayment}
-                    onDeleteClick={setShopToDelete}
+                    onDeleteClick={handleDeleteClick}
                   />
                 ))}
               </tbody>
@@ -835,7 +911,7 @@ function AgencyContent() {
       <CreateShopModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        onCreate={createShop}
+        onCreate={handleCreateShop}
       />
 
       {/* Payment Modal */}
