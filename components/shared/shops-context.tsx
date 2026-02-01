@@ -5,6 +5,7 @@ import {
   useContext,
   useState,
   useEffect,
+  useCallback,
   type ReactNode,
 } from "react";
 import { MOCK_SHOPS, type ShopConfig, type ShopTheme, type ShopSocialMedia, type ShopSchedule, type ShopBackground, DEFAULT_THEME } from "@/lib/constants";
@@ -24,6 +25,62 @@ function debugWarn(action: string, data?: unknown) {
 
 function debugError(action: string, data?: unknown) {
   console.error(`${DEBUG_PREFIX} ❌ ${action}`, data ?? "");
+}
+
+// ============================================
+// API HELPER FUNCTIONS
+// ============================================
+const API_BASE = "/api/admin/shops";
+
+async function getAuthToken(): Promise<string | null> {
+  // Check if we have an authenticated session
+  const authData = localStorage.getItem("nexo-auth");
+  if (!authData) return null;
+
+  try {
+    const user = JSON.parse(authData);
+    // In development, create a dev token
+    if (user.role === "SUPER_ADMIN") {
+      return `dev-admin-${user.email || user.username}`;
+    } else if (user.role === "SHOP_OWNER" && user.shopId) {
+      return `dev-owner-${user.shopId}`;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+async function apiRequest<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<{ data?: T; error?: string }> {
+  try {
+    const token = await getAuthToken();
+    if (!token) {
+      return { error: "No authentication token" };
+    }
+
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+        ...options.headers,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.error || `Error ${response.status}` };
+    }
+
+    return { data };
+  } catch (error) {
+    debugError("API request failed", error);
+    return { error: error instanceof Error ? error.message : "API request failed" };
+  }
 }
 
 export type SubscriptionStatus = "active" | "past_due" | "canceled" | "trial";
@@ -147,26 +204,67 @@ function initializeShops(): ManagedShop[] {
 export function ShopsProvider({ children }: { children: ReactNode }) {
   const [shops, setShops] = useState<ManagedShop[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [useFirestore, setUseFirestore] = useState(false);
 
-  // Cargar tiendas desde localStorage
+  // Función para cargar tiendas desde la API de Firestore
+  const loadFromFirestore = useCallback(async (): Promise<ManagedShop[] | null> => {
+    debugLog("Attempting to load shops from Firestore API...");
+    const { data, error } = await apiRequest<{ shops: ManagedShop[] }>("");
+
+    if (error) {
+      debugWarn("Firestore API error, falling back to localStorage", { error });
+      return null;
+    }
+
+    if (data?.shops) {
+      debugLog("Shops loaded from Firestore ✅", {
+        count: data.shops.length,
+        shops: data.shops.map(s => s.slug)
+      });
+      setUseFirestore(true);
+      return data.shops;
+    }
+
+    return null;
+  }, []);
+
+  // Cargar tiendas - intenta Firestore primero, luego localStorage
   useEffect(() => {
-    debugLog("INIT - Loading shops from localStorage");
-    const stored = localStorage.getItem(SHOPS_STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        debugLog("Shops loaded from storage", { count: parsed.length, shops: parsed.map((s: ManagedShop) => s.slug) });
-        setShops(parsed);
-      } catch {
-        debugWarn("Failed to parse shops, initializing defaults");
+    async function loadShops() {
+      debugLog("INIT - Loading shops...");
+
+      // Intentar cargar desde Firestore API
+      const firestoreShops = await loadFromFirestore();
+
+      if (firestoreShops && firestoreShops.length > 0) {
+        setShops(firestoreShops);
+        // También sincronizar con localStorage como cache
+        localStorage.setItem(SHOPS_STORAGE_KEY, JSON.stringify(firestoreShops));
+        setIsInitialized(true);
+        return;
+      }
+
+      // Fallback a localStorage
+      debugLog("Loading from localStorage as fallback...");
+      const stored = localStorage.getItem(SHOPS_STORAGE_KEY);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          debugLog("Shops loaded from localStorage", { count: parsed.length, shops: parsed.map((s: ManagedShop) => s.slug) });
+          setShops(parsed);
+        } catch {
+          debugWarn("Failed to parse shops, initializing defaults");
+          setShops(initializeShops());
+        }
+      } else {
+        debugLog("No stored shops, initializing defaults");
         setShops(initializeShops());
       }
-    } else {
-      debugLog("No stored shops, initializing defaults");
-      setShops(initializeShops());
+      setIsInitialized(true);
     }
-    setIsInitialized(true);
-  }, []);
+
+    loadShops();
+  }, [loadFromFirestore]);
 
   // Guardar en localStorage Y en cookies cuando cambian
   useEffect(() => {
@@ -233,6 +331,31 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
       ownerPassword: newShop.ownerPassword,
     });
 
+    // También crear en Firestore si está disponible
+    if (useFirestore) {
+      apiRequest<{ shop: ManagedShop }>("", {
+        method: "POST",
+        body: JSON.stringify({
+          name: data.name,
+          slug: data.slug,
+          category: data.category,
+          description: data.description,
+          phone: data.phone,
+          wholesaleEnabled: data.wholesale,
+        }),
+      }).then(({ data: responseData, error }) => {
+        if (error) {
+          debugWarn("Failed to create shop in Firestore", { error });
+        } else if (responseData?.shop) {
+          debugLog("Shop created in Firestore ✅", { shopId: responseData.shop.id });
+          // Actualizar con el ID real de Firestore
+          setShops((prev) =>
+            prev.map((s) => (s.slug === newShop.slug ? { ...s, id: responseData.shop.id } : s))
+          );
+        }
+      });
+    }
+
     setShops((prev) => {
       debugLog("CREATE SHOP - Adding to state", { previousCount: prev.length });
       return [...prev, newShop];
@@ -244,6 +367,24 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
 
   const updateShop = (shopId: string, data: UpdateShopData) => {
     debugLog("UPDATE SHOP", { shopId, data });
+
+    // Actualizar en Firestore si está disponible
+    if (useFirestore) {
+      const shop = shops.find((s) => s.slug === shopId);
+      if (shop?.id) {
+        apiRequest(`/${shop.id}`, {
+          method: "PUT",
+          body: JSON.stringify(data),
+        }).then(({ error }) => {
+          if (error) {
+            debugWarn("Failed to update shop in Firestore", { error });
+          } else {
+            debugLog("Shop updated in Firestore ✅", { shopId });
+          }
+        });
+      }
+    }
+
     setShops((prev) =>
       prev.map((shop) => {
         if (shop.slug === shopId) {
@@ -296,6 +437,23 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
 
   const toggleShopStatus = (shopId: string) => {
     debugLog("TOGGLE SHOP STATUS", { shopId });
+
+    // Sincronizar con Firestore si está disponible
+    if (useFirestore) {
+      const shop = shops.find((s) => s.slug === shopId);
+      if (shop?.id) {
+        apiRequest(`/${shop.id}/toggle`, {
+          method: "POST",
+        }).then(({ error }) => {
+          if (error) {
+            debugWarn("Failed to toggle shop status in Firestore", { error });
+          } else {
+            debugLog("Shop status toggled in Firestore ✅", { shopId });
+          }
+        });
+      }
+    }
+
     setShops((prev) =>
       prev.map((shop) => {
         if (shop.slug === shopId) {
@@ -351,6 +509,19 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
       return;
     }
     debugLog("DELETE SHOP - Found shop to delete", { name: shopToDelete.name, slug: shopToDelete.slug });
+
+    // Eliminar en Firestore si está disponible
+    if (useFirestore && shopToDelete.id) {
+      apiRequest(`/${shopToDelete.id}`, {
+        method: "DELETE",
+      }).then(({ error }) => {
+        if (error) {
+          debugWarn("Failed to delete shop in Firestore", { error });
+        } else {
+          debugLog("Shop deleted in Firestore ✅", { shopId });
+        }
+      });
+    }
 
     setShops((prev) => {
       const filtered = prev.filter((shop) => shop.slug !== shopId);

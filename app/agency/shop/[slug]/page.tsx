@@ -411,14 +411,37 @@ function ShopDetailContent() {
 
 
     useEffect(() => {
-        if (!authLoading && !isSuperAdmin) {
+        // DEBUG: Log state for troubleshooting
+        console.log("🔧 [SHOP-CONFIG]", {
+            authLoading,
+            isSuperAdmin,
+            shopsCount: shops.length,
+            slug: params.slug,
+        });
+
+        // Wait for auth to finish loading before making any decisions
+        if (authLoading) {
+            console.log("🔧 [SHOP-CONFIG] Waiting for auth to load...");
+            return;
+        }
+
+        // Only redirect to login if auth is definitely loaded and user is not super admin
+        if (!isSuperAdmin) {
+            console.log("🔧 [SHOP-CONFIG] Not super admin, redirecting to login");
             router.push("/login");
             return;
         }
 
-        if (shops.length > 0 && params.slug) {
+        // Wait for shops to be loaded before checking if shop exists
+        if (shops.length === 0) {
+            console.log("🔧 [SHOP-CONFIG] Waiting for shops to load...");
+            return;
+        }
+
+        if (params.slug) {
             const foundShop = getShop(params.slug as string);
             if (foundShop) {
+                console.log("🔧 [SHOP-CONFIG] Shop found ✅", foundShop.slug);
                 setShop(foundShop);
                 setName(foundShop.name);
                 setCategory(foundShop.category || "beauty");
@@ -448,6 +471,7 @@ function ShopDetailContent() {
                 setContactBackground(foundShop.background?.contact || "");
                 setLoading(false);
             } else {
+                console.log("🔧 [SHOP-CONFIG] Shop not found, redirecting to agency", { slug: params.slug });
                 router.push("/agency");
             }
         }
