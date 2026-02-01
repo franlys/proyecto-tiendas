@@ -1,11 +1,5 @@
 {
   "framework": "nextjs",
-  "rewrites": [
-    {
-      "source": "/:path*",
-      "destination": "/"
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",
