@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkOrderAssignmentResponse } from "@/lib/handlers/order-assignment.handler";
+import { checkBookingConfirmationResponse } from "@/lib/handlers/booking-confirmation.handler";
+import { sendTextMessage, getInstanceName } from "@/lib/evolution";
 
 /**
  * Webhook para recibir eventos de Evolution API
@@ -119,6 +122,48 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
 
   console.log(`[${instance}] New message from ${pushName || phone}: ${text}`);
 
+  // ============================================================
+  // PASO 1: Verificar si es respuesta a asignación de pedido
+  // ============================================================
+  try {
+    const assignmentResponse = await checkOrderAssignmentResponse(instance, phone, text);
+
+    if (assignmentResponse.handled) {
+      console.log(`[${instance}] Order assignment response: ${assignmentResponse.action}`);
+
+      // Enviar mensaje de respuesta si existe
+      if (assignmentResponse.message) {
+        await sendTextMessage(instance, phone, assignmentResponse.message);
+      }
+      return; // No continuar con auto-reply
+    }
+  } catch (error) {
+    console.error(`[${instance}] Error checking order assignment:`, error);
+  }
+
+  // ============================================================
+  // PASO 2: Verificar si es respuesta a confirmación de cita
+  // ============================================================
+  try {
+    const bookingResponse = await checkBookingConfirmationResponse(instance, phone, text);
+
+    if (bookingResponse.handled) {
+      console.log(`[${instance}] Booking confirmation response: ${bookingResponse.action}`);
+
+      // Enviar mensaje de respuesta si existe
+      if (bookingResponse.responseMessage) {
+        await sendTextMessage(instance, phone, bookingResponse.responseMessage);
+      }
+      return; // No continuar con auto-reply
+    }
+  } catch (error) {
+    console.error(`[${instance}] Error checking booking confirmation:`, error);
+  }
+
+  // ============================================================
+  // PASO 3: Auto-reply normal (si no fue manejado arriba)
+  // ============================================================
+
   // Check auto-reply cooldown
   const lastContact = recentContacts.get(phone);
   const now = Date.now();
@@ -139,21 +184,17 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
   // Check business hours if configured
   if (config.businessHoursOnly && !isBusinessHours(config.startHour, config.endHour)) {
     console.log(`[${instance}] Outside business hours`);
-    // Could send a different "we're closed" message here
     return;
   }
 
   // Send auto-reply
   try {
-    // In production, this would call Evolution API
-    // await sendTextMessage(instance, phone, config.welcomeMessage);
+    await sendTextMessage(instance, phone, config.welcomeMessage);
 
     // Update cooldown
     recentContacts.set(phone, now);
 
     console.log(`[${instance}] Auto-reply sent to ${phone}`);
-
-    // Log for analytics (would save to DB)
     console.log(`[Analytics] Auto-reply sent - instance: ${instance}, phone: ${phone}, name: ${pushName}`);
   } catch (error) {
     console.error(`[${instance}] Failed to send auto-reply:`, error);
