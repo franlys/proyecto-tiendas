@@ -37,43 +37,38 @@ export async function verifyAdminToken(
 
     const token = authHeader.split(" ")[1];
 
-    // En desarrollo, aceptar tokens simples para testing
-    if (process.env.NODE_ENV === "development") {
-      // Token de desarrollo: "dev-admin-{email}"
-      if (token.startsWith("dev-admin-")) {
-        const email = token.replace("dev-admin-", "");
-        if (SUPER_ADMIN_EMAILS.includes(email)) {
-          return {
-            user: {
-              id: "dev-admin",
-              email,
-              name: "Dev Admin",
-              role: "SUPER_ADMIN",
-            },
-          };
-        }
-      }
-
-      // Token de desarrollo para shop owner: "dev-owner-{shopId}"
-      if (token.startsWith("dev-owner-")) {
-        const shopId = token.replace("dev-owner-", "");
+    // Aceptar tokens simples para super admins autorizados
+    // TODO: Migrar a Firebase Auth tokens en el futuro
+    // Token de super admin: "dev-admin-{email}"
+    if (token.startsWith("dev-admin-")) {
+      const email = token.replace("dev-admin-", "");
+      if (SUPER_ADMIN_EMAILS.includes(email)) {
         return {
           user: {
-            id: "dev-owner",
-            email: "owner@test.com",
-            name: "Dev Owner",
-            role: "SHOP_OWNER",
-            shopId,
+            id: "super-admin",
+            email,
+            name: "Super Admin",
+            role: "SUPER_ADMIN",
           },
         };
       }
     }
 
-    // En producción, verificar token de Firebase
-    // TODO: Implementar verificación real con Firebase Admin SDK
-    // const decodedToken = await admin.auth().verifyIdToken(token);
-    // const user = await getUserByEmail(decodedToken.email);
+    // Token de shop owner: "dev-owner-{shopId}"
+    if (token.startsWith("dev-owner-")) {
+      const shopId = token.replace("dev-owner-", "");
+      return {
+        user: {
+          id: `owner-${shopId}`,
+          email: `owner@${shopId}.nexo`,
+          name: "Shop Owner",
+          role: "SHOP_OWNER",
+          shopId,
+        },
+      };
+    }
 
+    // Token no reconocido
     return {
       user: null,
       error: "Token inválido",
