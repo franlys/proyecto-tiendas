@@ -50,6 +50,7 @@ import {
     STAFF_ROLES,
 } from "@/components/shared";
 import { Button } from "@/components/ui";
+import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
 
 // Mapeo de categorías para mostrar labels correctos
 const CATEGORY_OPTIONS: { value: ShopCategory; label: string }[] = [
@@ -744,54 +745,27 @@ function ShopDetailContent() {
                                     </h3>
 
                                     {/* Logo */}
-                                    <div className="space-y-3">
-                                        <label className="block text-sm font-medium text-slate-300">
-                                            Logo de la Tienda
-                                        </label>
-                                        <div className="flex gap-4 items-start">
-                                            <div className="w-24 h-24 rounded-xl bg-black/30 border border-white/10 flex items-center justify-center overflow-hidden">
-                                                {logo ? (
-                                                    <img src={logo} alt="Logo" className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <Store className="w-10 h-10 text-slate-600" />
-                                                )}
-                                            </div>
-                                            <div className="flex-1 space-y-2">
-                                                <input
-                                                    type="text"
-                                                    value={logo}
-                                                    onChange={(e) => setLogo(e.target.value)}
-                                                    placeholder="URL del logo (ej: https://...)"
-                                                    className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white text-sm"
-                                                />
-                                                <p className="text-xs text-slate-500">
-                                                    Sube tu imagen a un servicio como Imgur o Cloudinary y pega la URL aquí
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <FirebaseImageUpload
+                                            value={logo}
+                                            onChange={setLogo}
+                                            folder="shops/logos"
+                                            shopId={shop?.slug || "temp"}
+                                            label="Logo de la Tienda"
+                                            aspectRatio="square"
+                                            maxSizeMB={2}
+                                        />
 
-                                    {/* Banner */}
-                                    <div className="space-y-3">
-                                        <label className="block text-sm font-medium text-slate-300">
-                                            Imagen de Portada / Banner
-                                        </label>
-                                        <div className="space-y-2">
-                                            <div className="w-full h-32 rounded-xl bg-black/30 border border-white/10 flex items-center justify-center overflow-hidden">
-                                                {banner ? (
-                                                    <img src={banner} alt="Banner" className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <Image className="w-10 h-10 text-slate-600" />
-                                                )}
-                                            </div>
-                                            <input
-                                                type="text"
-                                                value={banner}
-                                                onChange={(e) => setBanner(e.target.value)}
-                                                placeholder="URL del banner (ej: https://...)"
-                                                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white text-sm"
-                                            />
-                                        </div>
+                                        {/* Banner */}
+                                        <FirebaseImageUpload
+                                            value={banner}
+                                            onChange={setBanner}
+                                            folder="shops/banners"
+                                            shopId={shop?.slug || "temp"}
+                                            label="Imagen de Portada / Banner"
+                                            aspectRatio="banner"
+                                            maxSizeMB={5}
+                                        />
                                     </div>
                                 </div>
 
