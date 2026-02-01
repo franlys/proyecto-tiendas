@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkOrderAssignmentResponse } from "@/lib/handlers/order-assignment.handler";
 import { checkBookingConfirmationResponse } from "@/lib/handlers/booking-confirmation.handler";
+import { checkRentalConfirmationResponse } from "@/lib/handlers/rental-confirmation.handler";
 import { sendTextMessage, getInstanceName } from "@/lib/evolution";
 
 /**
@@ -161,7 +162,26 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
   }
 
   // ============================================================
-  // PASO 3: Auto-reply normal (si no fue manejado arriba)
+  // PASO 3: Verificar si es respuesta a confirmación de renta
+  // ============================================================
+  try {
+    const rentalResponse = await checkRentalConfirmationResponse(instance, phone, text);
+
+    if (rentalResponse.handled) {
+      console.log(`[${instance}] Rental confirmation response: ${rentalResponse.action}`);
+
+      // Enviar mensaje de respuesta si existe
+      if (rentalResponse.responseMessage) {
+        await sendTextMessage(instance, phone, rentalResponse.responseMessage);
+      }
+      return; // No continuar con auto-reply
+    }
+  } catch (error) {
+    console.error(`[${instance}] Error checking rental confirmation:`, error);
+  }
+
+  // ============================================================
+  // PASO 4: Auto-reply normal (si no fue manejado arriba)
   // ============================================================
 
   // Check auto-reply cooldown

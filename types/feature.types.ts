@@ -8,6 +8,7 @@ export type FeatureId =
   | "orders"
   | "kanban"
   | "whatsappIntegration"
+  | "dispatch"
   // Clientes
   | "crm"
   | "clientHistory"
@@ -19,6 +20,16 @@ export type FeatureId =
   // Staff
   | "staffManagement"
   | "staffCommissions"
+  // Restaurante
+  | "tables"
+  | "waiterPanel"
+  | "kitchenDisplay"
+  // Rent-a-Car
+  | "vehicles"
+  | "rentals"
+  | "rentalCalendar"
+  // Servicios
+  | "bookings"
   // Avanzado
   | "analytics"
   | "multiLocation"
@@ -31,6 +42,9 @@ export type FeatureCategory =
   | "clients"
   | "marketing"
   | "staff"
+  | "restaurant"
+  | "rentcar"
+  | "services"
   | "advanced";
 
 // Definición de un feature
@@ -150,6 +164,70 @@ export const SYSTEM_FEATURES: Record<FeatureId, FeatureDefinition> = {
     description: "Cálculo automático de comisiones",
     category: "staff",
     icon: "DollarSign",
+  },
+
+  // Ventas - Despacho
+  dispatch: {
+    id: "dispatch",
+    name: "Despacho de Pedidos",
+    description: "Panel de despacho conectado al inventario",
+    category: "sales",
+    icon: "Truck",
+  },
+
+  // Restaurante
+  tables: {
+    id: "tables",
+    name: "Gestión de Mesas",
+    description: "Control de mesas y QR codes",
+    category: "restaurant",
+    icon: "LayoutGrid",
+  },
+  waiterPanel: {
+    id: "waiterPanel",
+    name: "Panel de Meseros",
+    description: "Toma de pedidos y servicio en mesa",
+    category: "restaurant",
+    icon: "ClipboardList",
+  },
+  kitchenDisplay: {
+    id: "kitchenDisplay",
+    name: "Display de Cocina",
+    description: "Pantalla para órdenes en cocina",
+    category: "restaurant",
+    icon: "MonitorPlay",
+  },
+
+  // Rent-a-Car
+  vehicles: {
+    id: "vehicles",
+    name: "Gestión de Vehículos",
+    description: "Flota de vehículos para renta",
+    category: "rentcar",
+    icon: "Car",
+  },
+  rentals: {
+    id: "rentals",
+    name: "Gestión de Rentas",
+    description: "Reservaciones y entregas de vehículos",
+    category: "rentcar",
+    icon: "Key",
+  },
+  rentalCalendar: {
+    id: "rentalCalendar",
+    name: "Calendario de Disponibilidad",
+    description: "Vista de disponibilidad por vehículo",
+    category: "rentcar",
+    icon: "CalendarDays",
+  },
+
+  // Servicios
+  bookings: {
+    id: "bookings",
+    name: "Reservaciones",
+    description: "Sistema de citas y reservaciones",
+    category: "services",
+    icon: "Calendar",
   },
 
   // Avanzado

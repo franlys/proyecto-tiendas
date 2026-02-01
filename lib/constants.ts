@@ -8,13 +8,15 @@ export interface ShopTheme {
   style: "premium-dark" | "elegant-light" | "modern-minimal";
 }
 
-// Business Types for Phase 13
-export type BusinessType = "beauty" | "retail" | "repair";
+// Business Types for Phase 13+
+export type BusinessType = "beauty" | "retail" | "repair" | "restaurant" | "rentcar";
 
 export const BUSINESS_TYPE_LABELS: Record<BusinessType, string> = {
   beauty: "Belleza & Servicios",
   retail: "Tienda / Retail",
   repair: "Taller / Reparación",
+  restaurant: "Restaurante / Bar",
+  rentcar: "Rent-a-Car",
 };
 
 export const BUSINESS_TYPE_CONFIG: Record<BusinessType, {
@@ -22,6 +24,9 @@ export const BUSINESS_TYPE_CONFIG: Record<BusinessType, {
   icon: string;
   showBooking: boolean;
   showRepairTracking: boolean;
+  showRentals: boolean;
+  showTables: boolean;
+  showWaiterPanel: boolean;
   ctaText: string;
   servicesLabel: string;
 }> = {
@@ -30,6 +35,9 @@ export const BUSINESS_TYPE_CONFIG: Record<BusinessType, {
     icon: "✨",
     showBooking: true,
     showRepairTracking: false,
+    showRentals: false,
+    showTables: false,
+    showWaiterPanel: false,
     ctaText: "Agendar Cita",
     servicesLabel: "Servicios",
   },
@@ -38,6 +46,9 @@ export const BUSINESS_TYPE_CONFIG: Record<BusinessType, {
     icon: "🛍️",
     showBooking: false,
     showRepairTracking: false,
+    showRentals: false,
+    showTables: false,
+    showWaiterPanel: false,
     ctaText: "Comprar por WhatsApp",
     servicesLabel: "Catálogo",
   },
@@ -46,8 +57,33 @@ export const BUSINESS_TYPE_CONFIG: Record<BusinessType, {
     icon: "🔧",
     showBooking: true,
     showRepairTracking: true,
+    showRentals: false,
+    showTables: false,
+    showWaiterPanel: false,
     ctaText: "Solicitar Reparación",
     servicesLabel: "Servicios",
+  },
+  restaurant: {
+    label: "Restaurante / Bar",
+    icon: "🍽️",
+    showBooking: false,
+    showRepairTracking: false,
+    showRentals: false,
+    showTables: true,
+    showWaiterPanel: true,
+    ctaText: "Ver Menú",
+    servicesLabel: "Menú",
+  },
+  rentcar: {
+    label: "Rent-a-Car",
+    icon: "🚗",
+    showBooking: false,
+    showRepairTracking: false,
+    showRentals: true,
+    showTables: false,
+    showWaiterPanel: false,
+    ctaText: "Reservar Vehículo",
+    servicesLabel: "Vehículos",
   },
 };
 

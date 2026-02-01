@@ -14,6 +14,7 @@ export interface OrderItem {
   id: string;
   name: string;
   price: number;
+  quantity?: number; // Cantidad (default 1)
 }
 
 export interface Order {
