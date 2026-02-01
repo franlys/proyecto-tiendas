@@ -15,6 +15,12 @@ const STATIC_ROUTES = [
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Forzar que /agency/shop/* se resuelva correctamente
+  if (pathname.startsWith("/agency/shop/")) {
+    // Rewrite explícito para asegurar que la ruta se resuelva
+    return NextResponse.rewrite(new URL(pathname, request.url));
+  }
+
   // Si la ruta comienza con una ruta estática, dejar pasar sin modificar
   for (const route of STATIC_ROUTES) {
     if (pathname.startsWith(route)) {
