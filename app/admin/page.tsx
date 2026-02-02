@@ -20,6 +20,7 @@ import {
 import { OrdersProvider, useOrders, useAuth, ShopsProvider, useShops, AgencyProvider } from "@/components/shared";
 import { DashboardKPIs, SalesChart, SubscriptionLock, SupportWidget, AgencyContactCard } from "@/components/admin";
 import { DailyReportCard } from "@/components/admin";
+import { DatabaseSeeder } from "@/components/admin/database-seeder";
 import { Button } from "@/components/ui";
 
 // Demo data generator for when there's no real data
@@ -113,21 +114,25 @@ function DashboardContent({ isSuperAdmin, shop }: { isSuperAdmin: boolean; shop?
         </>
       ) : (
         /* Super Admin sees technical maintenance view */
-        <div className="glass-panel rounded-2xl p-8 text-center border border-cyan-500/20">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-cyan-500/20 flex items-center justify-center">
-            <Shield className="w-8 h-8 text-cyan-400" />
+        <div className="space-y-6">
+          <div className="glass-panel rounded-2xl p-8 text-center border border-cyan-500/20">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-cyan-500/20 flex items-center justify-center">
+              <Shield className="w-8 h-8 text-cyan-400" />
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">Vista de Mantenimiento</h2>
+            <p className="text-slate-400 mb-6">
+              Como administrador de agencia, los reportes financieros individuales de cada tienda
+              son privados. Accede al panel de Agencia para ver el estado de suscripciones.
+            </p>
+            <Link href="/agency">
+              <Button>
+                <Shield className="w-4 h-4 mr-2" />
+                Ir al Panel de Agencia
+              </Button>
+            </Link>
           </div>
-          <h2 className="text-xl font-bold text-white mb-2">Vista de Mantenimiento</h2>
-          <p className="text-slate-400 mb-6">
-            Como administrador de agencia, los reportes financieros individuales de cada tienda
-            son privados. Accede al panel de Agencia para ver el estado de suscripciones.
-          </p>
-          <Link href="/agency">
-            <Button>
-              <Shield className="w-4 h-4 mr-2" />
-              Ir al Panel de Agencia
-            </Button>
-          </Link>
+
+          <DatabaseSeeder />
         </div>
       )}
 

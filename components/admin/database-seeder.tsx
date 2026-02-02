@@ -37,7 +37,7 @@ export function DatabaseSeeder() {
                         createdAt: new Date().toISOString(),
                         updatedAt: new Date().toISOString(),
                         // Ensure essential fields exist for queries
-                        subscriptionStatus: shopConfig.subscriptionStatus || "active",
+                        subscriptionStatus: "active",
                         isDemo: true,
                     }, { merge: true });
 
@@ -96,7 +96,7 @@ export function DatabaseSeeder() {
 
                         {message && (
                             <div className={`text-sm p-3 rounded-lg flex items-center gap-2 ${status === "success" ? "bg-green-500/10 text-green-400" :
-                                    status === "error" ? "bg-red-500/10 text-red-400" : "bg-slate-800 text-slate-300"
+                                status === "error" ? "bg-red-500/10 text-red-400" : "bg-slate-800 text-slate-300"
                                 }`}>
                                 {status === "success" && <CheckCircle className="w-4 h-4" />}
                                 {status === "error" && <AlertTriangle className="w-4 h-4" />}
