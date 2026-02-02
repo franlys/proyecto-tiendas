@@ -54,10 +54,11 @@ import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
 
 // Mapeo de categorías para mostrar labels correctos
 const CATEGORY_OPTIONS: { value: ShopCategory; label: string }[] = [
-    { value: "retail", label: "Retail / Tecnología / Tienda" },
-    { value: "beauty", label: "Belleza / Spa" },
-    { value: "repair", label: "Taller / Reparación" },
-    { value: "restaurant", label: "Restaurante" },
+    { value: "retail", label: "Retail / Tienda / Tecnología" },
+    { value: "repair", label: "Servicio Técnico & Ventas" },
+    { value: "beauty", label: "Belleza / Spa / Citas" },
+    { value: "restaurant", label: "Restaurante / Bar" },
+    { value: "rentcar", label: "Rent-a-Car / Alquiler" },
 ];
 
 // Mapeo de roles de staff

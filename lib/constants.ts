@@ -53,15 +53,15 @@ export const BUSINESS_TYPE_CONFIG: Record<BusinessType, {
     servicesLabel: "Catálogo",
   },
   repair: {
-    label: "Taller / Reparación",
+    label: "Servicio Técnico & Ventas", // Changed from "Taller / Reparación"
     icon: "🔧",
     showBooking: true,
     showRepairTracking: true,
     showRentals: false,
     showTables: false,
     showWaiterPanel: false,
-    ctaText: "Solicitar Reparación",
-    servicesLabel: "Servicios",
+    ctaText: "Agendar Servicio", // More generic than "Solicitar Reparación"
+    servicesLabel: "Catálogo & Servicios", // Implies both products and services
   },
   restaurant: {
     label: "Restaurante / Bar",
@@ -75,7 +75,7 @@ export const BUSINESS_TYPE_CONFIG: Record<BusinessType, {
     servicesLabel: "Menú",
   },
   rentcar: {
-    label: "Rent-a-Car",
+    label: "Rent-a-Car / Alquiler",
     icon: "🚗",
     showBooking: false,
     showRepairTracking: false,
@@ -83,7 +83,7 @@ export const BUSINESS_TYPE_CONFIG: Record<BusinessType, {
     showTables: false,
     showWaiterPanel: false,
     ctaText: "Reservar Vehículo",
-    servicesLabel: "Vehículos",
+    servicesLabel: "Flota de Vehículos",
   },
 };
 
