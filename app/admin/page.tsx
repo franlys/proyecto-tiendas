@@ -15,6 +15,7 @@ import {
   Users,
   CreditCard,
   Package,
+  Bot,
 } from "lucide-react";
 import { OrdersProvider, useOrders, useAuth, ShopsProvider, useShops, AgencyProvider } from "@/components/shared";
 import { DashboardKPIs, SalesChart, SubscriptionLock, SupportWidget, AgencyContactCard } from "@/components/admin";
@@ -295,6 +296,12 @@ function AdminDashboardWithSubscription() {
                 <Button variant="ghost" size="sm" className="px-2 sm:px-3">
                   <Users className="w-4 h-4" />
                   <span className="hidden sm:inline ml-1">CRM</span>
+                </Button>
+              </Link>
+              <Link href="/admin/automation">
+                <Button variant="ghost" size="sm" className="px-2 sm:px-3">
+                  <Bot className="w-4 h-4" />
+                  <span className="hidden sm:inline ml-1">Bot WA</span>
                 </Button>
               </Link>
               <Link href="/admin/promos">
