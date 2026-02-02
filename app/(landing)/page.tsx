@@ -30,10 +30,10 @@ import { DemoWalkthrough } from "@/components/landing/demo-walkthrough";
 
 // Información de contacto del administrador
 const ADMIN_CONTACT = {
-  name: "NEXO",
+  name: "Linko",
   phone: "+52 1 55 1234 5678",
   whatsapp: "5215512345678",
-  email: "contacto@nexoapp.com",
+  email: "contacto@linko.app",
   location: "Ciudad de México, México",
 };
 
@@ -80,11 +80,11 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-600 flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-600 flex items-center justify-center overflow-hidden p-1">
+                <img src="/logo.png" alt="Linko" className="w-full h-full object-contain" />
               </div>
               <span className="font-display text-xl font-bold text-white">
-                NEXO
+                Linko
               </span>
             </div>
 
@@ -132,7 +132,7 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Button size="lg" onClick={() => setShowContactModal(true)}>
                   <MessageCircle className="w-5 h-5 mr-2" />
-                  Quiero mi NEXO
+                  Quiero mi Linko
                 </Button>
                 <Link href="/login">
                   <Button variant="outline" size="lg">
@@ -423,7 +423,7 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
               <span className="font-display text-lg font-bold text-white">
-                NEXO
+                Linko
               </span>
             </div>
 
@@ -446,7 +446,7 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
             </div>
 
             <p className="text-slate-500 text-sm">
-              © {new Date().getFullYear()} NEXO
+              © {new Date().getFullYear()} Linko
             </p>
           </div>
         </div>
@@ -488,7 +488,7 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
             <div className="space-y-4">
               {/* WhatsApp - Primary CTA */}
               <a
-                href={`https://wa.me/${ADMIN_CONTACT.whatsapp}?text=${encodeURIComponent("¡Hola! Me interesa unirme a NEXO")}`}
+                href={`https://wa.me/${ADMIN_CONTACT.whatsapp}?text=${encodeURIComponent("¡Hola! Me interesa unirme a Linko")}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-4 p-4 rounded-xl bg-green-500/20 border border-green-500/30 hover:bg-green-500/30 transition-colors group"
@@ -519,7 +519,7 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
 
               {/* Email */}
               <a
-                href={`mailto:${ADMIN_CONTACT.email}?subject=${encodeURIComponent("Interesado en NEXO")}`}
+                href={`mailto:${ADMIN_CONTACT.email}?subject=${encodeURIComponent("Interesado en Linko")}`}
                 className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
               >
                 <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">

@@ -28,7 +28,7 @@ const COLLECTION = "shops";
 // Tema por defecto
 const DEFAULT_THEME: ShopTheme = {
   id: "default",
-  name: "NEXO Default",
+  name: "Linko Default",
   primaryColor: "#06b6d4",
   backgroundColor: "#0f172a",
 };
@@ -138,8 +138,8 @@ export async function createShop(input: CreateShopInput): Promise<Shop> {
       input.category === "beauty"
         ? "beauty"
         : input.category === "repair"
-        ? "repair"
-        : "retail",
+          ? "repair"
+          : "retail",
     isActive: true,
     theme: {
       ...DEFAULT_THEME,
@@ -196,8 +196,8 @@ export async function updateShop(
       input.category === "beauty"
         ? "beauty"
         : input.category === "repair"
-        ? "repair"
-        : "retail";
+          ? "repair"
+          : "retail";
   }
   if (input.wholesaleEnabled !== undefined) {
     updateData.wholesaleEnabled = input.wholesaleEnabled;

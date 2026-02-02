@@ -84,11 +84,10 @@ export function SubscriptionLock({ shop, onContactSupport }: SubscriptionLockPro
           {/* Status Badge */}
           <div className="flex justify-center mb-6">
             <span
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${
-                isPastDue
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${isPastDue
                   ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
                   : "bg-red-500/20 text-red-400 border border-red-500/30"
-              }`}
+                }`}
             >
               <Icon className="w-4 h-4" />
               {config.badge}
@@ -98,14 +97,12 @@ export function SubscriptionLock({ shop, onContactSupport }: SubscriptionLockPro
           {/* Icon */}
           <div className="flex justify-center mb-6">
             <div
-              className={`w-20 h-20 rounded-2xl flex items-center justify-center ${
-                isPastDue ? "bg-amber-500/20" : "bg-red-500/20"
-              }`}
+              className={`w-20 h-20 rounded-2xl flex items-center justify-center ${isPastDue ? "bg-amber-500/20" : "bg-red-500/20"
+                }`}
             >
               <Lock
-                className={`w-10 h-10 ${
-                  isPastDue ? "text-amber-400" : "text-red-400"
-                }`}
+                className={`w-10 h-10 ${isPastDue ? "text-amber-400" : "text-red-400"
+                  }`}
               />
             </div>
           </div>
@@ -208,7 +205,7 @@ export function SubscriptionLock({ shop, onContactSupport }: SubscriptionLockPro
         <p className="text-center text-slate-500 text-sm mt-6">
           Powered by{" "}
           <span className="text-gradient-primary font-semibold">
-            NEXO
+            Linko
           </span>
         </p>
       </div>

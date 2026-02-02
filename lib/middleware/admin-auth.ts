@@ -60,7 +60,7 @@ export async function verifyAdminToken(
       return {
         user: {
           id: `owner-${shopId}`,
-          email: `owner@${shopId}.nexo`,
+          email: `owner@${shopId}.linko`,
           name: "Shop Owner",
           role: "SHOP_OWNER",
           shopId,

@@ -118,11 +118,10 @@ export function generateEmailTemplate(
 
     <!-- Header -->
     <div style="background: linear-gradient(135deg, ${primaryColor}, ${secondaryColor}); padding: 32px; text-align: center;">
-      ${
-        logo
-          ? `<img src="${logo}" alt="${name}" style="max-height: 60px; margin-bottom: 8px;">`
-          : `<h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">${name}</h1>`
-      }
+      ${logo
+      ? `<img src="${logo}" alt="${name}" style="max-height: 60px; margin-bottom: 8px;">`
+      : `<h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">${name}</h1>`
+    }
     </div>
 
     <!-- Content -->
@@ -271,7 +270,7 @@ export const emailTemplates = {
   welcomeShopOwner: (data: { name: string; shopName: string }) => {
     return generateEmailTemplate(`
       <h2 style="margin: 0 0 16px; color: #0f172a; font-size: 20px;">
-        ¡Bienvenido a Nexo!
+        ¡Bienvenido a Linko!
       </h2>
 
       <p style="margin: 0 0 16px;">
@@ -284,7 +283,7 @@ export const emailTemplates = {
       </p>
 
       <div style="text-align: center; margin: 32px 0;">
-        <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://nexoapp.mx"}/admin"
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://linko.app"}/admin"
            style="display: inline-block; background: linear-gradient(135deg, #06b6d4, #3b82f6); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600;">
           Ir a mi Panel
         </a>

@@ -1,7 +1,7 @@
 {
-  "name": "Nexo",
-  "short_name": "Nexo",
-  "description": "Nexo: La plataforma universal para conectar tu negocio con tus clientes.",
+  "name": "Linko",
+  "short_name": "Linko",
+  "description": "Linko: La plataforma universal para conectar tu negocio con tus clientes.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0F172A",

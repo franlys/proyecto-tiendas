@@ -90,7 +90,7 @@ function DemoWalkthroughInner({ onContactClick }: DemoWalkthroughInnerProps) {
             Descubre <span className="text-gradient-gold">todo lo que puedes hacer</span>
           </h2>
           <p className="text-base md:text-lg text-slate-400 max-w-2xl mx-auto">
-            Navega paso a paso por las funcionalidades de NEXO
+            Navega paso a paso por las funcionalidades de Linko
           </p>
         </div>
 

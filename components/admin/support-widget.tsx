@@ -98,7 +98,7 @@ export function SupportWidget({ shopName, userName }: SupportWidgetProps) {
               <div className="flex-1 text-left">
                 <p className="text-white font-medium text-sm">Email</p>
                 <p className="text-slate-400 text-xs">
-                  {isLoaded ? config.email : "soporte@nexoapp.mx"}
+                  {isLoaded ? config.email : "soporte@linko.app"}
                 </p>
               </div>
             </button>

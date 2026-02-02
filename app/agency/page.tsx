@@ -56,10 +56,11 @@ function CreateShopModal({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (data: { name: string; slug: string; category: ShopCategory; description: string; phone: string; wholesale: boolean }) => void;
+  onCreate: (data: { name: string; slug: string; category: ShopCategory; description: string; phone: string; wholesale: boolean; customDomain: string }) => void;
 }) {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
+  const [customDomain, setCustomDomain] = useState("");
   const [category, setCategory] = useState<ShopCategory>("technology");
   const [description, setDescription] = useState("");
   const [phone, setPhone] = useState("");
@@ -68,160 +69,177 @@ function CreateShopModal({
   // Auto-generar slug desde nombre
   useEffect(() => {
     const generatedSlug = name
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-  setSlug(generatedSlug);
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+    setSlug(generatedSlug);
   }, [name]);
 
-const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
-  if (name && slug && phone) {
-    onCreate({ name, slug, category, description, phone, wholesale });
-    setName("");
-    setSlug("");
-    setCategory("technology");
-    setDescription("");
-    setPhone("");
-    setWholesale(false);
-    onClose();
-  }
-};
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (name && slug && phone) {
+      onCreate({ name, slug, category, description, phone, wholesale, customDomain });
+      setName("");
+      setSlug("");
+      setCustomDomain("");
+      setCategory("technology");
+      setDescription("");
+      setPhone("");
+      setWholesale(false);
+      onClose();
+    }
+  };
 
-if (!isOpen) return null;
+  if (!isOpen) return null;
 
-return (
-  <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-    {/* Backdrop */}
-    <div
-      className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-      onClick={onClose}
-    />
-
-    {/* Modal */}
-    <div className="relative w-full max-w-md glass-panel rounded-2xl p-6 border border-cyan-500/20">
-      <button
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
-        className="absolute top-4 right-4 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-      >
-        <X className="w-5 h-5" />
-      </button>
+      />
 
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
-          <Store className="w-6 h-6 text-white" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold text-white">Nueva Tienda</h2>
-          <p className="text-sm text-slate-400">
-            Crea una tienda para tu cliente
-          </p>
-        </div>
-      </div>
+      {/* Modal */}
+      <div className="relative w-full max-w-md glass-panel rounded-2xl p-6 border border-cyan-500/20">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">
-            Nombre del Negocio
-          </label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Ej: Fix It Center"
-            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">
-            Categoría
-          </label>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value as ShopCategory)}
-            className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white"
-          >
-            <option value="technology">Tecnología / Celulares</option>
-            <option value="beauty">Belleza / Spa</option>
-            <option value="retail">Retail / Tienda</option>
-            <option value="repair">Taller / Reparación</option>
-            <option value="restaurant">Restaurante</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
-            <div className="relative flex items-center">
-              <input
-                type="checkbox"
-                checked={wholesale}
-                onChange={(e) => setWholesale(e.target.checked)}
-                className="w-5 h-5 rounded border-white/20 bg-black/20 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-0"
-              />
-            </div>
-            <div>
-              <span className="block text-sm font-medium text-white">Ventas al Por Mayor</span>
-              <span className="block text-xs text-slate-400">Habilita precios de mayoreo y registro B2B</span>
-            </div>
-          </label>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">
-            URL (slug)
-          </label>
-          <div className="flex items-center gap-2">
-            <span className="text-slate-500 text-sm">/</span>
-            <input
-              type="text"
-              value={slug}
-              onChange={(e) => setSlug(e.target.value)}
-              placeholder="fix-it-center"
-              className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
-              required
-            />
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+            <Store className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-white">Nueva Tienda</h2>
+            <p className="text-sm text-slate-400">
+              Crea una tienda para tu cliente
+            </p>
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">
-            WhatsApp
-          </label>
-          <input
-            type="text"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="+52 1 55 0000 0000"
-            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
-            required
-          />
-        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Nombre del Negocio
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ej: Fix It Center"
+              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
+              required
+            />
+          </div>
 
-        <div className="flex gap-3 pt-4">
-          <Button
-            type="button"
-            variant="ghost"
-            className="flex-1"
-            onClick={onClose}
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Crear Tienda
-          </Button>
-        </div>
-      </form>
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Categoría
+            </label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value as ShopCategory)}
+              className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white"
+            >
+              <option value="technology">Tecnología / Celulares</option>
+              <option value="beauty">Belleza / Spa</option>
+              <option value="retail">Retail / Tienda</option>
+              <option value="repair">Taller / Reparación</option>
+              <option value="restaurant">Restaurante</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
+              <div className="relative flex items-center">
+                <input
+                  type="checkbox"
+                  checked={wholesale}
+                  onChange={(e) => setWholesale(e.target.checked)}
+                  className="w-5 h-5 rounded border-white/20 bg-black/20 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-0"
+                />
+              </div>
+              <div>
+                <span className="block text-sm font-medium text-white">Ventas al Por Mayor</span>
+                <span className="block text-xs text-slate-400">Habilita precios de mayoreo y registro B2B</span>
+              </div>
+            </label>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              URL (slug)
+            </label>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500 text-sm">/</span>
+              <input
+                type="text"
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                placeholder="fix-it-center"
+                className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Dominio Personalizado (Opcional)
+            </label>
+            <input
+              type="text"
+              value={customDomain}
+              onChange={(e) => setCustomDomain(e.target.value)}
+              placeholder="ej. mipizzeria.com"
+              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              No incluyas "http://" ni "www".
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              WhatsApp
+            </label>
+            <input
+              type="text"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+52 1 55 0000 0000"
+              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
+              required
+            />
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <Button
+              type="button"
+              variant="ghost"
+              className="flex-1"
+              onClick={onClose}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Crear Tienda
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
-  </div>
-);
+  );
 }
 
 // Payment status configuration
@@ -361,45 +379,45 @@ function ShopRow({
 
       {/* Actions */}
       <td className="px-6 py-4">
-      <div className="flex items-center gap-1">
-        {/* Payment Action */}
-        <button
-          onClick={() => onPaymentAction(shop)}
-          className={cn(
-            "p-2 rounded-lg transition-colors",
-            shop.subscriptionStatus === "past_due"
-              ? "text-green-400 hover:bg-green-500/20 animate-pulse"
-              : "text-slate-400 hover:text-gold hover:bg-gold/10"
-          )}
-          title="Gestionar Pago"
-        >
-          <DollarSign className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          {/* Payment Action */}
+          <button
+            onClick={() => onPaymentAction(shop)}
+            className={cn(
+              "p-2 rounded-lg transition-colors",
+              shop.subscriptionStatus === "past_due"
+                ? "text-green-400 hover:bg-green-500/20 animate-pulse"
+                : "text-slate-400 hover:text-gold hover:bg-gold/10"
+            )}
+            title="Gestionar Pago"
+          >
+            <DollarSign className="w-4 h-4" />
+          </button>
 
-        <Link
-          href={`/${shop.slug}`}
-          target="_blank"
-          className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-          title="Ver tienda"
-        >
-          <Eye className="w-4 h-4" />
-        </Link>
-        <Link
-          href={`/agency/shop/${shop.slug}`}
-          className="p-2 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors"
-          title="Configurar tienda"
-        >
-          <Settings className="w-4 h-4" />
-        </Link>
-        <button
-          onClick={() => onDeleteClick(shop)}
-          className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-          title="Eliminar tienda"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
-    </td>
+          <Link
+            href={`/${shop.slug}`}
+            target="_blank"
+            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+            title="Ver tienda"
+          >
+            <Eye className="w-4 h-4" />
+          </Link>
+          <Link
+            href={`/agency/shop/${shop.slug}`}
+            className="p-2 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors"
+            title="Configurar tienda"
+          >
+            <Settings className="w-4 h-4" />
+          </Link>
+          <button
+            onClick={() => onDeleteClick(shop)}
+            className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+            title="Eliminar tienda"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      </td>
     </tr>
   );
 }
@@ -713,7 +731,7 @@ function AgencyContent() {
     setShopToDelete(shop);
   };
 
-  const handleCreateShop = (data: { name: string; slug: string; category: ShopCategory; description: string; phone: string; wholesale: boolean }) => {
+  const handleCreateShop = (data: { name: string; slug: string; category: ShopCategory; description: string; phone: string; wholesale: boolean; customDomain: string }) => {
     debugLog("CREATE SHOP - Form submitted", data);
     const newShop = createShop(data);
     debugLog("CREATE SHOP - Result", { success: !!newShop, shopId: newShop?.id });
@@ -751,12 +769,12 @@ function AgencyContent() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
-                <Shield className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center overflow-hidden p-1">
+                <img src="/logo.png" alt="Linko" className="w-full h-full object-contain" />
               </div>
               <div>
                 <h1 className="font-display text-2xl font-bold text-white">
-                  Agency Panel
+                  Linko Agency
                 </h1>
                 <p className="text-slate-400 text-sm">
                   Centro de Control · {user?.name}

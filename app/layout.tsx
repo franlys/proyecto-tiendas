@@ -16,11 +16,11 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: {
-    default: "Nexo - Conexión Universal para Negocios",
-    template: "%s | Nexo",
+    default: "Linko - Conexión Universal para Negocios",
+    template: "%s | Linko",
   },
   description:
-    "Nexo: La plataforma universal para conectar tu negocio con tus clientes. Ideal para salones, talleres, tiendas y consultorios.",
+    "Linko: La plataforma universal para conectar tu negocio con tus clientes. Ideal para salones, talleres, tiendas y consultorios.",
   keywords: [
     "Nexo",
     "reservas online",
@@ -33,27 +33,27 @@ export const metadata: Metadata = {
     "agenda digital",
     "WhatsApp booking",
   ],
-  authors: [{ name: "Nexo App" }],
-  creator: "Nexo App",
+  authors: [{ name: "Linko App" }],
+  creator: "Linko App",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Nexo",
+    title: "Linko",
   },
   openGraph: {
     type: "website",
     locale: "es_ES",
-    siteName: "Nexo",
-    title: "Nexo - Conexión Universal para Negocios",
+    siteName: "Linko",
+    title: "Linko - Conexión Universal para Negocios",
     description:
-      "Nexo: La plataforma universal para conectar tu negocio con tus clientes. Agenda, vende y fideliza.",
+      "Linko: La plataforma universal para conectar tu negocio con tus clientes. Agenda, vende y fideliza.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Nexo - Conexión Universal para Negocios",
+    title: "Linko - Conexión Universal para Negocios",
     description:
-      "Nexo: La plataforma universal para conectar tu negocio con tus clientes.",
+      "Linko: La plataforma universal para conectar tu negocio con tus clientes.",
   },
   robots: {
     index: true,

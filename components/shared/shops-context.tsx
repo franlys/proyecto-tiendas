@@ -34,7 +34,7 @@ const API_BASE = "/api/admin/shops";
 
 async function getAuthToken(): Promise<string | null> {
   // Check if we have an authenticated session
-  const authData = localStorage.getItem("nexo-auth");
+  const authData = localStorage.getItem("linko-auth");
   if (!authData) return null;
 
   try {
@@ -119,6 +119,7 @@ export interface ManagedShop extends ShopConfig {
   lastPaymentDate?: string;
   // Features enabled for this shop
   enabledFeatures?: FeatureId[];
+  customDomain?: string;
 }
 
 interface UpdateShopData {
@@ -142,6 +143,7 @@ interface UpdateShopData {
   social?: ShopSocialMedia;
   // Schedule
   schedule?: ShopSchedule;
+  customDomain?: string;
 }
 
 interface ShopsContextType {
@@ -170,11 +172,12 @@ interface CreateShopData {
   description: string;
   phone: string;
   wholesale: boolean;
+  customDomain?: string;
 }
 
 const ShopsContext = createContext<ShopsContextType | undefined>(undefined);
 
-const SHOPS_STORAGE_KEY = "nexo-managed-shops";
+const SHOPS_STORAGE_KEY = "linko-managed-shops";
 
 // Helper to get next month date
 function getNextMonthDate(): string {
@@ -278,6 +281,7 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
         id: s.id,
         name: s.name,
         slug: s.slug,
+        customDomain: s.customDomain,
         description: s.description || "",
         theme: s.theme,
         contact: s.contact,
@@ -285,7 +289,7 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
         wholesaleEnabled: s.wholesaleEnabled,
         category: s.category,
       }));
-      document.cookie = `nexo-managed-shops=${encodeURIComponent(JSON.stringify(simplifiedShops))}; path=/; max-age=${60 * 60 * 24 * 365}`;
+      document.cookie = `linko-managed-shops=${encodeURIComponent(JSON.stringify(simplifiedShops))}; path=/; max-age=${60 * 60 * 24 * 365}`;
       debugLog("Saved shops to cookie for SSR access");
     }
   }, [shops, isInitialized]);
@@ -321,6 +325,7 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
       subscriptionStatus: "trial",
       nextPaymentDate: getNextMonthDate(),
       monthlyPrice: 299,
+      customDomain: data.customDomain,
     };
 
     debugLog("CREATE SHOP - New shop object", {
@@ -342,6 +347,7 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
           description: data.description,
           phone: data.phone,
           wholesaleEnabled: data.wholesale,
+          customDomain: data.customDomain,
         }),
       }).then(({ data: responseData, error }) => {
         if (error) {
@@ -398,6 +404,7 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
           if (data.phone !== undefined) {
             updated.contact = { ...updated.contact, phone: data.phone };
           }
+          if (data.customDomain !== undefined) updated.customDomain = data.customDomain;
           if (data.description !== undefined) updated.description = data.description;
           // Visual customization
           if (data.logo !== undefined) updated.logo = data.logo;

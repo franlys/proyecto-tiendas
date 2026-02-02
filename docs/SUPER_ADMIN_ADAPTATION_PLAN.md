@@ -1,4 +1,4 @@
-# Plan de Adaptación: SUPER_ADMIN para NEXO
+# Plan de Adaptación: SUPER_ADMIN para Linko
 
 ## Resumen Ejecutivo
 

@@ -83,9 +83,9 @@ const DEFAULT_ADMIN_TIMEOUT = 30 * 60 * 1000;
 // Default session timeout for staff (configurable per shop, default 24 hours)
 const DEFAULT_STAFF_TIMEOUT = 24 * 60 * 60 * 1000;
 
-const ACTIVITY_STORAGE_KEY = "nexo-last-activity";
-const AUTH_STORAGE_KEY = "nexo-auth";
-const SHOP_SESSIONS_KEY = "nexo-shop-sessions";
+const ACTIVITY_STORAGE_KEY = "linko-last-activity";
+const AUTH_STORAGE_KEY = "linko-auth";
+const SHOP_SESSIONS_KEY = "linko-shop-sessions";
 
 // ============================================
 // DEMO USERS DATABASE
@@ -400,7 +400,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // 2. Check managed shops in localStorage (dynamic shop owners)
     debugLog("Checking managed shops for dynamic login...");
     try {
-      const storedShops = localStorage.getItem("nexo-managed-shops");
+      const storedShops = localStorage.getItem("linko-managed-shops");
       if (storedShops) {
         const managedShops = JSON.parse(storedShops);
         debugLog("Found managed shops", { count: managedShops.length });

@@ -20,7 +20,7 @@ async function getShopData(shopId: string): Promise<ShopConfig | null> {
   // 2. Buscar en cookies (tiendas creadas dinámicamente desde el panel de agencia)
   try {
     const cookieStore = await cookies();
-    const managedShopsCookie = cookieStore.get("nexo-managed-shops");
+    const managedShopsCookie = cookieStore.get("linko-managed-shops");
 
     if (managedShopsCookie?.value) {
       const decodedValue = decodeURIComponent(managedShopsCookie.value);
@@ -104,58 +104,58 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
       <OrdersProvider>
         <CartProvider>
           <ShopLayoutClient>
-          <div className="min-h-screen pb-24 relative">
-          {/* Shop Header */}
-          <header className="sticky top-0 z-50 glass-panel">
-            <div className="container mx-auto px-4 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {/* Logo placeholder */}
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-cyan-500 to-cyan-600 flex items-center justify-center">
-                    <span className="text-white font-bold text-lg">
-                      {shop.name.charAt(0)}
-                    </span>
-                  </div>
-                  <div>
-                    <h1 className="font-display text-xl font-semibold text-white">
-                      {shop.name}
-                    </h1>
-                    <p className="text-sm text-slate-400">{shop.description}</p>
+            <div className="min-h-screen pb-24 relative">
+              {/* Shop Header */}
+              <header className="sticky top-0 z-50 glass-panel">
+                <div className="container mx-auto px-4 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {/* Logo placeholder */}
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-cyan-500 to-cyan-600 flex items-center justify-center">
+                        <span className="text-white font-bold text-lg">
+                          {shop.name.charAt(0)}
+                        </span>
+                      </div>
+                      <div>
+                        <h1 className="font-display text-xl font-semibold text-white">
+                          {shop.name}
+                        </h1>
+                        <p className="text-sm text-slate-400">{shop.description}</p>
+                      </div>
+                    </div>
+
+                    {/* Navigation placeholder */}
+                    <nav className="hidden md:flex items-center gap-6">
+                      <a href={`/${shopId}`} className="text-slate-300 hover:text-white transition-colors">
+                        Inicio
+                      </a>
+                      <a href={`/${shopId}#servicios`} className="text-slate-300 hover:text-white transition-colors">
+                        Servicios
+                      </a>
+                      <a href={`/${shopId}/book`} className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-lg hover:shadow-lg transition-all">
+                        Reservar
+                      </a>
+                    </nav>
                   </div>
                 </div>
+              </header>
 
-                {/* Navigation placeholder */}
-                <nav className="hidden md:flex items-center gap-6">
-                  <a href={`/${shopId}`} className="text-slate-300 hover:text-white transition-colors">
-                    Inicio
-                  </a>
-                  <a href={`/${shopId}#servicios`} className="text-slate-300 hover:text-white transition-colors">
-                    Servicios
-                  </a>
-                  <a href={`/${shopId}/book`} className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-lg hover:shadow-lg transition-all">
-                    Reservar
-                  </a>
-                </nav>
-              </div>
+              {/* Main Content */}
+              <main>{children}</main>
+
+              {/* Footer */}
+              <footer className="border-t border-white/10 py-8 mt-20">
+                <div className="container mx-auto px-4 text-center text-slate-400">
+                  <p>&copy; {new Date().getFullYear()} {shop.name}. Todos los derechos reservados.</p>
+                  <p className="text-sm mt-2">
+                    Powered by <span className="text-gradient-primary font-semibold">Linko</span>
+                  </p>
+                </div>
+              </footer>
+
+              {/* Floating Cart */}
+              <FloatingCart />
             </div>
-          </header>
-
-          {/* Main Content */}
-          <main>{children}</main>
-
-          {/* Footer */}
-          <footer className="border-t border-white/10 py-8 mt-20">
-            <div className="container mx-auto px-4 text-center text-slate-400">
-              <p>&copy; {new Date().getFullYear()} {shop.name}. Todos los derechos reservados.</p>
-              <p className="text-sm mt-2">
-                Powered by <span className="text-gradient-primary font-semibold">NEXO</span>
-              </p>
-            </div>
-          </footer>
-
-          {/* Floating Cart */}
-          <FloatingCart />
-          </div>
           </ShopLayoutClient>
         </CartProvider>
       </OrdersProvider>

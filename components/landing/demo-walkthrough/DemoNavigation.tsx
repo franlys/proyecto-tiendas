@@ -21,11 +21,10 @@ export function DemoNavigation({ onContactClick }: DemoNavigationProps) {
       <motion.button
         onClick={prevStep}
         disabled={isFirstStep}
-        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-          isFirstStep
+        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${isFirstStep
             ? "text-slate-600 cursor-not-allowed"
             : "text-slate-300 hover:text-white hover:bg-white/10"
-        }`}
+          }`}
         whileHover={!isFirstStep ? { x: -2 } : {}}
         whileTap={!isFirstStep ? { scale: 0.95 } : {}}
       >
@@ -49,7 +48,7 @@ export function DemoNavigation({ onContactClick }: DemoNavigationProps) {
         {/* Contact CTA on last step */}
         {isLastStep && onContactClick && (
           <Button onClick={onContactClick} size="sm">
-            Quiero mi NEXO
+            Quiero mi Linko
           </Button>
         )}
       </div>
@@ -58,11 +57,10 @@ export function DemoNavigation({ onContactClick }: DemoNavigationProps) {
       <motion.button
         onClick={nextStep}
         disabled={isLastStep}
-        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-          isLastStep
+        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${isLastStep
             ? "text-slate-600 cursor-not-allowed"
             : "text-white bg-cyan-600 hover:bg-cyan-500"
-        }`}
+          }`}
         whileHover={!isLastStep ? { x: 2 } : {}}
         whileTap={!isLastStep ? { scale: 0.95 } : {}}
       >

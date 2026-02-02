@@ -29,11 +29,11 @@ const STORAGE_KEY = "agency-config";
 
 // Default agency configuration
 const DEFAULT_AGENCY: AgencyConfig = {
-  name: "Nexo App",
+  name: "Linko App",
   phone: "+52 55 1234 5678",
   whatsapp: "5215512345678",
-  email: "soporte@nexoapp.mx",
-  logoInitial: "N",
+  email: "soporte@linko.app",
+  logoInitial: "L",
 };
 
 const AgencyContext = createContext<AgencyContextType | undefined>(undefined);

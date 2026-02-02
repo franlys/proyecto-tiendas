@@ -9,7 +9,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // NEXO Premium Dark Palette
+        // Linko Premium Dark Palette
         background: "#0F172A", // Deep Navy Blue
         surface: "#1E293B",
         primary: {
