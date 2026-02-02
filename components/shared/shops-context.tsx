@@ -261,7 +261,7 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
       description: data.description,
       theme: { ...DEFAULT_THEME, id: `theme-${data.slug}`, name: `${data.name} Theme` },
       contact: { phone: data.phone },
-      businessType: data.category === "beauty" ? "beauty" : data.category === "repair" ? "repair" : "retail",
+      businessType: data.category, // Use category directly as they share the same type definition
       wholesaleEnabled: data.wholesale,
       customDomain: data.customDomain,
       category: data.category,

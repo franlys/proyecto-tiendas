@@ -712,10 +712,11 @@ function ShopDetailContent() {
                                                 updateShop(shop.slug, {
                                                     name,
                                                     category,
+                                                    businessType: category, // Sync business logic type
                                                     contact: { ...shop.contact, phone }
                                                 });
                                                 // Actualizar el shop local
-                                                setShop(prev => prev ? { ...prev, name, category, contact: { ...prev.contact, phone } } : prev);
+                                                setShop(prev => prev ? { ...prev, name, category, businessType: category, contact: { ...prev.contact, phone } } : prev);
                                                 setTimeout(() => {
                                                     setSaving(false);
                                                     setSaveSuccess(true);
