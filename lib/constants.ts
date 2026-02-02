@@ -268,26 +268,27 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
     },
     businessType: "restaurant",
   },
+};
 
-  // Navigation Items
-  export const NAV_ITEMS = [
-    { label: "Inicio", href: "/" },
-    { label: "Servicios", href: "#servicios" },
-    { label: "Portfolio", href: "#portfolio" },
-    { label: "Contacto", href: "#contacto" },
-  ] as const;
+// Navigation Items
+export const NAV_ITEMS = [
+  { label: "Inicio", href: "/" },
+  { label: "Servicios", href: "#servicios" },
+  { label: "Portfolio", href: "#portfolio" },
+  { label: "Contacto", href: "#contacto" },
+] as const;
 
-  // Service Categories
-  export type ServiceCategory = "cabello" | "unas" | "spa" | "barberia" | "facial";
+// Service Categories
+export type ServiceCategory = "cabello" | "unas" | "spa" | "barberia" | "facial";
 
-  export interface Service {
-    id: string;
-name: string;
-description: string;
-price: number;
-duration: number; // minutes
-category: ServiceCategory;
-image: string;
+export interface Service {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  duration: number; // minutes
+  category: ServiceCategory;
+  image: string;
 }
 
 // Mock Services for Estética Lola
