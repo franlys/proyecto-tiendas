@@ -749,10 +749,10 @@ function AgencyContent() {
   const pastDueShops = shops.filter((s) => s.subscriptionStatus === "past_due").length;
   const monthlyRevenue = shops
     .filter((s) => s.subscriptionStatus === "active" || s.subscriptionStatus === "trial")
-    .reduce((sum, s) => sum + s.monthlyPrice, 0);
+    .reduce((sum, s) => sum + (s.monthlyPrice || 0), 0);
   const pendingRevenue = shops
     .filter((s) => s.subscriptionStatus === "past_due")
-    .reduce((sum, s) => sum + s.monthlyPrice, 0);
+    .reduce((sum, s) => sum + (s.monthlyPrice || 0), 0);
 
   return (
     <div className="min-h-screen bg-background">
