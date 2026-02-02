@@ -140,6 +140,9 @@ export interface ShopConfig {
   businessType?: BusinessType;
   wholesaleCode?: string;
   wholesaleEnabled?: boolean;
+  // Auth (for Mock/Seeding purposes)
+  ownerUsername?: string;
+  ownerPassword?: string;
 }
 
 // ============================================
