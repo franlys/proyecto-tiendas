@@ -729,9 +729,9 @@ function AgencyContent() {
     setShopToDelete(shop);
   };
 
-  const handleCreateShop = (data: { name: string; slug: string; category: ShopCategory; description: string; phone: string; wholesale: boolean; customDomain: string; monthlyPrice: number }) => {
+  const handleCreateShop = async (data: { name: string; slug: string; category: ShopCategory; description: string; phone: string; wholesale: boolean; customDomain: string; monthlyPrice: number }) => {
     debugLog("CREATE SHOP - Form submitted", data);
-    const newShop = createShop(data);
+    const newShop = await createShop(data);
     debugLog("CREATE SHOP - Result", { success: !!newShop, shopId: newShop?.id });
   };
 
