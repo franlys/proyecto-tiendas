@@ -28,6 +28,7 @@ import {
   ExternalLink,
   Users,
   TrendingUp,
+  Database,
   CreditCard,
   AlertTriangle,
   DollarSign,
@@ -812,7 +813,7 @@ function AgencyContent() {
                 }}
                 className="text-amber-400 hover:text-amber-300 hover:bg-amber-400/10"
               >
-                <DatabaseSeeder className="w-4 h-4 mr-2" />
+                <Database className="w-4 h-4 mr-2" />
                 Restaurar Demos
               </Button>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
