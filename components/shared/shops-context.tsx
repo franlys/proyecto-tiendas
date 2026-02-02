@@ -31,6 +31,10 @@ import {
   type ShopCategory
 } from "@/lib/constants";
 
+// RE-EXPORT for consumers that import from here
+export { DEFAULT_FEATURES };
+export type { FeatureId, SubscriptionStatus, ShopCategory };
+
 // ============================================
 // TYPES
 // ============================================
@@ -57,6 +61,7 @@ export interface ManagedShop extends ShopConfig {
   features?: FeatureId[]; // Legacy compatibility
   // Business Logic
   businessType: "beauty" | "retail" | "repair" | "restaurant";
+  category: ShopCategory; // Added to fix type error
   wholesaleEnabled?: boolean;
   customDomain?: string;
 }

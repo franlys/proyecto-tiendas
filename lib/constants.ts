@@ -142,6 +142,33 @@ export interface ShopConfig {
   wholesaleEnabled?: boolean;
 }
 
+// ============================================
+// SHARED TYPES & FEATURES
+// ============================================
+
+export type SubscriptionStatus = "active" | "past_due" | "canceled" | "trial";
+
+export type ShopCategory = BusinessType; // Alias for backward compatibility
+
+// Features que pueden activarse por tienda
+export type FeatureId =
+  | "inventory" | "variants" | "lowStockAlerts"
+  | "orders" | "kanban" | "whatsappIntegration"
+  | "crm" | "clientHistory" | "loyalty"
+  | "campaigns" | "promoGenerator" | "emailMarketing"
+  | "staffManagement" | "staffCommissions"
+  | "analytics" | "multiLocation" | "api";
+
+// Features básicos que todas las tiendas nuevas tienen
+export const DEFAULT_FEATURES: FeatureId[] = [
+  "inventory",
+  "variants",
+  "orders",
+  "kanban",
+  "whatsappIntegration",
+  "staffManagement"
+];
+
 // Default Theme - Premium Dark
 export const DEFAULT_THEME: ShopTheme = {
   id: "premium-dark",
