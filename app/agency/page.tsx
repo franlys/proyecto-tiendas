@@ -35,6 +35,7 @@ import {
   Sparkles,
   Ban,
   Building2,
+  Bot,
 } from "lucide-react";
 import {
   AuthProvider,
@@ -787,6 +788,12 @@ function AgencyContent() {
                 <Button variant="ghost" size="sm">
                   <Building2 className="w-4 h-4" />
                   Mi Agencia
+                </Button>
+              </Link>
+              <Link href="/admin/automation">
+                <Button variant="ghost" size="sm">
+                  <Bot className="w-4 h-4" />
+                  Bot WA
                 </Button>
               </Link>
               <Link href="/">
