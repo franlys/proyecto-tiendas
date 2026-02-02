@@ -85,8 +85,8 @@ export function SubscriptionLock({ shop, onContactSupport }: SubscriptionLockPro
           <div className="flex justify-center mb-6">
             <span
               className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${isPastDue
-                  ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                  : "bg-red-500/20 text-red-400 border border-red-500/30"
+                ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                : "bg-red-500/20 text-red-400 border border-red-500/30"
                 }`}
             >
               <Icon className="w-4 h-4" />
@@ -154,21 +154,7 @@ export function SubscriptionLock({ shop, onContactSupport }: SubscriptionLockPro
               </span>
             </div>
 
-            {shop.lastPaymentDate && (
-              <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                <div className="flex items-center gap-2 text-slate-400">
-                  <Clock className="w-4 h-4" />
-                  <span className="text-sm">Último pago</span>
-                </div>
-                <span className="text-slate-300 text-sm">
-                  {new Date(shop.lastPaymentDate).toLocaleDateString("es-MX", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </span>
-              </div>
-            )}
+
           </div>
 
           {/* Actions */}

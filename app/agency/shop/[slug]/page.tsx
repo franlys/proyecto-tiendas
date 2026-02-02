@@ -54,9 +54,8 @@ import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
 
 // Mapeo de categorías para mostrar labels correctos
 const CATEGORY_OPTIONS: { value: ShopCategory; label: string }[] = [
-    { value: "technology", label: "Tecnología / Celulares" },
+    { value: "retail", label: "Retail / Tecnología / Tienda" },
     { value: "beauty", label: "Belleza / Spa" },
-    { value: "retail", label: "Retail / Tienda" },
     { value: "repair", label: "Taller / Reparación" },
     { value: "restaurant", label: "Restaurante" },
 ];
@@ -106,14 +105,12 @@ function FeatureToggle({
                 <p className="text-xs text-slate-400">{description}</p>
             </div>
             <div
-                className={`w-12 h-6 rounded-full relative transition-colors ${
-                    enabled ? "bg-cyan-500" : "bg-slate-600"
-                }`}
+                className={`w-12 h-6 rounded-full relative transition-colors ${enabled ? "bg-cyan-500" : "bg-slate-600"
+                    }`}
             >
                 <div
-                    className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                        enabled ? "translate-x-7" : "translate-x-1"
-                    }`}
+                    className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${enabled ? "translate-x-7" : "translate-x-1"
+                        }`}
                 />
             </div>
         </div>
@@ -519,8 +516,8 @@ function ShopDetailContent() {
                         <button
                             onClick={() => setActiveTab("overview")}
                             className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "overview"
-                                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                : "text-slate-400 hover:bg-white/5 hover:text-white"
                                 }`}
                         >
                             <div className="flex items-center gap-3">
@@ -531,8 +528,8 @@ function ShopDetailContent() {
                         <button
                             onClick={() => setActiveTab("config")}
                             className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "config"
-                                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                : "text-slate-400 hover:bg-white/5 hover:text-white"
                                 }`}
                         >
                             <div className="flex items-center gap-3">
@@ -543,8 +540,8 @@ function ShopDetailContent() {
                         <button
                             onClick={() => setActiveTab("appearance")}
                             className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "appearance"
-                                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                : "text-slate-400 hover:bg-white/5 hover:text-white"
                                 }`}
                         >
                             <div className="flex items-center gap-3">
@@ -555,8 +552,8 @@ function ShopDetailContent() {
                         <button
                             onClick={() => setActiveTab("features")}
                             className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "features"
-                                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                : "text-slate-400 hover:bg-white/5 hover:text-white"
                                 }`}
                         >
                             <div className="flex items-center gap-3">
@@ -567,8 +564,8 @@ function ShopDetailContent() {
                         <button
                             onClick={() => setActiveTab("staff")}
                             className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "staff"
-                                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                : "text-slate-400 hover:bg-white/5 hover:text-white"
                                 }`}
                         >
                             <div className="flex items-center gap-3">
@@ -579,8 +576,8 @@ function ShopDetailContent() {
                         <button
                             onClick={() => setActiveTab("whatsapp")}
                             className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "whatsapp"
-                                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                : "text-slate-400 hover:bg-white/5 hover:text-white"
                                 }`}
                         >
                             <div className="flex items-center gap-3">
@@ -591,8 +588,8 @@ function ShopDetailContent() {
                         <button
                             onClick={() => setActiveTab("security")}
                             className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "security"
-                                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                : "text-slate-400 hover:bg-white/5 hover:text-white"
                                 }`}
                         >
                             <div className="flex items-center gap-3">
@@ -711,7 +708,11 @@ function ShopDetailContent() {
                                         <Button
                                             onClick={() => {
                                                 setSaving(true);
-                                                updateShop(shop.slug, { name, category, phone });
+                                                updateShop(shop.slug, {
+                                                    name,
+                                                    category,
+                                                    contact: { ...shop.contact, phone }
+                                                });
                                                 // Actualizar el shop local
                                                 setShop(prev => prev ? { ...prev, name, category, contact: { ...prev.contact, phone } } : prev);
                                                 setTimeout(() => {
@@ -974,7 +975,7 @@ function ShopDetailContent() {
                                             <div className="flex gap-2">
                                                 <div className="px-3 py-3 bg-black border border-white/20 rounded-xl text-white">
                                                     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                                                        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                                                        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
                                                     </svg>
                                                 </div>
                                                 <input
@@ -1021,11 +1022,10 @@ function ShopDetailContent() {
                                             <button
                                                 type="button"
                                                 onClick={() => setBackgroundType("solid")}
-                                                className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
-                                                    backgroundType === "solid"
-                                                        ? "border-cyan-500 bg-cyan-500/10"
-                                                        : "border-white/10 bg-black/20 hover:border-white/20"
-                                                }`}
+                                                className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${backgroundType === "solid"
+                                                    ? "border-cyan-500 bg-cyan-500/10"
+                                                    : "border-white/10 bg-black/20 hover:border-white/20"
+                                                    }`}
                                             >
                                                 <Palette className="w-6 h-6 text-cyan-400" />
                                                 <span className="text-sm text-white">Color Sólido</span>
@@ -1033,11 +1033,10 @@ function ShopDetailContent() {
                                             <button
                                                 type="button"
                                                 onClick={() => setBackgroundType("image")}
-                                                className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
-                                                    backgroundType === "image"
-                                                        ? "border-pink-500 bg-pink-500/10"
-                                                        : "border-white/10 bg-black/20 hover:border-white/20"
-                                                }`}
+                                                className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${backgroundType === "image"
+                                                    ? "border-pink-500 bg-pink-500/10"
+                                                    : "border-white/10 bg-black/20 hover:border-white/20"
+                                                    }`}
                                             >
                                                 <Image className="w-6 h-6 text-pink-400" />
                                                 <span className="text-sm text-white">Imagen</span>
@@ -1045,11 +1044,10 @@ function ShopDetailContent() {
                                             <button
                                                 type="button"
                                                 onClick={() => setBackgroundType("video")}
-                                                className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
-                                                    backgroundType === "video"
-                                                        ? "border-purple-500 bg-purple-500/10"
-                                                        : "border-white/10 bg-black/20 hover:border-white/20"
-                                                }`}
+                                                className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${backgroundType === "video"
+                                                    ? "border-purple-500 bg-purple-500/10"
+                                                    : "border-white/10 bg-black/20 hover:border-white/20"
+                                                    }`}
                                             >
                                                 <Video className="w-6 h-6 text-purple-400" />
                                                 <span className="text-sm text-white">Video</span>
@@ -1237,9 +1235,12 @@ function ShopDetailContent() {
                                                     products: productsBackground,
                                                     contact: contactBackground,
                                                 },
-                                                email,
-                                                address,
-                                                city,
+                                                contact: {
+                                                    ...shop.contact,
+                                                    email,
+                                                    address,
+                                                    city,
+                                                },
                                                 social: {
                                                     instagram,
                                                     facebook,
@@ -1490,31 +1491,28 @@ function ShopDetailContent() {
                                         staffMembers.map((staff) => (
                                             <div
                                                 key={staff.id}
-                                                className={`p-4 rounded-xl bg-white/5 border transition-all ${
-                                                    staff.isActive
-                                                        ? "border-white/10 hover:border-white/20"
-                                                        : "border-red-500/20 bg-red-500/5 opacity-60"
-                                                }`}
+                                                className={`p-4 rounded-xl bg-white/5 border transition-all ${staff.isActive
+                                                    ? "border-white/10 hover:border-white/20"
+                                                    : "border-red-500/20 bg-red-500/5 opacity-60"
+                                                    }`}
                                             >
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-4">
-                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
-                                                            staff.role === "owner" ? "bg-yellow-500" :
+                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${staff.role === "owner" ? "bg-yellow-500" :
                                                             staff.role === "manager" ? "bg-purple-500" :
-                                                            staff.role === "sales" ? "bg-blue-500" :
-                                                            "bg-orange-500"
-                                                        }`}>
+                                                                staff.role === "sales" ? "bg-blue-500" :
+                                                                    "bg-orange-500"
+                                                            }`}>
                                                             {staff.name.charAt(0).toUpperCase()}
                                                         </div>
                                                         <div>
                                                             <div className="flex items-center gap-2">
                                                                 <p className="font-medium text-white">{staff.name}</p>
-                                                                <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                                                    staff.role === "owner" ? "bg-yellow-500/20 text-yellow-400" :
+                                                                <span className={`text-xs px-2 py-0.5 rounded-full ${staff.role === "owner" ? "bg-yellow-500/20 text-yellow-400" :
                                                                     staff.role === "manager" ? "bg-purple-500/20 text-purple-400" :
-                                                                    staff.role === "sales" ? "bg-blue-500/20 text-blue-400" :
-                                                                    "bg-orange-500/20 text-orange-400"
-                                                                }`}>
+                                                                        staff.role === "sales" ? "bg-blue-500/20 text-blue-400" :
+                                                                            "bg-orange-500/20 text-orange-400"
+                                                                    }`}>
                                                                     {STAFF_ROLES[staff.role].label}
                                                                 </span>
                                                                 {!staff.isActive && (
@@ -1715,15 +1713,13 @@ function ShopDetailContent() {
                                             </p>
                                         </div>
                                         <div
-                                            className={`w-12 h-6 rounded-full relative transition-colors cursor-pointer ${
-                                                flowConfig.isEnabled ? "bg-green-500" : "bg-slate-600"
-                                            }`}
+                                            className={`w-12 h-6 rounded-full relative transition-colors cursor-pointer ${flowConfig.isEnabled ? "bg-green-500" : "bg-slate-600"
+                                                }`}
                                             onClick={() => setFlowConfig(prev => ({ ...prev, isEnabled: !prev.isEnabled }))}
                                         >
                                             <div
-                                                className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                                                    flowConfig.isEnabled ? "translate-x-7" : "translate-x-1"
-                                                }`}
+                                                className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${flowConfig.isEnabled ? "translate-x-7" : "translate-x-1"
+                                                    }`}
                                             />
                                         </div>
                                     </div>
@@ -1744,9 +1740,8 @@ function ShopDetailContent() {
                                         {whatsappNumbers.map((num) => (
                                             <div
                                                 key={num.id}
-                                                className={`flex items-center justify-between p-3 rounded-xl bg-black/20 border ${
-                                                    num.isDefault ? "border-green-500/30" : "border-white/5"
-                                                }`}
+                                                className={`flex items-center justify-between p-3 rounded-xl bg-black/20 border ${num.isDefault ? "border-green-500/30" : "border-white/5"
+                                                    }`}
                                             >
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
