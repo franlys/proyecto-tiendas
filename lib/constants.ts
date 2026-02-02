@@ -170,46 +170,124 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
       email: "info@estetica-lola.com",
       address: "Calle Mayor 15, Madrid",
     },
+    businessType: "beauty",
   },
-  "barberia-classic": {
-    id: "2",
-    name: "Barbería Classic",
-    slug: "barberia-classic",
-    description: "Barbería tradicional con estilo moderno",
+  "ejemplo-estetica": {
+    id: "demo-1",
+    name: "Glow Beauty Studio",
+    slug: "ejemplo-estetica",
+    description: "Tu espacio de belleza y relajación. Expertos en color y cuidado personal.",
     theme: {
-      id: "classic-theme",
-      name: "Classic Gold",
-      primaryColor: "#D4AF37",
-      accentColor: "#F43F5E",
+      id: "theme-estetica",
+      name: "Beauty Pink",
+      primaryColor: "#ec4899", // Pink 500
+      accentColor: "#fbcfe8", // Pink 100
       style: "premium-dark",
     },
     contact: {
-      phone: "+34 600 789 012",
-      email: "info@barberia-classic.com",
-      address: "Plaza España 8, Madrid",
+      phone: "", // To be configured by user
+      email: "contacto@glowstudio.com",
+      address: "Av. Reforma 222, CDMX",
     },
+    businessType: "beauty",
   },
-};
+  "ejemplo-rentcar": {
+    id: "demo-2",
+    name: "Speedy Rent a Car",
+    slug: "ejemplo-rentcar",
+    description: "Renta de autos premium y utilitarios para tu viaje.",
+    theme: {
+      id: "theme-rentcar",
+      name: "Speedy Blue",
+      primaryColor: "#3b82f6", // Blue 500
+      accentColor: "#60a5fa", // Blue 400
+      style: "modern-minimal",
+    },
+    contact: {
+      phone: "",
+      email: "reservas@speedyrent.com",
+      address: "Aeropuerto Terminal 1, CDMX",
+    },
+    businessType: "rentcar",
+  },
+  "ejemplo-mayoreo": {
+    id: "demo-3",
+    name: "Mega Importaciones",
+    slug: "ejemplo-mayoreo",
+    description: "Venta al mayoreo de electrónica y accesorios. Precios especiales a distribuidores.",
+    theme: {
+      id: "theme-mayoreo",
+      name: "Wholesale Orange",
+      primaryColor: "#f97316", // Orange 500
+      accentColor: "#fdba74", // Orange 300
+      style: "elegant-light",
+    },
+    contact: {
+      phone: "",
+      email: "ventas@megaimport.com",
+      address: "Centro Mayorista Bodega 4",
+    },
+    businessType: "retail",
+    wholesaleEnabled: true,
+  },
+  "ejemplo-dental": {
+    id: "demo-4",
+    name: "Clínica Dental Sonrisas",
+    slug: "ejemplo-dental",
+    description: "Especialistas en ortodoncia y estética dental.",
+    theme: {
+      id: "theme-dental",
+      name: "Medical Teal",
+      primaryColor: "#14b8a6", // Teal 500
+      accentColor: "#5eead4", // Teal 300
+      style: "elegant-light",
+    },
+    contact: {
+      phone: "",
+      email: "citas@sonrisasdental.com",
+      address: "Torre Médica Piso 4",
+    },
+    businessType: "beauty", // Uses booking system
+  },
+  "ejemplo-restaurante": {
+    id: "demo-5",
+    name: "La Parrilla Urbana",
+    slug: "ejemplo-restaurante",
+    description: "Cortes finos, hamburguesas gourmet y mixología.",
+    theme: {
+      id: "theme-restaurante",
+      name: "Grill Red",
+      primaryColor: "#dc2626", // Red 600
+      accentColor: "#fca5a5", // Red 300
+      style: "premium-dark",
+    },
+    contact: {
+      phone: "",
+      email: "reservas@parrillaurbana.com",
+      address: "Zona Gastronómica Local 12",
+    },
+    businessType: "restaurant",
+  },
 
-// Navigation Items
-export const NAV_ITEMS = [
-  { label: "Inicio", href: "/" },
-  { label: "Servicios", href: "#servicios" },
-  { label: "Portfolio", href: "#portfolio" },
-  { label: "Contacto", href: "#contacto" },
-] as const;
+  // Navigation Items
+  export const NAV_ITEMS = [
+    { label: "Inicio", href: "/" },
+    { label: "Servicios", href: "#servicios" },
+    { label: "Portfolio", href: "#portfolio" },
+    { label: "Contacto", href: "#contacto" },
+  ] as const;
 
-// Service Categories
-export type ServiceCategory = "cabello" | "unas" | "spa" | "barberia" | "facial";
+  // Service Categories
+  export type ServiceCategory = "cabello" | "unas" | "spa" | "barberia" | "facial";
 
-export interface Service {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  duration: number; // minutes
-  category: ServiceCategory;
-  image: string;
+  export interface Service {
+    id: string;
+name: string;
+description: string;
+price: number;
+duration: number; // minutes
+category: ServiceCategory;
+image: string;
 }
 
 // Mock Services for Estética Lola

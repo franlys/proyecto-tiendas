@@ -191,15 +191,16 @@ function initializeShops(): ManagedShop[] {
   const initialShops: ManagedShop[] = Object.values(MOCK_SHOPS).map((shop, index) => ({
     ...shop,
     isActive: true,
-    category: "beauty", // Default legacy
+    category: (shop.businessType as ShopCategory) || "beauty",
     createdAt: new Date().toISOString(),
-    ownerUsername: shop.slug === "estetica-lola" ? "lola" : "carlos",
+    ownerUsername: shop.id.startsWith("demo") ? shop.slug : (shop.slug === "estetica-lola" ? "lola" : "carlos"),
     ownerPassword: "123",
     // Subscription defaults - first shop is active, second is past_due for demo
-    subscriptionStatus: index === 0 ? "active" : "past_due",
+    subscriptionStatus: "active",
     nextPaymentDate: getNextMonthDate(),
     monthlyPrice: 299,
     lastPaymentDate: new Date().toISOString(),
+    wholesaleEnabled: !!shop.wholesaleEnabled,
   }));
   return initialShops;
 }
@@ -275,8 +276,29 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          debugLog("Shops loaded from localStorage", { count: parsed.length, shops: parsed.map((s: ManagedShop) => s.slug) });
-          setShops(parsed);
+          let mergedShops = parsed;
+
+          // SEEDING DEMOS V2: Merge new demos if not present
+          const demosSeeded = localStorage.getItem("linko-demos-v2");
+          if (!demosSeeded) {
+            debugWarn("SEEDING: Injecting new demo shops (V2)...");
+            const allDemos = initializeShops();
+
+            // Filter out demos that might already exist by slug
+            const newDemos = allDemos.filter(demo =>
+              !parsed.some((existing: ManagedShop) => existing.slug === demo.slug)
+            );
+
+            if (newDemos.length > 0) {
+              mergedShops = [...parsed, ...newDemos];
+              localStorage.setItem(SHOPS_STORAGE_KEY, JSON.stringify(mergedShops));
+              debugLog(`SEEDING: Added ${newDemos.length} new demos.`);
+            }
+            localStorage.setItem("linko-demos-v2", "true");
+          }
+
+          debugLog("Shops loaded from localStorage", { count: mergedShops.length });
+          setShops(mergedShops);
         } catch {
           debugWarn("Failed to parse shops, initializing defaults");
           setShops(initializeShops());
@@ -284,6 +306,7 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
       } else {
         debugLog("No stored shops, initializing defaults");
         setShops(initializeShops());
+        localStorage.setItem("linko-demos-v2", "true");
       }
       setIsInitialized(true);
     }
