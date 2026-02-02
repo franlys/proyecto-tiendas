@@ -236,6 +236,8 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
       address: "Aeropuerto Terminal 1, CDMX",
     },
     businessType: "rentcar",
+    ownerUsername: "rentcar",
+    ownerPassword: "123",
   },
   "ejemplo-mayoreo": {
     id: "demo-3",
@@ -275,6 +277,8 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
       address: "Torre Médica Piso 4",
     },
     businessType: "beauty", // Uses booking system
+    ownerUsername: "dental",
+    ownerPassword: "123",
   },
   "ejemplo-restaurante": {
     id: "demo-5",
@@ -294,6 +298,8 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
       address: "Zona Gastronómica Local 12",
     },
     businessType: "restaurant",
+    ownerUsername: "restaurante",
+    ownerPassword: "123",
   },
   "ejemplo-perfumeria": {
     id: "demo-6",
@@ -332,8 +338,9 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
       email: "contacto@gonzalezsmartphone.com",
       address: "Local Comercial",
     },
-    businessType: "repair",
     wholesaleEnabled: true,
+    ownerUsername: "gonzalez",
+    ownerPassword: "123",
   },
 };
 
