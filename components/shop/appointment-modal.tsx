@@ -275,7 +275,7 @@ ${notes ? `\n📝 *Notas:* ${notes}` : ""}
                     <Calendar className="w-5 h-5 text-gold" />
                     <span className="font-medium">Elige una fecha</span>
                   </div>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 sm:gap-2">
                     {availableDates.map((date) => {
                       const isSelected = selectedDate?.toDateString() === date.toDateString();
                       return (
@@ -283,16 +283,16 @@ ${notes ? `\n📝 *Notas:* ${notes}` : ""}
                           key={date.toISOString()}
                           onClick={() => setSelectedDate(date)}
                           className={cn(
-                            "p-3 rounded-xl text-center transition-all",
+                            "p-2 sm:p-3 rounded-xl text-center transition-all",
                             isSelected
                               ? "bg-primary text-white"
                               : "bg-white/5 text-slate-300 hover:bg-white/10"
                           )}
                         >
-                          <p className="text-xs opacity-70">
+                          <p className="text-[10px] sm:text-xs opacity-70">
                             {date.toLocaleDateString("es-MX", { weekday: "short" })}
                           </p>
-                          <p className="text-lg font-bold">{date.getDate()}</p>
+                          <p className="text-base sm:text-lg font-bold">{date.getDate()}</p>
                         </button>
                       );
                     })}
@@ -305,7 +305,7 @@ ${notes ? `\n📝 *Notas:* ${notes}` : ""}
                     <Clock className="w-5 h-5 text-gold" />
                     <span className="font-medium">Elige una hora</span>
                   </div>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 sm:gap-2">
                     {timeSlots.map((time) => {
                       const isSelected = selectedTime === time;
                       return (
@@ -313,7 +313,7 @@ ${notes ? `\n📝 *Notas:* ${notes}` : ""}
                           key={time}
                           onClick={() => setSelectedTime(time)}
                           className={cn(
-                            "py-2 px-3 rounded-lg text-sm font-medium transition-all",
+                            "py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all",
                             isSelected
                               ? "bg-primary text-white"
                               : "bg-white/5 text-slate-300 hover:bg-white/10"

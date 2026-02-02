@@ -22,7 +22,10 @@
       "mcp__claude_ai_Vercel__get_deployment_build_logs",
       "Bash(npx next info)",
       "Bash(taskkill:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "mcp__claude_ai_Vercel__search_vercel_documentation",
+      "Bash(grep:*)",
+      "Bash(git restore:*)"
     ]
   }
 }

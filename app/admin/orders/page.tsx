@@ -121,30 +121,32 @@ function OrderDetailModal({
 
         <div className="p-6 space-y-6">
           {/* Status Progress */}
-          <div className="flex items-center justify-between">
-            {statusOrder.map((status, idx) => {
-              const config = ORDER_STATUS_CONFIG[status];
-              const isActive = idx <= currentIndex;
-              const isCurrent = status === order.status;
+          <div className="overflow-x-auto pb-4 -mx-2 px-2">
+            <div className="flex items-center justify-between min-w-[500px]">
+              {statusOrder.map((status, idx) => {
+                const config = ORDER_STATUS_CONFIG[status];
+                const isActive = idx <= currentIndex;
+                const isCurrent = status === order.status;
 
-              return (
-                <div key={status} className="flex items-center">
-                  <div className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all",
-                    isActive ? "bg-green-500/20 border-2 border-green-500" : "bg-white/5 border-2 border-white/20",
-                    isCurrent && "ring-2 ring-green-500/50 ring-offset-2 ring-offset-slate-900"
-                  )}>
-                    {isActive ? "✓" : config.icon}
-                  </div>
-                  {idx < statusOrder.length - 1 && (
+                return (
+                  <div key={status} className="flex items-center flex-1 last:flex-none">
                     <div className={cn(
-                      "w-8 h-0.5 mx-1",
-                      idx < currentIndex ? "bg-green-500" : "bg-white/20"
-                    )} />
-                  )}
-                </div>
-              );
-            })}
+                      "w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all shrink-0",
+                      isActive ? "bg-green-500/20 border-2 border-green-500" : "bg-white/5 border-2 border-white/20",
+                      isCurrent && "ring-2 ring-green-500/50 ring-offset-2 ring-offset-slate-900"
+                    )}>
+                      {isActive ? "✓" : config.icon}
+                    </div>
+                    {idx < statusOrder.length - 1 && (
+                      <div className={cn(
+                        "h-0.5 mx-2 flex-1",
+                        isActive && idx < currentIndex ? "bg-green-500" : "bg-white/20"
+                      )} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {/* Items */}
@@ -236,20 +238,20 @@ function OrderDetailModal({
                 <FileText className="w-4 h-4 mr-2" />
                 Factura
               </Button>
-            {order.status !== "cancelled" && order.status !== "delivered" && (
-              <Button
-                variant="outline"
-                onClick={handleCancel}
-                className="text-red-400 border-red-500/30 hover:bg-red-500/10"
-              >
-                <XCircle className="w-4 h-4 mr-2" />
-                Cancelar
-              </Button>
-            )}
+              {order.status !== "cancelled" && order.status !== "delivered" && (
+                <Button
+                  variant="outline"
+                  onClick={handleCancel}
+                  className="text-red-400 border-red-500/30 hover:bg-red-500/10"
+                >
+                  <XCircle className="w-4 h-4 mr-2" />
+                  Cancelar
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
     </div >
   );
 }

@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { storage } from "@/lib/firebase";
 import {
   ref,
   uploadBytesResumable,
   getDownloadURL,
   deleteObject,
+  UploadTask,
 } from "firebase/storage";
-import { Upload, X, Loader2, ImageIcon } from "lucide-react";
+import { X, Loader2, ImageIcon, AlertTriangle } from "lucide-react";
 import Image from "next/image";
 
 interface FirebaseImageUploadProps {
@@ -34,7 +35,11 @@ export function FirebaseImageUpload({
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [stuckWarning, setStuckWarning] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const uploadTaskRef = useRef<UploadTask | null>(null);
+  const lastProgressRef = useRef<number>(0);
+  const stuckTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const aspectClasses = {
     square: "aspect-square",
@@ -42,8 +47,52 @@ export function FirebaseImageUpload({
     auto: "aspect-video",
   };
 
+  // Check if upload is stuck (no progress for 10 seconds)
+  useEffect(() => {
+    if (uploading && progress > 0) {
+      if (stuckTimerRef.current) {
+        clearTimeout(stuckTimerRef.current);
+      }
+
+      if (progress === lastProgressRef.current && progress < 100) {
+        stuckTimerRef.current = setTimeout(() => {
+          setStuckWarning(true);
+        }, 10000);
+      } else {
+        setStuckWarning(false);
+      }
+
+      lastProgressRef.current = progress;
+    }
+
+    return () => {
+      if (stuckTimerRef.current) {
+        clearTimeout(stuckTimerRef.current);
+      }
+    };
+  }, [uploading, progress]);
+
+  const handleCancelUpload = () => {
+    if (uploadTaskRef.current) {
+      uploadTaskRef.current.cancel();
+      uploadTaskRef.current = null;
+    }
+    setUploading(false);
+    setProgress(0);
+    setStuckWarning(false);
+    setError(null);
+  };
+
   const handleFileSelect = async (file: File) => {
     setError(null);
+    setStuckWarning(false);
+
+    // Check if storage is initialized
+    if (!storage) {
+      setError("Firebase Storage no está configurado. Contacta al administrador.");
+      console.error("Firebase Storage is not initialized");
+      return;
+    }
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
@@ -60,40 +109,82 @@ export function FirebaseImageUpload({
 
     setUploading(true);
     setProgress(0);
+    lastProgressRef.current = 0;
 
     try {
       // Create unique filename
       const timestamp = Date.now();
       const extension = file.name.split(".").pop();
       const filename = `${folder}/${shopId}/${timestamp}.${extension}`;
+
+      console.log("Starting upload to:", filename);
+      console.log("File size:", (file.size / 1024).toFixed(2), "KB");
+
       const storageRef = ref(storage, filename);
 
       // Upload with progress tracking
       const uploadTask = uploadBytesResumable(storageRef, file);
+      uploadTaskRef.current = uploadTask;
 
       uploadTask.on(
         "state_changed",
         (snapshot) => {
           const pct = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
           setProgress(Math.round(pct));
+          console.log(`Upload progress: ${Math.round(pct)}% (${snapshot.bytesTransferred}/${snapshot.totalBytes} bytes)`);
         },
         (error) => {
-          console.error("Upload error:", error);
-          setError("Error al subir la imagen. Intenta de nuevo.");
+          console.error("Upload error details:", {
+            code: error.code,
+            message: error.message,
+            serverResponse: error.serverResponse,
+            name: error.name,
+          });
+
+          // Provide specific error messages
+          let errorMessage = "Error al subir la imagen. ";
+          if (error.code === "storage/unauthorized") {
+            errorMessage += "No tienes permisos. Verifica las reglas de Firebase Storage.";
+          } else if (error.code === "storage/canceled") {
+            errorMessage += "Subida cancelada.";
+          } else if (error.code === "storage/unknown") {
+            errorMessage += "Error de conexión. Verifica tu internet.";
+          } else if (error.code === "storage/quota-exceeded") {
+            errorMessage += "Se agotó el espacio de almacenamiento.";
+          } else if (error.code === "storage/unauthenticated") {
+            errorMessage += "Debes iniciar sesión para subir imágenes.";
+          } else {
+            errorMessage += error.message || "Intenta de nuevo.";
+          }
+
+          setError(errorMessage);
           setUploading(false);
+          setStuckWarning(false);
+          uploadTaskRef.current = null;
         },
         async () => {
-          // Get download URL
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          onChange(downloadURL);
-          setUploading(false);
-          setProgress(0);
+          try {
+            // Get download URL
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            console.log("Upload complete! URL:", downloadURL);
+            onChange(downloadURL);
+            setUploading(false);
+            setProgress(0);
+            setStuckWarning(false);
+            uploadTaskRef.current = null;
+          } catch (urlError) {
+            console.error("Error getting download URL:", urlError);
+            setError("Imagen subida pero error al obtener URL. Intenta de nuevo.");
+            setUploading(false);
+            uploadTaskRef.current = null;
+          }
         }
       );
     } catch (err) {
       console.error("Upload error:", err);
-      setError("Error al subir la imagen");
+      setError("Error al iniciar la subida. Verifica tu conexión.");
       setUploading(false);
+      uploadTaskRef.current = null;
     }
   };
 
@@ -182,7 +273,7 @@ export function FirebaseImageUpload({
           `}
         >
           {uploading ? (
-            <>
+            <div className="flex flex-col items-center gap-2">
               <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
               <span className="text-sm text-zinc-400">Subiendo... {progress}%</span>
               <div className="w-32 h-1.5 bg-zinc-700 rounded-full overflow-hidden">
@@ -191,7 +282,23 @@ export function FirebaseImageUpload({
                   style={{ width: `${progress}%` }}
                 />
               </div>
-            </>
+              {stuckWarning && (
+                <div className="flex items-center gap-2 text-amber-400 text-xs mt-2">
+                  <AlertTriangle className="w-4 h-4" />
+                  <span>La subida parece atorada</span>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCancelUpload();
+                }}
+                className="mt-2 px-3 py-1 text-xs text-zinc-400 hover:text-white bg-zinc-700/50 hover:bg-zinc-700 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
           ) : (
             <>
               <div className="p-3 rounded-full bg-zinc-700/50">

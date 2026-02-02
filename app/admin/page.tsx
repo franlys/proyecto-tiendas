@@ -276,61 +276,61 @@ function AdminDashboardWithSubscription() {
               </div>
             </div>
 
-            <nav className="flex items-center gap-2">
+            <nav className="flex items-center gap-1 sm:gap-2 overflow-x-auto">
               {isSuperAdmin && (
                 <Link href="/agency">
-                  <Button variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300">
+                  <Button variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300 px-2 sm:px-3">
                     <Shield className="w-4 h-4" />
-                    Agency
+                    <span className="hidden sm:inline ml-1">Agency</span>
                   </Button>
                 </Link>
               )}
               <Link href="/admin/inventory">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="px-2 sm:px-3">
                   <Package className="w-4 h-4" />
-                  Inventario
+                  <span className="hidden sm:inline ml-1">Inventario</span>
                 </Button>
               </Link>
               <Link href="/admin/clients">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="px-2 sm:px-3">
                   <Users className="w-4 h-4" />
-                  CRM
+                  <span className="hidden sm:inline ml-1">CRM</span>
                 </Button>
               </Link>
               <Link href="/admin/promos">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="px-2 sm:px-3">
                   <Image className="w-4 h-4" />
-                  Promos
+                  <span className="hidden sm:inline ml-1">Promos</span>
                 </Button>
               </Link>
               {/* Phase 21: Settings only visible to Super Admin */}
               {isSuperAdmin && (
                 <Link href="/admin/settings">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" className="px-2 sm:px-3">
                     <Settings className="w-4 h-4" />
-                    Config
+                    <span className="hidden sm:inline ml-1">Config</span>
                   </Button>
                 </Link>
               )}
               {/* Shop Profile for Shop Owners */}
               {!isSuperAdmin && (
                 <Link href="/admin/profile">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" className="px-2 sm:px-3">
                     <Store className="w-4 h-4" />
-                    Mi Negocio
+                    <span className="hidden sm:inline ml-1">Mi Negocio</span>
                   </Button>
                 </Link>
               )}
               {/* Phase 21: Billing redirects based on role */}
               <Link href={isSuperAdmin ? "/agency" : "/admin/billing"}>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="px-2 sm:px-3">
                   <CreditCard className="w-4 h-4" />
-                  {isSuperAdmin ? "Clientes" : "Billing"}
+                  <span className="hidden sm:inline ml-1">{isSuperAdmin ? "Clientes" : "Billing"}</span>
                 </Button>
               </Link>
-              <Button variant="ghost" size="sm" onClick={handleLogout}>
+              <Button variant="ghost" size="sm" onClick={handleLogout} className="px-2 sm:px-3">
                 <LogOut className="w-4 h-4" />
-                Salir
+                <span className="hidden sm:inline ml-1">Salir</span>
               </Button>
             </nav>
           </div>

@@ -99,35 +99,35 @@ export function ProductCard({ product }: ProductCardProps) {
               ) : (
                 /* Simple Add Toggle */
                 simpleInCart ? (
-                  <div className="flex items-center gap-1 bg-white rounded-full shadow-lg p-1">
+                  <div className="flex items-center gap-0.5 sm:gap-1 bg-white rounded-full shadow-lg p-0.5 sm:p-1">
                     <button
                       onClick={handleSimpleRemove}
-                      className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
+                      className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
                     >
-                      <Minus className="w-4 h-4 text-background" />
+                      <Minus className="w-3 h-3 sm:w-4 sm:h-4 text-background" />
                     </button>
-                    <span className="w-8 text-center font-semibold text-background">
+                    <span className="w-5 sm:w-8 text-center font-semibold text-background text-xs sm:text-base">
                       {simpleQuantity}
                     </span>
                     <button
                       onClick={handleSimpleAdd}
                       disabled={simpleQuantity >= product.stock}
                       className={cn(
-                        "w-8 h-8 rounded-full flex items-center justify-center transition-colors",
+                        "w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-colors",
                         simpleQuantity >= product.stock
                           ? "bg-slate-200 text-slate-400"
                           : "bg-primary hover:bg-primary/90 text-white"
                       )}
                     >
-                      <Plus className="w-4 h-4" />
+                      <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>
                   </div>
                 ) : (
                   <button
                     onClick={handleSimpleAdd}
-                    className="w-10 h-10 rounded-full bg-white/90 hover:bg-white hover:scale-110 flex items-center justify-center transition-all shadow-lg"
+                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/90 hover:bg-white hover:scale-110 flex items-center justify-center transition-all shadow-lg"
                   >
-                    <ShoppingBag className="w-5 h-5 text-background" />
+                    <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-background" />
                   </button>
                 )
               )}
@@ -173,7 +173,7 @@ function VariantsModal({ product, onClose }: { product: Product, onClose: () => 
   const { addProduct, getVariantQuantity, removeVariant, updateVariantQuantity } = useCart();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -185,7 +185,7 @@ function VariantsModal({ product, onClose }: { product: Product, onClose: () => 
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
-        className="relative w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl p-6"
+        className="relative w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl p-4 sm:p-6"
       >
         <div className="flex justify-between items-start mb-4">
           <div>
@@ -213,17 +213,17 @@ function VariantsModal({ product, onClose }: { product: Product, onClose: () => 
                   <p className="text-sm font-semibold text-emerald-400">${variant.price.toLocaleString()}</p>
                 </div>
 
-                <div>
+                <div className="flex-shrink-0">
                   {qty > 0 ? (
-                    <div className="flex items-center gap-2 bg-zinc-900 rounded-lg p-1 border border-zinc-700">
+                    <div className="flex items-center gap-1 sm:gap-2 bg-zinc-900 rounded-lg p-0.5 sm:p-1 border border-zinc-700">
                       <button
                         onClick={() => qty > 1 ? updateVariantQuantity(product.id, variant.id, qty - 1) : removeVariant(product.id, variant.id)}
-                        className="w-7 h-7 flex items-center justify-center rounded bg-zinc-800 text-zinc-400 hover:text-white"
+                        className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded bg-zinc-800 text-zinc-400 hover:text-white text-sm"
                       >-</button>
-                      <span className="w-6 text-center text-white text-sm font-medium">{qty}</span>
+                      <span className="w-5 sm:w-6 text-center text-white text-xs sm:text-sm font-medium">{qty}</span>
                       <button
                         onClick={() => stock > qty && addProduct(product, 1, variant)}
-                        className="w-7 h-7 flex items-center justify-center rounded bg-indigo-600/80 text-white hover:bg-indigo-600"
+                        className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded bg-indigo-600/80 text-white hover:bg-indigo-600 text-sm"
                       >+</button>
                     </div>
                   ) : (
@@ -231,7 +231,7 @@ function VariantsModal({ product, onClose }: { product: Product, onClose: () => 
                       onClick={() => stock > 0 && addProduct(product, 1, variant)}
                       disabled={stock === 0}
                       className={cn(
-                        "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                        "px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors",
                         stock === 0 ? "bg-zinc-800 text-zinc-600 cursor-not-allowed" : "bg-white text-black hover:bg-zinc-200"
                       )}
                     >

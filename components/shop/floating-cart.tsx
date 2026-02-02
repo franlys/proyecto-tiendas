@@ -152,30 +152,31 @@ export function FloatingCart() {
     <>
       <div
         className={cn(
-          "fixed bottom-4 left-4 right-4 z-50",
+          "fixed bottom-4 left-2 right-2 z-50",
+          "sm:left-4 sm:right-4",
           "md:left-auto md:right-6 md:max-w-md",
-          "glass-panel rounded-2xl p-4",
+          "glass-panel rounded-2xl p-3 sm:p-4",
           "animate-in slide-in-from-bottom-4 duration-300"
         )}
       >
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
           {/* Left: Item count */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <div className={cn(
-              "w-10 h-10 rounded-xl flex items-center justify-center",
+              "w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0",
               shouldUseAppointmentFlow ? "bg-primary/20" : "bg-gold/20"
             )}>
               {shouldUseAppointmentFlow ? (
-                <Calendar className="w-5 h-5 text-primary" />
+                <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               ) : (
-                <ShoppingBag className="w-5 h-5 text-gold" />
+                <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-gold" />
               )}
             </div>
-            <div>
-              <p className="text-white font-medium">
+            <div className="min-w-0">
+              <p className="text-white font-medium text-sm sm:text-base truncate">
                 {getSummaryText()}
               </p>
-              <p className="text-sm text-slate-400">
+              <p className="text-xs sm:text-sm text-slate-400 hidden xs:block">
                 {shouldUseAppointmentFlow
                   ? 'seleccionados'
                   : hasProducts
@@ -186,10 +187,10 @@ export function FloatingCart() {
           </div>
 
           {/* Right: Total and CTA */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             <div className="text-right">
-              <p className="text-xs text-slate-400">Total</p>
-              <p className="text-lg font-bold text-white">
+              <p className="text-[10px] sm:text-xs text-slate-400">Total</p>
+              <p className="text-sm sm:text-lg font-bold text-white">
                 ${totalPrice.toLocaleString()}
               </p>
             </div>
@@ -197,8 +198,8 @@ export function FloatingCart() {
             <button
               onClick={handleClick}
               className={cn(
-                "flex items-center gap-2 px-4 py-3 rounded-xl",
-                "text-white font-medium",
+                "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl",
+                "text-white font-medium text-sm",
                 "transition-all duration-300",
                 "shadow-lg hover:shadow-xl",
                 shouldUseAppointmentFlow
@@ -207,9 +208,9 @@ export function FloatingCart() {
               )}
             >
               {shouldUseAppointmentFlow ? (
-                <Calendar className="w-5 h-5" />
+                <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
               ) : (
-                <MessageCircle className="w-5 h-5" />
+                <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
               )}
               <span className="hidden sm:inline">
                 {getButtonText()}
@@ -219,10 +220,10 @@ export function FloatingCart() {
             {/* Clear cart button */}
             <button
               onClick={clearCart}
-              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
               aria-label="Limpiar carrito"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>

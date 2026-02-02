@@ -23,6 +23,7 @@
     "nodemailer": "^7.0.13",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-swipeable": "^7.0.2",
     "recharts": "^3.7.0",
     "resend": "^6.9.1",
     "tailwind-merge": "^2.6.0"

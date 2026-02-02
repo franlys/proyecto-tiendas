@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useCallback } from "react";
+import { useSwipeable } from "react-swipeable";
 import { DemoProvider, useDemo } from "./DemoProvider";
 import { DemoStep } from "./DemoStep";
 import { DemoProgress } from "./DemoProgress";
@@ -36,9 +37,27 @@ interface DemoWalkthroughInnerProps {
 }
 
 function DemoWalkthroughInner({ onContactClick }: DemoWalkthroughInnerProps) {
-  const { currentStep, steps, nextStep, prevStep } = useDemo();
+  const { currentStep, steps, totalSteps, nextStep, prevStep } = useDemo();
   const currentStepData = steps[currentStep];
   const MockupComponent = STEP_MOCKUPS[currentStepData.id];
+
+  // Swipe handlers for mobile
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => {
+      if (currentStep < totalSteps - 1) {
+        nextStep();
+      }
+    },
+    onSwipedRight: () => {
+      if (currentStep > 0) {
+        prevStep();
+      }
+    },
+    trackMouse: false,
+    trackTouch: true,
+    delta: 50, // Minimum swipe distance
+    preventScrollOnSwipe: true,
+  });
 
   // Keyboard navigation
   const handleKeyDown = useCallback(
@@ -80,12 +99,22 @@ function DemoWalkthroughInner({ onContactClick }: DemoWalkthroughInnerProps) {
           <DemoProgress />
         </div>
 
-        {/* Main Demo Area */}
-        <div className="max-w-6xl mx-auto mb-8 md:mb-12">
+        {/* Main Demo Area with Swipe Support */}
+        <div
+          {...swipeHandlers}
+          className="max-w-6xl mx-auto mb-8 md:mb-12 touch-pan-y"
+        >
           <DemoStep>
             {MockupComponent && <MockupComponent />}
           </DemoStep>
         </div>
+
+        {/* Swipe Hint for Mobile */}
+        <p className="text-center text-xs text-slate-500 mb-4 md:hidden flex items-center justify-center gap-2">
+          <span className="inline-block animate-pulse">👈</span>
+          Desliza para navegar
+          <span className="inline-block animate-pulse">👉</span>
+        </p>
 
         {/* Navigation */}
         <div className="mb-8">

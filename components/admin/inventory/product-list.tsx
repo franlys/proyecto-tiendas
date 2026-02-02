@@ -124,42 +124,44 @@ export function ProductList({ products, onEdit, onDelete, onUpdateStock }: Produ
                                     exit={{ height: 0, opacity: 0 }}
                                     className="bg-zinc-950/50 border-t border-zinc-800"
                                 >
-                                    <table className="w-full text-sm text-left">
-                                        <thead className="text-xs text-zinc-500 bg-zinc-900/50 uppercase">
-                                            <tr>
-                                                <th className="px-4 py-2">Variante</th>
-                                                <th className="px-4 py-2 text-right">Precio Púb.</th>
-                                                <th className="px-4 py-2 text-right">Mayoreo</th>
-                                                <th className="px-4 py-2 text-center">Stock</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {product.variants.map((variant) => (
-                                                <tr key={variant.id} className="border-b border-zinc-800/50 last:border-0 hover:bg-zinc-900/30">
-                                                    <td className="px-4 py-2 font-medium text-zinc-300">{variant.name}</td>
-                                                    <td className="px-4 py-2 text-right text-zinc-400">${variant.price}</td>
-                                                    <td className="px-4 py-2 text-right text-amber-500/80">${variant.wholesalePrice || "-"}</td>
-                                                    <td className="px-4 py-2">
-                                                        <div className="flex items-center justify-center gap-2">
-                                                            <button
-                                                                onClick={() => onUpdateStock(product.id, Math.max(0, (variant.stock || 0) - 1), variant.id)}
-                                                                className="w-5 h-5 flex items-center justify-center rounded bg-zinc-800 text-zinc-400 hover:bg-zinc-700 text-xs"
-                                                            >
-                                                                -
-                                                            </button>
-                                                            <span className="font-mono w-6 text-center text-zinc-300">{variant.stock || 0}</span>
-                                                            <button
-                                                                onClick={() => onUpdateStock(product.id, (variant.stock || 0) + 1, variant.id)}
-                                                                className="w-5 h-5 flex items-center justify-center rounded bg-zinc-800 text-zinc-400 hover:bg-zinc-700 text-xs"
-                                                            >
-                                                                +
-                                                            </button>
-                                                        </div>
-                                                    </td>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm text-left min-w-[500px]">
+                                            <thead className="text-xs text-zinc-500 bg-zinc-900/50 uppercase">
+                                                <tr>
+                                                    <th className="px-4 py-2">Variante</th>
+                                                    <th className="px-4 py-2 text-right">Precio Púb.</th>
+                                                    <th className="px-4 py-2 text-right">Mayoreo</th>
+                                                    <th className="px-4 py-2 text-center">Stock</th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tbody>
+                                                {product.variants.map((variant) => (
+                                                    <tr key={variant.id} className="border-b border-zinc-800/50 last:border-0 hover:bg-zinc-900/30">
+                                                        <td className="px-4 py-2 font-medium text-zinc-300">{variant.name}</td>
+                                                        <td className="px-4 py-2 text-right text-zinc-400">${variant.price}</td>
+                                                        <td className="px-4 py-2 text-right text-amber-500/80">${variant.wholesalePrice || "-"}</td>
+                                                        <td className="px-4 py-2">
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <button
+                                                                    onClick={() => onUpdateStock(product.id, Math.max(0, (variant.stock || 0) - 1), variant.id)}
+                                                                    className="w-5 h-5 flex items-center justify-center rounded bg-zinc-800 text-zinc-400 hover:bg-zinc-700 text-xs"
+                                                                >
+                                                                    -
+                                                                </button>
+                                                                <span className="font-mono w-6 text-center text-zinc-300">{variant.stock || 0}</span>
+                                                                <button
+                                                                    onClick={() => onUpdateStock(product.id, (variant.stock || 0) + 1, variant.id)}
+                                                                    className="w-5 h-5 flex items-center justify-center rounded bg-zinc-800 text-zinc-400 hover:bg-zinc-700 text-xs"
+                                                                >
+                                                                    +
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </motion.div>
                             )}
                         </AnimatePresence>
