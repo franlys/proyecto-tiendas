@@ -682,7 +682,7 @@ function PaymentModal({
 function AgencyContent() {
   const router = useRouter();
   const { user, logout, isAuthenticated, isSuperAdmin, isLoading } = useAuth();
-  const { shops, createShop } = useShops();
+  const { shops, createShop, restoreDemos } = useShops();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedShopForPayment, setSelectedShopForPayment] = useState<ManagedShop | null>(null);
   const [shopToDelete, setShopToDelete] = useState<ManagedShop | null>(null);
@@ -802,6 +802,19 @@ function AgencyContent() {
                   Landing
                 </Button>
               </Link>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (confirm("¿Restaurar tiendas de prueba?")) {
+                    restoreDemos();
+                  }
+                }}
+                className="text-amber-400 hover:text-amber-300 hover:bg-amber-400/10"
+              >
+                <DatabaseSeeder className="w-4 h-4 mr-2" />
+                Restaurar Demos
+              </Button>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="w-4 h-4" />
                 Salir

@@ -174,9 +174,15 @@ async function initializeCloudShops(currentShops: ManagedShop[]) {
 
   if (updatesCount > 0) {
     debugLog(`CLOUD INIT: Committing ${updatesCount} new shops...`);
-    await batch.commit();
+    try {
+      await batch.commit();
+      debugLog("CLOUD INIT: SUCCESS ✅ - Data written to Firestore");
+    } catch (error) {
+      debugError("CLOUD INIT: FAILED ❌ - Could not write to Firestore", error);
+    }
   }
 }
+
 
 export function ShopsProvider({ children }: { children: ReactNode }) {
   const [shops, setShops] = useState<ManagedShop[]>([]);

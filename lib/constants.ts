@@ -341,6 +341,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
       email: "contacto@gonzalezsmartphone.com",
       address: "Local Comercial",
     },
+    businessType: "repair", // Explicitly set type
     wholesaleEnabled: true,
     ownerUsername: "gonzalez",
     ownerPassword: "123",
