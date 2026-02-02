@@ -6,10 +6,10 @@ service firebase.storage {
       allow read: if true;
       
       // Allow write access only to authenticated users
-      // Limit size to 5MB and ensure it is an image
+      // Limit size to 50MB (for videos) and ensure it is an image or video
       allow write: if request.auth != null
-                   && request.resource.size < 5 * 1024 * 1024
-                   && request.resource.contentType.matches('image/.*');
+                   && request.resource.size < 50 * 1024 * 1024
+                   && (request.resource.contentType.matches('image/.*') || request.resource.contentType.matches('video/.*'));
     }
   }
 }

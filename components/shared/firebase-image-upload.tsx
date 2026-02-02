@@ -15,11 +15,12 @@ import Image from "next/image";
 interface FirebaseImageUploadProps {
   value?: string;
   onChange: (url: string) => void;
-  folder: string; // e.g., "shops/logo" or "shops/banner"
+  folder: string;
   shopId: string;
   label?: string;
   aspectRatio?: "square" | "banner" | "auto";
   maxSizeMB?: number;
+  accept?: "image" | "video" | "both";
 }
 
 export function FirebaseImageUpload({
@@ -27,9 +28,10 @@ export function FirebaseImageUpload({
   onChange,
   folder,
   shopId,
-  label = "Subir imagen",
+  label = "Subir archivo",
   aspectRatio = "auto",
-  maxSizeMB = 5,
+  maxSizeMB = 10,
+  accept = "image",
 }: FirebaseImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -45,6 +47,10 @@ export function FirebaseImageUpload({
     square: "aspect-square",
     banner: "aspect-[3/1]",
     auto: "aspect-video",
+  };
+
+  const isVideo = (url: string) => {
+    return url.includes(".mp4") || url.includes(".webm") || url.includes(".mov");
   };
 
   // Check if upload is stuck (no progress for 10 seconds)
@@ -90,13 +96,23 @@ export function FirebaseImageUpload({
     // Check if storage is initialized
     if (!storage) {
       setError("Firebase Storage no está configurado. Contacta al administrador.");
-      console.error("Firebase Storage is not initialized");
       return;
     }
 
     // Validate file type
-    if (!file.type.startsWith("image/")) {
-      setError("Solo se permiten archivos de imagen");
+    const isImage = file.type.startsWith("image/");
+    const isVideoFile = file.type.startsWith("video/");
+
+    if (accept === "image" && !isImage) {
+      setError("Solo se permiten imágenes");
+      return;
+    }
+    if (accept === "video" && !isVideoFile) {
+      setError("Solo se permiten videos");
+      return;
+    }
+    if (accept === "both" && !isImage && !isVideoFile) {
+      setError("Solo se permiten imágenes o videos");
       return;
     }
 
@@ -118,7 +134,6 @@ export function FirebaseImageUpload({
       const filename = `${folder}/${shopId}/${timestamp}.${extension}`;
 
       console.log("Starting upload to:", filename);
-      console.log("File size:", (file.size / 1024).toFixed(2), "KB");
 
       const storageRef = ref(storage, filename);
 
@@ -131,42 +146,17 @@ export function FirebaseImageUpload({
         (snapshot) => {
           const pct = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
           setProgress(Math.round(pct));
-          console.log(`Upload progress: ${Math.round(pct)}% (${snapshot.bytesTransferred}/${snapshot.totalBytes} bytes)`);
         },
         (error) => {
-          console.error("Upload error details:", {
-            code: error.code,
-            message: error.message,
-            serverResponse: error.serverResponse,
-            name: error.name,
-          });
-
-          // Provide specific error messages
-          let errorMessage = "Error al subir la imagen. ";
-          if (error.code === "storage/unauthorized") {
-            errorMessage += "No tienes permisos. Verifica las reglas de Firebase Storage.";
-          } else if (error.code === "storage/canceled") {
-            errorMessage += "Subida cancelada.";
-          } else if (error.code === "storage/unknown") {
-            errorMessage += "Error de conexión. Verifica tu internet.";
-          } else if (error.code === "storage/quota-exceeded") {
-            errorMessage += "Se agotó el espacio de almacenamiento.";
-          } else if (error.code === "storage/unauthenticated") {
-            errorMessage += "Debes iniciar sesión para subir imágenes.";
-          } else {
-            errorMessage += error.message || "Intenta de nuevo.";
-          }
-
-          setError(errorMessage);
+          console.error("Upload error details:", error);
+          setError("Error al subir el archivo.");
           setUploading(false);
           setStuckWarning(false);
           uploadTaskRef.current = null;
         },
         async () => {
           try {
-            // Get download URL
             const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            console.log("Upload complete! URL:", downloadURL);
             onChange(downloadURL);
             setUploading(false);
             setProgress(0);
@@ -174,7 +164,7 @@ export function FirebaseImageUpload({
             uploadTaskRef.current = null;
           } catch (urlError) {
             console.error("Error getting download URL:", urlError);
-            setError("Imagen subida pero error al obtener URL. Intenta de nuevo.");
+            setError("Error al obtener URL.");
             setUploading(false);
             uploadTaskRef.current = null;
           }
@@ -182,7 +172,7 @@ export function FirebaseImageUpload({
       );
     } catch (err) {
       console.error("Upload error:", err);
-      setError("Error al iniciar la subida. Verifica tu conexión.");
+      setError("Error al iniciar la subida.");
       setUploading(false);
       uploadTaskRef.current = null;
     }
@@ -210,10 +200,37 @@ export function FirebaseImageUpload({
         const imageRef = ref(storage, value);
         await deleteObject(imageRef);
       } catch (err) {
-        console.error("Error deleting image:", err);
+        console.error("Error deleting file:", err);
       }
     }
     onChange("");
+  };
+
+  const renderPreview = () => {
+    if (!value) return null;
+
+    if (isVideo(value)) {
+      return (
+        <video
+          src={value}
+          className="w-full h-full object-cover"
+          controls
+          autoPlay
+          muted
+          loop
+        />
+      );
+    }
+
+    return (
+      <Image
+        src={value}
+        alt="Preview"
+        fill
+        className="object-cover"
+        unoptimized
+      />
+    );
   };
 
   return (
@@ -225,7 +242,7 @@ export function FirebaseImageUpload({
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept={accept === "video" ? "video/*" : accept === "both" ? "image/*,video/*" : "image/*"}
         onChange={handleInputChange}
         className="hidden"
       />
@@ -233,24 +250,18 @@ export function FirebaseImageUpload({
       {value ? (
         // Preview with remove button
         <div className={`relative ${aspectClasses[aspectRatio]} w-full rounded-lg overflow-hidden border border-zinc-700 bg-zinc-800`}>
-          <Image
-            src={value}
-            alt="Preview"
-            fill
-            className="object-cover"
-            unoptimized
-          />
+          {renderPreview()}
           <button
             type="button"
             onClick={handleRemove}
-            className="absolute top-2 right-2 p-1.5 bg-red-500/80 hover:bg-red-500 rounded-full transition-colors"
+            className="absolute top-2 right-2 p-1.5 bg-red-500/80 hover:bg-red-500 rounded-full transition-colors z-10"
           >
             <X className="w-4 h-4 text-white" />
           </button>
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="absolute bottom-2 right-2 px-3 py-1.5 bg-zinc-900/80 hover:bg-zinc-900 rounded-lg text-xs text-white transition-colors"
+            className="absolute bottom-2 right-2 px-3 py-1.5 bg-zinc-900/80 hover:bg-zinc-900 rounded-lg text-xs text-white transition-colors z-10"
           >
             Cambiar
           </button>
@@ -306,11 +317,11 @@ export function FirebaseImageUpload({
               </div>
               <div className="text-center">
                 <p className="text-sm text-zinc-300">
-                  Arrastra una imagen o{" "}
+                  Arrastra un archivo o{" "}
                   <span className="text-cyan-400">haz clic</span>
                 </p>
                 <p className="text-xs text-zinc-500 mt-1">
-                  PNG, JPG, WebP (máx. {maxSizeMB}MB)
+                  {accept === "video" ? "MP4, WEBM" : accept === "both" ? "Imágenes o Video" : "PNG, JPG, WebP"} (máx. {maxSizeMB}MB)
                 </p>
               </div>
             </>

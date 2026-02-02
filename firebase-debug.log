@@ -1,0 +1,33 @@
+[debug] [2026-02-02T19:41:59.840Z] ----------------------------------------------------------------------
+[debug] [2026-02-02T19:41:59.846Z] Command:       C:\nvm4w\nodejs\node_modules\nodejs\node.exe C:\Users\elmae\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only storage
+[debug] [2026-02-02T19:41:59.846Z] CLI Version:   13.35.1
+[debug] [2026-02-02T19:41:59.846Z] Platform:      win32
+[debug] [2026-02-02T19:41:59.847Z] Node Version:  v22.18.0
+[debug] [2026-02-02T19:41:59.847Z] Time:          Mon Feb 02 2026 15:41:59 GMT-0400 (Bolivia Time)
+[debug] [2026-02-02T19:41:59.847Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-02-02T19:42:00.300Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-02-02T19:42:00.300Z] > authorizing via signed-in user (elmaestrogonzalez30@gmail.com)
+[debug] [2026-02-02T19:42:00.301Z] [iam] checking project proyecto-tiendas-5a23f for permissions ["firebase.projects.get","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]
+[debug] [2026-02-02T19:42:00.303Z] Checked if tokens are valid: true, expires at: 1770062454947
+[debug] [2026-02-02T19:42:00.303Z] Checked if tokens are valid: true, expires at: 1770062454947
+[debug] [2026-02-02T19:42:00.305Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/proyecto-tiendas-5a23f:testIamPermissions [none]
+[debug] [2026-02-02T19:42:00.305Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/proyecto-tiendas-5a23f:testIamPermissions x-goog-quota-user=projects/proyecto-tiendas-5a23f
+[debug] [2026-02-02T19:42:00.305Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/proyecto-tiendas-5a23f:testIamPermissions {"permissions":["firebase.projects.get","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]}
+[debug] [2026-02-02T19:42:00.693Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/proyecto-tiendas-5a23f:testIamPermissions 200
+[debug] [2026-02-02T19:42:00.694Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/proyecto-tiendas-5a23f:testIamPermissions {"permissions":["firebase.projects.get","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]}
+[info] 
+[info] === Deploying to 'proyecto-tiendas-5a23f'...
+[info] 
+[info] i  deploying storage 
+[info] i  storage: ensuring required API firebasestorage.googleapis.com is enabled... 
+[debug] [2026-02-02T19:42:00.699Z] Checked if tokens are valid: true, expires at: 1770062454947
+[debug] [2026-02-02T19:42:00.699Z] Checked if tokens are valid: true, expires at: 1770062454947
+[debug] [2026-02-02T19:42:00.700Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/proyecto-tiendas-5a23f/services/firebasestorage.googleapis.com [none]
+[debug] [2026-02-02T19:42:00.700Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/proyecto-tiendas-5a23f/services/firebasestorage.googleapis.com x-goog-quota-user=projects/proyecto-tiendas-5a23f
+[debug] [2026-02-02T19:42:01.150Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/proyecto-tiendas-5a23f/services/firebasestorage.googleapis.com 200
+[debug] [2026-02-02T19:42:01.150Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/proyecto-tiendas-5a23f/services/firebasestorage.googleapis.com [omitted]
+[info] +  storage: required API firebasestorage.googleapis.com is enabled 
+[debug] [2026-02-02T19:42:01.151Z] Checked if tokens are valid: true, expires at: 1770062454947
+[debug] [2026-02-02T19:42:01.151Z] Checked if tokens are valid: true, expires at: 1770062454947
+[debug] [2026-02-02T19:42:01.152Z] >>> [apiv2][query] GET https://firebasestorage.googleapis.com/v1alpha/projects/proyecto-tiendas-5a23f/defaultBucket [none]
