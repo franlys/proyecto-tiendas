@@ -152,7 +152,12 @@ function ProfileContent() {
         updateShop(user.shopId, {
             name: profile.name,
             description: profile.description,
-            phone: profile.phone,
+            contact: {
+                phone: profile.phone,
+                email: profile.email,
+                address: profile.address,
+                city: profile.city
+            }
         });
 
         setTimeout(() => {
@@ -235,11 +240,10 @@ function ProfileContent() {
                     <div className="lg:col-span-1 space-y-2">
                         <button
                             onClick={() => setActiveTab("general")}
-                            className={`w-full text-left px-4 py-3 rounded-xl transition-all ${
-                                activeTab === "general"
+                            className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "general"
                                     ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
                                     : "text-slate-400 hover:bg-white/5 hover:text-white"
-                            }`}
+                                }`}
                         >
                             <div className="flex items-center gap-3">
                                 <Store className="w-4 h-4" />
@@ -248,11 +252,10 @@ function ProfileContent() {
                         </button>
                         <button
                             onClick={() => setActiveTab("contact")}
-                            className={`w-full text-left px-4 py-3 rounded-xl transition-all ${
-                                activeTab === "contact"
+                            className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "contact"
                                     ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
                                     : "text-slate-400 hover:bg-white/5 hover:text-white"
-                            }`}
+                                }`}
                         >
                             <div className="flex items-center gap-3">
                                 <Phone className="w-4 h-4" />
@@ -261,11 +264,10 @@ function ProfileContent() {
                         </button>
                         <button
                             onClick={() => setActiveTab("schedule")}
-                            className={`w-full text-left px-4 py-3 rounded-xl transition-all ${
-                                activeTab === "schedule"
+                            className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "schedule"
                                     ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
                                     : "text-slate-400 hover:bg-white/5 hover:text-white"
-                            }`}
+                                }`}
                         >
                             <div className="flex items-center gap-3">
                                 <Clock className="w-4 h-4" />
@@ -274,11 +276,10 @@ function ProfileContent() {
                         </button>
                         <button
                             onClick={() => setActiveTab("social")}
-                            className={`w-full text-left px-4 py-3 rounded-xl transition-all ${
-                                activeTab === "social"
+                            className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "social"
                                     ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
                                     : "text-slate-400 hover:bg-white/5 hover:text-white"
-                            }`}
+                                }`}
                         >
                             <div className="flex items-center gap-3">
                                 <Instagram className="w-4 h-4" />
@@ -287,11 +288,10 @@ function ProfileContent() {
                         </button>
                         <button
                             onClick={() => setActiveTab("theme")}
-                            className={`w-full text-left px-4 py-3 rounded-xl transition-all ${
-                                activeTab === "theme"
+                            className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "theme"
                                     ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
                                     : "text-slate-400 hover:bg-white/5 hover:text-white"
-                            }`}
+                                }`}
                         >
                             <div className="flex items-center gap-3">
                                 <Palette className="w-4 h-4" />
@@ -487,9 +487,8 @@ function ProfileContent() {
                                     {Object.entries(profile.schedule).map(([day, hours]) => (
                                         <div
                                             key={day}
-                                            className={`flex items-center gap-4 p-3 rounded-xl ${
-                                                hours.closed ? "bg-black/20 opacity-50" : "bg-black/20"
-                                            }`}
+                                            className={`flex items-center gap-4 p-3 rounded-xl ${hours.closed ? "bg-black/20 opacity-50" : "bg-black/20"
+                                                }`}
                                         >
                                             <div className="w-24">
                                                 <span className="text-white font-medium">{DAY_LABELS[day]}</span>
@@ -581,7 +580,7 @@ function ProfileContent() {
                                     <div>
                                         <label className="block text-sm font-medium text-slate-300 mb-2">
                                             <svg className="w-4 h-4 inline mr-2" viewBox="0 0 24 24" fill="currentColor">
-                                                <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/>
+                                                <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z" />
                                             </svg>
                                             TikTok
                                         </label>
