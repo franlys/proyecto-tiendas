@@ -3,7 +3,7 @@
   "crons": [
     {
       "path": "/api/cron/order-escalation",
-      "schedule": "* * * * *"
+      "schedule": "0 12 * * *"
     },
     {
       "path": "/api/cron/booking-reminders",
