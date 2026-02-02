@@ -260,8 +260,22 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
           setShops(initializeShops());
         }
       } else {
-        debugLog("No stored shops, initializing defaults");
-        setShops(initializeShops());
+        // MIGRATION: Check for legacy "nexo" data
+        const legacyData = localStorage.getItem("nexo-managed-shops");
+        if (legacyData) {
+          try {
+            debugWarn("MIGRATION: Found legacy 'nexo' data. Migrating to 'linko'...");
+            const parsedLegacy = JSON.parse(legacyData);
+            setShops(parsedLegacy);
+            localStorage.setItem(SHOPS_STORAGE_KEY, legacyData); // Persist to new key
+            debugLog("MIGRATION: Success ✅ Data restored.");
+          } catch {
+            setShops(initializeShops());
+          }
+        } else {
+          debugLog("No stored shops, initializing defaults");
+          setShops(initializeShops());
+        }
       }
       setIsInitialized(true);
     }
