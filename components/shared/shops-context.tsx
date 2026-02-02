@@ -191,7 +191,17 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const cloudShops: ManagedShop[] = [];
       snapshot.forEach((doc) => {
-        cloudShops.push({ id: doc.id, ...doc.data() } as ManagedShop);
+        const data = doc.data();
+        cloudShops.push({
+          id: doc.id,
+          ...data,
+          // Robust Mapping: Handle both Flat (Context) and Nested (Service) structures
+          monthlyPrice: data.monthlyPrice ?? data.subscription?.monthlyPrice ?? 0,
+          subscriptionStatus: data.subscriptionStatus ?? data.subscription?.status ?? "trial",
+          nextPaymentDate: data.nextPaymentDate ?? data.subscription?.nextPaymentDate ?? new Date().toISOString(),
+          // Ensure features are mapped if they exist in legacy/service format
+          enabledFeatures: data.enabledFeatures ?? data.features ?? [],
+        } as ManagedShop);
       });
 
       setShops(cloudShops);
