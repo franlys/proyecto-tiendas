@@ -238,16 +238,15 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
       debugLog("INIT - Loading shops...");
 
       // Intentar cargar desde Firestore API
-      // PHASE 1: Deshabilitado temporalmente para asegurar migración de datos locales
-      // const firestoreShops = await loadFromFirestore();
+      const firestoreShops = await loadFromFirestore();
 
-      /* if (firestoreShops && firestoreShops.length > 0) {
+      if (firestoreShops && firestoreShops.length > 0) {
         setShops(firestoreShops);
         // También sincronizar con localStorage como cache
         localStorage.setItem(SHOPS_STORAGE_KEY, JSON.stringify(firestoreShops));
         setIsInitialized(true);
         return;
-      } */
+      }
 
       // Fallback a localStorage
       // Fallback a localStorage

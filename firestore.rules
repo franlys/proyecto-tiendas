@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper: User is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper: User owns the shop (Phase 2: Check 'ownerId' field)
+    // For Phase 1 (Prototype with shared credentials), we basically check if they are logged in.
+    function isShopOwner(shopId) {
+      return isAuthenticated(); 
+    }
+
+    // SHOPS: Public profiles, but restricted editing
+    match /shops/{shopId} {
+      allow read: if true;
+      allow create: if isAuthenticated(); // Allow new signups
+      allow update: if isShopOwner(shopId);
+      
+      // SHOP SUBCOLLECTIONS (if any, like 'products' if subcollection)
+      match /products/{productId} {
+        allow read: if true;
+        allow write: if isShopOwner(shopId);
+      }
+    }
+    
+    // PRODUCTS: If stored as root collection (optional architecture)
+    // We are likely storing them inside shops/{shopId}/products or root 'products' with shopId field.
+    // Let's support both for flexibility.
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAuthenticated() && (resource.data.shopId == request.auth.uid || request.resource.data.shopId == request.auth.uid); 
+      // Note: This assumes Mapping shopId <-> auth.uid which we might not have yet.
+      // Fallback:
+      allow write: if isAuthenticated();
+    }
+  }
+}

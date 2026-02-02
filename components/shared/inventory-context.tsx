@@ -9,6 +9,23 @@ import {
   type ReactNode,
 } from "react";
 import { MOCK_PRODUCTS, type Product } from "@/lib/constants";
+import { db } from "@/lib/firebase";
+import {
+  collection,
+  query,
+  orderBy,
+  getDocs,
+  addDoc,
+  doc,
+  updateDoc,
+  deleteDoc
+} from "firebase/firestore";
+
+const debugLog = (msg: string, ...args: any[]) => {
+  if (process.env.NODE_ENV === "development") {
+    console.log(`[Inventory] ${msg}`, ...args);
+  }
+};
 
 interface InventoryContextType {
   products: Product[];
@@ -36,76 +53,144 @@ export function InventoryProvider({ children, shopId }: InventoryProviderProps) 
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load products from localStorage or use mock data
-  useEffect(() => {
-    const storageKey = getStorageKey(shopId);
-    try {
-      const stored = localStorage.getItem(storageKey);
-      if (stored) {
-        setProducts(JSON.parse(stored));
-      } else {
-        // Initialize with mock data
-        const mockProducts = MOCK_PRODUCTS[shopId] || [];
-        setProducts(mockProducts);
-        localStorage.setItem(storageKey, JSON.stringify(mockProducts));
-      }
-    } catch (error) {
-      console.error("Error loading inventory:", error);
-      setProducts(MOCK_PRODUCTS[shopId] || []);
-    } finally {
-      setIsLoading(false);
-    }
+  // Helper to get Firestore ref
+  const getCollectionRef = useCallback(() => {
+    // We store products in a subcollection: shops/{shopId}/products
+    return collection(db, "shops", shopId, "products");
   }, [shopId]);
 
-  // Save to localStorage when products change
+  // Load products from Firestore
   useEffect(() => {
-    if (!isLoading && products.length >= 0) {
-      const storageKey = getStorageKey(shopId);
-      localStorage.setItem(storageKey, JSON.stringify(products));
+    async function loadInventory() {
+      if (!shopId) return;
+
+      setIsLoading(true);
+      try {
+        debugLog(`INVENTORY: Loading for shop ${shopId}...`);
+
+        // 1. Try Firestore
+        const q = query(getCollectionRef(), orderBy("name"));
+        const snapshot = await getDocs(q);
+
+        if (!snapshot.empty) {
+          const cloudProducts = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          })) as Product[];
+
+          setProducts(cloudProducts);
+          // Update local cache
+          localStorage.setItem(getStorageKey(shopId), JSON.stringify(cloudProducts));
+          debugLog(`INVENTORY: Loaded ${cloudProducts.length} items from Cloud ☁️`);
+        } else {
+          // 2. Fallback to LocalStorage (Offline or First Run)
+          debugLog("INVENTORY: Cloud empty, checking local storage...");
+          const stored = localStorage.getItem(getStorageKey(shopId));
+
+          if (stored) {
+            const localProducts = JSON.parse(stored);
+            setProducts(localProducts);
+            debugLog("INVENTORY: Loaded from LocalStorage 💾");
+
+            // OPTIONAL: Sync local to cloud?
+            // Not doing automatically to avoid overwriting if just empty query
+          } else {
+            // 3. Fallback to Mocks (First run ever)
+            debugLog("INVENTORY: No data found, seeding mocks.");
+            const mockProducts = MOCK_PRODUCTS[shopId] || [];
+            setProducts(mockProducts);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading inventory:", error);
+        // Fallback to local on error
+        const stored = localStorage.getItem(getStorageKey(shopId));
+        if (stored) setProducts(JSON.parse(stored));
+      } finally {
+        setIsLoading(false);
+      }
     }
-  }, [products, isLoading, shopId]);
+
+    loadInventory();
+  }, [shopId, getCollectionRef]);
 
   const getProduct = useCallback(
     (id: string) => products.find((p) => p.id === id),
     [products]
   );
 
-  const addProduct = useCallback((product: Omit<Product, "id">) => {
-    const newProduct: Product = {
-      ...product,
-      id: `p-${Date.now()}`,
-    };
-    setProducts((prev) => [...prev, newProduct]);
-  }, []);
+  const addProduct = useCallback(async (product: Omit<Product, "id">) => {
+    // Optimistic Update
+    const tempId = `temp-${Date.now()}`;
+    const newProduct: Product = { ...product, id: tempId };
 
-  const updateProduct = useCallback((id: string, updates: Partial<Product>) => {
+    setProducts((prev) => [...prev, newProduct]);
+
+    try {
+      // Write to Cloud
+      // If we want auto-ID from firestore:
+      const colRef = getCollectionRef();
+      const docRef = await addDoc(colRef, product);
+
+      // Update with real ID
+      const finalProduct = { ...product, id: docRef.id };
+      setProducts(prev => prev.map(p => p.id === tempId ? finalProduct : p));
+
+      // Update Cache
+      const current = [...products, finalProduct]; // Approximation
+      localStorage.setItem(getStorageKey(shopId), JSON.stringify(current));
+    } catch (e) {
+      console.error("Error adding product to cloud:", e);
+      // Revert or flag error? For now, keep local optimistic version but alert
+      // In a real app we'd show a toast "Failed to save online"
+    }
+  }, [getCollectionRef, products, shopId]);
+
+  const updateProduct = useCallback(async (id: string, updates: Partial<Product>) => {
+    // Optimistic
     setProducts((prev) =>
       prev.map((p) => (p.id === id ? { ...p, ...updates } : p))
     );
-  }, []);
 
-  const deleteProduct = useCallback((id: string) => {
+    try {
+      const docRef = doc(db, "shops", shopId, "products", id);
+      await updateDoc(docRef, updates);
+    } catch (e) {
+      console.error("Error updating product in cloud:", e);
+    }
+  }, [shopId]);
+
+  const deleteProduct = useCallback(async (id: string) => {
+    // Optimistic
     setProducts((prev) => prev.filter((p) => p.id !== id));
-  }, []);
+
+    try {
+      const docRef = doc(db, "shops", shopId, "products", id);
+      await deleteDoc(docRef);
+    } catch (e) {
+      console.error("Error deleting product in cloud:", e);
+    }
+  }, [shopId]);
 
   const updateStock = useCallback((id: string, quantity: number, variantId?: string) => {
-    setProducts((prev) =>
-      prev.map((p) => {
-        if (p.id !== id) return p;
+    // NOTE: Does not sync to cloud immediately to avoid spamming writes on every click?
+    // Ideally we should denounce or just write. Let's write for simplicity.
+    const product = products.find(p => p.id === id);
+    if (!product) return;
 
-        if (variantId && p.variants) {
-          // Update variant stock
-          const newVariants = p.variants.map((v) =>
-            v.id === variantId ? { ...v, stock: Math.max(0, quantity) } : v
-          );
-          return { ...p, variants: newVariants };
-        }
+    let updates: Partial<Product> = {};
 
-        // Update base stock
-        return { ...p, stock: Math.max(0, quantity) };
-      })
-    );
-  }, []);
+    if (variantId && product.variants) {
+      const newVariants = product.variants.map((v) =>
+        v.id === variantId ? { ...v, stock: Math.max(0, quantity) } : v
+      );
+      updates = { variants: newVariants };
+    } else {
+      updates = { stock: Math.max(0, quantity) };
+    }
+
+    updateProduct(id, updates);
+  }, [products, updateProduct]);
 
   const decrementStock = useCallback(
     (id: string, quantity: number): boolean => {
@@ -113,14 +198,12 @@ export function InventoryProvider({ children, shopId }: InventoryProviderProps) 
       if (!product || product.stock < quantity) {
         return false;
       }
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.id === id ? { ...p, stock: p.stock - quantity } : p
-        )
-      );
+
+      const newStock = product.stock - quantity;
+      updateProduct(id, { stock: newStock });
       return true;
     },
-    [products]
+    [products, updateProduct]
   );
 
   const getLowStockProducts = useCallback(() => {
@@ -128,24 +211,25 @@ export function InventoryProvider({ children, shopId }: InventoryProviderProps) 
   }, [products]);
 
   const saveProduct = useCallback((product: Product): Product => {
-    const existingProduct = products.find((p) => p.id === product.id);
-
-    if (existingProduct) {
-      // Update existing product
-      setProducts((prev) =>
-        prev.map((p) => (p.id === product.id ? product : p))
-      );
+    // Adapter for Admin Form
+    if (products.some(p => p.id === product.id)) {
+      updateProduct(product.id, product);
       return product;
     } else {
-      // Create new product with generated ID if empty
-      const newProduct: Product = {
-        ...product,
-        id: product.id || `p-${Date.now()}`,
-      };
-      setProducts((prev) => [newProduct, ...prev]);
-      return newProduct;
+      // Since addProduct is async/void, we just fire it. 
+      // The ID logic here is tricky because addProduct generates ID.
+      // For this legacy signature, we might need adjustments.
+      // But assuming the user passes a product *without* ID for creation...
+      const { id, ...data } = product;
+      if (!id || id.startsWith("temp-")) {
+        addProduct(data as Product);
+      } else {
+        // Has ID but not found in state? Weird case. Treat as update.
+        updateProduct(id, data);
+      }
+      return product;
     }
-  }, [products]);
+  }, [products, updateProduct, addProduct]);
 
   return (
     <InventoryContext.Provider

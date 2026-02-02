@@ -268,6 +268,46 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
     },
     businessType: "restaurant",
   },
+  "ejemplo-perfumeria": {
+    id: "demo-6",
+    name: "Essence Perfumería",
+    slug: "ejemplo-perfumeria",
+    description: "Fragancias exclusivas, perfumes de autor y esencias importadas.",
+    theme: {
+      id: "theme-perfumeria",
+      name: "Elegant Violet",
+      primaryColor: "#8b5cf6", // Violet 500
+      accentColor: "#ddd6fe", // Violet 100
+      style: "elegant-light",
+    },
+    contact: {
+      phone: "",
+      email: "contacto@essence.com",
+      address: "Plaza Luxury Local 5",
+    },
+    businessType: "retail",
+    wholesaleEnabled: true,
+  },
+  "gonzalezsmartphone": {
+    id: "legacy-1",
+    name: "Gonzalez Smartphone",
+    slug: "gonzalezsmartphone",
+    description: "Venta y reparación de telefonía móvil. Servicio técnico especializado.",
+    theme: {
+      id: "theme-gonzalez",
+      name: "Tech Blue",
+      primaryColor: "#0ea5e9", // Sky 500
+      accentColor: "#38bdf8", // Sky 400
+      style: "modern-minimal",
+    },
+    contact: {
+      phone: "",
+      email: "contacto@gonzalezsmartphone.com",
+      address: "Local Comercial",
+    },
+    businessType: "repair",
+    wholesaleEnabled: true,
+  },
 };
 
 // Navigation Items
@@ -425,8 +465,20 @@ export const CATEGORY_LABELS: Record<ServiceCategory, string> = {
 // PRODUCTS (Phase 7 - Inventory & eCommerce)
 // ============================================
 
-export type ProductCategory = "cabello" | "skincare" | "unas" | "accesorios" | "barberia";
-
+export type ProductCategory =
+  | "comida"
+  | "bebidas"
+  | "cabello"
+  | "unas"
+  | "barberia"
+  | "accesorios"
+  | "spa"
+  | "facial"
+  | "autos"
+  | "electronica"
+  | "perfumes" // New
+  | "sets" // New
+  | "otros";
 export interface ProductVariant {
   id: string;
   name: string; // "Original", "OLED", "Genérica AAA"
@@ -708,6 +760,70 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
       lowStockThreshold: 2,
       category: "accesorios",
       image: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=400&h=400&fit=crop",
+    },
+  ],
+  "ejemplo-perfumeria": [
+    {
+      id: "pf1",
+      name: "Eau de Parfum 'Midnight'",
+      description: "Fragancia nocturna con notas de vainilla y orquídea. 100ml.",
+      price: 1800,
+      stock: 12,
+      lowStockThreshold: 3,
+      category: "perfumes",
+      image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&h=400&fit=crop",
+    },
+    {
+      id: "pf2",
+      name: "Cítricos de Sicilia",
+      description: "Esencia fresca de limón y bergamota. Unisex. 100ml.",
+      price: 1500,
+      stock: 20,
+      lowStockThreshold: 5,
+      category: "perfumes",
+      image: "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&h=400&fit=crop",
+    },
+    {
+      id: "pf3",
+      name: "Ocean Breeze Man",
+      description: "Aroma acuático y maderas. 100ml.",
+      price: 1350,
+      stock: 15,
+      lowStockThreshold: 4,
+      category: "perfumes",
+      image: "https://images.unsplash.com/photo-1523293188086-b46e0a804130?w=400&h=400&fit=crop",
+    },
+    {
+      id: "pf4",
+      name: "Rose Garden Set",
+      description: "Set de regalo con perfume de rosas y crema corporal.",
+      price: 2200,
+      stock: 8,
+      lowStockThreshold: 2,
+      category: "sets",
+      image: "https://images.unsplash.com/photo-1615397349754-cfa2066a298e?w=400&h=400&fit=crop",
+    },
+  ],
+  "gonzalezsmartphone": [
+    {
+      id: "gs1",
+      name: "Cambio de Pantalla iPhone",
+      description: "Servicio de reparación con pantalla calidad original.",
+      price: 1200,
+      stock: 10,
+      lowStockThreshold: 2,
+      category: "accesorios",
+      image: "https://images.unsplash.com/photo-1599580492317-062e70b7986c?w=400&h=400&fit=crop",
+    },
+    {
+      id: "gs2",
+      name: "Mica de Hidrogel",
+      description: "Protección premium para cualquier modelo.",
+      price: 150,
+      stock: 50,
+      lowStockThreshold: 10,
+      category: "accesorios",
+      image: "https://images.unsplash.com/photo-1603351154351-5cf99bc32f2d?w=400&h=400&fit=crop",
     },
   ],
 };
