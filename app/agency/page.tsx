@@ -44,6 +44,7 @@ import {
   type ManagedShop,
   type SubscriptionStatus,
 } from "@/components/shared";
+import { DatabaseSeeder } from "@/components/admin/database-seeder";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
