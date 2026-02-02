@@ -272,6 +272,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    // MIGRATION: Check for legacy "nexo" auth data
+    const legacyAuth = localStorage.getItem("nexo-auth");
+    const migrationAuthDone = localStorage.getItem("linko-migration-auth-v1");
+
+    if (legacyAuth && !migrationAuthDone) {
+      debugWarn("MIGRATION: Found legacy auth data. Restoring session...");
+      localStorage.setItem(AUTH_STORAGE_KEY, legacyAuth);
+      localStorage.setItem("linko-migration-auth-v1", "true");
+
+      // Also migrate shop sessions and activity if present
+      const legacySessions = localStorage.getItem("nexo-shop-sessions");
+      if (legacySessions) localStorage.setItem(SHOP_SESSIONS_KEY, legacySessions);
+
+      const legacyActivity = localStorage.getItem("nexo-last-activity");
+      if (legacyActivity) localStorage.setItem(ACTIVITY_STORAGE_KEY, legacyActivity);
+    }
+
     // Load auth session
     const stored = localStorage.getItem(AUTH_STORAGE_KEY);
     debugLog("Stored auth data found", { hasStoredAuth: !!stored });

@@ -248,7 +248,28 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
       }
 
       // Fallback a localStorage
+      // Fallback a localStorage
       debugLog("Loading from localStorage as fallback...");
+
+      // MIGRATION V2: Force check for legacy "nexo" data if explicitly requested or not migrated
+      const legacyData = localStorage.getItem("nexo-managed-shops");
+      const migrationCompleted = localStorage.getItem("linko-migration-v1");
+
+      if (legacyData && !migrationCompleted) {
+        try {
+          debugWarn("MIGRATION V2: Found legacy 'nexo' data. Restoring...");
+          const parsedLegacy = JSON.parse(legacyData);
+          setShops(parsedLegacy);
+          localStorage.setItem(SHOPS_STORAGE_KEY, legacyData); // Overwrite/Save to new key
+          localStorage.setItem("linko-migration-v1", "true"); // Mark as done
+          debugLog("MIGRATION V2: Success ✅ Data restored from legacy.");
+          setIsInitialized(true);
+          return;
+        } catch {
+          debugError("MIGRATION V2: Failed to parse legacy data.");
+        }
+      }
+
       const stored = localStorage.getItem(SHOPS_STORAGE_KEY);
       if (stored) {
         try {
@@ -260,22 +281,8 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
           setShops(initializeShops());
         }
       } else {
-        // MIGRATION: Check for legacy "nexo" data
-        const legacyData = localStorage.getItem("nexo-managed-shops");
-        if (legacyData) {
-          try {
-            debugWarn("MIGRATION: Found legacy 'nexo' data. Migrating to 'linko'...");
-            const parsedLegacy = JSON.parse(legacyData);
-            setShops(parsedLegacy);
-            localStorage.setItem(SHOPS_STORAGE_KEY, legacyData); // Persist to new key
-            debugLog("MIGRATION: Success ✅ Data restored.");
-          } catch {
-            setShops(initializeShops());
-          }
-        } else {
-          debugLog("No stored shops, initializing defaults");
-          setShops(initializeShops());
-        }
+        debugLog("No stored shops, initializing defaults");
+        setShops(initializeShops());
       }
       setIsInitialized(true);
     }
