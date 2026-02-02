@@ -201,7 +201,7 @@ function VariantsModal({ product, onClose }: { product: Product, onClose: () => 
             const stock = variant.stock || 0;
 
             return (
-              <div key={variant.id} className="flex items-center justify-between p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/50">
+              <div key={variant.id} className="flex flex-col xs:flex-row xs:items-center justify-between p-2 sm:p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/50 gap-2 xs:gap-0">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-white">{variant.name}</span>
@@ -213,7 +213,7 @@ function VariantsModal({ product, onClose }: { product: Product, onClose: () => 
                   <p className="text-sm font-semibold text-emerald-400">${variant.price.toLocaleString()}</p>
                 </div>
 
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 self-end xs:self-auto">
                   {qty > 0 ? (
                     <div className="flex items-center gap-1 sm:gap-2 bg-zinc-900 rounded-lg p-0.5 sm:p-1 border border-zinc-700">
                       <button

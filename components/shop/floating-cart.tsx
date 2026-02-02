@@ -173,7 +173,7 @@ export function FloatingCart() {
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-white font-medium text-sm sm:text-base truncate">
+              <p className="text-white font-medium text-sm sm:text-base truncate max-w-[120px] xs:max-w-none">
                 {getSummaryText()}
               </p>
               <p className="text-xs sm:text-sm text-slate-400 hidden xs:block">
