@@ -352,9 +352,7 @@ function ShopRow({
             })}
           </p>
           <p className="text-xs text-slate-500">
-            {shop.lastPaymentDate
-              ? `Último: ${new Date(shop.lastPaymentDate).toLocaleDateString("es-MX", { day: "numeric", month: "short" })}`
-              : "Sin pagos"}
+            {shop.subscriptionStatus === "active" ? "Recurrente" : "Manual"}
           </p>
         </div>
       </td>
@@ -583,14 +581,12 @@ function PaymentModal({
             <span className="text-slate-400">Monto mensual</span>
             <span className="text-white font-bold">${shop.monthlyPrice} MXN</span>
           </div>
-          {shop.lastPaymentDate && (
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-slate-500">Último pago</span>
-              <span className="text-slate-400">
-                {new Date(shop.lastPaymentDate).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}
-              </span>
-            </div>
-          )}
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-slate-500">Próx. Vencimiento</span>
+            <span className="text-slate-400">
+              {new Date(shop.nextPaymentDate).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}
+            </span>
+          </div>
         </div>
 
         {/* Actions */}
