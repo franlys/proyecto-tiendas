@@ -278,6 +278,25 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
           const parsed = JSON.parse(stored);
           let mergedShops = parsed;
 
+          // RESCUE MISSON: Check if 'gonzalezsmartphone' was lost and restore it from legacy
+          const legacyBackup = localStorage.getItem("nexo-managed-shops");
+          if (legacyBackup) {
+            try {
+              const parsedLegacy = JSON.parse(legacyBackup);
+              const originalShop = parsedLegacy.find((s: ManagedShop) => s.slug === "gonzalezsmartphone");
+
+              // If found in backup but NOT in current list, restore it
+              if (originalShop && !mergedShops.some((s: ManagedShop) => s.slug === "gonzalezsmartphone")) {
+                debugWarn("RESCUE: 'gonzalezsmartphone' found in backup but missing in active list. Restoring...");
+                // Add to the beginning
+                mergedShops = [originalShop, ...mergedShops];
+                localStorage.setItem(SHOPS_STORAGE_KEY, JSON.stringify(mergedShops));
+              }
+            } catch (e) {
+              debugError("RESCUE: Failed to parse legacy backup for rescue operation.");
+            }
+          }
+
           // SEEDING DEMOS V2: Merge new demos if not present
           const demosSeeded = localStorage.getItem("linko-demos-v2");
           if (!demosSeeded) {
