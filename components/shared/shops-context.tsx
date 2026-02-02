@@ -60,7 +60,7 @@ export interface ManagedShop extends ShopConfig {
   enabledFeatures?: FeatureId[];
   features?: FeatureId[]; // Legacy compatibility
   // Business Logic
-  businessType: "beauty" | "retail" | "repair" | "restaurant";
+  businessType: ShopCategory;
   category: ShopCategory; // Added to fix type error
   wholesaleEnabled?: boolean;
   customDomain?: string;
