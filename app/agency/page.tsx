@@ -51,6 +51,7 @@ import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 import { ShopCategory } from "@/components/shared";
+import { BUSINESS_TYPE_LABELS } from "@/lib/constants";
 
 function CreateShopModal({
   isOpen,
