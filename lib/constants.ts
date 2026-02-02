@@ -184,7 +184,7 @@ export const DEFAULT_THEME: ShopTheme = {
 // Example Shop Configurations (Hardcoded for Phase 1)
 export const MOCK_SHOPS: Record<string, ShopConfig> = {
   "estetica-lola": {
-    id: "1",
+    id: "demo-0",
     name: "Estética Lola",
     slug: "estetica-lola",
     description: "Centro de belleza y estética profesional",

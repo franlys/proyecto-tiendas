@@ -97,6 +97,7 @@ interface ShopsContextType {
   // Feature management
   updateShopFeatures: (shopId: string, features: FeatureId[]) => Promise<void>;
   toggleFeature: (shopId: string, featureId: FeatureId) => Promise<void>;
+  restoreDemos: () => Promise<void>;
 
   // State
   isLoading: boolean;
@@ -180,6 +181,14 @@ async function initializeCloudShops(currentShops: ManagedShop[]) {
 export function ShopsProvider({ children }: { children: ReactNode }) {
   const [shops, setShops] = useState<ManagedShop[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Manual Restore Trigger
+  const restoreDemos = useCallback(async () => {
+    debugLog("MANUAL RESTORE TRIGGERED");
+    await initializeCloudShops(shops);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    window.location.reload();
+  }, [shops]);
 
   // ============================================
   // SYNC LOGIC
@@ -351,6 +360,7 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
         isSubscriptionActive,
         updateShopFeatures,
         toggleFeature,
+        restoreDemos,
         isLoading,
         isInitialized: !isLoading
       }}

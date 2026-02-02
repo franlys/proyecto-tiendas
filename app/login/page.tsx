@@ -2,20 +2,22 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Lock, User, Eye, EyeOff, Loader2, Shield } from "lucide-react";
-import { useAuth, AuthProvider } from "@/components/shared";
+import { Lock, User, Eye, EyeOff, Loader2, Shield, Database } from "lucide-react";
+import { useAuth, AuthProvider, useShops, ShopsProvider } from "@/components/shared";
 import { Button } from "@/components/ui";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, logout, isAuthenticated, isSuperAdmin, user, isLoading, sessionExpired, clearSessionExpired } = useAuth();
+  const { restoreDemos } = useShops();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
   const [forceLogout, setForceLogout] = useState(false);
   const [showExpiredBanner, setShowExpiredBanner] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -250,13 +252,15 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <AuthProvider>
-      <Suspense fallback={
-        <div className="min-h-screen bg-background flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-primary animate-spin" />
-        </div>
-      }>
-        <LoginForm />
-      </Suspense>
+      <ShopsProvider>
+        <Suspense fallback={
+          <div className="min-h-screen bg-background flex items-center justify-center">
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+          </div>
+        }>
+          <LoginForm />
+        </Suspense>
+      </ShopsProvider>
     </AuthProvider>
   );
 }
