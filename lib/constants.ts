@@ -476,9 +476,13 @@ export type ProductCategory =
   | "facial"
   | "autos"
   | "electronica"
-  | "perfumes" // New
-  | "sets" // New
+  | "perfumes"
+  | "sets"
+  | "skincare" // Re-added
   | "otros";
+
+  | "otros";
+
 export interface ProductVariant {
   id: string;
   name: string; // "Original", "OLED", "Genérica AAA"
@@ -511,6 +515,15 @@ export const PRODUCT_CATEGORY_LABELS: Record<ProductCategory, string> = {
   unas: "Uñas",
   accesorios: "Accesorios",
   barberia: "Barbería",
+  comida: "Comida",
+  bebidas: "Bebidas",
+  spa: "Spa",
+  facial: "Facial",
+  autos: "Autos",
+  electronica: "Electrónica",
+  perfumes: "Perfumes",
+  sets: "Sets",
+  otros: "Otros",
 };
 
 // Mock Products
