@@ -101,8 +101,8 @@ function LoginForm() {
         <div className="w-full max-w-md">
           {/* Logo & Title */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 mb-6 shadow-lg shadow-cyan-500/25 overflow-hidden p-2">
-              <img src="/logo.png" alt="Linko" className="w-full h-full object-contain" />
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 mb-6 shadow-2xl shadow-cyan-500/30 overflow-hidden ring-1 ring-white/20">
+              <img src="/logo.png" alt="Linko" className="w-full h-full object-cover" />
             </div>
             <h1 className="font-display text-3xl font-bold text-white mb-2">
               Centro de Control
