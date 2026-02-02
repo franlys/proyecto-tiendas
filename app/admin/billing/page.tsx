@@ -167,9 +167,9 @@ function BillingContent() {
                     <span className="text-sm">Precio mensual</span>
                   </div>
                   <p className="text-2xl font-bold text-white">
-                    ${shop.monthlyPrice}{" "}
+                    RD$ {shop.monthlyPrice || 0}{" "}
                     <span className="text-sm text-slate-400 font-normal">
-                      MXN/mes
+                      DOP/mes
                     </span>
                   </p>
                 </div>

@@ -56,15 +56,16 @@ function CreateShopModal({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (data: { name: string; slug: string; category: ShopCategory; description: string; phone: string; wholesale: boolean; customDomain: string }) => void;
+  onCreate: (data: { name: string; slug: string; category: ShopCategory; description: string; phone: string; wholesale: boolean; customDomain: string; monthlyPrice: number }) => void;
 }) {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [customDomain, setCustomDomain] = useState("");
-  const [category, setCategory] = useState<ShopCategory>("technology");
+  const [category, setCategory] = useState<ShopCategory>("retail");
   const [description, setDescription] = useState("");
   const [phone, setPhone] = useState("");
   const [wholesale, setWholesale] = useState(false);
+  const [monthlyPrice, setMonthlyPrice] = useState(1500); // Default to 1500 DOP/MXN
 
   // Auto-generar slug desde nombre
   useEffect(() => {
@@ -80,11 +81,11 @@ function CreateShopModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name && slug && phone) {
-      onCreate({ name, slug, category, description, phone, wholesale, customDomain });
+      onCreate({ name, slug, category, description, phone, wholesale, customDomain, monthlyPrice });
       setName("");
       setSlug("");
       setCustomDomain("");
-      setCategory("technology");
+      setCategory("retail"); // Reset to valid default
       setDescription("");
       setPhone("");
       setWholesale(false);
@@ -152,6 +153,7 @@ function CreateShopModal({
               <option value="retail">Retail / Tienda</option>
               <option value="repair">Taller / Reparación</option>
               <option value="restaurant">Restaurante</option>
+              <option value="rentcar">Rent-a-Car</option>
             </select>
           </div>
 
@@ -291,7 +293,7 @@ function ShopRow({
             <div className="flex items-center gap-2">
               <p className="text-sm text-slate-400">/{shop.slug}</p>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-slate-300 border border-white/5 uppercase tracking-wider">
-                {shop.category || "beauty"}
+                {shop.category || "retail"}
               </span>
               {shop.wholesaleEnabled && (
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 border border-cyan-500/20 uppercase tracking-wider font-bold">
@@ -731,7 +733,7 @@ function AgencyContent() {
     setShopToDelete(shop);
   };
 
-  const handleCreateShop = (data: { name: string; slug: string; category: ShopCategory; description: string; phone: string; wholesale: boolean; customDomain: string }) => {
+  const handleCreateShop = (data: { name: string; slug: string; category: ShopCategory; description: string; phone: string; wholesale: boolean; customDomain: string; monthlyPrice: number }) => {
     debugLog("CREATE SHOP - Form submitted", data);
     const newShop = createShop(data);
     debugLog("CREATE SHOP - Result", { success: !!newShop, shopId: newShop?.id });

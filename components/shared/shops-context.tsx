@@ -64,6 +64,7 @@ export interface ManagedShop extends ShopConfig {
   category: ShopCategory; // Added to fix type error
   wholesaleEnabled?: boolean;
   customDomain?: string;
+  paymentLink?: string; // For manual payments
 }
 
 interface CreateShopData {
@@ -74,6 +75,7 @@ interface CreateShopData {
   phone: string;
   wholesale: boolean;
   customDomain?: string;
+  monthlyPrice: number;
 }
 
 interface UpdateShopData extends Partial<ManagedShop> { }
@@ -251,6 +253,7 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
       ownerPassword: "123",
       subscriptionStatus: "trial",
       nextPaymentDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      monthlyPrice: data.monthlyPrice || 0, // Set the custom price
       features: DEFAULT_FEATURES as FeatureId[],
       enabledFeatures: DEFAULT_FEATURES as FeatureId[],
       stats: { monthlyRevenue: 0, activeOrders: 0, completedOrders: 0, totalCustomers: 0 }
