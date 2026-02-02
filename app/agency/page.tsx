@@ -296,7 +296,7 @@ function ShopRow({
             <div className="flex items-center gap-2">
               <p className="text-sm text-slate-400">/{shop.slug}</p>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-slate-300 border border-white/5 uppercase tracking-wider">
-                {shop.category || "retail"}
+                {shop.businessType ? (BUSINESS_TYPE_LABELS[shop.businessType] || shop.businessType) : "RETAIL"}
               </span>
               {shop.wholesaleEnabled && (
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 border border-cyan-500/20 uppercase tracking-wider font-bold">
