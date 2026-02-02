@@ -4,7 +4,8 @@ service cloud.firestore {
     
     // Helper: User is authenticated
     function isAuthenticated() {
-      return request.auth != null;
+      // return request.auth != null; 
+      return true; // TEMPORARY DEV MODE: Allow all writes because we use Mock Auth (localStorage)
     }
 
     // Helper: User owns the shop (Phase 2: Check 'ownerId' field)

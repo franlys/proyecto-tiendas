@@ -196,6 +196,14 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
     window.location.reload();
   }, [shops]);
 
+  // Debug Environment Variables
+  useEffect(() => {
+    console.log("🛠️ [CONFIG-DEBUG] Checking Firebase Config...");
+    console.log("🛠️ [CONFIG-DEBUG] Project ID:", process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ? "✅ OK" : "❌ MISSING");
+    console.log("🛠️ [CONFIG-DEBUG] API Key:", process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? "✅ OK" : "❌ MISSING");
+    console.log("🛠️ [CONFIG-DEBUG] Auth Domain:", process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ? "✅ OK" : "❌ MISSING");
+  }, []);
+
   // ============================================
   // SYNC LOGIC
   // ============================================
