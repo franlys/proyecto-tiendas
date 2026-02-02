@@ -481,7 +481,7 @@ export type ProductCategory =
   | "skincare" // Re-added
   | "otros";
 
-  | "otros";
+
 
 export interface ProductVariant {
   id: string;
