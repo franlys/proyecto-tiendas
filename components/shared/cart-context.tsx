@@ -66,24 +66,36 @@ interface CartProviderProps {
   children: ReactNode;
 }
 
-export function CartProvider({ children }: CartProviderProps) {
+export function CartProvider({ children, shopId }: CartProviderProps & { shopId?: string }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [tableId, setTableId] = useState<string | null>(null);
 
-  // Load from local storage on mount (Optional persistence)
+  // Load from local storage on mount or when shopId changes
   useEffect(() => {
-    const saved = localStorage.getItem("shop-cart");
+    if (!shopId) return;
+
+    const key = `shop-cart-${shopId}`;
+    const saved = localStorage.getItem(key);
+
     if (saved) {
       try {
         setItems(JSON.parse(saved));
-      } catch (e) { console.error("Failed to load cart", e) }
+      } catch (e) {
+        console.error("Failed to load cart", e);
+      }
+    } else {
+      // If no cart found for this shop, ensure we start empty
+      // (Important if just switching from another shop)
+      setItems([]);
     }
-  }, []);
+  }, [shopId]);
 
   // Save to local storage
   useEffect(() => {
-    localStorage.setItem("shop-cart", JSON.stringify(items));
-  }, [items]);
+    if (!shopId) return;
+    const key = `shop-cart-${shopId}`;
+    localStorage.setItem(key, JSON.stringify(items));
+  }, [items, shopId]);
 
   // Add service to cart
   const addService = useCallback((service: Service) => {

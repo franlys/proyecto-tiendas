@@ -102,7 +102,7 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
   return (
     <ThemeProvider shop={shop}>
       <OrdersProvider>
-        <CartProvider>
+        <CartProvider shopId={shop.id}>
           <ShopLayoutClient>
             <div className="min-h-screen pb-24 relative">
               {/* Shop Header */}

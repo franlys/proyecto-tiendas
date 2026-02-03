@@ -31,43 +31,44 @@ export default function ShopHomePage() {
   const searchParams = useSearchParams();
   const shopId = params.shopId as string;
 
-  // Get initial tab from URL or default to "servicios"
-  const initialTab = (searchParams.get("tab") as TabType) || "servicios";
-  const [activeTab, setActiveTab] = useState<TabType>(initialTab);
-
-  // Table Detection Logic
-  const queryTable = searchParams.get("table");
-
-  useEffect(() => {
-    if (queryTable) {
-      setTableId(queryTable);
-    }
-  }, [queryTable, setTableId]);
-
-  // Use the one from context (persistent) or query (fresh)
-  const currentTable = tableId || queryTable;
-
-  // Get services and products for this shop
+  // 1. Get Data First
   const services = MOCK_SERVICES[shopId] || [];
   const products = MOCK_PRODUCTS[shopId] || [];
 
-  // Group services by category
+  // 2. Business Logic for Visibility
+  const isServiceBusiness = shop?.businessType === "beauty" || shop?.businessType === "repair";
+  const hasServices = services.length > 0;
+
+  // Rule: Retail/Restaurants only show products unless services exist. Beauty shows services.
+  const showServices = isServiceBusiness || hasServices;
+  const showProducts = products.length > 0 || shop?.businessType === "retail" || shop?.businessType === "rentcar" || shop?.businessType === "restaurant";
+
+  // 3. Tab State
+  const [activeTab, setActiveTab] = useState<TabType>(() => {
+    const queryTab = searchParams.get("tab") as TabType;
+    if (queryTab && ((queryTab === "servicios" && showServices) || (queryTab === "productos" && showProducts))) {
+      return queryTab;
+    }
+    return showServices ? "servicios" : "productos";
+  });
+
+  // 4. Table Logic
+  const queryTable = searchParams.get("table");
+  useEffect(() => {
+    if (queryTable) setTableId(queryTable);
+  }, [queryTable, setTableId]);
+  const currentTable = tableId || queryTable;
+
+  // 5. Memoize Categories
   const servicesByCategory = useMemo(() => {
     const grouped: Partial<Record<ServiceCategory, typeof services>> = {};
-
     services.forEach((service) => {
-      if (!grouped[service.category]) {
-        grouped[service.category] = [];
-      }
+      if (!grouped[service.category]) grouped[service.category] = [];
       grouped[service.category]!.push(service);
     });
-
     return grouped;
   }, [services]);
-
   const categories = Object.keys(servicesByCategory) as ServiceCategory[];
-
-  const hasProducts = products.length > 0;
 
   return (
     <div className="relative">
@@ -96,15 +97,9 @@ export default function ShopHomePage() {
             <ScrollReveal delay={0.2}>
               <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
                 {activeTab === "servicios" ? (
-                  <>
-                    Elige tus{" "}
-                    <span className="text-gradient-primary">servicios</span>
-                  </>
+                  <>Elige tus <span className="text-gradient-primary">servicios</span></>
                 ) : (
-                  <>
-                    Descubre nuestros{" "}
-                    <span className="text-gradient-gold">productos</span>
-                  </>
+                  <>Descubre nuestros <span className="text-gradient-gold">productos</span></>
                 )}
               </h1>
             </ScrollReveal>
@@ -113,7 +108,7 @@ export default function ShopHomePage() {
               <p className="text-lg text-slate-300 mb-8 max-w-2xl mx-auto">
                 {activeTab === "servicios"
                   ? "Selecciona los tratamientos que deseas y agenda por WhatsApp."
-                  : "Productos profesionales para el cuidado en casa. Agrégalos a tu pedido."}
+                  : "Productos profesionales. Agrégalos a tu pedido."}
               </p>
             </ScrollReveal>
 
@@ -121,18 +116,8 @@ export default function ShopHomePage() {
             {shop?.contact && (
               <ScrollReveal delay={0.4}>
                 <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-400">
-                  {shop.contact.address && (
-                    <span className="inline-flex items-center gap-2">
-                      <MapPin className="w-4 h-4" />
-                      {shop.contact.address}
-                    </span>
-                  )}
-                  {shop.contact.phone && (
-                    <span className="inline-flex items-center gap-2">
-                      <Phone className="w-4 h-4" />
-                      {shop.contact.phone}
-                    </span>
-                  )}
+                  {shop.contact.address && <span className="inline-flex items-center gap-2"><MapPin className="w-4 h-4" />{shop.contact.address}</span>}
+                  {shop.contact.phone && <span className="inline-flex items-center gap-2"><Phone className="w-4 h-4" />{shop.contact.phone}</span>}
                 </div>
               </ScrollReveal>
             )}
@@ -140,8 +125,8 @@ export default function ShopHomePage() {
         </div>
       </SectionObserver>
 
-      {/* Tabs Section */}
-      {hasProducts && (
+      {/* Tabs Section - ONLY SHOW IF BOTH AVAILABLE */}
+      {showServices && showProducts && (
         <section className="border-t border-white/10">
           <div className="container mx-auto px-4">
             <div className="flex justify-center -mt-px">

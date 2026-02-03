@@ -215,7 +215,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
       style: "premium-dark",
     },
     contact: {
-      phone: "", // To be configured by user
+      phone: "+525512345678", // To be configured by user
       email: "contacto@glowstudio.com",
       address: "Av. Reforma 222, CDMX",
     },
@@ -234,7 +234,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
       style: "modern-minimal",
     },
     contact: {
-      phone: "",
+      phone: "+525512345678",
       email: "reservas@speedyrent.com",
       address: "Aeropuerto Terminal 1, CDMX",
     },
@@ -255,7 +255,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
       style: "elegant-light",
     },
     contact: {
-      phone: "",
+      phone: "+525512345678",
       email: "ventas@megaimport.com",
       address: "Centro Mayorista Bodega 4",
     },
@@ -275,7 +275,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
       style: "elegant-light",
     },
     contact: {
-      phone: "",
+      phone: "+525512345678",
       email: "citas@sonrisasdental.com",
       address: "Torre Médica Piso 4",
     },
@@ -296,7 +296,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
       style: "premium-dark",
     },
     contact: {
-      phone: "",
+      phone: "+525512345678",
       email: "reservas@parrillaurbana.com",
       address: "Zona Gastronómica Local 12",
     },
@@ -317,7 +317,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
       style: "elegant-light",
     },
     contact: {
-      phone: "",
+      phone: "+525512345678",
       email: "contacto@essence.com",
       address: "Plaza Luxury Local 5",
     },
@@ -337,7 +337,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
       style: "modern-minimal",
     },
     contact: {
-      phone: "",
+      phone: "+525512345678",
       email: "contacto@gonzalezsmartphone.com",
       address: "Local Comercial",
     },
