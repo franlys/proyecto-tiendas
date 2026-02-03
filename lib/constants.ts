@@ -10,7 +10,7 @@ export interface ShopTheme {
 }
 
 // Business Types for Phase 13+
-export type BusinessType = "beauty" | "retail" | "repair" | "restaurant" | "rentcar";
+export type BusinessType = "beauty" | "retail" | "repair" | "restaurant" | "rentcar" | "technology";
 
 export const BUSINESS_TYPE_LABELS: Record<BusinessType, string> = {
   beauty: "Belleza & Servicios",
@@ -18,6 +18,7 @@ export const BUSINESS_TYPE_LABELS: Record<BusinessType, string> = {
   repair: "Taller / Reparación",
   restaurant: "Restaurante / Bar",
   rentcar: "Rent-a-Car",
+  technology: "Tecnología",
 };
 
 export const BUSINESS_TYPE_CONFIG: Record<BusinessType, {
@@ -85,6 +86,17 @@ export const BUSINESS_TYPE_CONFIG: Record<BusinessType, {
     showWaiterPanel: false,
     ctaText: "Reservar Vehículo",
     servicesLabel: "Flota de Vehículos",
+  },
+  technology: {
+    label: "Tecnología",
+    icon: "📱",
+    showBooking: false,
+    showRepairTracking: true,
+    showRentals: false,
+    showTables: false,
+    showWaiterPanel: false,
+    ctaText: "Comprar",
+    servicesLabel: "Catálogo",
   },
 };
 

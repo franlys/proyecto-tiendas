@@ -142,6 +142,12 @@ export function FloatingCart() {
     if (shouldUseAppointmentFlow) {
       return 'Agendar Cita';
     }
+
+    // Dynamic text based on business type
+    if (config.businessType === "rentcar") return 'Reservar';
+    if (config.businessType === "restaurant") return 'Ordenar';
+    if (config.businessType === "technology" || config.businessType === "retail") return 'Comprar';
+
     if (hasProducts && !hasServices) {
       return 'Pedir';
     }

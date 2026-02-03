@@ -94,9 +94,9 @@ export default function ShopHomePage() {
             <img
               src={shop.theme.backgroundImage}
               alt=""
-              className="w-full h-full object-cover opacity-30 blur-[2px] scale-105"
+              className="w-full h-full object-cover opacity-60 scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/80 to-background" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-background" />
           </div>
         )}
 
@@ -111,19 +111,23 @@ export default function ShopHomePage() {
 
             <ScrollReveal delay={0.2}>
               <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
-                {activeTab === "servicios" ? (
-                  <>Elige tus <span className="text-gradient-primary">servicios</span></>
-                ) : (
-                  <>Descubre nuestros <span className="text-gradient-gold">productos</span></>
-                )}
+                {(() => {
+                  if (shop?.businessType === "rentcar") return <>Renta el <span className="text-gradient-primary">Auto Perfecto</span></>;
+                  if (shop?.businessType === "restaurant") return <>Menú <span className="text-gradient-gold">Digital</span></>;
+                  if (shop?.businessType === "technology" || shop?.businessType === "retail") return <>Catálogo <span className="text-gradient-primary">Online</span></>;
+                  return activeTab === "servicios" ? <>Elige tus <span className="text-gradient-primary">servicios</span></> : <>Descubre nuestros <span className="text-gradient-gold">productos</span></>;
+                })()}
               </h1>
             </ScrollReveal>
 
             <ScrollReveal delay={0.3}>
               <p className="text-lg text-slate-300 mb-8 max-w-2xl mx-auto">
-                {activeTab === "servicios"
-                  ? "Selecciona los tratamientos que deseas y agenda por WhatsApp."
-                  : "Productos profesionales. Agrégalos a tu pedido."}
+                {(() => {
+                  if (shop?.businessType === "rentcar") return "Explora nuestra flota y reserva tu vehículo vía WhatsApp.";
+                  if (shop?.businessType === "restaurant") return "Disfruta de nuestros platillos. Ordena fácil y rápido.";
+                  if (shop?.businessType === "technology" || shop?.businessType === "retail") return "Encuentra los mejores productos y recíbelos hoy.";
+                  return activeTab === "servicios" ? "Selecciona los tratamientos que deseas y agenda por WhatsApp." : "Productos profesionales para el cuidado personal.";
+                })()}
               </p>
             </ScrollReveal>
 

@@ -771,57 +771,52 @@ function AgencyContent() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center overflow-hidden shadow-lg shadow-cyan-500/20">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center overflow-hidden shadow-lg shadow-cyan-500/20">
                 <img src="/logo.png" alt="Linko" className="w-full h-full object-cover" />
               </div>
               <div>
-                <h1 className="font-display text-2xl font-bold text-white">
+                <h1 className="font-display text-xl sm:text-2xl font-bold text-white">
                   Linko Agency
                 </h1>
-                <p className="text-slate-400 text-sm">
+                <p className="text-slate-400 text-xs sm:text-sm">
                   Centro de Control · {user?.name}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              {/* Phase 24: Agency Profile Link */}
+            <nav className="flex items-center gap-1 sm:gap-2 overflow-x-auto ml-4 hide-scrollbar">
+              {/* Profile Link */}
               <Link href="/agency/profile">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="px-2 sm:px-3 whitespace-nowrap">
                   <Building2 className="w-4 h-4" />
-                  Mi Agencia
+                  <span className="hidden sm:inline ml-2">Mi Agencia</span>
                 </Button>
               </Link>
+
               <Link href="/admin/automation">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="px-2 sm:px-3 whitespace-nowrap">
                   <Bot className="w-4 h-4" />
-                  Bot WA
+                  <span className="hidden sm:inline ml-2">Bot WA</span>
                 </Button>
               </Link>
+
               <Link href="/">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="px-2 sm:px-3 whitespace-nowrap">
                   <ExternalLink className="w-4 h-4" />
-                  Landing
+                  <span className="hidden sm:inline ml-2">Landing</span>
                 </Button>
               </Link>
+
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => {
-                  if (confirm("¿Restaurar tiendas de prueba?")) {
-                    restoreDemos();
-                  }
-                }}
-                className="text-amber-400 hover:text-amber-300 hover:bg-amber-400/10"
+                onClick={handleLogout}
+                className="px-2 sm:px-3 whitespace-nowrap text-red-400 hover:text-red-300 hover:bg-red-400/10"
               >
-                <Database className="w-4 h-4 mr-2" />
-                Restaurar Demos
-              </Button>
-              <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="w-4 h-4" />
-                Salir
+                <span className="hidden sm:inline ml-2">Salir</span>
               </Button>
-            </div>
+            </nav>
           </div>
         </div>
       </header>
