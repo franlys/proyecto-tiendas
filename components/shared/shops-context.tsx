@@ -142,15 +142,13 @@ async function initializeCloudShops(currentShops: ManagedShop[]) {
     }
   }));
 
-  // 2. Identify Missing Demos
+  // 2. Sync Demos (Ensure latest config/visuals)
   for (const mock of mocks) {
-    const exists = currentShops.some(s => s.slug === mock.slug);
-    if (!exists) {
-      const docRef = doc(db, "shops", mock.id);
-      batch.set(docRef, mock);
-      updatesCount++;
-      debugLog(`CLOUD INIT: Preparing to seed ${mock.name}`);
-    }
+    const docRef = doc(db, "shops", mock.id);
+    // Always update to apply latest features/backgrounds from code
+    batch.set(docRef, mock, { merge: true });
+    updatesCount++;
+    debugLog(`CLOUD INIT: Syncing ${mock.name}`);
   }
 
   // 3. Rescue Legacy Data (Gonzalez Smartphone)
@@ -173,10 +171,10 @@ async function initializeCloudShops(currentShops: ManagedShop[]) {
   }
 
   if (updatesCount > 0) {
-    debugLog(`CLOUD INIT: Committing ${updatesCount} new shops...`);
+    debugLog(`CLOUD INIT: Committing ${updatesCount} updates...`);
     try {
       await batch.commit();
-      debugLog("CLOUD INIT: SUCCESS ✅ - Data written to Firestore");
+      debugLog("CLOUD INIT: SUCCESS ✅ - Data synced to Firestore");
     } catch (error) {
       debugError("CLOUD INIT: FAILED ❌ - Could not write to Firestore", error);
     }
@@ -225,11 +223,16 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
       // Update LocalStorage as Backup
       localStorage.setItem(SHOPS_STORAGE_KEY, JSON.stringify(cloudShops));
 
-      // Check for missing items
+      // Check for missing items OR stale versions (e.g. rentcar slug mismatch)
       const perfumeria = cloudShops.some(s => s.slug === "ejemplo-perfumeria");
+      const rentcar = cloudShops.some(s => s.slug === "ejemplo-rentcar");
       const gonzalez = cloudShops.some(s => s.slug === "gonzalezsmartphone");
 
-      if (!perfumeria || !gonzalez) {
+      // Determine if visual update is needed (check one shop for new field)
+      const hasVisuals = cloudShops.some(s => s.id === "demo-0" && s.theme?.backgroundImage);
+
+      if (!perfumeria || !rentcar || !gonzalez || !hasVisuals) {
+        debugLog("CLOUD SYNC: Triggering update/seed for demos...");
         initializeCloudShops(cloudShops);
       }
     }, (error) => {

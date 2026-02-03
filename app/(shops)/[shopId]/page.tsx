@@ -70,6 +70,9 @@ export default function ShopHomePage() {
   }, [services]);
   const categories = Object.keys(servicesByCategory) as ServiceCategory[];
 
+  // Logic for Loyalty Card (Hide if simplified retail)
+  const showLoyalty = shop?.features?.includes("loyalty") ?? (shop?.businessType === "beauty");
+
   return (
     <div className="relative">
       {/* Table Banner */}
@@ -85,6 +88,18 @@ export default function ShopHomePage() {
 
       {/* Hero Section */}
       <SectionObserver id="hero" className="relative py-16 lg:py-24 overflow-hidden">
+        {/* Dynamic Background */}
+        {shop?.theme?.backgroundImage && (
+          <div className="absolute inset-0 z-0 select-none pointer-events-none">
+            <img
+              src={shop.theme.backgroundImage}
+              alt=""
+              className="w-full h-full object-cover opacity-30 blur-[2px] scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/80 to-background" />
+          </div>
+        )}
+
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
             <FadeIn delay={0.1}>
@@ -161,24 +176,26 @@ export default function ShopHomePage() {
         </section>
       )}
 
-      {/* Loyalty Card Section - Part of Services feel */}
-      <SectionObserver id="services" threshold={0.3} className="py-12 border-t border-white/10">
-        <div className="container mx-auto px-4">
-          <ScrollReveal>
-            <div className="text-center mb-8">
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-2">
-                Tu Tarjeta de <span className="text-gradient-gold">Fidelidad</span>
-              </h2>
-              <p className="text-slate-400">
-                Acumula sellos y obtén recompensas exclusivas
-              </p>
-            </div>
-          </ScrollReveal>
-          <ScrollReveal delay={0.2}>
-            <LoyaltyCard />
-          </ScrollReveal>
-        </div>
-      </SectionObserver>
+      {/* Loyalty Card Section - ONLY SHOW IF ENABLED */}
+      {showLoyalty && (
+        <SectionObserver id="loyalty" threshold={0.3} className="py-12 border-t border-white/10">
+          <div className="container mx-auto px-4">
+            <ScrollReveal>
+              <div className="text-center mb-8">
+                <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-2">
+                  Tu Tarjeta de <span className="text-gradient-gold">Fidelidad</span>
+                </h2>
+                <p className="text-slate-400">
+                  Acumula sellos y obtén recompensas exclusivas
+                </p>
+              </div>
+            </ScrollReveal>
+            <ScrollReveal delay={0.2}>
+              <LoyaltyCard />
+            </ScrollReveal>
+          </div>
+        </SectionObserver>
+      )}
 
       {/* Services Catalog */}
       {activeTab === "servicios" && (

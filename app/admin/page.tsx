@@ -248,17 +248,35 @@ function AdminDashboardWithSubscription() {
   const { user, logout, isSuperAdmin } = useAuth();
   const { getShop, isSubscriptionActive } = useShops();
 
+  // Redirect Super Admin to Agency Panel immediately
+  useEffect(() => {
+    if (isSuperAdmin) {
+      router.replace("/agency");
+    }
+  }, [isSuperAdmin, router]);
+
   const handleLogout = () => {
     logout();
     router.push("/login");
   };
 
+  if (isSuperAdmin) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center gap-4 text-slate-400">
+          <Shield className="w-8 h-8 text-cyan-500" />
+          <p>Accediendo al Panel de Agencia...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Check subscription status for shop owners (not super admin)
   const shop = user?.shopId ? getShop(user.shopId) : null;
-  const hasActiveSubscription = isSuperAdmin || (shop && isSubscriptionActive(shop.slug));
+  const hasActiveSubscription = shop && isSubscriptionActive(shop.slug);
 
   // Show subscription lock if not active
-  if (!isSuperAdmin && shop && !hasActiveSubscription) {
+  if (shop && !hasActiveSubscription) {
     return <SubscriptionLock shop={shop} />;
   }
 

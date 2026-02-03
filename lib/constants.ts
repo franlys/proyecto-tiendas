@@ -6,6 +6,7 @@ export interface ShopTheme {
   primaryColor: string;
   accentColor: string;
   style: "premium-dark" | "elegant-light" | "modern-minimal";
+  backgroundImage?: string;
 }
 
 // Business Types for Phase 13+
@@ -143,6 +144,7 @@ export interface ShopConfig {
   // Auth (for Mock/Seeding purposes)
   ownerUsername?: string;
   ownerPassword?: string;
+  features?: FeatureId[];
 }
 
 // ============================================
@@ -194,6 +196,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
       primaryColor: "#F43F5E",
       accentColor: "#D4AF37",
       style: "premium-dark",
+      backgroundImage: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80",
     },
     contact: {
       phone: "+34 600 123 456",
@@ -201,6 +204,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
       address: "Calle Mayor 15, Madrid",
     },
     businessType: "beauty",
+    features: ["inventory", "orders", "loyalty", "whatsappIntegration"],
   },
   "ejemplo-estetica": {
     id: "demo-1",
@@ -213,6 +217,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
       primaryColor: "#ec4899", // Pink 500
       accentColor: "#fbcfe8", // Pink 100
       style: "premium-dark",
+      backgroundImage: "https://images.unsplash.com/photo-1560750588-73207b1ef5b8?auto=format&fit=crop&q=80",
     },
     contact: {
       phone: "+525512345678", // To be configured by user
@@ -220,6 +225,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
       address: "Av. Reforma 222, CDMX",
     },
     businessType: "beauty",
+    features: ["inventory", "orders", "loyalty", "whatsappIntegration"],
   },
   "ejemplo-rentcar": {
     id: "demo-2",
@@ -232,6 +238,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
       primaryColor: "#3b82f6", // Blue 500
       accentColor: "#60a5fa", // Blue 400
       style: "modern-minimal",
+      backgroundImage: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80",
     },
     contact: {
       phone: "+525512345678",
@@ -241,6 +248,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
     businessType: "rentcar",
     ownerUsername: "rentcar",
     ownerPassword: "123",
+    features: ["inventory", "orders", "whatsappIntegration"],
   },
   "ejemplo-mayoreo": {
     id: "demo-3",
@@ -253,6 +261,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
       primaryColor: "#f97316", // Orange 500
       accentColor: "#fdba74", // Orange 300
       style: "elegant-light",
+      backgroundImage: "https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&q=80",
     },
     contact: {
       phone: "+525512345678",
@@ -261,6 +270,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
     },
     businessType: "retail",
     wholesaleEnabled: true,
+    features: ["inventory", "orders", "whatsappIntegration"],
   },
   "ejemplo-dental": {
     id: "demo-4",
@@ -273,6 +283,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
       primaryColor: "#14b8a6", // Teal 500
       accentColor: "#5eead4", // Teal 300
       style: "elegant-light",
+      backgroundImage: "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&q=80",
     },
     contact: {
       phone: "+525512345678",
@@ -282,6 +293,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
     businessType: "beauty", // Uses booking system
     ownerUsername: "dental",
     ownerPassword: "123",
+    features: ["inventory", "orders", "loyalty", "whatsappIntegration"],
   },
   "ejemplo-restaurante": {
     id: "demo-5",
@@ -294,6 +306,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
       primaryColor: "#dc2626", // Red 600
       accentColor: "#fca5a5", // Red 300
       style: "premium-dark",
+      backgroundImage: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80",
     },
     contact: {
       phone: "+525512345678",
@@ -303,6 +316,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
     businessType: "restaurant",
     ownerUsername: "restaurante",
     ownerPassword: "123",
+    features: ["inventory", "orders", "whatsappIntegration"],
   },
   "ejemplo-perfumeria": {
     id: "demo-6",
@@ -315,6 +329,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
       primaryColor: "#8b5cf6", // Violet 500
       accentColor: "#ddd6fe", // Violet 100
       style: "elegant-light",
+      backgroundImage: "https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80",
     },
     contact: {
       phone: "+525512345678",
@@ -323,6 +338,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
     },
     businessType: "retail",
     wholesaleEnabled: true,
+    features: ["inventory", "orders", "whatsappIntegration"],
   },
   "gonzalezsmartphone": {
     id: "legacy-1",
@@ -335,6 +351,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
       primaryColor: "#0ea5e9", // Sky 500
       accentColor: "#38bdf8", // Sky 400
       style: "modern-minimal",
+      backgroundImage: "https://images.unsplash.com/photo-1597424214711-2090b8f2c6ee?auto=format&fit=crop&q=80",
     },
     contact: {
       phone: "+525512345678",
@@ -345,6 +362,7 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
     wholesaleEnabled: true,
     ownerUsername: "gonzalez",
     ownerPassword: "123",
+    features: ["inventory", "orders", "whatsappIntegration"],
   },
 };
 

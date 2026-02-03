@@ -879,6 +879,34 @@ function AgencyContent() {
           </div>
         </div>
 
+        {/* System Tools Section */}
+        <div className="mb-8">
+          <div className="glass-panel rounded-xl p-6 border border-white/10">
+            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <Database className="w-5 h-5 text-cyan-400" />
+              Herramientas del Sistema
+            </h3>
+            <div className="flex flex-wrap gap-4">
+              <DatabaseSeeder />
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (confirm("¿Estás seguro de restaurar las tiendas de prueba? Esto reiniciará sus datos.")) {
+                    restoreDemos();
+                  }
+                }}
+                className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Reparar / Restaurar Demos
+              </Button>
+            </div>
+            <p className="text-xs text-slate-500 mt-2">
+              Utiliza estas herramientas para inicializar la base de datos o corregir las tiendas de demostración.
+            </p>
+          </div>
+        </div>
+
         {/* Shops Table */}
         <div className="glass-panel rounded-2xl border border-white/10 overflow-hidden">
           <div className="flex items-center justify-between p-6 border-b border-white/10">
