@@ -142,13 +142,14 @@ async function initializeCloudShops(currentShops: ManagedShop[]) {
     }
   }));
 
-  // 2. Sync Demos (Ensure latest config/visuals)
-  for (const mock of mocks) {
+  // 2. Sync Demos (Only creates MISSING shops, does not overwrite existing)
+  const missingMocks = mocks.filter(mock => !currentShops.some(shop => shop.id === mock.id));
+
+  for (const mock of missingMocks) {
     const docRef = doc(db, "shops", mock.id);
-    // Always update to apply latest features/backgrounds from code
     batch.set(docRef, mock, { merge: true });
     updatesCount++;
-    debugLog(`CLOUD INIT: Syncing ${mock.name}`);
+    debugLog(`CLOUD INIT: Seeding NEW Demo ${mock.name}`);
   }
 
   // 3. Rescue Legacy Data (Gonzalez Smartphone)
@@ -223,16 +224,12 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
       // Update LocalStorage as Backup
       localStorage.setItem(SHOPS_STORAGE_KEY, JSON.stringify(cloudShops));
 
-      // Check for missing items OR stale versions (e.g. rentcar slug mismatch)
+      // Check for missing items (only seed if CRITICAL demos are missing)
       const perfumeria = cloudShops.some(s => s.slug === "ejemplo-perfumeria");
       const rentcar = cloudShops.some(s => s.slug === "ejemplo-rentcar");
-      const gonzalez = cloudShops.some(s => s.slug === "gonzalezsmartphone");
 
-      // Determine if visual update is needed (check one shop for new field)
-      const hasVisuals = cloudShops.some(s => s.id === "demo-0" && s.theme?.backgroundImage);
-
-      if (!perfumeria || !rentcar || !gonzalez || !hasVisuals) {
-        debugLog("CLOUD SYNC: Triggering update/seed for demos...");
+      if (!perfumeria || !rentcar) {
+        debugLog("CLOUD SYNC: Missing critical demos, triggering seed...");
         initializeCloudShops(cloudShops);
       }
     }, (error) => {

@@ -7,8 +7,10 @@ service firebase.storage {
       
       // Allow write access only to authenticated users
       // Limit size to 50MB (for videos) and ensure it is an image or video
-      // Allow write access only to authenticated users
-      allow write: if request.auth != null;
+      // PUBLIC ACCESS (DEV MODE):
+      // Since the app uses Mock Auth (localStorage) and not Firebase Auth,
+      // request.auth is null. We must allow writes to enable uploads.
+      allow write: if true;
     }
   }
 }

@@ -768,7 +768,7 @@ function ShopDetailContent() {
                                             shopId={shop?.slug || "temp"}
                                             label="Imagen de Portada / Banner"
                                             aspectRatio="banner"
-                                            maxSizeMB={5}
+                                            maxSizeMB={50}
                                         />
                                     </div>
                                 </div>
