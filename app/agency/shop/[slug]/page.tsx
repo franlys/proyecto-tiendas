@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { collection, doc, onSnapshot, setDoc, deleteDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import {
     ArrowLeft,
     Store,
@@ -180,32 +182,22 @@ function ShopDetailContent() {
     const [newStaffPassword, setNewStaffPassword] = useState("");
     const [showStaffPassword, setShowStaffPassword] = useState(false);
 
-    // Load staff from localStorage when shop is loaded
+    // Load staff from Firestore (Real-time)
     useEffect(() => {
-        if (shop) {
-            const storageKey = getStaffStorageKey(shop.slug);
-            const stored = localStorage.getItem(storageKey);
-            if (stored) {
-                try {
-                    setStaffMembers(JSON.parse(stored));
-                } catch {
-                    setStaffMembers([]);
-                }
-            }
-        }
-    }, [shop]);
+        if (!shop?.id) return;
 
-    // Save staff to localStorage when it changes
-    useEffect(() => {
-        if (shop && staffMembers.length >= 0) {
-            const storageKey = getStaffStorageKey(shop.slug);
-            localStorage.setItem(storageKey, JSON.stringify(staffMembers));
-        }
-    }, [staffMembers, shop]);
+        const staffRef = collection(db, "shops", shop.id, "staff");
+        const unsubscribe = onSnapshot(staffRef, (snapshot) => {
+            const staff = snapshot.docs.map(doc => doc.data() as ShopStaffMember);
+            setStaffMembers(staff);
+        });
+
+        return () => unsubscribe();
+    }, [shop?.id]);
 
     // Staff CRUD functions
-    const handleAddStaff = () => {
-        if (!newStaffName || !newStaffEmail || !newStaffPassword) return;
+    const handleAddStaff = async () => {
+        if (!newStaffName || !newStaffEmail || !newStaffPassword || !shop?.id) return;
 
         const newMember: ShopStaffMember = {
             id: `staff-${Date.now()}`,
@@ -218,39 +210,56 @@ function ShopDetailContent() {
             createdAt: new Date().toISOString(),
         };
 
-        setStaffMembers(prev => [...prev, newMember]);
-        resetStaffForm();
-        setShowAddStaffModal(false);
+        try {
+            await setDoc(doc(db, "shops", shop.id, "staff", newMember.id), newMember);
+            resetStaffForm();
+            setShowAddStaffModal(false);
+        } catch (error) {
+            console.error("Error creating staff:", error);
+        }
     };
 
-    const handleUpdateStaff = () => {
-        if (!editingStaff || !newStaffName || !newStaffEmail) return;
+    const handleUpdateStaff = async () => {
+        if (!editingStaff || !newStaffName || !newStaffEmail || !shop?.id) return;
 
-        setStaffMembers(prev => prev.map(s =>
-            s.id === editingStaff.id
-                ? {
-                    ...s,
-                    name: newStaffName,
-                    email: newStaffEmail.toLowerCase(),
-                    phone: newStaffPhone || undefined,
-                    role: newStaffRole,
-                    password: newStaffPassword || s.password,
-                }
-                : s
-        ));
-        resetStaffForm();
-        setEditingStaff(null);
-        setShowAddStaffModal(false);
+        const updatedMember = {
+            ...editingStaff,
+            name: newStaffName,
+            email: newStaffEmail.toLowerCase(),
+            phone: newStaffPhone || undefined,
+            role: newStaffRole,
+            password: newStaffPassword || editingStaff.password,
+        };
+
+        try {
+            await setDoc(doc(db, "shops", shop.id, "staff", editingStaff.id), updatedMember, { merge: true });
+            resetStaffForm();
+            setEditingStaff(null);
+            setShowAddStaffModal(false);
+        } catch (error) {
+            console.error("Error updating staff:", error);
+        }
     };
 
-    const handleDeleteStaff = (staffId: string) => {
-        setStaffMembers(prev => prev.filter(s => s.id !== staffId));
+    const handleDeleteStaff = async (staffId: string) => {
+        if (!shop?.id) return;
+        try {
+            await deleteDoc(doc(db, "shops", shop.id, "staff", staffId));
+        } catch (error) {
+            console.error("Error deleting staff:", error);
+        }
     };
 
-    const handleToggleStaffStatus = (staffId: string) => {
-        setStaffMembers(prev => prev.map(s =>
-            s.id === staffId ? { ...s, isActive: !s.isActive } : s
-        ));
+    const handleToggleStaffStatus = async (staffId: string) => {
+        if (!shop?.id) return;
+        const member = staffMembers.find(s => s.id === staffId);
+        if (!member) return;
+
+        try {
+            await setDoc(doc(db, "shops", shop.id, "staff", staffId), { isActive: !member.isActive }, { merge: true });
+        } catch (error) {
+            console.error("Error toggling status:", error);
+        }
     };
 
     const openEditStaffModal = (staff: ShopStaffMember) => {
@@ -312,64 +321,90 @@ function ShopDetailContent() {
     const [savingWhatsapp, setSavingWhatsapp] = useState(false);
     const [whatsappSaveSuccess, setWhatsappSaveSuccess] = useState(false);
 
-    // Load WhatsApp config from localStorage
+    // Load WhatsApp config from Firestore (Real-time)
     useEffect(() => {
-        if (shop) {
-            const waKey = `nexo-whatsapp-config-${shop.slug}`;
-            const stored = localStorage.getItem(waKey);
-            if (stored) {
-                try {
-                    const parsed = JSON.parse(stored);
-                    setWhatsappNumbers(parsed.numbers || []);
-                    setRegisteredClients(parsed.registeredClients || []);
-                    if (parsed.flowConfig) {
-                        setFlowConfig(parsed.flowConfig);
-                    }
-                } catch {
-                    // Default values
+        if (!shop?.id) return;
+
+        const waRef = doc(db, "shops", shop.id, "whatsapp_bot", "settings");
+
+        const unsubscribe = onSnapshot(waRef, (doc) => {
+            if (doc.exists()) {
+                const data = doc.data();
+                setWhatsappNumbers(data.numbers || []);
+                setRegisteredClients(data.registeredClients || []);
+                if (data.flowConfig) {
+                    setFlowConfig(data.flowConfig);
                 }
             }
-            // Set default catalog URL if empty
-            if (!flowConfig.catalogUrl && shop) {
+
+            // Default catalog URL if empty
+            if ((!doc.exists() || !doc.data()?.flowConfig?.catalogUrl) && shop) {
                 setFlowConfig(prev => ({
                     ...prev,
                     catalogUrl: `${typeof window !== 'undefined' ? window.location.origin : ''}/${shop.slug}`
                 }));
             }
-        }
-    }, [shop]);
+        });
 
-    // Save WhatsApp config
-    const saveWhatsappConfig = () => {
-        if (!shop) return;
+        return () => unsubscribe();
+    }, [shop?.id, shop?.slug]);
+
+    // Save WhatsApp config (Firestore)
+    const saveWhatsappConfig = async () => {
+        if (!shop?.id) return;
         setSavingWhatsapp(true);
-        const waKey = `nexo-whatsapp-config-${shop.slug}`;
-        localStorage.setItem(waKey, JSON.stringify({
-            numbers: whatsappNumbers,
-            registeredClients: registeredClients,
-            flowConfig: flowConfig,
-        }));
-        setTimeout(() => {
-            setSavingWhatsapp(false);
+
+        try {
+            const waRef = doc(db, "shops", shop.id, "whatsapp_bot", "settings");
+            await setDoc(waRef, {
+                numbers: whatsappNumbers,
+                registeredClients: registeredClients,
+                flowConfig: flowConfig,
+            }, { merge: true });
+
             setWhatsappSaveSuccess(true);
             setTimeout(() => setWhatsappSaveSuccess(false), 3000);
-        }, 500);
+        } catch (error) {
+            console.error("Error saving WA config:", error);
+        } finally {
+            setSavingWhatsapp(false);
+        }
     };
 
     // Add registered client manually
-    const addRegisteredClient = (phone: string, name: string) => {
+    const addRegisteredClient = async (phone: string, name: string) => {
+        if (!shop?.id) return;
         const newClient: RegisteredClient = {
             id: `client-${Date.now()}`,
             phone,
             name,
             registeredAt: new Date().toISOString(),
         };
-        setRegisteredClients(prev => [...prev, newClient]);
+        const updatedList = [...registeredClients, newClient];
+        setRegisteredClients(updatedList); // Optimistic update
+
+        try {
+            await setDoc(doc(db, "shops", shop.id, "whatsapp_bot", "settings"), {
+                registeredClients: updatedList
+            }, { merge: true });
+        } catch (error) {
+            console.error("Error adding client:", error);
+        }
     };
 
     // Remove registered client
-    const removeRegisteredClient = (id: string) => {
-        setRegisteredClients(prev => prev.filter(c => c.id !== id));
+    const removeRegisteredClient = async (id: string) => {
+        if (!shop?.id) return;
+        const updatedList = registeredClients.filter(c => c.id !== id);
+        setRegisteredClients(updatedList);
+
+        try {
+            await setDoc(doc(db, "shops", shop.id, "whatsapp_bot", "settings"), {
+                registeredClients: updatedList
+            }, { merge: true });
+        } catch (error) {
+            console.error("Error removing client:", error);
+        }
     };
 
     // Filter registered clients by search
@@ -378,35 +413,62 @@ function ShopDetailContent() {
         client.phone.includes(clientSearch)
     );
 
-    const addWhatsappNumber = () => {
-        if (!newWaNumber) return;
+    const addWhatsappNumber = async () => {
+        if (!newWaNumber || !shop?.id) return;
         const newNum: WhatsAppNumber = {
             id: `wa-${Date.now()}`,
             number: newWaNumber,
             label: newWaLabel || "Principal",
             isDefault: whatsappNumbers.length === 0,
         };
-        setWhatsappNumbers(prev => [...prev, newNum]);
+
+        const updatedList = [...whatsappNumbers, newNum];
+        setWhatsappNumbers(updatedList);
         setNewWaNumber("");
         setNewWaLabel("");
+
+        try {
+            await setDoc(doc(db, "shops", shop.id, "whatsapp_bot", "settings"), {
+                numbers: updatedList
+            }, { merge: true });
+        } catch (error) {
+            console.error("Error adding number:", error);
+        }
     };
 
-    const removeWhatsappNumber = (id: string) => {
-        setWhatsappNumbers(prev => {
-            const filtered = prev.filter(n => n.id !== id);
-            // If we removed the default, make the first one default
-            if (filtered.length > 0 && !filtered.some(n => n.isDefault)) {
-                filtered[0].isDefault = true;
-            }
-            return filtered;
-        });
+    const removeWhatsappNumber = async (id: string) => {
+        if (!shop?.id) return;
+        let updatedList = whatsappNumbers.filter(n => n.id !== id);
+        // If we removed the default, make the first one default
+        if (updatedList.length > 0 && !updatedList.some(n => n.isDefault)) {
+            updatedList[0].isDefault = true;
+        }
+        setWhatsappNumbers(updatedList);
+
+        try {
+            await setDoc(doc(db, "shops", shop.id, "whatsapp_bot", "settings"), {
+                numbers: updatedList
+            }, { merge: true });
+        } catch (error) {
+            console.error("Error removing number:", error);
+        }
     };
 
-    const setDefaultWhatsappNumber = (id: string) => {
-        setWhatsappNumbers(prev => prev.map(n => ({
+    const setDefaultWhatsappNumber = async (id: string) => {
+        if (!shop?.id) return;
+        const updatedList = whatsappNumbers.map(n => ({
             ...n,
             isDefault: n.id === id,
-        })));
+        }));
+        setWhatsappNumbers(updatedList);
+
+        try {
+            await setDoc(doc(db, "shops", shop.id, "whatsapp_bot", "settings"), {
+                numbers: updatedList
+            }, { merge: true });
+        } catch (error) {
+            console.error("Error setting default:", error);
+        }
     };
 
 
@@ -613,15 +675,60 @@ function ShopDetailContent() {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="p-4 rounded-xl bg-black/20">
                                             <p className="text-sm text-slate-400 mb-1">Suscripción</p>
-                                            <p className="font-semibold capitalize text-green-400">
-                                                {shop.subscriptionStatus}
-                                            </p>
+                                            <div className="flex items-center gap-2">
+                                                <p className="font-semibold capitalize text-green-400">
+                                                    {shop.subscriptionStatus}
+                                                </p>
+                                                {shop.subscriptionStatus === "active" && (
+                                                    <span className="px-2 py-0.5 rounded text-[10px] bg-green-500/20 text-green-400 border border-green-500/20">
+                                                        Al día
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="mt-3 w-full border-green-500/30 hover:bg-green-500/10 text-green-400"
+                                                onClick={() => {
+                                                    if (confirm("¿Confirmar pago mensual de " + (shop.monthlyPrice || 0) + " DOP?")) {
+                                                        registerPayment(shop.id);
+                                                    }
+                                                }}
+                                            >
+                                                <CheckCircle className="w-3 h-3 mr-2" />
+                                                Confirmar Pago
+                                            </Button>
                                         </div>
                                         <div className="p-4 rounded-xl bg-black/20">
-                                            <p className="text-sm text-slate-400 mb-1">Plan</p>
-                                            <p className="font-semibold text-white">
-                                                ${shop.monthlyPrice} / mes
-                                            </p>
+                                            <p className="text-sm text-slate-400 mb-1">Plan Mensual (DOP)</p>
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <input
+                                                    type="number"
+                                                    defaultValue={shop.monthlyPrice || 0}
+                                                    className="w-full bg-transparent border-b border-white/10 focus:border-cyan-500 outline-none text-white font-semibold"
+                                                    onBlur={(e) => {
+                                                        const val = parseFloat(e.target.value);
+                                                        if (val !== shop.monthlyPrice) {
+                                                            updateShop(shop.id, { monthlyPrice: val });
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
+                                            <label className="flex items-center gap-2 cursor-pointer group">
+                                                <div className="relative">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={shop.invoiceReminders || false}
+                                                        onChange={(e) => updateShop(shop.id, { invoiceReminders: e.target.checked })}
+                                                        className="sr-only peer"
+                                                    />
+                                                    <div className="w-8 h-4 bg-slate-700 rounded-full peer peer-checked:bg-cyan-500 transition-colors"></div>
+                                                    <div className="absolute left-0 top-0 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-full"></div>
+                                                </div>
+                                                <span className="text-xs text-slate-400 group-hover:text-white transition-colors">
+                                                    Recordatorios Mensuales
+                                                </span>
+                                            </label>
                                         </div>
                                     </div>
                                 </div>
@@ -695,6 +802,7 @@ function ShopDetailContent() {
                                                 type="text"
                                                 value={phone}
                                                 onChange={(e) => setPhone(e.target.value)}
+                                                placeholder="809-555-1234"
                                                 className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white"
                                             />
                                         </div>
@@ -1143,57 +1251,53 @@ function ShopDetailContent() {
                                     <div className="grid grid-cols-2 gap-4">
                                         {/* Hero */}
                                         <div className="space-y-2">
-                                            <label className="block text-sm font-medium text-slate-300">
-                                                Sección Hero / Portada
-                                            </label>
-                                            <input
-                                                type="text"
+                                            <FirebaseImageUpload
                                                 value={heroBackground}
-                                                onChange={(e) => setHeroBackground(e.target.value)}
-                                                placeholder="URL imagen o video"
-                                                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white text-sm"
+                                                onChange={setHeroBackground}
+                                                folder={`shops/${shop?.slug || "temp"}/backgrounds`}
+                                                shopId={shop?.slug || "temp"}
+                                                label="Sección Hero / Portada"
+                                                aspectRatio="video"
+                                                maxSizeMB={50}
                                             />
                                         </div>
 
                                         {/* Servicios */}
                                         <div className="space-y-2">
-                                            <label className="block text-sm font-medium text-slate-300">
-                                                Sección Servicios
-                                            </label>
-                                            <input
-                                                type="text"
+                                            <FirebaseImageUpload
                                                 value={servicesBackground}
-                                                onChange={(e) => setServicesBackground(e.target.value)}
-                                                placeholder="URL imagen o video"
-                                                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white text-sm"
+                                                onChange={setServicesBackground}
+                                                folder={`shops/${shop?.slug || "temp"}/backgrounds`}
+                                                shopId={shop?.slug || "temp"}
+                                                label="Sección Servicios"
+                                                aspectRatio="video"
+                                                maxSizeMB={50}
                                             />
                                         </div>
 
                                         {/* Productos */}
                                         <div className="space-y-2">
-                                            <label className="block text-sm font-medium text-slate-300">
-                                                Sección Productos
-                                            </label>
-                                            <input
-                                                type="text"
+                                            <FirebaseImageUpload
                                                 value={productsBackground}
-                                                onChange={(e) => setProductsBackground(e.target.value)}
-                                                placeholder="URL imagen o video"
-                                                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white text-sm"
+                                                onChange={setProductsBackground}
+                                                folder={`shops/${shop?.slug || "temp"}/backgrounds`}
+                                                shopId={shop?.slug || "temp"}
+                                                label="Sección Productos"
+                                                aspectRatio="video"
+                                                maxSizeMB={50}
                                             />
                                         </div>
 
                                         {/* Contacto */}
                                         <div className="space-y-2">
-                                            <label className="block text-sm font-medium text-slate-300">
-                                                Sección Contacto
-                                            </label>
-                                            <input
-                                                type="text"
+                                            <FirebaseImageUpload
                                                 value={contactBackground}
-                                                onChange={(e) => setContactBackground(e.target.value)}
-                                                placeholder="URL imagen o video"
-                                                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white text-sm"
+                                                onChange={setContactBackground}
+                                                folder={`shops/${shop?.slug || "temp"}/backgrounds`}
+                                                shopId={shop?.slug || "temp"}
+                                                label="Sección Contacto"
+                                                aspectRatio="video"
+                                                maxSizeMB={50}
                                             />
                                         </div>
                                     </div>

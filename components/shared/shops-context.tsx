@@ -49,6 +49,7 @@ export interface ManagedShop extends ShopConfig {
   subscriptionStatus: SubscriptionStatus;
   nextPaymentDate: string;
   monthlyPrice?: number;
+  invoiceReminders?: boolean;
   // Stats
   stats: {
     monthlyRevenue: number;
@@ -152,24 +153,7 @@ async function initializeCloudShops(currentShops: ManagedShop[]) {
     debugLog(`CLOUD INIT: Seeding NEW Demo ${mock.name}`);
   }
 
-  // 3. Rescue Legacy Data (Gonzalez Smartphone)
-  const legacyBackup = typeof window !== "undefined" ? localStorage.getItem("nexo-managed-shops") : null;
-  if (legacyBackup) {
-    try {
-      const parsedLegacy = JSON.parse(legacyBackup);
-      const gonzalez = parsedLegacy.find((s: ManagedShop) => s.slug === "gonzalezsmartphone");
-
-      if (gonzalez && !currentShops.some(s => s.slug === "gonzalezsmartphone")) {
-        const docRef = doc(db, "shops", "legacy-gonzalez");
-        batch.set(docRef, {
-          ...gonzalez,
-          id: "legacy-gonzalez",
-          subscriptionStatus: "active"
-        });
-        updatesCount++;
-      }
-    } catch { }
-  }
+  // 3. Legacy Rescue Removed (Cloud Only) - LocalStorage source ignored.
 
   if (updatesCount > 0) {
     debugLog(`CLOUD INIT: Committing ${updatesCount} updates...`);
@@ -221,8 +205,8 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
       setShops(cloudShops);
       setIsLoading(false);
 
-      // Update LocalStorage as Backup
-      localStorage.setItem(SHOPS_STORAGE_KEY, JSON.stringify(cloudShops));
+      // LocalStorage backup disabled (Cloud Only)
+      // localStorage.setItem(SHOPS_STORAGE_KEY, JSON.stringify(cloudShops));
 
       // Check for missing items (only seed if CRITICAL demos are missing)
       const perfumeria = cloudShops.some(s => s.slug === "ejemplo-perfumeria");

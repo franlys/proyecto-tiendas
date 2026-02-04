@@ -14,6 +14,7 @@ function debugLog(action: string, data?: unknown) {
 }
 import {
   Shield,
+  Edit,
   Store,
   Plus,
   Power,
@@ -525,9 +526,11 @@ function PaymentModal({
   shop: ManagedShop | null;
   onClose: () => void;
 }) {
-  const { registerPayment, updateSubscriptionStatus, updatePaymentLink } = useShops();
+  const { registerPayment, updateSubscriptionStatus, updatePaymentLink, updateShop } = useShops();
   const [paymentLink, setPaymentLink] = useState(shop?.paymentLink || "");
   const [showLinkField, setShowLinkField] = useState(false);
+  const [price, setPrice] = useState(shop?.monthlyPrice?.toString() || "0");
+  const [isEditingPrice, setIsEditingPrice] = useState(false);
 
   if (!shop) return null;
 
@@ -539,6 +542,11 @@ function PaymentModal({
   const handleSaveLink = () => {
     updatePaymentLink(shop.slug, paymentLink);
     setShowLinkField(false);
+  };
+
+  const handleSavePrice = async () => {
+    await updateShop(shop.id, { monthlyPrice: Number(price) });
+    setIsEditingPrice(false);
   };
 
   // Mostrar botón de confirmar pago si está en trial o past_due
@@ -583,12 +591,28 @@ function PaymentModal({
           </div>
           <div className="flex justify-between items-center mb-2">
             <span className="text-slate-400">Monto mensual</span>
-            <span className="text-white font-bold">${shop.monthlyPrice} MXN</span>
+            {isEditingPrice ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  className="w-24 px-2 py-1 rounded bg-black/40 border border-white/10 text-white text-right font-bold"
+                />
+                <span className="text-white font-bold">DOP</span>
+                <button onClick={handleSavePrice} className="p-1 hover:text-green-400"><Check className="w-4 h-4" /></button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="text-white font-bold">${shop.monthlyPrice} DOP</span>
+                <button onClick={() => setIsEditingPrice(true)} className="text-slate-500 hover:text-white"><Edit className="w-3 h-3" /></button>
+              </div>
+            )}
           </div>
           <div className="flex justify-between items-center text-sm">
             <span className="text-slate-500">Próx. Vencimiento</span>
             <span className="text-slate-400">
-              {new Date(shop.nextPaymentDate).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}
+              {new Date(shop.nextPaymentDate).toLocaleDateString("es-DO", { day: "numeric", month: "short", year: "numeric" })}
             </span>
           </div>
         </div>

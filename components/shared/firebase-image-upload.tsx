@@ -18,7 +18,7 @@ interface FirebaseImageUploadProps {
   folder: string;
   shopId: string;
   label?: string;
-  aspectRatio?: "square" | "banner" | "auto";
+  aspectRatio?: "square" | "banner" | "auto" | "video";
   maxSizeMB?: number;
   accept?: "image" | "video" | "both";
 }
@@ -47,6 +47,7 @@ export function FirebaseImageUpload({
     square: "aspect-square",
     banner: "aspect-[3/1]",
     auto: "aspect-video",
+    video: "aspect-video",
   };
 
   const isVideo = (url: string) => {
