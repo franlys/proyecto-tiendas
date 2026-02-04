@@ -219,7 +219,15 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
       stats: { monthlyRevenue: 0, activeOrders: 0, completedOrders: 0, totalCustomers: 0 }
     };
 
-    await setDoc(doc(db, "shops", newId), newShop);
+    debugLog("CREANDO TIENDA EN FIRESTORE...", newShop);
+    try {
+      await setDoc(doc(db, "shops", newId), newShop);
+      debugLog("TIENDA GUARDADA EXITOSAMENTE ✅");
+    } catch (error) {
+      console.error("ERROR GUARDANDO TIENDA ❌", error);
+      alert(`Error guardando en base de datos: ${(error as any).message}`);
+      throw error;
+    }
     return newShop;
   }, []);
 
