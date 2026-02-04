@@ -12,6 +12,16 @@ const firebaseConfig = {
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+// Debug / Validation
+if (!firebaseConfig.apiKey) {
+    console.error("❌ FIREBASE MISSING KEYS. Application will not work.");
+    if (typeof window !== "undefined") {
+        console.warn("⚠️ Las variables de entorno de Firebase no están cargadas. Revisa .env.local (local) o Vercel -> Settings -> Environment Variables (producción).");
+    }
+} else {
+    console.log("✅ Firebase Config Loaded for Project:", firebaseConfig.projectId);
+}
+
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
