@@ -124,7 +124,7 @@ function FeatureToggle({
 function ShopDetailContent() {
     const params = useParams();
     const router = useRouter();
-    const { shops, getShop, updateShop, updateShopCredentials, toggleFeature } = useShops();
+    const { shops, getShop, updateShop, updateShopCredentials, toggleFeature, registerPayment } = useShops();
     const { isSuperAdmin, isLoading: authLoading } = useAuth();
 
     const [shop, setShop] = useState<ManagedShop | undefined>(undefined);
