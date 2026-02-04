@@ -8,6 +8,8 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import { db } from "@/lib/firebase";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 // ============================================
 // DEBUG LOGGING - SUPER ADMIN
@@ -414,27 +416,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return true;
     }
 
-    // 2. Check managed shops in localStorage (dynamic shop owners)
-    debugLog("Checking managed shops for dynamic login...");
+    // 2. Check managed shops in Firestore (dynamic shop owners)
+    debugLog("Checking managed shops in Firestore for dynamic login...");
     try {
-      const storedShops = localStorage.getItem("linko-managed-shops");
-      if (storedShops) {
-        const managedShops = JSON.parse(storedShops);
-        debugLog("Found managed shops", { count: managedShops.length });
+      const shopsRef = collection(db, "shops");
+      // Query for shop where ownerUsername matches
+      const q = query(shopsRef, where("ownerUsername", "==", username));
+      const querySnapshot = await getDocs(q);
 
-        const matchingShop = managedShops.find(
-          (shop: { ownerUsername?: string; ownerPassword?: string }) =>
-            shop.ownerUsername?.toLowerCase() === username.toLowerCase() &&
-            shop.ownerPassword === password
-        );
+      let matchingShop = null;
+      let matchingShopId = null;
 
-        if (matchingShop) {
+      if (!querySnapshot.empty) {
+        // Found by username
+        const doc = querySnapshot.docs[0];
+        matchingShop = doc.data();
+        matchingShopId = doc.id;
+      } else {
+        // Fallback: Try to find by slug (legacy or direct ID match)
+        // If the user typed the "slug" as username
+        const qSlug = query(shopsRef, where("slug", "==", username));
+        const slugSnapshot = await getDocs(qSlug);
+        if (!slugSnapshot.empty) {
+          const doc = slugSnapshot.docs[0];
+          matchingShop = doc.data();
+          matchingShopId = doc.id;
+        }
+      }
+
+      if (matchingShop && matchingShopId) {
+        // Verify password
+        if (matchingShop.ownerPassword === password) {
           const dynamicUser: User = {
             id: `shop-owner-${matchingShop.slug}`,
-            username: matchingShop.ownerUsername,
+            username: matchingShop.ownerUsername || matchingShop.slug,
             name: matchingShop.name,
             role: "SHOP_OWNER",
-            shopId: matchingShop.slug,
+            shopId: matchingShop.slug, // Using SLUG as shopId for cleaner URLs
           };
 
           debugLog("DYNAMIC SHOP OWNER LOGIN SUCCESS ✅", {
@@ -452,7 +470,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch (error) {
-      debugError("Error checking managed shops", error);
+      debugError("Error checking Firestore shops", error);
     }
 
     debugWarn("LOGIN FAILED", {

@@ -121,49 +121,8 @@ function debugError(action: string, data?: unknown) {
 // CLOUD HELPER: Initialize Data
 // ============================================
 async function initializeCloudShops(currentShops: ManagedShop[]) {
-  const batch = writeBatch(db);
-  let updatesCount = 0;
-
-  // 1. Get All Mocks (The "Truth" for Demos)
-  const mocks = Object.values(MOCK_SHOPS).map((s) => ({
-    ...s,
-    id: s.id,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    ownerUsername: s.slug.includes("demo") || s.id.includes("demo") ? s.slug : (s.slug === "estetica-lola" ? "lola" : "carlos"),
-    ownerPassword: "123",
-    subscriptionStatus: "active" as SubscriptionStatus,
-    nextPaymentDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    features: DEFAULT_FEATURES as FeatureId[],
-    stats: {
-      monthlyRevenue: 0,
-      activeOrders: 0,
-      completedOrders: 0,
-      totalCustomers: 0,
-    }
-  }));
-
-  // 2. Sync Demos (Only creates MISSING shops, does not overwrite existing)
-  const missingMocks = mocks.filter(mock => !currentShops.some(shop => shop.id === mock.id));
-
-  for (const mock of missingMocks) {
-    const docRef = doc(db, "shops", mock.id);
-    batch.set(docRef, mock, { merge: true });
-    updatesCount++;
-    debugLog(`CLOUD INIT: Seeding NEW Demo ${mock.name}`);
-  }
-
-  // 3. Legacy Rescue Removed (Cloud Only) - LocalStorage source ignored.
-
-  if (updatesCount > 0) {
-    debugLog(`CLOUD INIT: Committing ${updatesCount} updates...`);
-    try {
-      await batch.commit();
-      debugLog("CLOUD INIT: SUCCESS ✅ - Data synced to Firestore");
-    } catch (error) {
-      debugError("CLOUD INIT: FAILED ❌ - Could not write to Firestore", error);
-    }
-  }
+  // Demo logic removed per user request
+  debugLog("CLOUD INIT: Demos disabled.");
 }
 
 
@@ -173,11 +132,8 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
 
   // Manual Restore Trigger
   const restoreDemos = useCallback(async () => {
-    debugLog("MANUAL RESTORE TRIGGERED");
-    await initializeCloudShops(shops);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    window.location.reload();
-  }, [shops]);
+    debugLog("MANUAL RESTORE DISABLED");
+  }, []);
 
   // ============================================
   // SYNC LOGIC
@@ -205,17 +161,6 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
       setShops(cloudShops);
       setIsLoading(false);
 
-      // LocalStorage backup disabled (Cloud Only)
-      // localStorage.setItem(SHOPS_STORAGE_KEY, JSON.stringify(cloudShops));
-
-      // Check for missing items (only seed if CRITICAL demos are missing)
-      const perfumeria = cloudShops.some(s => s.slug === "ejemplo-perfumeria");
-      const rentcar = cloudShops.some(s => s.slug === "ejemplo-rentcar");
-
-      if (!perfumeria || !rentcar) {
-        debugLog("CLOUD SYNC: Missing critical demos, triggering seed...");
-        initializeCloudShops(cloudShops);
-      }
     }, (error) => {
       debugError("Sync Failed", error);
       setIsLoading(false);
@@ -243,6 +188,12 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
   // --- WRITE OPERATIONS (Direct to Firestore) ---
 
   const createShop = useCallback(async (data: CreateShopData): Promise<ManagedShop> => {
+    // 1. Validation: Check if shop exists
+    if (shops.some(s => s.slug === data.slug)) {
+      alert("¡Error! Ya existe una tienda con este nombre/slug.");
+      throw new Error("Duplicate shop slug");
+    }
+
     const newId = `shop-${Date.now()}`;
     const newShop: ManagedShop = {
       id: newId,
@@ -309,9 +260,22 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
     await setDoc(doc(db, "shops", shop.id), { subscriptionStatus: status }, { merge: true });
   }, [shops]);
 
-  const registerPayment = useCallback(async (shopId: string) => {
-    // No-op or log
-  }, []);
+  const registerPayment = useCallback(async (shopId: string, method?: "stripe" | "manual") => {
+    const shop = shops.find(s => s.id === shopId || s.slug === shopId);
+    if (!shop) return;
+
+    const nextDate = new Date();
+    nextDate.setDate(nextDate.getDate() + 30);
+
+    await setDoc(doc(db, "shops", shop.id), {
+      subscriptionStatus: "active",
+      nextPaymentDate: nextDate.toISOString(),
+      stats: {
+        ...shop.stats,
+        monthlyRevenue: (shop.stats?.monthlyRevenue || 0) + (shop.monthlyPrice || 0)
+      }
+    }, { merge: true });
+  }, [shops]);
 
   const updatePaymentLink = useCallback(async (shopId: string, link: string) => {
     // No-op
