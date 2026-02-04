@@ -734,9 +734,15 @@ function AgencyContent() {
   };
 
   const handleCreateShop = async (data: { name: string; slug: string; category: ShopCategory; description: string; phone: string; wholesale: boolean; customDomain: string; monthlyPrice: number }) => {
-    debugLog("CREATE SHOP - Form submitted", data);
-    const newShop = await createShop(data);
-    debugLog("CREATE SHOP - Result", { success: !!newShop, shopId: newShop?.id });
+    try {
+      debugLog("CREATE SHOP - Form submitted", data);
+      const newShop = await createShop(data);
+      debugLog("CREATE SHOP - Result", { success: !!newShop, shopId: newShop?.id });
+      setShowCreateModal(false);
+    } catch (error: any) {
+      console.error("CREATE SHOP ERROR:", error);
+      alert(`Error al crear la tienda: ${error.message || "Error desconocido"}. Revisa la consola y tu conexión.`);
+    }
   };
 
   if (isLoading || !isAuthenticated || !isSuperAdmin) {
