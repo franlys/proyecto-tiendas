@@ -26,7 +26,9 @@ export async function createShopAction(shopData: any) {
         } catch (e: any) {
             console.error("❌ [SERVER ACTION] Connection Probe Failed:", e);
             if (e.code === 5 || (e.message && e.message.includes("NOT_FOUND"))) {
-                throw new Error(`CRÍTICO: Error 5 NOT_FOUND. Firebase no encuentra el proyecto '${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}'.`);
+                const pId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "";
+                const chars = pId.split("").map(c => c.charCodeAt(0)).join(",");
+                throw new Error(`CRÍTICO: Error 5 NOT_FOUND. Proyecto: '${pId}' (ASCII: [${chars}]). Revisa espacios en blanco en Vercel.`);
             }
             // Continue anyway? No, validation failed.
         }

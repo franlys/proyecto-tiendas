@@ -65,9 +65,15 @@ export function initAdmin() {
         return null;
     }
 
-    // NEW: Check for Truncation
+    // NEW: Check for Truncation checking
     // Remove quotes first to check end safely
     const cleanRaw = rawPrivateKey.replace(/^["']|["']$/g, "").trim();
+
+    // NEW: Check if user pasted the entire JSON file
+    if (cleanRaw.startsWith("{") || cleanRaw.includes('"private_key"')) {
+        throw new Error("Error de Configuración Vercel: Has pegado el archivo JSON entero en FIREBASE_ADMIN_PRIVATE_KEY. Debes pegar SOLAMENTE el valor de 'private_key' (empezando por -----BEGIN...).");
+    }
+
     if (!cleanRaw.includes("-----END PRIVATE KEY-----")) {
         console.error("❌ [FIREBASE ADMIN] KEY TRUNCATION DETECTED!");
         console.error("   - Length:", cleanRaw.length);
