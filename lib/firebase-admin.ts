@@ -18,24 +18,24 @@ function formatPrivateKey(key: string) {
         cleanKey = cleanKey.slice(1, -1);
     }
 
-    // 2. Handle literal escaped newlines (standard .env format)
+    // 2. Basic cleanup of escaped newlines
     cleanKey = cleanKey.replace(/\\n/g, "\n");
 
-    // 3. Handle "One-Line" or "Mashed" keys (User Case)
     const header = "-----BEGIN PRIVATE KEY-----";
     const footer = "-----END PRIVATE KEY-----";
 
-    // If it contains the header but DOES NOT have a newline immediately after
-    if (cleanKey.includes(header) && !cleanKey.includes(`${header}\n`)) {
-        // Isolate the body by stripping headers
-        let body = cleanKey.replace(header, "").replace(footer, "").trim();
+    // 3. PEM Reconstruction: Extract, Clean, Chunk
+    if (cleanKey.includes(header)) {
+        // Isolate the base64 payload by removing headers and ALL whitespace
+        const bodyRaw = cleanKey
+            .replace(header, "")
+            .replace(footer, "")
+            .replace(/\s+/g, "");
 
-        // Improve formatting: If spaces exist, they are likely broken newlines
-        if (body.includes(" ")) {
-            body = body.replace(/ /g, "\n");
-        }
+        // RFC 7468: Split into 64-character lines
+        const chunkedBody = bodyRaw.match(/.{1,64}/g)?.join("\n");
 
-        return `${header}\n${body}\n${footer}`;
+        return `${header}\n${chunkedBody}\n${footer}`;
     }
 
     return cleanKey;
