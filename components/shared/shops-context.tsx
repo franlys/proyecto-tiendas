@@ -1,3 +1,5 @@
+"use client";
+
 import { createShopAction } from "@/lib/actions/shop-actions";
 
 import {
