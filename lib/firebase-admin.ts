@@ -8,37 +8,22 @@ interface FirebaseAdminConfig {
 }
 
 function formatPrivateKey(key: string) {
-    let cleanKey = key.trim();
+    // Robust Regex Extraction: Ignores outer garbage, grabs inner base64
+    const match = key.match(/-----BEGIN PRIVATE KEY-----([\s\S]*)-----END PRIVATE KEY-----/);
 
-    // 1. Remove wrapping quotes
-    if (
-        (cleanKey.startsWith('"') && cleanKey.endsWith('"')) ||
-        (cleanKey.startsWith("'") && cleanKey.endsWith("'"))
-    ) {
-        cleanKey = cleanKey.slice(1, -1);
-    }
-
-    // 2. Basic cleanup of escaped newlines
-    cleanKey = cleanKey.replace(/\\n/g, "\n");
-
-    const header = "-----BEGIN PRIVATE KEY-----";
-    const footer = "-----END PRIVATE KEY-----";
-
-    // 3. PEM Reconstruction: Extract, Clean, Chunk
-    if (cleanKey.includes(header)) {
-        // Isolate the base64 payload by removing headers and ALL whitespace
-        const bodyRaw = cleanKey
-            .replace(header, "")
-            .replace(footer, "")
-            .replace(/\s+/g, "");
-
-        // RFC 7468: Split into 64-character lines
+    if (match && match[1]) {
+        // We found headers. Extract body.
+        const bodyRaw = match[1].replace(/\s+/g, ""); // Remove all whitespace
+        // Re-chunk to 64 chars
         const chunkedBody = bodyRaw.match(/.{1,64}/g)?.join("\n");
-
-        return `${header}\n${chunkedBody}\n${footer}`;
+        return `-----BEGIN PRIVATE KEY-----\n${chunkedBody}\n-----END PRIVATE KEY-----`;
     }
 
-    return cleanKey;
+    // Fallback: Maybe it's verified JSON string?
+    let clean = key.trim();
+    if (clean.startsWith('"') || clean.startsWith("'")) clean = clean.slice(1, -1);
+    clean = clean.replace(/\\n/g, "\n");
+    return clean;
 }
 
 export function initAdmin() {
@@ -98,7 +83,13 @@ export function initAdmin() {
         });
     } catch (error: any) {
         console.error("❌ [FIREBASE ADMIN] Init Failed:", error);
-        throw new Error(`Error fatal al inicializar Firebase Admin: ${error.message}`);
+
+        // PUBLIC DIAGNOSTICS FOR UI
+        const debugStart = formattedKey.substring(0, 15).replace(/\n/g, "N");
+        const debugEnd = formattedKey.slice(-15).replace(/\n/g, "N");
+        const diag = `[Len:${formattedKey.length} Start:${debugStart} End:${debugEnd}]`;
+
+        throw new Error(`Firebase Key Error: ${error.message} ${diag}`);
     }
 }
 
