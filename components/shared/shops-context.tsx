@@ -1,4 +1,4 @@
-"use client";
+import { createShopAction } from "@/lib/actions/shop-actions";
 
 import {
   createContext,
@@ -219,10 +219,16 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
       stats: { monthlyRevenue: 0, activeOrders: 0, completedOrders: 0, totalCustomers: 0 }
     };
 
-    debugLog("CREANDO TIENDA EN FIRESTORE...", newShop);
+    debugLog("CREANDO TIENDA (Server Action)...", newShop);
     try {
-      await setDoc(doc(db, "shops", newId), newShop);
+      const result = await createShopAction(newShop);
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
       debugLog("TIENDA GUARDADA EXITOSAMENTE ✅");
+      setShops(prev => [...prev, newShop]);
     } catch (error) {
       console.error("ERROR GUARDANDO TIENDA ❌", error);
       alert(`Error guardando en base de datos: ${(error as any).message}`);
