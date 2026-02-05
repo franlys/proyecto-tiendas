@@ -16,9 +16,15 @@ export function initAdmin() {
         return admin.app();
     }
 
-    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-    const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
-    const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+    const projectId = (process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "").trim();
+    const clientEmail = (process.env.FIREBASE_ADMIN_CLIENT_EMAIL || "").trim();
+    let privateKey = (process.env.FIREBASE_ADMIN_PRIVATE_KEY || "").trim();
+
+    // Remove wrapping quotes common in Vercel copy-paste
+    if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+        privateKey = privateKey.slice(1, -1);
+    }
+
 
     if (!projectId || !clientEmail || !privateKey) {
         // In development/build, we might not have these, but they are required for runtime
