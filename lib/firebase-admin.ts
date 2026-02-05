@@ -8,7 +8,7 @@ interface FirebaseAdminConfig {
 }
 
 function formatPrivateKey(key: string) {
-    // 1. Remove all surrounding quotes (single or double), recursively
+    // 1. Remove wrapping quotes
     let cleanKey = key.trim();
     while (
         (cleanKey.startsWith('"') && cleanKey.endsWith('"')) ||
@@ -17,8 +17,22 @@ function formatPrivateKey(key: string) {
         cleanKey = cleanKey.slice(1, -1).trim();
     }
 
-    // 2. Handle escaped newlines (literal \n -> real newline)
+    // 2. Handle escaped newlines
     cleanKey = cleanKey.replace(/\\n/g, "\n");
+
+    // 3. PEM Reconstruction (Aggressive fix for formatting issues)
+    const header = "-----BEGIN PRIVATE KEY-----";
+    const footer = "-----END PRIVATE KEY-----";
+
+    if (cleanKey.includes(header) && cleanKey.includes(footer)) {
+        // Extract body, kill all whitespace/newlines, re-wrap cleanly
+        const body = cleanKey
+            .replace(header, "")
+            .replace(footer, "")
+            .replace(/\s/g, "");
+
+        return `${header}\n${body}\n${footer}`;
+    }
 
     return cleanKey;
 }
