@@ -8,17 +8,16 @@ interface FirebaseAdminConfig {
 }
 
 function formatPrivateKey(key: string) {
-    // 1. Remove wrapping quotes (common in Vercel)
-    let cleanKey = key.trim();
-    if (
-        (cleanKey.startsWith('"') && cleanKey.endsWith('"')) ||
-        (cleanKey.startsWith("'") && cleanKey.endsWith("'"))
-    ) {
-        cleanKey = cleanKey.slice(1, -1);
+    // 1. Try to unescape if it looks like a JSON string (handles quotes and \n naturally)
+    if (key.startsWith('"') && key.endsWith('"')) {
+        try {
+            return JSON.parse(key);
+        } catch (e) {
+            // cleaning manually if parse fails
+            return key.slice(1, -1).replace(/\\n/g, "\n");
+        }
     }
-
-    // 2. Handle escaped newlines
-    return cleanKey.replace(/\\n/g, "\n");
+    return key.replace(/\\n/g, "\n");
 }
 
 export function initAdmin() {
@@ -38,8 +37,9 @@ export function initAdmin() {
 
     if (missing.length > 0) {
         if (process.env.NODE_ENV === "production") {
-            console.error(`❌ [FIREBASE ADMIN] MISSING KEYS: ${missing.join(", ")}`);
-            throw new Error(`Error de Configuración Vercel: Faltan las variables: ${missing.join(", ")}`);
+            const msg = `MISSING KEYS: ${missing.join(", ")}`;
+            console.error(`❌ [FIREBASE ADMIN] ${msg}`);
+            throw new Error(`Error de Configuración Vercel: ${msg}`);
         }
         console.warn("Missing Admin Credentials in Dev:", missing);
         return null;
@@ -47,12 +47,14 @@ export function initAdmin() {
 
     const formattedKey = formatPrivateKey(rawPrivateKey);
 
-    // DEBUG: Log key structure
+    // DEBUG: Log precise key diagnosis
     if (process.env.NODE_ENV === "production") {
-        const lines = formattedKey.split("\n");
-        console.log(`🔑 [FIREBASE ADMIN] Key Processed. Total Lines: ${lines.length}`);
-        console.log(`   - Header: ${lines[0]}`);
-        console.log(`   - Footer: ${lines[lines.length - 1]}`);
+        console.log("🔍 [KEY DIAGNOSIS]");
+        console.log(`   - Raw Length: ${rawPrivateKey.length}`);
+        console.log(`   - Formatted Length: ${formattedKey.length}`);
+        console.log(`   - Starts With Header?: ${formattedKey.startsWith("-----BEGIN PRIVATE KEY-----")}`);
+        console.log(`   - Contains Newlines?: ${formattedKey.includes("\n")}`);
+        console.log(`   - First 10 chars: "${formattedKey.substring(0, 10)}..."`);
     }
 
     try {
@@ -64,9 +66,8 @@ export function initAdmin() {
             }),
         });
     } catch (error: any) {
-        console.error("❌ [FIREBASE ADMIN] Key Parsing Failed!");
-        console.error("   - Error:", error.message);
-        throw new Error(`Error procesando la Clave Privada (Private Key). Revisa el formato en Vercel.`);
+        console.error("❌ [FIREBASE ADMIN] Init Failed:", error);
+        throw new Error(`Error fatal al inicializar Firebase Admin: ${error.message}`);
     }
 }
 
