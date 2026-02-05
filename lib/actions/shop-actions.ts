@@ -1,6 +1,4 @@
 "use server";
-// Force Node.js runtime for Firebase Admin SDK compatibility
-export const runtime = 'nodejs';
 
 import { adminDb } from "@/lib/firebase-admin";
 import { revalidatePath } from "next/cache";
