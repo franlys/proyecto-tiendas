@@ -82,18 +82,24 @@ export function initAdmin() {
         console.log("🔍 [KEY DIAGNOSIS]");
         console.log(`   - Raw Length: ${rawPrivateKey.length}`);
         console.log(`   - Formatted Length: ${formattedKey.length}`);
-        console.log(`   - Starts With Header?: ${formattedKey.startsWith("-----BEGIN PRIVATE KEY-----")}`);
-        console.log(`   - Contains Newlines?: ${formattedKey.includes("\n")}`);
-        console.log(`   - First 10 chars: "${formattedKey.substring(0, 10)}..."`);
+
+        // NEW: Debug Project ID chars (Detect invisible chars)
+        console.log(`🔍 [PROJECT ID DEBUG] Value: '${projectId}'`);
+        console.log(`   - Length: ${projectId.length}`);
+        console.log(`   - Char Codes: ${projectId.split("").map(c => c.charCodeAt(0)).join(",")}`);
+
+        console.log(`🔍 [EMAIL DEBUG] Length: ${clientEmail.length}`);
     }
 
     try {
+        // Explicitly pass projectId in options too, just in case
         return admin.initializeApp({
             credential: admin.credential.cert({
                 projectId,
                 clientEmail,
                 privateKey: formattedKey,
             }),
+            projectId: projectId,
         });
     } catch (error: any) {
         console.error("❌ [FIREBASE ADMIN] Init Failed:", error);
