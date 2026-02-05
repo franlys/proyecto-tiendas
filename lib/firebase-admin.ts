@@ -29,16 +29,27 @@ function formatPrivateKey(key: string) {
     return `${header}\n${chunkedBody}\n${footer}`;
 }
 
+// Helper to sanitize Env Vars (remove quotes if user added them)
+function cleanEnv(val: string | undefined) {
+    let v = (val || "").trim();
+    if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+        v = v.slice(1, -1);
+    }
+    return v;
+}
+
 export function initAdmin() {
+    // 1. Singleton Check
     if (admin.apps.length > 0) {
         return admin.app();
     }
 
-    const projectId = (process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "").trim();
-    const clientEmail = (process.env.FIREBASE_ADMIN_CLIENT_EMAIL || "").trim();
+    // 2. Load & Sanitize Credentials
+    const projectId = cleanEnv(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+    const clientEmail = cleanEnv(process.env.FIREBASE_ADMIN_CLIENT_EMAIL);
     const rawPrivateKey = (process.env.FIREBASE_ADMIN_PRIVATE_KEY || "").trim();
 
-    // Diagnostics for logs
+    // 3. Validation
     const missing = [];
     if (!projectId) missing.push("NEXT_PUBLIC_FIREBASE_PROJECT_ID");
     if (!clientEmail) missing.push("FIREBASE_ADMIN_CLIENT_EMAIL");
