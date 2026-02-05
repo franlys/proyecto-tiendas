@@ -20,17 +20,10 @@ export async function createShopAction(shopData: any) {
         // DEBUG: Verify Project and Connection
         try {
             const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-            console.log(`🔍 [SERVER ACTION] Probe: Connecting to ${projectId}...`);
-            const collections = await db.listCollections();
-            console.log(`✅ [SERVER ACTION] Connection Successful! Found ${collections.length} collections.`);
+            console.log(`🔍 [SERVER ACTION] Attempting Direct Write to ${projectId}...`);
+            // We skip listCollections() probe as it might give false negatives on permissions
         } catch (e: any) {
-            console.error("❌ [SERVER ACTION] Connection Probe Failed:", e);
-            if (e.code === 5 || (e.message && e.message.includes("NOT_FOUND"))) {
-                const pId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "";
-                const chars = pId.split("").map(c => c.charCodeAt(0)).join(",");
-                throw new Error(`CRÍTICO: Error 5 NOT_FOUND. Proyecto: '${pId}' (ASCII: [${chars}]). Revisa espacios en blanco en Vercel.`);
-            }
-            // Continue anyway? No, validation failed.
+            console.error("❌ [SERVER ACTION] Setup Failed:", e);
         }
 
         // Ensure shopData has an ID
