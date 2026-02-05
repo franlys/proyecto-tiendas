@@ -26,12 +26,23 @@ export function initAdmin() {
     }
 
 
-    if (!projectId || !clientEmail || !privateKey) {
-        // In development/build, we might not have these, but they are required for runtime
+    const missing = [];
+    if (!projectId) missing.push("NEXT_PUBLIC_FIREBASE_PROJECT_ID");
+    if (!clientEmail) missing.push("FIREBASE_ADMIN_CLIENT_EMAIL");
+    if (!privateKey) missing.push("FIREBASE_ADMIN_PRIVATE_KEY");
+
+    if (missing.length > 0) {
+        // En producción es crítico
         if (process.env.NODE_ENV === "production") {
-            throw new Error("Missing Firebase Admin credentials");
+            // Log obfuscated values for debugging before throwing
+            console.error(`❌ [FIREBASE ADMIN] MISSING KEYS: ${missing.join(", ")}`);
+            console.error(`   - Received Project: ${projectId ? "OK" : "MISSING"}`);
+            console.error(`   - Received Email: ${clientEmail ? "OK" : "MISSING"}`);
+            console.error(`   - Received Key: ${privateKey ? "OK (Length: " + privateKey.length + ")" : "MISSING"}`);
+
+            throw new Error(`Error de Configuración Vercel: Faltan las variables: ${missing.join(", ")}`);
         }
-        console.warn("Missing Firebase Admin credentials in dev/build");
+        console.warn("Missing Admin Credentials in Dev:", missing);
         return null;
     }
 

@@ -1,29 +1,36 @@
 "use server";
+// Force Node.js runtime for Firebase Admin SDK compatibility
+export const runtime = 'nodejs';
 
 import { adminDb } from "@/lib/firebase-admin";
 import { revalidatePath } from "next/cache";
 
 export async function createShopAction(shopData: any) {
     try {
+        // DIAGNOSTIC INFO
+        const pKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY || "";
+        console.log("🔍 [SERVER ACTION] DIAGNOSTIC INFO:");
+        console.log("   - Project ID:", process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+        console.log("   - Client Email:", process.env.FIREBASE_ADMIN_CLIENT_EMAIL);
+        console.log("   - Private Key Length:", pKey.length);
+
         const db = adminDb();
         if (!db) {
-            throw new Error("Could not connect to Firebase Admin. Check server credentials.");
+            throw new Error("Could not connect to Firebase Admin. Init returned null. Check logs for missing keys.");
         }
 
-        // DEBUG: Connection Probe
+        // DEBUG: Verify Project and Connection
         try {
             const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-            console.log(`🔍 [SERVER ACTION] Testing Connection to Project: ${projectId}`);
-            // Attempt to list collections to verify connectivity and auth
+            console.log(`🔍 [SERVER ACTION] Probe: Connecting to ${projectId}...`);
             const collections = await db.listCollections();
             console.log(`✅ [SERVER ACTION] Connection Successful! Found ${collections.length} collections.`);
         } catch (e: any) {
             console.error("❌ [SERVER ACTION] Connection Probe Failed:", e);
-            // If this fails, the detailed error will be logged server-side
             if (e.code === 5 || (e.message && e.message.includes("NOT_FOUND"))) {
-                throw new Error(`CRÍTICO: Error 5 NOT_FOUND. Firebase no encuentra la base de datos en el proyecto '${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}'. ¿La base de datos existe en la consola?`);
+                throw new Error(`CRÍTICO: Error 5 NOT_FOUND. Firebase no encuentra el proyecto '${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}'.`);
             }
-            throw e;
+            // Continue anyway? No, validation failed.
         }
 
         // Ensure shopData has an ID
