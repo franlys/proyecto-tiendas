@@ -66,6 +66,16 @@ export function initAdmin() {
         return null;
     }
 
+    // NEW: Check for Truncation
+    // Remove quotes first to check end safely
+    const cleanRaw = rawPrivateKey.replace(/^["']|["']$/g, "").trim();
+    if (!cleanRaw.includes("-----END PRIVATE KEY-----")) {
+        console.error("❌ [FIREBASE ADMIN] KEY TRUNCATION DETECTED!");
+        console.error("   - Length:", cleanRaw.length);
+        console.error("   - End of Key:", cleanRaw.slice(-50));
+        throw new Error("Error Crítico: La Variable de Entorno FIREBASE_ADMIN_PRIVATE_KEY está incomplet. Parece que no se copió el final '-----END PRIVATE KEY-----'.");
+    }
+
     const formattedKey = formatPrivateKey(rawPrivateKey);
 
     // DEBUG: Log precise key diagnosis
