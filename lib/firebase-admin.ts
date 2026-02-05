@@ -8,16 +8,37 @@ interface FirebaseAdminConfig {
 }
 
 function formatPrivateKey(key: string) {
-    // 1. Try to unescape if it looks like a JSON string (handles quotes and \n naturally)
-    if (key.startsWith('"') && key.endsWith('"')) {
-        try {
-            return JSON.parse(key);
-        } catch (e) {
-            // cleaning manually if parse fails
-            return key.slice(1, -1).replace(/\\n/g, "\n");
-        }
+    let cleanKey = key.trim();
+
+    // 1. Remove wrapping quotes
+    if (
+        (cleanKey.startsWith('"') && cleanKey.endsWith('"')) ||
+        (cleanKey.startsWith("'") && cleanKey.endsWith("'"))
+    ) {
+        cleanKey = cleanKey.slice(1, -1);
     }
-    return key.replace(/\\n/g, "\n");
+
+    // 2. Handle literal escaped newlines (standard .env format)
+    cleanKey = cleanKey.replace(/\\n/g, "\n");
+
+    // 3. Handle "One-Line" or "Mashed" keys (User Case)
+    const header = "-----BEGIN PRIVATE KEY-----";
+    const footer = "-----END PRIVATE KEY-----";
+
+    // If it contains the header but DOES NOT have a newline immediately after
+    if (cleanKey.includes(header) && !cleanKey.includes(`${header}\n`)) {
+        // Isolate the body by stripping headers
+        let body = cleanKey.replace(header, "").replace(footer, "").trim();
+
+        // Improve formatting: If spaces exist, they are likely broken newlines
+        if (body.includes(" ")) {
+            body = body.replace(/ /g, "\n");
+        }
+
+        return `${header}\n${body}\n${footer}`;
+    }
+
+    return cleanKey;
 }
 
 export function initAdmin() {
