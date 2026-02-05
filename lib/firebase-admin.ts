@@ -8,7 +8,19 @@ interface FirebaseAdminConfig {
 }
 
 function formatPrivateKey(key: string) {
-    return key.replace(/\\n/g, "\n");
+    // 1. Remove all surrounding quotes (single or double), recursively
+    let cleanKey = key.trim();
+    while (
+        (cleanKey.startsWith('"') && cleanKey.endsWith('"')) ||
+        (cleanKey.startsWith("'") && cleanKey.endsWith("'"))
+    ) {
+        cleanKey = cleanKey.slice(1, -1).trim();
+    }
+
+    // 2. Handle escaped newlines (literal \n -> real newline)
+    cleanKey = cleanKey.replace(/\\n/g, "\n");
+
+    return cleanKey;
 }
 
 export function initAdmin() {
@@ -18,41 +30,39 @@ export function initAdmin() {
 
     const projectId = (process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "").trim();
     const clientEmail = (process.env.FIREBASE_ADMIN_CLIENT_EMAIL || "").trim();
-    let privateKey = (process.env.FIREBASE_ADMIN_PRIVATE_KEY || "").trim();
+    const rawPrivateKey = (process.env.FIREBASE_ADMIN_PRIVATE_KEY || "").trim();
 
-    // Remove wrapping quotes common in Vercel copy-paste
-    if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
-        privateKey = privateKey.slice(1, -1);
-    }
-
-
+    // Diagnostics for logs
     const missing = [];
     if (!projectId) missing.push("NEXT_PUBLIC_FIREBASE_PROJECT_ID");
     if (!clientEmail) missing.push("FIREBASE_ADMIN_CLIENT_EMAIL");
-    if (!privateKey) missing.push("FIREBASE_ADMIN_PRIVATE_KEY");
+    if (!rawPrivateKey) missing.push("FIREBASE_ADMIN_PRIVATE_KEY");
 
     if (missing.length > 0) {
-        // En producción es crítico
         if (process.env.NODE_ENV === "production") {
-            // Log obfuscated values for debugging before throwing
             console.error(`❌ [FIREBASE ADMIN] MISSING KEYS: ${missing.join(", ")}`);
-            console.error(`   - Received Project: ${projectId ? "OK" : "MISSING"}`);
-            console.error(`   - Received Email: ${clientEmail ? "OK" : "MISSING"}`);
-            console.error(`   - Received Key: ${privateKey ? "OK (Length: " + privateKey.length + ")" : "MISSING"}`);
-
             throw new Error(`Error de Configuración Vercel: Faltan las variables: ${missing.join(", ")}`);
         }
         console.warn("Missing Admin Credentials in Dev:", missing);
         return null;
     }
 
-    return admin.initializeApp({
-        credential: admin.credential.cert({
-            projectId,
-            clientEmail,
-            privateKey: formatPrivateKey(privateKey),
-        }),
-    });
+    const formattedKey = formatPrivateKey(rawPrivateKey);
+
+    try {
+        return admin.initializeApp({
+            credential: admin.credential.cert({
+                projectId,
+                clientEmail,
+                privateKey: formattedKey,
+            }),
+        });
+    } catch (error: any) {
+        console.error("❌ [FIREBASE ADMIN] Key Parsing Failed!");
+        console.error("   - Error:", error.message);
+        console.error("   - Start Check:", formattedKey.substring(0, 30));
+        throw new Error(`Error procesando la Clave Privada (Private Key) de Firebase. Asegúrate de haberla copiado completa y sin comillas extra.`);
+    }
 }
 
 export const adminAuth = () => {
