@@ -8,22 +8,25 @@ interface FirebaseAdminConfig {
 }
 
 function formatPrivateKey(key: string) {
-    // Robust Regex Extraction: Ignores outer garbage, grabs inner base64
-    const match = key.match(/-----BEGIN PRIVATE KEY-----([\s\S]*)-----END PRIVATE KEY-----/);
+    const header = "-----BEGIN PRIVATE KEY-----";
+    const footer = "-----END PRIVATE KEY-----";
 
-    if (match && match[1]) {
-        // We found headers. Extract body.
-        const bodyRaw = match[1].replace(/\s+/g, ""); // Remove all whitespace
-        // Re-chunk to 64 chars
-        const chunkedBody = bodyRaw.match(/.{1,64}/g)?.join("\n");
-        return `-----BEGIN PRIVATE KEY-----\n${chunkedBody}\n-----END PRIVATE KEY-----`;
+    // 1. Normalize: remove literal escaped newlines and headers
+    let internalBody = key.replace(/\\n/g, "");
+    internalBody = internalBody.replace(header, "").replace(footer, "");
+
+    // 2. Whitelist: Keep ONLY valid Base64 characters (A-Z, a-z, 0-9, +, /, =)
+    // This aggressively removes spaces, quotes, newlines, and potential copy-paste artifacts
+    const cleanBody = internalBody.replace(/[^a-zA-Z0-9+/=]/g, "");
+
+    if (cleanBody.length < 500) {
+        // RSA 2048 keys are usually ~1600 chars. <500 implies severe data loss.
+        console.warn(`⚠️ [FIREBASE ADMIN] Private Key body seems too short! (Len: ${cleanBody.length})`);
     }
 
-    // Fallback: Maybe it's verified JSON string?
-    let clean = key.trim();
-    if (clean.startsWith('"') || clean.startsWith("'")) clean = clean.slice(1, -1);
-    clean = clean.replace(/\\n/g, "\n");
-    return clean;
+    // 3. Reconstruct standard PEM
+    const chunkedBody = cleanBody.match(/.{1,64}/g)?.join("\n");
+    return `${header}\n${chunkedBody}\n${footer}`;
 }
 
 export function initAdmin() {
