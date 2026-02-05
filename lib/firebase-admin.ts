@@ -8,33 +8,17 @@ interface FirebaseAdminConfig {
 }
 
 function formatPrivateKey(key: string) {
-    // 1. Remove wrapping quotes
+    // 1. Remove wrapping quotes (common in Vercel)
     let cleanKey = key.trim();
-    while (
+    if (
         (cleanKey.startsWith('"') && cleanKey.endsWith('"')) ||
         (cleanKey.startsWith("'") && cleanKey.endsWith("'"))
     ) {
-        cleanKey = cleanKey.slice(1, -1).trim();
+        cleanKey = cleanKey.slice(1, -1);
     }
 
     // 2. Handle escaped newlines
-    cleanKey = cleanKey.replace(/\\n/g, "\n");
-
-    // 3. PEM Reconstruction (Aggressive fix for formatting issues)
-    const header = "-----BEGIN PRIVATE KEY-----";
-    const footer = "-----END PRIVATE KEY-----";
-
-    if (cleanKey.includes(header) && cleanKey.includes(footer)) {
-        // Extract body, kill all whitespace/newlines, re-wrap cleanly
-        const body = cleanKey
-            .replace(header, "")
-            .replace(footer, "")
-            .replace(/\s/g, "");
-
-        return `${header}\n${body}\n${footer}`;
-    }
-
-    return cleanKey;
+    return cleanKey.replace(/\\n/g, "\n");
 }
 
 export function initAdmin() {
@@ -63,6 +47,14 @@ export function initAdmin() {
 
     const formattedKey = formatPrivateKey(rawPrivateKey);
 
+    // DEBUG: Log key structure
+    if (process.env.NODE_ENV === "production") {
+        const lines = formattedKey.split("\n");
+        console.log(`🔑 [FIREBASE ADMIN] Key Processed. Total Lines: ${lines.length}`);
+        console.log(`   - Header: ${lines[0]}`);
+        console.log(`   - Footer: ${lines[lines.length - 1]}`);
+    }
+
     try {
         return admin.initializeApp({
             credential: admin.credential.cert({
@@ -74,8 +66,7 @@ export function initAdmin() {
     } catch (error: any) {
         console.error("❌ [FIREBASE ADMIN] Key Parsing Failed!");
         console.error("   - Error:", error.message);
-        console.error("   - Start Check:", formattedKey.substring(0, 30));
-        throw new Error(`Error procesando la Clave Privada (Private Key) de Firebase. Asegúrate de haberla copiado completa y sin comillas extra.`);
+        throw new Error(`Error procesando la Clave Privada (Private Key). Revisa el formato en Vercel.`);
     }
 }
 
