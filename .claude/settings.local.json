@@ -25,7 +25,12 @@
       "Bash(git checkout:*)",
       "mcp__claude_ai_Vercel__search_vercel_documentation",
       "Bash(grep:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(find:*)",
+      "WebFetch(domain:proyecto-tiendas.vercel.app)",
+      "WebFetch(domain:proyecto-tiendas-bdcp6h8c0-franlys-projects-e0a57c06.vercel.app)",
+      "mcp__claude_ai_Vercel__deploy_to_vercel",
+      "Bash(npx vercel --prod --yes)"
     ]
   }
 }
