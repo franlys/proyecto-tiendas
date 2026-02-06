@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  createBooking,
-  getBookingsForDate,
-  getBookingConfig,
-} from "@/lib/services/booking.service";
+  createBookingAdmin,
+  getBookingsForDateAdmin,
+  getBookingConfigAdmin,
+} from "@/lib/services/booking-admin.service";
 import type { CreateBookingInput } from "@/lib/types/booking.types";
 
 /**
  * GET /api/bookings?shopId=xxx&date=2026-02-15
- * Obtener reservaciones para una fecha específica
+ * Obtener reservaciones para una fecha específica (usando Admin SDK)
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -21,12 +21,12 @@ export async function GET(request: NextRequest) {
 
   try {
     if (date) {
-      const bookings = await getBookingsForDate(shopId, date);
+      const bookings = await getBookingsForDateAdmin(shopId, date);
       return NextResponse.json({ bookings });
     }
 
     // Si no hay fecha, retornar config
-    const config = await getBookingConfig(shopId);
+    const config = await getBookingConfigAdmin(shopId);
     return NextResponse.json({ config });
   } catch (error) {
     console.error("Error fetching bookings:", error);
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/bookings
- * Crear nueva reservación
+ * Crear nueva reservación (usando Admin SDK)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const booking = await createBooking(shopId, bookingData as CreateBookingInput);
+    const booking = await createBookingAdmin(shopId, bookingData as CreateBookingInput);
 
     return NextResponse.json({ booking }, { status: 201 });
   } catch (error) {

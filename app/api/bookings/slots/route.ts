@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  getAvailableSlots,
-  getBookingConfig,
-  isSlotAvailable,
-} from "@/lib/services/booking.service";
+  getAvailableSlotsAdmin,
+  getBookingConfigAdmin,
+  isSlotAvailableAdmin,
+} from "@/lib/services/booking-admin.service";
 
 /**
  * GET /api/bookings/slots?shopId=xxx&date=2026-02-15
- * Obtener slots disponibles para una fecha
+ * Obtener slots disponibles para una fecha (usando Admin SDK)
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -25,12 +25,12 @@ export async function GET(request: NextRequest) {
   try {
     // Si se pide una hora específica, verificar disponibilidad
     if (time) {
-      const available = await isSlotAvailable(shopId, date, time);
+      const available = await isSlotAvailableAdmin(shopId, date, time);
       return NextResponse.json({ available, date, time });
     }
 
     // Obtener todos los slots disponibles
-    const config = await getBookingConfig(shopId);
+    const config = await getBookingConfigAdmin(shopId);
 
     // Verificar si está habilitado
     if (!config.enabled) {
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const slots = await getAvailableSlots(shopId, date);
+    const slots = await getAvailableSlotsAdmin(shopId, date);
 
     // Filtrar slots que ya pasaron si es hoy
     const isToday = dateObj.toDateString() === new Date().toDateString();

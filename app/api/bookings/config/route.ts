@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  getBookingConfig,
-  updateBookingConfig,
-} from "@/lib/services/booking.service";
+  getBookingConfigAdmin,
+  updateBookingConfigAdmin,
+} from "@/lib/services/booking-admin.service";
 
 /**
  * GET /api/bookings/config?shopId=xxx
- * Obtener configuración de reservas
+ * Obtener configuración de reservas (usando Admin SDK)
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const config = await getBookingConfig(shopId);
+    const config = await getBookingConfigAdmin(shopId);
     return NextResponse.json({ config });
   } catch (error) {
     console.error("Error fetching booking config:", error);
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * PUT /api/bookings/config
- * Actualizar configuración de reservas
+ * Actualizar configuración de reservas (usando Admin SDK)
  */
 export async function PUT(request: NextRequest) {
   try {
@@ -41,9 +41,9 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "shopId is required" }, { status: 400 });
     }
 
-    await updateBookingConfig(shopId, configData);
+    await updateBookingConfigAdmin(shopId, configData);
 
-    const updatedConfig = await getBookingConfig(shopId);
+    const updatedConfig = await getBookingConfigAdmin(shopId);
 
     return NextResponse.json({ config: updatedConfig });
   } catch (error) {

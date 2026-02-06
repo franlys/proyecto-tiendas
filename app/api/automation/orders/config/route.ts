@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  getAssignmentConfig,
-  updateAssignmentConfig,
-} from "@/lib/services/order-assignment.service";
+  getAssignmentConfigAdmin,
+  updateAssignmentConfigAdmin,
+} from "@/lib/services/order-assignment-admin.service";
 
 /**
  * GET /api/automation/orders/config?shopId=xxx
- * Obtener configuración de asignación rotativa
+ * Obtener configuración de asignación rotativa (usando Admin SDK)
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const config = await getAssignmentConfig(shopId);
+    const config = await getAssignmentConfigAdmin(shopId);
     return NextResponse.json({ config });
   } catch (error) {
     console.error("Error fetching assignment config:", error);
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * PUT /api/automation/orders/config
- * Actualizar configuración de asignación rotativa
+ * Actualizar configuración de asignación rotativa (usando Admin SDK)
  */
 export async function PUT(request: NextRequest) {
   try {
@@ -41,9 +41,9 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "shopId is required" }, { status: 400 });
     }
 
-    await updateAssignmentConfig(shopId, configData);
+    await updateAssignmentConfigAdmin(shopId, configData);
 
-    const updatedConfig = await getAssignmentConfig(shopId);
+    const updatedConfig = await getAssignmentConfigAdmin(shopId);
 
     return NextResponse.json({ config: updatedConfig });
   } catch (error) {
