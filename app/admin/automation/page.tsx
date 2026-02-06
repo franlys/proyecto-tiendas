@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, MessageCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, MessageCircle, Loader2, Bot } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useAuth } from "@/components/shared";
-import { AccessDenied } from "@/components/admin/access-denied";
+import { AccessDenied, OrderAssignmentConfigPanel, BookingConfigPanel } from "@/components/admin";
 import { WhatsAppAutomationPanel } from "@/components/shared/whatsapp-automation";
 
 export default function AutomationPage() {
@@ -25,8 +25,8 @@ export default function AutomationPage() {
   if (!canConfigureWhatsApp) {
     return (
       <AccessDenied
-        title="Configuración de WhatsApp"
-        message="La configuración de WhatsApp Business es gestionada por tu asesor digital. Contacta con el equipo de soporte para solicitar cambios en la automatización."
+        title="Configuracion de WhatsApp"
+        message="La configuracion de WhatsApp Business es gestionada por tu asesor digital. Contacta con el equipo de soporte para solicitar cambios en la automatizacion."
       />
     );
   }
@@ -44,14 +44,14 @@ export default function AutomationPage() {
             </Link>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-green-500 to-emerald-400 flex items-center justify-center">
-                <MessageCircle className="w-5 h-5 text-white" />
+                <Bot className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h1 className="font-display text-2xl font-bold text-white">
-                  Automatización WhatsApp
+                  Centro de Automatizacion
                 </h1>
                 <p className="text-slate-400 text-sm">
-                  Conecta y configura tu bot de WhatsApp
+                  Configura WhatsApp, pedidos y reservaciones
                 </p>
               </div>
             </div>
@@ -59,8 +59,25 @@ export default function AutomationPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <WhatsAppAutomationPanel shopSlug={shopSlug} />
+      <main className="container mx-auto px-4 py-8 space-y-8">
+        {/* WhatsApp Connection */}
+        <section>
+          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <MessageCircle className="w-5 h-5 text-green-400" />
+            Conexion WhatsApp
+          </h2>
+          <WhatsAppAutomationPanel shopSlug={shopSlug} />
+        </section>
+
+        {/* Order Assignment */}
+        <section>
+          <OrderAssignmentConfigPanel shopId={shopSlug} />
+        </section>
+
+        {/* Booking System */}
+        <section>
+          <BookingConfigPanel shopId={shopSlug} />
+        </section>
       </main>
     </div>
   );

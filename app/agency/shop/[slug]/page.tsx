@@ -54,6 +54,7 @@ import {
 import { Button } from "@/components/ui";
 import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
 import { WhatsAppAutomationPanel } from "@/components/shared/whatsapp-automation";
+import { BackgroundGallery } from "@/components/shared/background-gallery";
 
 // Mapeo de categorías para mostrar labels correctos
 const CATEGORY_OPTIONS: { value: ShopCategory; label: string }[] = [
@@ -1191,25 +1192,12 @@ function ShopDetailContent() {
 
                                     {backgroundType === "image" && (
                                         <div className="space-y-3">
-                                            <label className="block text-sm font-medium text-slate-300">
-                                                URL de Imagen de Fondo
-                                            </label>
-                                            <div className="space-y-2">
-                                                <div className="w-full h-24 rounded-xl bg-black/30 border border-white/10 flex items-center justify-center overflow-hidden">
-                                                    {backgroundImage ? (
-                                                        <img src={backgroundImage} alt="Background" className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <Image className="w-8 h-8 text-slate-600" />
-                                                    )}
-                                                </div>
-                                                <input
-                                                    type="text"
-                                                    value={backgroundImage}
-                                                    onChange={(e) => setBackgroundImage(e.target.value)}
-                                                    placeholder="https://ejemplo.com/fondo.jpg"
-                                                    className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white text-sm"
-                                                />
-                                            </div>
+                                            <BackgroundGallery
+                                                value={backgroundImage}
+                                                onChange={setBackgroundImage}
+                                                businessType={shop?.businessType as ShopCategory}
+                                                label="Imagen de Fondo"
+                                            />
                                         </div>
                                     )}
 

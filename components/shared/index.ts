@@ -107,3 +107,5 @@ export {
   useAgency,
   type AgencyConfig,
 } from "./agency-context";
+// Background Gallery for Shop Configuration
+export { BackgroundGallery } from "./background-gallery";

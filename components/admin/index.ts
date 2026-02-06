@@ -8,3 +8,5 @@ export { SubscriptionLock } from "./subscription-lock";
 export { SupportWidget } from "./support-widget";
 export { AccessDenied } from "./access-denied";
 export { AgencyContactCard } from "./agency-contact-card";
+export { OrderAssignmentConfigPanel } from "./order-assignment-config";
+export { BookingConfigPanel } from "./booking-config";

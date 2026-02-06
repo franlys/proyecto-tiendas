@@ -575,6 +575,8 @@ export function WhatsAppAutomationPanel({
     subtitle?: string;
 }) {
     const [showQRModal, setShowQRModal] = useState(false);
+    const [apiStatus, setApiStatus] = useState<"checking" | "configured" | "not_configured">("checking");
+
     const {
         status,
         qrCode,
@@ -588,6 +590,23 @@ export function WhatsAppAutomationPanel({
         checkStatus,
     } = useWhatsAppConnection(shopSlug);
 
+    // Check if Evolution API is configured on mount
+    useEffect(() => {
+        const checkApiConfig = async () => {
+            try {
+                const res = await fetch("/api/whatsapp/status?instance=test");
+                if (res.status === 503) {
+                    setApiStatus("not_configured");
+                } else {
+                    setApiStatus("configured");
+                }
+            } catch {
+                setApiStatus("not_configured");
+            }
+        };
+        checkApiConfig();
+    }, []);
+
     const handleConnect = () => {
         setShowQRModal(true);
         connect();
@@ -598,6 +617,98 @@ export function WhatsAppAutomationPanel({
             await disconnect();
         }
     };
+
+    // Show setup guide if API is not configured
+    if (apiStatus === "not_configured") {
+        return (
+            <div className="max-w-4xl mx-auto">
+                <div className="glass-panel rounded-2xl p-6 sm:p-8 border border-amber-500/30 bg-amber-500/5">
+                    <div className="flex items-start gap-4 mb-6">
+                        <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                            <AlertCircle className="w-6 h-6 text-amber-400" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-white mb-2">Configuración Requerida</h2>
+                            <p className="text-slate-400 text-sm">
+                                Para habilitar WhatsApp, necesitas configurar Evolution API.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4 mb-6">
+                        <div className="p-4 rounded-xl bg-black/30 border border-white/10">
+                            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                                <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 text-xs flex items-center justify-center">1</span>
+                                Instalar Evolution API
+                            </h3>
+                            <p className="text-sm text-slate-400 mb-2">
+                                Evolution API es un servidor que maneja sesiones de WhatsApp. Instálalo con Docker:
+                            </p>
+                            <code className="block p-3 rounded-lg bg-black/50 text-xs text-green-400 font-mono overflow-x-auto">
+                                docker run -d --name evolution -p 8080:8080 atendai/evolution-api
+                            </code>
+                            <a
+                                href="https://doc.evolution-api.com/v2/pt/get-started/introduction"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-cyan-400 hover:underline mt-2 inline-block"
+                            >
+                                📖 Ver documentación completa
+                            </a>
+                        </div>
+
+                        <div className="p-4 rounded-xl bg-black/30 border border-white/10">
+                            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                                <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 text-xs flex items-center justify-center">2</span>
+                                Configurar Variables de Entorno
+                            </h3>
+                            <p className="text-sm text-slate-400 mb-2">
+                                Agrega en Vercel → Settings → Environment Variables:
+                            </p>
+                            <div className="space-y-2">
+                                <code className="block p-2 rounded bg-black/50 text-xs text-slate-300 font-mono">
+                                    EVOLUTION_API_URL=https://tu-servidor.com
+                                </code>
+                                <code className="block p-2 rounded bg-black/50 text-xs text-slate-300 font-mono">
+                                    EVOLUTION_API_KEY=tu-api-key
+                                </code>
+                            </div>
+                        </div>
+
+                        <div className="p-4 rounded-xl bg-black/30 border border-white/10">
+                            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                                <span className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 text-xs flex items-center justify-center">3</span>
+                                Alternativas de Hosting
+                            </h3>
+                            <ul className="text-sm text-slate-400 space-y-1">
+                                <li>• <strong className="text-white">Railway.app</strong> - Deploy gratis con Docker</li>
+                                <li>• <strong className="text-white">Render.com</strong> - Tier gratuito disponible</li>
+                                <li>• <strong className="text-white">VPS</strong> - $5/mes en Digital Ocean o Hetzner</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 p-4 rounded-xl bg-green-500/10 border border-green-500/20">
+                        <MessageCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+                        <p className="text-sm text-slate-300">
+                            Una vez configurado, podrás conectar WhatsApp escaneando un código QR.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (apiStatus === "checking") {
+        return (
+            <div className="max-w-4xl mx-auto">
+                <div className="glass-panel rounded-2xl p-8 border border-white/10 flex items-center justify-center">
+                    <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+                    <span className="ml-3 text-slate-400">Verificando configuración...</span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-4xl mx-auto">
