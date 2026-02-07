@@ -76,12 +76,10 @@ async function evolutionFetch<T>(
 // ============================================
 
 /**
- * Crear una nueva instancia para una tienda
- * @param shopSlug - Identificador de la tienda (ej: "estetica-lola")
+ * Crear una nueva instancia con un nombre específico
+ * @param instanceName - Nombre de la instancia (ej: "shop_tienda1" o "fleet_tienda1_1234567890")
  */
-export async function createInstance(shopSlug: string): Promise<EvolutionInstance> {
-  const instanceName = `shop_${shopSlug.replace(/-/g, "_")}`;
-
+export async function createInstance(instanceName: string): Promise<EvolutionInstance> {
   return evolutionFetch<EvolutionInstance>("/instance/create", {
     method: "POST",
     body: JSON.stringify({
@@ -90,6 +88,15 @@ export async function createInstance(shopSlug: string): Promise<EvolutionInstanc
       integration: "WHATSAPP-BAILEYS",
     }),
   });
+}
+
+/**
+ * Crear una instancia para una tienda (WhatsApp principal)
+ * @param shopSlug - Identificador de la tienda (ej: "estetica-lola")
+ */
+export async function createShopInstance(shopSlug: string): Promise<EvolutionInstance> {
+  const instanceName = `shop_${shopSlug.replace(/-/g, "_")}`;
+  return createInstance(instanceName);
 }
 
 /**
