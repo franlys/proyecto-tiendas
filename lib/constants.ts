@@ -15,12 +15,16 @@ import type { BusinessType } from "@/lib/types/business.types";
 import { BUSINESS_TYPE_CONFIG as FULL_BUSINESS_CONFIG } from "@/lib/types/business.types";
 export type { BusinessType };
 
+// Las 6 categorías principales de UI (legacy)
+export type MainBusinessCategory = "beauty" | "retail" | "repair" | "restaurant" | "rentcar" | "technology";
+
 // Generar labels dinámicamente desde el nuevo sistema (incluye todos los 40+ tipos)
 export const BUSINESS_TYPE_LABELS: Record<string, string> = Object.fromEntries(
   Object.entries(FULL_BUSINESS_CONFIG).map(([key, config]) => [key, config.label])
 );
 
-export const BUSINESS_TYPE_CONFIG: Record<BusinessType, {
+// Configuración UI para las 6 categorías principales
+export const BUSINESS_TYPE_CONFIG: Record<MainBusinessCategory, {
   label: string;
   icon: string;
   showBooking: boolean;
@@ -98,6 +102,61 @@ export const BUSINESS_TYPE_CONFIG: Record<BusinessType, {
     servicesLabel: "Catálogo",
   },
 };
+
+/**
+ * Maps any BusinessType to one of the 6 main UI categories
+ */
+export function mapToMainCategory(businessType?: string): MainBusinessCategory {
+  if (!businessType) return "retail";
+
+  // Direct matches
+  const mainCategories: MainBusinessCategory[] = ["beauty", "retail", "repair", "restaurant", "rentcar", "technology"];
+  if (mainCategories.includes(businessType as MainBusinessCategory)) {
+    return businessType as MainBusinessCategory;
+  }
+
+  // Map specific business types to main categories
+  const mappings: Record<string, MainBusinessCategory> = {
+    // Beauty & Wellness
+    salon: "beauty", spa: "beauty", barberia: "beauty", estetica: "beauty",
+    nail_salon: "beauty", makeup_artist: "beauty", wellness: "beauty",
+    gym: "beauty", yoga_studio: "beauty", massage: "beauty", tattoo: "beauty",
+
+    // Food & Beverage
+    cafe: "restaurant", bakery: "restaurant", bar: "restaurant",
+    food_truck: "restaurant", catering: "restaurant", pizzeria: "restaurant",
+    sushi: "restaurant", taqueria: "restaurant", ice_cream: "restaurant", juice_bar: "restaurant",
+
+    // Retail & Commerce
+    boutique: "retail", jewelry: "retail", electronics: "retail", furniture: "retail",
+    grocery: "retail", pharmacy: "retail", pet_store: "retail", florist: "retail",
+    bookstore: "retail", clothing: "retail", shoes: "retail", sports: "retail",
+    toys: "retail", gifts: "retail", celulares: "retail", computadoras: "retail",
+    decoracion: "retail", electrodomesticos: "retail", ferreteria: "retail",
+    hogar: "retail", instrumentos: "retail", joyeria: "retail", juguetes: "retail",
+    libros: "retail", licores: "retail", mascotas: "retail", muebles: "retail",
+    optica: "retail", papeleria: "retail", perfumeria: "retail", regalos: "retail",
+    relojeria: "retail", ropa: "retail", supermercado: "retail", tienda_general: "retail",
+    vinos: "retail", zapatos: "retail",
+
+    // Automotive & Transport
+    car_dealer: "rentcar", car_wash: "rentcar", parking: "rentcar",
+    motorcycle: "rentcar", bike_rental: "rentcar", autos: "rentcar",
+    motos: "rentcar", bicicletas: "rentcar",
+
+    // Repair & Services
+    phone_repair: "repair", computer_repair: "repair", appliance_repair: "repair",
+    auto_repair: "repair", mechanic: "repair", electrician: "repair", plumber: "repair",
+    reparacion_celulares: "repair", reparacion_electrodomesticos: "repair",
+    taller_mecanico: "repair",
+
+    // Technology & Digital
+    software: "technology", web_agency: "technology", it_services: "technology",
+    coworking: "technology", printing: "technology",
+  };
+
+  return mappings[businessType] || "retail";
+}
 
 export interface ShopSocialMedia {
   instagram?: string;
