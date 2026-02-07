@@ -54,7 +54,7 @@ import {
 import { Button } from "@/components/ui";
 import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
 import { WhatsAppAutomationPanel } from "@/components/shared/whatsapp-automation";
-import { BackgroundGallery } from "@/components/shared/background-gallery";
+import { BackgroundGallery, mapToBackgroundCategory } from "@/components/shared/background-gallery";
 
 // Mapeo de categorías para mostrar labels correctos
 const CATEGORY_OPTIONS: { value: ShopCategory; label: string }[] = [
@@ -1195,7 +1195,7 @@ function ShopDetailContent() {
                                             <BackgroundGallery
                                                 value={backgroundImage}
                                                 onChange={setBackgroundImage}
-                                                businessType={shop?.businessType as ShopCategory}
+                                                businessType={mapToBackgroundCategory(shop?.businessType)}
                                                 label="Imagen de Fondo"
                                             />
                                         </div>

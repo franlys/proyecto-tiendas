@@ -3,8 +3,92 @@
 import { useState } from "react";
 import { Check, Image as ImageIcon, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+
 // Fondos predefinidos por categoría de negocio (tipos principales)
-type BackgroundCategory = "beauty" | "restaurant" | "retail" | "rentcar" | "repair" | "technology" | "general";
+export type BackgroundCategory = "beauty" | "restaurant" | "retail" | "rentcar" | "repair" | "technology" | "general";
+
+/**
+ * Maps any BusinessType to a valid BackgroundCategory
+ * Used to ensure compatibility between the 40+ business types and the 6 background categories
+ */
+export function mapToBackgroundCategory(businessType?: string): BackgroundCategory {
+  if (!businessType) return "general";
+
+  // Direct matches
+  const validCategories: BackgroundCategory[] = ["beauty", "restaurant", "retail", "rentcar", "repair", "technology"];
+  if (validCategories.includes(businessType as BackgroundCategory)) {
+    return businessType as BackgroundCategory;
+  }
+
+  // Map specific business types to background categories
+  const mappings: Record<string, BackgroundCategory> = {
+    // Beauty & Wellness
+    salon: "beauty",
+    spa: "beauty",
+    barberia: "beauty",
+    estetica: "beauty",
+    nail_salon: "beauty",
+    makeup_artist: "beauty",
+    wellness: "beauty",
+    gym: "beauty",
+    yoga_studio: "beauty",
+    massage: "beauty",
+    tattoo: "beauty",
+
+    // Food & Beverage
+    cafe: "restaurant",
+    bakery: "restaurant",
+    bar: "restaurant",
+    food_truck: "restaurant",
+    catering: "restaurant",
+    pizzeria: "restaurant",
+    sushi: "restaurant",
+    taqueria: "restaurant",
+    ice_cream: "restaurant",
+    juice_bar: "restaurant",
+
+    // Retail & Commerce
+    boutique: "retail",
+    jewelry: "retail",
+    electronics: "retail",
+    furniture: "retail",
+    grocery: "retail",
+    pharmacy: "retail",
+    pet_store: "retail",
+    florist: "retail",
+    bookstore: "retail",
+    clothing: "retail",
+    shoes: "retail",
+    sports: "retail",
+    toys: "retail",
+    gifts: "retail",
+
+    // Automotive & Transport
+    car_dealer: "rentcar",
+    car_wash: "rentcar",
+    parking: "rentcar",
+    motorcycle: "rentcar",
+    bike_rental: "rentcar",
+
+    // Repair & Services
+    phone_repair: "repair",
+    computer_repair: "repair",
+    appliance_repair: "repair",
+    auto_repair: "repair",
+    mechanic: "repair",
+    electrician: "repair",
+    plumber: "repair",
+
+    // Technology & Digital
+    software: "technology",
+    web_agency: "technology",
+    it_services: "technology",
+    coworking: "technology",
+    printing: "technology",
+  };
+
+  return mappings[businessType] || "general";
+}
 
 const PRESET_BACKGROUNDS: Record<BackgroundCategory, { label: string; url: string }[]> = {
   beauty: [
