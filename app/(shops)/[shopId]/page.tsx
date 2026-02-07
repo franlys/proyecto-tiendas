@@ -12,12 +12,14 @@ import {
   SectionObserver,
 } from "@/components/shared";
 import { ServiceCard, ProductGrid } from "@/components/shop";
-import { Sparkles, MapPin, Phone, Clock, Calendar, ShoppingBag } from "lucide-react";
+import { Sparkles, MapPin, Phone, Clock, Calendar, ShoppingBag, Loader2 } from "lucide-react";
 import {
   MOCK_SERVICES,
   MOCK_PRODUCTS,
   CATEGORY_LABELS,
   type ServiceCategory,
+  type Service,
+  type Product,
 } from "@/lib/constants";
 import { useParams, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -31,11 +33,59 @@ export default function ShopHomePage() {
   const searchParams = useSearchParams();
   const shopId = params.shopId as string;
 
-  // 1. Get Data First
-  const services = MOCK_SERVICES[shopId] || [];
-  const products = MOCK_PRODUCTS[shopId] || [];
+  // State for Real Data
+  const [services, setServices] = useState<Service[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
+
+  // Load Data (Real or Mock)
+  useEffect(() => {
+    async function loadShopData() {
+      if (!shop?.id) return;
+
+      setLoadingData(true);
+
+      // 1. Check if it's a Demo Shop (keep using Mocks for demos)
+      const isDemo = shop.id.startsWith("demo-") || shop.id.startsWith("legacy-");
+
+      if (isDemo) {
+        setServices(MOCK_SERVICES[shop.slug] || []);
+        setProducts(MOCK_PRODUCTS[shop.slug] || []);
+        setLoadingData(false);
+        return;
+      }
+
+      // 2. Fetch Real Data from Firestore
+      try {
+        const { db } = await import("@/lib/firebase");
+        const { collection, getDocs } = await import("firebase/firestore");
+
+        // Fetch Services
+        const servicesRef = collection(db, "shops", shop.id, "services");
+        const servicesSnap = await getDocs(servicesRef);
+        const servicesData = servicesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Service));
+        setServices(servicesData);
+
+        // Fetch Products
+        const productsRef = collection(db, "shops", shop.id, "products");
+        const productsSnap = await getDocs(productsRef);
+        const productsData = productsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+        setProducts(productsData);
+
+      } catch (error) {
+        console.error("Error loading shop data:", error);
+      } finally {
+        setLoadingData(false);
+      }
+    }
+
+    loadShopData();
+  }, [shop?.id, shop?.slug]);
 
   // 2. Business Logic for Visibility
+  // Ensure "services" and "products" used below refer to the STATE variables, not local consts.
+  // We removed the local const assignments that used MOCK_ directly.
+
   const isServiceBusiness = shop?.businessType === "beauty" || shop?.businessType === "repair";
   const hasServices = services.length > 0;
 
@@ -46,11 +96,15 @@ export default function ShopHomePage() {
   // 3. Tab State
   const [activeTab, setActiveTab] = useState<TabType>(() => {
     const queryTab = searchParams.get("tab") as TabType;
-    if (queryTab && ((queryTab === "servicios" && showServices) || (queryTab === "productos" && showProducts))) {
-      return queryTab;
-    }
-    return showServices ? "servicios" : "productos";
+    // We can't rely on 'showServices' here immediately because data is loading.
+    // Default to business type logic for initial state
+    const initialShowServices = shop?.businessType === "beauty" || shop?.businessType === "repair";
+
+    if (queryTab) return queryTab;
+    return initialShowServices ? "servicios" : "productos";
   });
+
+  // Update active tab once data is loaded if needed (optional, purely UX)
 
   // 4. Table Logic
   const queryTable = searchParams.get("table");
@@ -205,47 +259,55 @@ export default function ShopHomePage() {
       {activeTab === "servicios" && (
         <section id="servicios" className="py-12 border-t border-white/10">
           <div className="container mx-auto px-4">
-            {categories.map((category, categoryIndex) => (
-              <div key={category} className="mb-16">
-                {/* Category Header */}
-                <ScrollReveal delay={categoryIndex * 0.1}>
-                  <div className="mb-8">
-                    <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-2">
-                      {CATEGORY_LABELS[category]}
-                    </h2>
-                    <div className="w-20 h-1 bg-gradient-to-r from-primary to-orange-400 rounded-full" />
-                  </div>
-                </ScrollReveal>
-
-                {/* Services Grid with Stagger Animation */}
-                <StaggerContainer
-                  staggerDelay={0.08}
-                  className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
-                >
-                  {servicesByCategory[category]?.map((service) => (
-                    <StaggerItem key={service.id}>
-                      <ServiceCard service={service} />
-                    </StaggerItem>
-                  ))}
-                </StaggerContainer>
+            {loadingData ? (
+              <div className="flex justify-center py-20">
+                <Loader2 className="w-10 h-10 text-primary animate-spin" />
               </div>
-            ))}
+            ) : (
+              <>
+                {categories.map((category, categoryIndex) => (
+                  <div key={category} className="mb-16">
+                    {/* Category Header */}
+                    <ScrollReveal delay={categoryIndex * 0.1}>
+                      <div className="mb-8">
+                        <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-2">
+                          {CATEGORY_LABELS[category]}
+                        </h2>
+                        <div className="w-20 h-1 bg-gradient-to-r from-primary to-orange-400 rounded-full" />
+                      </div>
+                    </ScrollReveal>
 
-            {/* Empty State */}
-            {services.length === 0 && (
-              <ScrollReveal>
-                <div className="text-center py-20">
-                  <div className="w-20 h-20 rounded-full bg-surface flex items-center justify-center mx-auto mb-6">
-                    <Clock className="w-10 h-10 text-slate-500" />
+                    {/* Services Grid with Stagger Animation */}
+                    <StaggerContainer
+                      staggerDelay={0.08}
+                      className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
+                    >
+                      {servicesByCategory[category]?.map((service) => (
+                        <StaggerItem key={service.id}>
+                          <ServiceCard service={service} />
+                        </StaggerItem>
+                      ))}
+                    </StaggerContainer>
                   </div>
-                  <h3 className="text-xl font-semibold text-white mb-2">
-                    Próximamente
-                  </h3>
-                  <p className="text-slate-400">
-                    Estamos preparando nuestro catálogo de servicios.
-                  </p>
-                </div>
-              </ScrollReveal>
+                ))}
+
+                {/* Empty State */}
+                {services.length === 0 && (
+                  <ScrollReveal>
+                    <div className="text-center py-20">
+                      <div className="w-20 h-20 rounded-full bg-surface flex items-center justify-center mx-auto mb-6">
+                        <Clock className="w-10 h-10 text-slate-500" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-white mb-2">
+                        Próximamente
+                      </h3>
+                      <p className="text-slate-400">
+                        Estamos preparando nuestro catálogo de servicios.
+                      </p>
+                    </div>
+                  </ScrollReveal>
+                )}
+              </>
             )}
           </div>
         </section>
@@ -255,7 +317,13 @@ export default function ShopHomePage() {
       {activeTab === "productos" && (
         <SectionObserver id="products" threshold={0.3} className="py-12 border-t border-white/10">
           <div className="container mx-auto px-4">
-            <ProductGrid products={products} />
+            {loadingData ? (
+              <div className="flex justify-center py-20">
+                <Loader2 className="w-10 h-10 text-gold animate-spin" />
+              </div>
+            ) : (
+              <ProductGrid products={products} />
+            )}
           </div>
         </SectionObserver>
       )}
