@@ -1,5 +1,6 @@
 import "server-only";
 import * as admin from "firebase-admin";
+import { getFirestore } from "firebase-admin/firestore";
 
 interface FirebaseAdminConfig {
     projectId: string;
@@ -126,5 +127,16 @@ export const adminAuth = () => {
 
 export const adminDb = () => {
     const app = initAdmin();
-    return app ? app.firestore() : null;
+    if (!app) return null;
+
+    // Explicitly specify the database ID as 'default'
+    // This is needed because the database was created with name 'default'
+    // instead of the standard '(default)'
+    try {
+        return getFirestore(app, 'default');
+    } catch (error) {
+        console.error("Error getting Firestore with database ID 'default':", error);
+        // Fallback to standard method
+        return app.firestore();
+    }
 };
