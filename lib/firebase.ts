@@ -26,9 +26,10 @@ if (!firebaseConfig.apiKey) {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 // Use Long Polling to avoid WebSocket timeouts/blocks
+// IMPORTANT: Specify 'default' database ID because the database was created as 'default' not '(default)'
 const db = initializeFirestore(app, {
     experimentalForceLongPolling: true,
-});
+}, 'default');
 const storage = getStorage(app);
 
 export { app, auth, db, storage };
