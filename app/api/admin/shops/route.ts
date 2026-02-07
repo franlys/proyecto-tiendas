@@ -74,6 +74,7 @@ export async function POST(req: NextRequest) {
       name: body.name,
       slug: body.slug,
       category: body.category,
+      businessType: body.businessType || body.category, // Use category as fallback
       description: body.description,
       phone: body.phone,
       wholesaleEnabled: body.wholesaleEnabled || false,
