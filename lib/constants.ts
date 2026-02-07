@@ -10,9 +10,10 @@ export interface ShopTheme {
 }
 
 // Business Types for Phase 13+
-// Re-exportar desde el nuevo sistema de tipos
-export type { BusinessType } from "@/lib/types/business.types";
+// Importar y re-exportar desde el nuevo sistema de tipos
+import type { BusinessType } from "@/lib/types/business.types";
 import { BUSINESS_TYPE_CONFIG as FULL_BUSINESS_CONFIG } from "@/lib/types/business.types";
+export type { BusinessType };
 
 // Generar labels dinámicamente desde el nuevo sistema (incluye todos los 40+ tipos)
 export const BUSINESS_TYPE_LABELS: Record<string, string> = Object.fromEntries(
