@@ -187,12 +187,9 @@ export async function updateShop(
   if (input.description !== undefined) updateData.description = input.description;
   if (input.category !== undefined) {
     updateData.category = input.category;
-    updateData.businessType =
-      input.category === "beauty"
-        ? "beauty"
-        : input.category === "repair"
-          ? "repair"
-          : "retail";
+  }
+  if (input.businessType !== undefined) {
+    updateData.businessType = input.businessType;
   }
   if (input.wholesaleEnabled !== undefined) {
     updateData.wholesaleEnabled = input.wholesaleEnabled;
