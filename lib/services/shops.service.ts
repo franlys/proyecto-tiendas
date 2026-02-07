@@ -134,12 +134,7 @@ export async function createShop(input: CreateShopInput): Promise<Shop> {
     slug: input.slug,
     description: input.description || "",
     category: input.category,
-    businessType:
-      input.category === "beauty"
-        ? "beauty"
-        : input.category === "repair"
-          ? "repair"
-          : "retail",
+    businessType: input.businessType || "retail",
     isActive: true,
     theme: {
       ...DEFAULT_THEME,
