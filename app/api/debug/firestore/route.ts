@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { initAdmin } from "@/lib/firebase-admin";
+import { initAdmin, adminDb } from "@/lib/firebase-admin";
 
 export async function GET() {
   const diagnostics: Record<string, any> = {
@@ -39,25 +39,29 @@ export async function GET() {
   // Test Firestore write (only if admin initialized)
   if (diagnostics.adminSdk.initialized) {
     try {
-      const admin = await import("firebase-admin");
-      const db = admin.firestore();
+      // Use adminDb() which explicitly specifies the 'default' database ID
+      const db = adminDb();
 
-      // Try to write a test document
-      const testRef = db.collection("_diagnostics").doc("test");
-      await testRef.set({
-        timestamp: new Date().toISOString(),
-        test: true,
-      });
+      if (!db) {
+        diagnostics.firestoreTest.error = "adminDb() returned null";
+      } else {
+        // Try to write a test document
+        const testRef = db.collection("_diagnostics").doc("test");
+        await testRef.set({
+          timestamp: new Date().toISOString(),
+          test: true,
+        });
 
-      // Read it back
-      const doc = await testRef.get();
+        // Read it back
+        const doc = await testRef.get();
 
-      if (doc.exists) {
-        diagnostics.firestoreTest.success = true;
-        diagnostics.firestoreTest.data = doc.data();
+        if (doc.exists) {
+          diagnostics.firestoreTest.success = true;
+          diagnostics.firestoreTest.data = doc.data();
 
-        // Clean up
-        await testRef.delete();
+          // Clean up
+          await testRef.delete();
+        }
       }
     } catch (error: any) {
       diagnostics.firestoreTest.error = error.message;
