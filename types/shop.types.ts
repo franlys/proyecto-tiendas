@@ -1,14 +1,24 @@
 import { Timestamp } from "firebase/firestore";
 import type { ShopLimits } from "./plan.types";
 import type { FeatureId } from "./feature.types";
+import type { BusinessType, BusinessCategory } from "@/lib/types/business.types";
+import type {
+  ShopMedia,
+  ShopLinks,
+  ShopBranding,
+  ShopFeatureToggles,
+} from "@/lib/types/shop-customization.types";
 
-// Categorías de negocio soportadas
-export type ShopCategory = "beauty" | "retail" | "repair" | "restaurant" | "technology";
+// Re-export para compatibilidad
+export type { BusinessType, BusinessCategory };
+
+// Categorías de negocio soportadas (legacy - usar BusinessCategory)
+export type ShopCategory = BusinessCategory;
 
 // Estados de suscripción (simplificado - cobro manual)
 export type SubscriptionStatus = "active" | "trial" | "past_due" | "canceled";
 
-// Configuración de tema
+// Configuración de tema (legacy - ahora en ShopBranding.theme)
 export interface ShopTheme {
   id: string;
   name: string;
@@ -24,6 +34,9 @@ export interface ShopContact {
   email?: string;
   address?: string;
   whatsapp?: string;
+  // Enlaces adicionales
+  website?: string;
+  mapLink?: string;
 }
 
 // Información de suscripción (simplificada para cobro manual)
@@ -44,12 +57,12 @@ export interface FirestoreShop {
 
   // Categorización
   category: ShopCategory;
-  businessType: "beauty" | "retail" | "repair";
+  businessType: BusinessType;
 
   // Estado
   isActive: boolean;
 
-  // Configuración visual
+  // Configuración visual (legacy)
   theme: ShopTheme;
 
   // Contacto
@@ -61,11 +74,19 @@ export interface FirestoreShop {
   // Features habilitados (el super admin activa/desactiva individualmente)
   enabledFeatures: string[];
 
+  // Feature toggles (nuevo sistema)
+  featureToggles?: ShopFeatureToggles;
+
   // Límites personalizados (opcional)
   limits?: ShopLimits;
 
   // Configuración de negocio
   wholesaleEnabled: boolean;
+
+  // Personalización avanzada (nuevo)
+  media?: ShopMedia;
+  links?: ShopLinks;
+  branding?: ShopBranding;
 
   // Credenciales del owner (temporal - migrar a users collection)
   ownerUsername?: string;
@@ -89,6 +110,7 @@ export interface CreateShopInput {
   slug: string;
   description?: string;
   category: ShopCategory;
+  businessType: BusinessType;
   phone: string;
   wholesaleEnabled?: boolean;
   enabledFeatures?: FeatureId[];  // Features iniciales
@@ -100,12 +122,20 @@ export interface UpdateShopInput {
   name?: string;
   description?: string;
   category?: ShopCategory;
+  businessType?: BusinessType;
   phone?: string;
   email?: string;
   address?: string;
+  website?: string;
+  mapLink?: string;
   wholesaleEnabled?: boolean;
   theme?: Partial<ShopTheme>;
   monthlyPrice?: number;
+  // Nuevos campos de personalización
+  media?: Partial<ShopMedia>;
+  links?: Partial<ShopLinks>;
+  branding?: Partial<ShopBranding>;
+  featureToggles?: Partial<ShopFeatureToggles>;
 }
 
 // Respuesta de API

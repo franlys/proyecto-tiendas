@@ -146,20 +146,52 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const cloudShops: ManagedShop[] = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
+      snapshot.forEach((docSnapshot) => {
+        const data = docSnapshot.data();
+
+        // Default stats object
+        const defaultStats = {
+          monthlyRevenue: 0,
+          activeOrders: 0,
+          completedOrders: 0,
+          totalCustomers: 0,
+        };
+
         cloudShops.push({
-          id: doc.id,
-          ...data,
-          // Robust Mapping: Handle both Flat (Context) and Nested (Service) structures
-          monthlyPrice: data.monthlyPrice ?? data.subscription?.monthlyPrice ?? 0,
+          id: docSnapshot.id,
+          // Basic fields
+          name: data.name || "",
+          slug: data.slug || docSnapshot.id,
+          description: data.description || "",
+          // Theme
+          theme: data.theme || DEFAULT_THEME,
+          // Contact
+          contact: data.contact || { phone: "" },
+          // Business type
+          businessType: data.businessType || data.category || "retail",
+          category: data.category || data.businessType || "retail",
+          wholesaleEnabled: data.wholesaleEnabled ?? false,
+          customDomain: data.customDomain,
+          // State
+          isActive: data.isActive ?? true,
+          createdAt: data.createdAt || new Date().toISOString(),
+          // Auth
+          ownerUsername: data.ownerUsername || data.slug || "",
+          ownerPassword: data.ownerPassword || "123",
+          // Subscription - Handle both flat and nested structures
           subscriptionStatus: data.subscriptionStatus ?? data.subscription?.status ?? "trial",
           nextPaymentDate: data.nextPaymentDate ?? data.subscription?.nextPaymentDate ?? new Date().toISOString(),
-          // Ensure features are mapped if they exist in legacy/service format
+          monthlyPrice: data.monthlyPrice ?? data.subscription?.monthlyPrice ?? 0,
+          paymentLink: data.paymentLink,
+          // Features
           enabledFeatures: data.enabledFeatures ?? data.features ?? [],
+          features: data.features ?? data.enabledFeatures ?? [],
+          // Stats - Always ensure it exists
+          stats: data.stats ? { ...defaultStats, ...data.stats } : defaultStats,
         } as ManagedShop);
       });
 
+      debugLog("Shops loaded:", cloudShops.length);
       setShops(cloudShops);
       setIsLoading(false);
 
@@ -283,12 +315,20 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
     const nextDate = new Date();
     nextDate.setDate(nextDate.getDate() + 30);
 
+    // Ensure stats has default values
+    const currentStats = shop.stats || {
+      monthlyRevenue: 0,
+      activeOrders: 0,
+      completedOrders: 0,
+      totalCustomers: 0,
+    };
+
     await setDoc(doc(db, "shops", shop.id), {
       subscriptionStatus: "active",
       nextPaymentDate: nextDate.toISOString(),
       stats: {
-        ...shop.stats,
-        monthlyRevenue: (shop.stats?.monthlyRevenue || 0) + (shop.monthlyPrice || 0)
+        ...currentStats,
+        monthlyRevenue: (currentStats.monthlyRevenue || 0) + (shop.monthlyPrice || 0)
       }
     }, { merge: true });
   }, [shops]);

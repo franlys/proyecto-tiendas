@@ -290,7 +290,7 @@ function ShopRow({
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-orange-400 flex items-center justify-center">
             <span className="text-white font-bold">
-              {shop.name.charAt(0).toUpperCase()}
+              {shop.name ? shop.name.charAt(0).toUpperCase() : "?"}
             </span>
           </div>
           <div>

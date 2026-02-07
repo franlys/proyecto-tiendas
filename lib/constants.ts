@@ -10,16 +10,14 @@ export interface ShopTheme {
 }
 
 // Business Types for Phase 13+
-export type BusinessType = "beauty" | "retail" | "repair" | "restaurant" | "rentcar" | "technology";
+// Re-exportar desde el nuevo sistema de tipos
+export type { BusinessType } from "@/lib/types/business.types";
+import { BUSINESS_TYPE_CONFIG as FULL_BUSINESS_CONFIG } from "@/lib/types/business.types";
 
-export const BUSINESS_TYPE_LABELS: Record<BusinessType, string> = {
-  beauty: "Belleza & Servicios",
-  retail: "Tienda / Retail",
-  repair: "Taller / Reparación",
-  restaurant: "Restaurante / Bar",
-  rentcar: "Rent-a-Car",
-  technology: "Tecnología",
-};
+// Generar labels dinámicamente desde el nuevo sistema (incluye todos los 40+ tipos)
+export const BUSINESS_TYPE_LABELS: Record<string, string> = Object.fromEntries(
+  Object.entries(FULL_BUSINESS_CONFIG).map(([key, config]) => [key, config.label])
+);
 
 export const BUSINESS_TYPE_CONFIG: Record<BusinessType, {
   label: string;
