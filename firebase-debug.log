@@ -1,0 +1,81 @@
+[debug] [2026-02-07T23:53:52.171Z] ----------------------------------------------------------------------
+[debug] [2026-02-07T23:53:52.192Z] Command:       C:\nvm4w\nodejs\node_modules\nodejs\node.exe C:\Users\elmae\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only firestore:rules
+[debug] [2026-02-07T23:53:52.193Z] CLI Version:   15.5.1
+[debug] [2026-02-07T23:53:52.193Z] Platform:      win32
+[debug] [2026-02-07T23:53:52.193Z] Node Version:  v22.18.0
+[debug] [2026-02-07T23:53:52.194Z] Time:          Sat Feb 07 2026 19:53:52 GMT-0400 (Bolivia Time)
+[debug] [2026-02-07T23:53:52.194Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-02-07T23:53:59.184Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-02-07T23:53:59.185Z] > authorizing via signed-in user (elmaestrogonzalez30@gmail.com)
+[debug] [2026-02-07T23:53:59.185Z] [iam] checking project proyecto-tiendas-5a23f for permissions ["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]
+[debug] [2026-02-07T23:53:59.188Z] Checked if tokens are valid: false, expires at: 1770504560848
+[debug] [2026-02-07T23:53:59.188Z] Checked if tokens are valid: false, expires at: 1770504560848
+[debug] [2026-02-07T23:53:59.189Z] > refreshing access token with scopes: []
+[debug] [2026-02-07T23:53:59.195Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-02-07T23:53:59.195Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-02-07T23:53:59.574Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-02-07T23:53:59.574Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-02-07T23:53:59.629Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/proyecto-tiendas-5a23f:testIamPermissions [none]
+[debug] [2026-02-07T23:53:59.629Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/proyecto-tiendas-5a23f:testIamPermissions  x-goog-user-project=proyecto-tiendas-5a23f
+[debug] [2026-02-07T23:53:59.629Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/proyecto-tiendas-5a23f:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]}
+[debug] [2026-02-07T23:53:59.865Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/proyecto-tiendas-5a23f:testIamPermissions 200
+[debug] [2026-02-07T23:53:59.865Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/proyecto-tiendas-5a23f:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]}
+[info] 
+[info] === Deploying to 'proyecto-tiendas-5a23f'...
+[info] 
+[info] i  deploying firestore 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[debug] [2026-02-07T23:53:59.954Z] Checked if tokens are valid: true, expires at: 1770512038575
+[debug] [2026-02-07T23:53:59.954Z] Checked if tokens are valid: true, expires at: 1770512038575
+[debug] [2026-02-07T23:53:59.954Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/proyecto-tiendas-5a23f/databases/default [none]
+[debug] [2026-02-07T23:54:00.401Z] <<< [apiv2][status] GET https://firestore.googleapis.com/v1/projects/proyecto-tiendas-5a23f/databases/default 200
+[debug] [2026-02-07T23:54:00.402Z] <<< [apiv2][body] GET https://firestore.googleapis.com/v1/projects/proyecto-tiendas-5a23f/databases/default {"name":"projects/proyecto-tiendas-5a23f/databases/default","uid":"706951a6-f418-425f-9bfd-a7968b7474a1","createTime":"2026-02-02T16:33:14.546533Z","updateTime":"2026-02-02T16:33:14.546533Z","locationId":"nam5","type":"FIRESTORE_NATIVE","concurrencyMode":"OPTIMISTIC","versionRetentionPeriod":"604800s","earliestVersionTime":"2026-02-02T16:34:00Z","appEngineIntegrationMode":"DISABLED","pointInTimeRecoveryEnablement":"POINT_IN_TIME_RECOVERY_ENABLED","deleteProtectionState":"DELETE_PROTECTION_DISABLED","databaseEdition":"ENTERPRISE","freeTier":true,"realtimeUpdatesMode":"REALTIME_UPDATES_MODE_ENABLED","firestoreDataAccessMode":"DATA_ACCESS_MODE_ENABLED","mongodbCompatibleDataAccessMode":"DATA_ACCESS_MODE_DISABLED","etag":"IIW2q/XJyJIDMNiIjvGku5ID"}
+[info] i  firestore: reading indexes from firestore.indexes.json... 
+[info] i  cloud.firestore: checking firestore.rules for compilation errors... 
+[debug] [2026-02-07T23:54:00.410Z] Checked if tokens are valid: true, expires at: 1770512038575
+[debug] [2026-02-07T23:54:00.411Z] Checked if tokens are valid: true, expires at: 1770512038575
+[debug] [2026-02-07T23:54:00.411Z] >>> [apiv2][query] POST https://firebaserules.googleapis.com/v1/projects/proyecto-tiendas-5a23f:test [none]
+[debug] [2026-02-07T23:54:00.412Z] >>> [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/proyecto-tiendas-5a23f:test [omitted]
+[debug] [2026-02-07T23:54:00.823Z] <<< [apiv2][status] POST https://firebaserules.googleapis.com/v1/projects/proyecto-tiendas-5a23f:test 200
+[debug] [2026-02-07T23:54:00.824Z] <<< [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/proyecto-tiendas-5a23f:test {"issues":[{"sourcePosition":{"fileName":"firestore.rules","line":13,"column":26,"currentOffset":511,"endOffset":516},"description":"Unused variable: shopId.","severity":"WARNING"}]}
+[warn] !  [W] 13:26 - Unused variable: shopId. 
+[info] +  cloud.firestore: rules file firestore.rules compiled successfully 
+[debug] [2026-02-07T23:54:00.832Z] Checked if tokens are valid: true, expires at: 1770512038575
+[debug] [2026-02-07T23:54:00.832Z] Checked if tokens are valid: true, expires at: 1770512038575
+[debug] [2026-02-07T23:54:00.833Z] >>> [apiv2][query] GET https://firebaserules.googleapis.com/v1/projects/proyecto-tiendas-5a23f/releases pageSize=10&pageToken=
+[debug] [2026-02-07T23:54:01.026Z] <<< [apiv2][status] GET https://firebaserules.googleapis.com/v1/projects/proyecto-tiendas-5a23f/releases 200
+[debug] [2026-02-07T23:54:01.026Z] <<< [apiv2][body] GET https://firebaserules.googleapis.com/v1/projects/proyecto-tiendas-5a23f/releases {"releases":[{"name":"projects/proyecto-tiendas-5a23f/releases/cloud.firestore","rulesetName":"projects/proyecto-tiendas-5a23f/rulesets/da87b122-f2d5-417b-923c-b75cf295ca5c","createTime":"2026-02-02T16:40:20.475882Z","updateTime":"2026-02-04T19:34:23.738237Z"},{"name":"projects/proyecto-tiendas-5a23f/releases/cloud.firestore/default","rulesetName":"projects/proyecto-tiendas-5a23f/rulesets/b149d533-d872-4aa2-a36d-9ce8eaa0cac2","createTime":"2026-02-02T16:33:16.098180Z","updateTime":"2026-02-07T21:49:24.347227Z"},{"name":"projects/proyecto-tiendas-5a23f/releases/firebase.storage/proyecto-tiendas-5a23f.firebasestorage.app","rulesetName":"projects/proyecto-tiendas-5a23f/rulesets/f0dd461d-1f3d-43a1-a840-9b7fffb99da7","createTime":"2026-02-02T16:31:21.114294Z","updateTime":"2026-02-06T20:39:54.923714Z"}]}
+[debug] [2026-02-07T23:54:01.130Z] Checked if tokens are valid: true, expires at: 1770512038575
+[debug] [2026-02-07T23:54:01.130Z] Checked if tokens are valid: true, expires at: 1770512038575
+[debug] [2026-02-07T23:54:01.131Z] >>> [apiv2][query] GET https://firebaserules.googleapis.com/v1/projects/proyecto-tiendas-5a23f/rulesets/da87b122-f2d5-417b-923c-b75cf295ca5c [none]
+[debug] [2026-02-07T23:54:01.315Z] <<< [apiv2][status] GET https://firebaserules.googleapis.com/v1/projects/proyecto-tiendas-5a23f/rulesets/da87b122-f2d5-417b-923c-b75cf295ca5c 200
+[debug] [2026-02-07T23:54:01.316Z] <<< [apiv2][body] GET https://firebaserules.googleapis.com/v1/projects/proyecto-tiendas-5a23f/rulesets/da87b122-f2d5-417b-923c-b75cf295ca5c [omitted]
+[info] i  firestore: uploading rules firestore.rules... 
+[debug] [2026-02-07T23:54:01.320Z] Checked if tokens are valid: true, expires at: 1770512038575
+[debug] [2026-02-07T23:54:01.320Z] Checked if tokens are valid: true, expires at: 1770512038575
+[debug] [2026-02-07T23:54:01.321Z] >>> [apiv2][query] POST https://firebaserules.googleapis.com/v1/projects/proyecto-tiendas-5a23f/rulesets [none]
+[debug] [2026-02-07T23:54:01.321Z] >>> [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/proyecto-tiendas-5a23f/rulesets [omitted]
+[debug] [2026-02-07T23:54:01.673Z] <<< [apiv2][status] POST https://firebaserules.googleapis.com/v1/projects/proyecto-tiendas-5a23f/rulesets 200
+[debug] [2026-02-07T23:54:01.673Z] <<< [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/proyecto-tiendas-5a23f/rulesets {"name":"projects/proyecto-tiendas-5a23f/rulesets/bed3a624-f765-4b8b-a0c3-ec718fbe3932","source":{"files":[{"content":"rules_version = '2';\r\nservice cloud.firestore {\r\n  match /databases/{database}/documents {\r\n    \r\n    // Helper: User is authenticated\r\n    function isAuthenticated() {\r\n      // return request.auth != null; \r\n      return true; // TEMPORARY DEV MODE: Allow all writes because we use Mock Auth (localStorage)\r\n    }\r\n\r\n    // Helper: User owns the shop (Phase 2: Check 'ownerId' field)\r\n    // For Phase 1 (Prototype with shared credentials), we basically check if they are logged in.\r\n    function isShopOwner(shopId) {\r\n      return isAuthenticated(); \r\n    }\r\n\r\n    // SHOPS: Public profiles, but restricted editing\r\n    match /shops/{shopId} {\r\n      allow read: if true;\r\n      allow create: if isAuthenticated() || \r\n                       request.resource.id.matches('^demo-.*') || \r\n                       request.resource.id == 'legacy-1' ||\r\n                       request.resource.id == 'legacy-gonzalez';\r\n      allow update: if isShopOwner(shopId);\r\n      allow delete: if isShopOwner(shopId);\r\n      \r\n      // SHOP SUBCOLLECTIONS (if any, like 'products' if subcollection)\r\n      // SHOP SUBCOLLECTIONS\r\n      match /products/{productId} {\r\n        allow read: if true;\r\n        allow write: if isShopOwner(shopId);\r\n      }\r\n\r\n      match /services/{serviceId} {\r\n        allow read: if true;\r\n        allow write: if isShopOwner(shopId);\r\n      }\r\n      \r\n      // STAFF & CONFIG\r\n      match /staff/{staffId} {\r\n        allow read: if true;\r\n        allow write: if isShopOwner(shopId);\r\n      }\r\n      match /orderAssignmentConfig/{docId} {\r\n        allow read: if true;\r\n        allow write: if isShopOwner(shopId);\r\n      }\r\n\r\n    // WHATSAPP BOT CONFIG\r\n      match /whatsapp_bot/{document=**} {\r\n        allow read, write: if isShopOwner(shopId);\r\n      }\r\n\r\n      // OPERATIONAL DATA (Rentals, Assignments, etc.)\r\n      match /rentals/{rentalId} {\r\n        allow read: if true;\r\n        allow write: if true; // Open for demo purposes (bookings)\r\n      }\r\n      match /vehicles/{vehicleId} {\r\n        allow read: if true;\r\n        allow write: if isShopOwner(shopId);\r\n      }\r\n      match /orderAssignments/{assignmentId} {\r\n        allow read: if true;\r\n        allow write: if true; // Internal logic often runs as client for now\r\n      }\r\n      match /assignmentNotifications/{notifId} {\r\n         allow read: if true;\r\n         allow write: if true; \r\n      }\r\n      match /appointments/{apptId} {\r\n         allow read: if true;\r\n         allow write: if true; // Public booking\r\n      }\r\n    }\r\n    \r\n    // PRODUCTS: If stored as root collection (optional architecture)\r\n    // We are likely storing them inside shops/{shopId}/products or root 'products' with shopId field.\r\n    // Let's support both for flexibility.\r\n    match /products/{productId} {\r\n      allow read: if true;\r\n      allow write: if isAuthenticated() && (resource.data.shopId == request.auth.uid || request.resource.data.shopId == request.auth.uid); \r\n      // Note: This assumes Mapping shopId <-> auth.uid which we might not have yet.\r\n      // Fallback:\r\n      allow write: if isAuthenticated();\r\n    }\r\n  }\r\n}\r\n","name":"firestore.rules"}]},"createTime":"2026-02-07T23:54:01.739567Z","metadata":{"services":["cloud.firestore"]}}
+[debug] [2026-02-07T23:54:01.674Z] [rules] created ruleset projects/proyecto-tiendas-5a23f/rulesets/bed3a624-f765-4b8b-a0c3-ec718fbe3932
+[debug] [2026-02-07T23:54:01.675Z] [rules] releasing cloud.firestore/default with ruleset projects/proyecto-tiendas-5a23f/rulesets/bed3a624-f765-4b8b-a0c3-ec718fbe3932
+[debug] [2026-02-07T23:54:01.676Z] Checked if tokens are valid: true, expires at: 1770512038575
+[debug] [2026-02-07T23:54:01.676Z] Checked if tokens are valid: true, expires at: 1770512038575
+[debug] [2026-02-07T23:54:01.677Z] >>> [apiv2][query] PATCH https://firebaserules.googleapis.com/v1/projects/proyecto-tiendas-5a23f/releases/cloud.firestore/default [none]
+[debug] [2026-02-07T23:54:01.677Z] >>> [apiv2][body] PATCH https://firebaserules.googleapis.com/v1/projects/proyecto-tiendas-5a23f/releases/cloud.firestore/default {"release":{"name":"projects/proyecto-tiendas-5a23f/releases/cloud.firestore/default","rulesetName":"projects/proyecto-tiendas-5a23f/rulesets/bed3a624-f765-4b8b-a0c3-ec718fbe3932"}}
+[debug] [2026-02-07T23:54:02.038Z] <<< [apiv2][status] PATCH https://firebaserules.googleapis.com/v1/projects/proyecto-tiendas-5a23f/releases/cloud.firestore/default 200
+[debug] [2026-02-07T23:54:02.038Z] <<< [apiv2][body] PATCH https://firebaserules.googleapis.com/v1/projects/proyecto-tiendas-5a23f/releases/cloud.firestore/default {"name":"projects/proyecto-tiendas-5a23f/releases/cloud.firestore/default","rulesetName":"projects/proyecto-tiendas-5a23f/rulesets/bed3a624-f765-4b8b-a0c3-ec718fbe3932","createTime":"2026-02-02T16:33:16.098180Z","updateTime":"2026-02-07T23:54:02.108452Z"}
+[debug] [2026-02-07T23:54:02.038Z] [rules] updated release projects/proyecto-tiendas-5a23f/releases/cloud.firestore/default
+[info] +  firestore: released rules firestore.rules to cloud.firestore 
+[info] 
+[info] +  Deploy complete! 
+[info] 
+[info] Project Console: https://console.firebase.google.com/project/proyecto-tiendas-5a23f/overview
+[debug] [2026-02-07T23:54:07.277Z] Error: Timed out.
+    at Timeout._onTimeout (C:\Users\elmae\AppData\Roaming\npm\node_modules\firebase-tools\lib\utils.js:308:49)
+    at listOnTimeout (node:internal/timers:588:17)
+    at process.processTimers (node:internal/timers:523:7)
+[error] 
+[error] Error: An unexpected error has occurred.
