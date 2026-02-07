@@ -291,8 +291,16 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
     // Or actually delete. Let's strictly delete.
     const shop = shops.find(s => s.id === shopId || s.slug === shopId);
     if (shop) {
-      // await deleteDoc(doc(db, "shops", shop.id)); // Uncomment if real delete is desired
-      debugLog("Delete requested for", shopId);
+      try {
+        const { deleteDoc, doc } = await import("firebase/firestore");
+        await deleteDoc(doc(db, "shops", shop.id));
+        debugLog("Shop deleted successfully", shopId);
+        // Update local state to remove the deleted shop immediately
+        setShops(prev => prev.filter(s => s.id !== shop.id));
+      } catch (error) {
+        console.error("Error deleting shop:", error);
+        alert("Error eliminando la tienda. Verifica tu conexión o permisos.");
+      }
     }
   }, [shops]);
 

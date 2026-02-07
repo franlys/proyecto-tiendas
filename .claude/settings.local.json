@@ -30,7 +30,20 @@
       "WebFetch(domain:proyecto-tiendas.vercel.app)",
       "WebFetch(domain:proyecto-tiendas-bdcp6h8c0-franlys-projects-e0a57c06.vercel.app)",
       "mcp__claude_ai_Vercel__deploy_to_vercel",
-      "Bash(npx vercel --prod --yes)"
+      "Bash(npx vercel --prod --yes)",
+      "Bash(npm run lint:*)",
+      "Bash(powershell.exe -Command \"cd ''c:\\\\Users\\\\elmae\\\\proyecto-tiendas''; npm run lint 2>&1 | Select-Object -First 50\")",
+      "Bash(cmd.exe /c \"cd /d c:\\\\Users\\\\elmae\\\\proyecto-tiendas && npm run build\")",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" status)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" diff app/agency/shop/[slug]/page.tsx components/shared/background-gallery.tsx)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" log --oneline -5)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" add app/agency/shop/[slug]/page.tsx components/shared/background-gallery.tsx)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nFix BusinessType to BackgroundCategory mapping for shop settings\n\nAdd mapToBackgroundCategory helper function that maps any of the 40+ BusinessType values to one of the 6 background categories \\(beauty, restaurant, retail, rentcar, repair, technology, general\\).\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" push origin main)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" add lib/constants.ts)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nFix BUSINESS_TYPE_CONFIG type to use MainBusinessCategory\n\nThe BUSINESS_TYPE_CONFIG only has 6 entries for UI config, not all 40+ BusinessType values.\nCreated MainBusinessCategory type and mapToMainCategory helper function.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" add lib/services/shops.service.ts)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nFix second businessType derivation in updateShop function\n\nSeparate category and businessType updates instead of deriving\nbusinessType from category which caused type mismatch.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }

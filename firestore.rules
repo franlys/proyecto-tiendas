@@ -22,6 +22,7 @@ service cloud.firestore {
                        request.resource.id == 'legacy-1' ||
                        request.resource.id == 'legacy-gonzalez';
       allow update: if isShopOwner(shopId);
+      allow delete: if isShopOwner(shopId);
       
       // SHOP SUBCOLLECTIONS (if any, like 'products' if subcollection)
       // SHOP SUBCOLLECTIONS
@@ -38,6 +39,11 @@ service cloud.firestore {
       match /orderAssignmentConfig/{docId} {
         allow read: if true;
         allow write: if isShopOwner(shopId);
+      }
+
+    // WHATSAPP BOT CONFIG
+      match /whatsapp_bot/{document=**} {
+        allow read, write: if isShopOwner(shopId);
       }
 
       // OPERATIONAL DATA (Rentals, Assignments, etc.)

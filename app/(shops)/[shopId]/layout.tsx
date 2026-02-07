@@ -45,6 +45,55 @@ async function getShopData(shopId: string): Promise<ShopConfig | null> {
     console.error("Error reading managed shops from cookie:", error);
   }
 
+  // 3. Buscar en Firestore (Produccion / Base de Datos Real)
+  try {
+    const { db } = await import("@/lib/firebase");
+    const { collection, query, where, getDocs } = await import("firebase/firestore");
+
+    // 5.4 Buscar por slug
+    const shopsRef = collection(db, "shops");
+    const q = query(shopsRef, where("slug", "==", shopId));
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+      const shopData = snapshot.docs[0].data();
+
+      // Mapear a ShopConfig
+      return {
+        id: snapshot.docs[0].id,
+        name: shopData.name,
+        slug: shopData.slug,
+        description: shopData.description || "",
+        theme: shopData.theme || DEFAULT_THEME,
+        contact: shopData.contact || {},
+        businessType: shopData.businessType || (shopData.category === "beauty" ? "beauty" : shopData.category === "repair" ? "repair" : "retail"),
+        wholesaleEnabled: shopData.wholesaleEnabled || false,
+        // Asegurar que features y configuración extra se pasen si es necesario en el futuro
+      };
+    } else {
+      // 5.5 Fallback: Intentar buscar por ID (si el usuario navegó a /shop-123 en vez de /slug)
+      const { doc, getDoc } = await import("firebase/firestore");
+      const docRef = doc(db, "shops", shopId);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const shopData = docSnap.data();
+        return {
+          id: docSnap.id,
+          name: shopData.name,
+          slug: shopData.slug,
+          description: shopData.description || "",
+          theme: shopData.theme || DEFAULT_THEME,
+          contact: shopData.contact || {},
+          businessType: shopData.businessType || (shopData.category === "beauty" ? "beauty" : shopData.category === "repair" ? "repair" : "retail"),
+          wholesaleEnabled: shopData.wholesaleEnabled || false,
+        };
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching shop from Firestore:", error);
+  }
+
   return null;
 }
 
