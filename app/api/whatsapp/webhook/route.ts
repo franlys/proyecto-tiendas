@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkOrderAssignmentResponse } from "@/lib/handlers/order-assignment.handler";
 import { checkBookingConfirmationResponse } from "@/lib/handlers/booking-confirmation.handler";
 import { checkRentalConfirmationResponse } from "@/lib/handlers/rental-confirmation.handler";
-import { sendTextMessage, getInstanceName } from "@/lib/evolution";
+import { sendTextMessage } from "@/lib/evolution";
+import {
+    getConversationContext,
+    setConversationContext,
+    clearConversationContext,
+    detectMessageIntent,
+} from "@/lib/services/conversation-context.service";
 
 /**
  * Webhook para recibir eventos de Evolution API
@@ -181,7 +187,27 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
   }
 
   // ============================================================
-  // PASO 4: Auto-reply normal (si no fue manejado arriba)
+  // PASO 4: Verificar contexto de conversación
+  // ============================================================
+
+  // Extraer shopId del nombre de instancia (shop_xxx -> xxx)
+  const shopId = instance.replace("shop_", "").replace(/_/g, "-");
+
+  try {
+    const context = await getConversationContext(shopId, phone);
+
+    if (context) {
+      // ¡El cliente tiene contexto! Vino de un link de producto/servicio
+      console.log(`[${instance}] Customer has context: ${context.source}`);
+      await handleContextualMessage(instance, phone, text, context, pushName);
+      return;
+    }
+  } catch (error) {
+    console.error(`[${instance}] Error checking conversation context:`, error);
+  }
+
+  // ============================================================
+  // PASO 5: Mensaje genérico (sin contexto previo)
   // ============================================================
 
   // Check auto-reply cooldown
@@ -192,6 +218,10 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
     console.log(`[${instance}] Skipping auto-reply - cooldown active for ${phone}`);
     return;
   }
+
+  // Detectar intención del mensaje
+  const { intent, confidence } = detectMessageIntent(text);
+  console.log(`[${instance}] Detected intent: ${intent} (confidence: ${confidence})`);
 
   // Get auto-reply config for this instance
   const config = getAutoReplyConfig(instance);
@@ -207,17 +237,115 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
     return;
   }
 
+  // Enviar respuesta según la intención detectada
+  let responseMessage = config.welcomeMessage;
+
+  if (intent === "catalog") {
+    responseMessage = `¡Hola${pushName ? ` ${pushName}` : ""}! 👋
+
+Aquí puedes ver nuestro catálogo completo:
+🛍️ https://linko-app-pied.vercel.app/${shopId}
+
+¿Hay algo específico que te interese?`;
+
+    // Crear contexto de solicitud de catálogo
+    await setConversationContext(shopId, phone, "catalog_request", "idle", {
+      customerName: pushName,
+    });
+  } else if (intent === "service") {
+    responseMessage = `¡Hola${pushName ? ` ${pushName}` : ""}! 👋
+
+Para agendar una cita, visita nuestra página de servicios:
+📅 https://linko-app-pied.vercel.app/${shopId}/book
+
+O dime qué servicio te interesa y te ayudo a reservar.`;
+  } else if (intent === "greeting" || intent === "unknown") {
+    responseMessage = `¡Hola${pushName ? ` ${pushName}` : ""}! 👋 Gracias por contactarnos.
+
+¿En qué podemos ayudarte?
+
+📋 *CATÁLOGO* - Ver productos y servicios
+📅 *CITA* - Agendar una cita
+❓ *PREGUNTA* - Escribe tu consulta
+
+O visita nuestra tienda:
+🛍️ https://linko-app-pied.vercel.app/${shopId}`;
+  }
+
   // Send auto-reply
   try {
-    await sendTextMessage(instance, phone, config.welcomeMessage);
+    await sendTextMessage(instance, phone, responseMessage);
 
     // Update cooldown
     recentContacts.set(phone, now);
 
-    console.log(`[${instance}] Auto-reply sent to ${phone}`);
-    console.log(`[Analytics] Auto-reply sent - instance: ${instance}, phone: ${phone}, name: ${pushName}`);
+    console.log(`[${instance}] Auto-reply sent to ${phone} (intent: ${intent})`);
   } catch (error) {
     console.error(`[${instance}] Failed to send auto-reply:`, error);
+  }
+}
+
+/**
+ * Maneja mensajes de clientes que tienen contexto previo
+ * (vinieron de un link de producto o servicio)
+ */
+async function handleContextualMessage(
+  instance: string,
+  phone: string,
+  text: string,
+  context: Awaited<ReturnType<typeof getConversationContext>>,
+  pushName?: string
+) {
+  if (!context) return;
+
+  const shopId = context.shopId;
+
+  switch (context.source) {
+    case "product_inquiry":
+      // Cliente preguntando por un producto específico
+      const productMessage = `¡Hola${pushName ? ` ${pushName}` : ""}! 👋
+
+Veo que te interesa: *${context.productName}*
+
+Un momento, nuestro equipo revisará tu consulta y te responderá pronto.
+
+Mientras tanto, puedes ver más detalles aquí:
+🛍️ https://linko-app-pied.vercel.app/${shopId}/product/${context.productId}`;
+
+      await sendTextMessage(instance, phone, productMessage);
+
+      // Limpiar contexto después de responder
+      await clearConversationContext(shopId, phone);
+      break;
+
+    case "service_inquiry":
+      // Cliente preguntando por un servicio específico
+      const serviceMessage = `¡Hola${pushName ? ` ${pushName}` : ""}! 👋
+
+Veo que te interesa nuestro servicio: *${context.serviceName}*
+
+¿Te gustaría agendar una cita?
+📅 Responde *SÍ* para ver horarios disponibles
+
+O visita nuestra página para reservar:
+https://linko-app-pied.vercel.app/${shopId}/book`;
+
+      await sendTextMessage(instance, phone, serviceMessage);
+      break;
+
+    case "catalog_request":
+      // Ya pidió catálogo, dar seguimiento
+      const catalogMessage = `Recuerda que puedes ver todos nuestros productos aquí:
+🛍️ https://linko-app-pied.vercel.app/${shopId}
+
+¿Hay algo específico que buscas?`;
+
+      await sendTextMessage(instance, phone, catalogMessage);
+      break;
+
+    default:
+      // Contexto no manejado, respuesta genérica
+      console.log(`[${instance}] Unhandled context source: ${context.source}`);
   }
 }
 
