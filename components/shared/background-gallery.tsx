@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { Check, Image as ImageIcon, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ShopCategory } from "@/lib/constants";
+// Fondos predefinidos por categoría de negocio (tipos principales)
+type BackgroundCategory = "beauty" | "restaurant" | "retail" | "rentcar" | "repair" | "technology" | "general";
 
-// Fondos predefinidos por categoría de negocio
-const PRESET_BACKGROUNDS: Record<ShopCategory | "general", { label: string; url: string }[]> = {
+const PRESET_BACKGROUNDS: Record<BackgroundCategory, { label: string; url: string }[]> = {
   beauty: [
     { label: "Salón Elegante", url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200&q=80" },
     { label: "Spa Zen", url: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1200&q=80" },
@@ -68,7 +68,7 @@ const PRESET_BACKGROUNDS: Record<ShopCategory | "general", { label: string; url:
 interface BackgroundGalleryProps {
   value?: string;
   onChange: (url: string) => void;
-  businessType?: ShopCategory;
+  businessType?: BackgroundCategory;
   label?: string;
 }
 
@@ -79,7 +79,7 @@ export function BackgroundGallery({
   label = "Elige un fondo predefinido",
 }: BackgroundGalleryProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<ShopCategory | "general">(
+  const [activeCategory, setActiveCategory] = useState<BackgroundCategory>(
     businessType || "general"
   );
 
@@ -88,7 +88,7 @@ export function BackgroundGallery({
   const generalBackgrounds = activeCategory !== "general" ? PRESET_BACKGROUNDS.general : [];
   const allBackgrounds = [...categoryBackgrounds, ...generalBackgrounds];
 
-  const categories: { id: ShopCategory | "general"; label: string }[] = [
+  const categories: { id: BackgroundCategory; label: string }[] = [
     { id: "general", label: "General" },
     { id: "beauty", label: "Belleza" },
     { id: "restaurant", label: "Restaurant" },
