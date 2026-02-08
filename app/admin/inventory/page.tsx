@@ -7,7 +7,7 @@ import { Product } from "@/lib/constants";
 import { Plus, Search, Filter, Loader2, Package } from "lucide-react";
 import { useAuth, InventoryProvider, useInventory } from "@/components/shared";
 
-function InventoryContent() {
+function InventoryContent({ shopId }: { shopId: string }) {
   const { products, saveProduct, deleteProduct, updateStock, getLowStockProducts, isLoading } = useInventory();
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -63,7 +63,9 @@ function InventoryContent() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Inventario</h1>
-          <p className="text-zinc-400 mt-1">Gestión de productos y existencias</p>
+          <p className="text-zinc-400 mt-1">
+            Gestión de productos y existencias <span className="text-xs text-zinc-600 bg-zinc-900 px-2 py-0.5 rounded ml-2">ID: {shopId}</span>
+          </p>
         </div>
         <button
           onClick={handleCreate}
@@ -164,7 +166,7 @@ export default function InventoryPage() {
 
   return (
     <InventoryProvider shopId={shopId}>
-      <InventoryContent />
+      <InventoryContent shopId={shopId} />
     </InventoryProvider>
   );
 }
