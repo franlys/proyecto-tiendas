@@ -21,7 +21,7 @@ import {
   type Service,
   type Product,
 } from "@/lib/constants";
-import { useParams, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 type TabType = "servicios" | "productos";
@@ -29,9 +29,7 @@ type TabType = "servicios" | "productos";
 export default function ShopHomePage() {
   const shop = useShop();
   const { setTableId, tableId } = useCart();
-  const params = useParams();
   const searchParams = useSearchParams();
-  const shopId = params.shopId as string;
 
   // State for Real Data
   const [services, setServices] = useState<Service[]>([]);
@@ -130,8 +128,10 @@ export default function ShopHomePage() {
   }, [services]);
   const categories = Object.keys(servicesByCategory) as ServiceCategory[];
 
-  // Logic for Loyalty Card (Hide if simplified retail)
-  const showLoyalty = shop?.features?.includes("loyalty") ?? (shop?.businessType === "beauty");
+  // Logic for Loyalty Card - Only show if explicitly enabled in features
+  // Retail shops should NOT show loyalty card by default
+  const isRetailBusiness = shop?.businessType === "retail" || shop?.businessType === "technology" || shop?.businessType === "restaurant";
+  const showLoyalty = shop?.features?.includes("loyalty") && !isRetailBusiness;
 
   return (
     <div className="relative">
@@ -146,19 +146,8 @@ export default function ShopHomePage() {
         </div>
       )}
 
-      {/* Hero Section */}
+      {/* Hero Section - Background handled by BackgroundEffects component globally */}
       <SectionObserver id="hero" className="relative py-16 lg:py-24 overflow-hidden">
-        {/* Dynamic Background */}
-        {shop?.theme?.backgroundImage && (
-          <div className="absolute inset-0 z-0 select-none pointer-events-none">
-            <img
-              src={shop.theme.backgroundImage}
-              alt=""
-              className="w-full h-full object-cover opacity-60 scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-background" />
-          </div>
-        )}
 
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">

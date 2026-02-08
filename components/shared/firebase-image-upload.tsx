@@ -30,7 +30,7 @@ export function FirebaseImageUpload({
   shopId,
   label = "Subir archivo",
   aspectRatio = "auto",
-  maxSizeMB = 10,
+  maxSizeMB = 25, // Increased limit for high-res images
   accept = "image",
 }: FirebaseImageUploadProps) {
   const [uploading, setUploading] = useState(false);

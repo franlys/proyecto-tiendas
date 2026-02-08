@@ -12,7 +12,7 @@ import {
     isEvolutionConfigured,
 } from "@/lib/evolution";
 
-const WEBHOOK_BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://linko-app-pied.vercel.app";
+const WEBHOOK_BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://proyecto-tiendas.vercel.app";
 
 /**
  * GET /api/shops/{shopId}/fleets/{fleetId}/connect

@@ -31,8 +31,8 @@ const CLOUDINARY_UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESE
 // Fallback for demo mode when Cloudinary is not configured
 const DEMO_MODE = !CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET;
 
-// Max file sizes
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
+// Max file sizes (increased for high-res images)
+const MAX_IMAGE_SIZE = 25 * 1024 * 1024; // 25MB
 const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
 
 // Accepted file types

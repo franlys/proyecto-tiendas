@@ -35,7 +35,7 @@ import {
 
 // RE-EXPORT for consumers that import from here
 export { DEFAULT_FEATURES };
-export type { FeatureId, SubscriptionStatus, ShopCategory };
+export type { FeatureId, SubscriptionStatus, ShopCategory, ShopBackground };
 
 // ============================================
 // TYPES
@@ -68,6 +68,17 @@ export interface ManagedShop extends ShopConfig {
   wholesaleEnabled?: boolean;
   customDomain?: string;
   paymentLink?: string; // For manual payments
+  // Appearance (from agency panel)
+  logo?: string;
+  banner?: string;
+  slogan?: string;
+  background?: ShopBackground;
+  social?: {
+    instagram?: string;
+    facebook?: string;
+    tiktok?: string;
+    website?: string;
+  };
 }
 
 interface CreateShopData {
@@ -188,6 +199,12 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
           features: data.features ?? data.enabledFeatures ?? [],
           // Stats - Always ensure it exists
           stats: data.stats ? { ...defaultStats, ...data.stats } : defaultStats,
+          // Appearance (from agency panel)
+          logo: data.logo,
+          banner: data.banner,
+          slogan: data.slogan,
+          background: data.background,
+          social: data.social,
         } as ManagedShop);
       });
 

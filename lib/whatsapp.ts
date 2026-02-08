@@ -1,12 +1,12 @@
 import axios from "axios";
 
-const IS_PRODUCTION = process.env.NODE_ENV === "production";
-const DEFAULT_URL = IS_PRODUCTION
-  ? "https://evolution-api-production-0fa7.up.railway.app"
-  : "http://localhost:8080";
-
-const EVOLUTION_URL = process.env.EVOLUTION_API_URL || DEFAULT_URL;
+// Evolution API configuration - MUST be set in environment variables
+const EVOLUTION_URL = process.env.EVOLUTION_API_URL;
 const EVOLUTION_KEY = process.env.EVOLUTION_API_KEY || "";
+
+if (!EVOLUTION_URL && process.env.NODE_ENV === "production") {
+  console.warn("⚠️ EVOLUTION_API_URL not configured. WhatsApp features will not work.");
+}
 
 // Axios client configured for Evolution API
 const evolutionClient = axios.create({

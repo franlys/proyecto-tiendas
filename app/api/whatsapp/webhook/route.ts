@@ -10,6 +10,9 @@ import {
     detectMessageIntent,
 } from "@/lib/services/conversation-context.service";
 
+// App URL for links in messages (fallback to production URL)
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://proyecto-tiendas.vercel.app";
+
 /**
  * Webhook para recibir eventos de Evolution API
  *
@@ -244,7 +247,7 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
     responseMessage = `¡Hola${pushName ? ` ${pushName}` : ""}! 👋
 
 Aquí puedes ver nuestro catálogo completo:
-🛍️ https://linko-app-pied.vercel.app/${shopId}
+🛍️ ${APP_URL}/${shopId}
 
 ¿Hay algo específico que te interese?`;
 
@@ -256,7 +259,7 @@ Aquí puedes ver nuestro catálogo completo:
     responseMessage = `¡Hola${pushName ? ` ${pushName}` : ""}! 👋
 
 Para agendar una cita, visita nuestra página de servicios:
-📅 https://linko-app-pied.vercel.app/${shopId}/book
+📅 ${APP_URL}/${shopId}/book
 
 O dime qué servicio te interesa y te ayudo a reservar.`;
   } else if (intent === "greeting" || intent === "unknown") {
@@ -269,7 +272,7 @@ O dime qué servicio te interesa y te ayudo a reservar.`;
 ❓ *PREGUNTA* - Escribe tu consulta
 
 O visita nuestra tienda:
-🛍️ https://linko-app-pied.vercel.app/${shopId}`;
+🛍️ ${APP_URL}/${shopId}`;
   }
 
   // Send auto-reply
@@ -310,7 +313,7 @@ Veo que te interesa: *${context.productName}*
 Un momento, nuestro equipo revisará tu consulta y te responderá pronto.
 
 Mientras tanto, puedes ver más detalles aquí:
-🛍️ https://linko-app-pied.vercel.app/${shopId}/product/${context.productId}`;
+🛍️ ${APP_URL}/${shopId}/product/${context.productId}`;
 
       await sendTextMessage(instance, phone, productMessage);
 
@@ -328,7 +331,7 @@ Veo que te interesa nuestro servicio: *${context.serviceName}*
 📅 Responde *SÍ* para ver horarios disponibles
 
 O visita nuestra página para reservar:
-https://linko-app-pied.vercel.app/${shopId}/book`;
+${APP_URL}/${shopId}/book`;
 
       await sendTextMessage(instance, phone, serviceMessage);
       break;
@@ -336,7 +339,7 @@ https://linko-app-pied.vercel.app/${shopId}/book`;
     case "catalog_request":
       // Ya pidió catálogo, dar seguimiento
       const catalogMessage = `Recuerda que puedes ver todos nuestros productos aquí:
-🛍️ https://linko-app-pied.vercel.app/${shopId}
+🛍️ ${APP_URL}/${shopId}
 
 ¿Hay algo específico que buscas?`;
 

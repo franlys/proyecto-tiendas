@@ -169,32 +169,54 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
               <header className="sticky top-0 z-50 glass-panel">
                 <div className="container mx-auto px-4 py-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {/* Logo placeholder */}
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-cyan-500 to-cyan-600 flex items-center justify-center">
-                        <span className="text-white font-bold text-lg">
-                          {shop.name.charAt(0)}
-                        </span>
-                      </div>
-                      <div>
-                        <h1 className="font-display text-xl font-semibold text-white">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      {/* Shop Logo */}
+                      {shop.logo ? (
+                        <img
+                          src={shop.logo}
+                          alt={shop.name}
+                          className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-cyan-500 to-cyan-600 flex items-center justify-center flex-shrink-0">
+                          <span className="text-white font-bold text-lg">
+                            {shop.name.charAt(0)}
+                          </span>
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <h1 className="font-display text-xl font-semibold text-white truncate">
                           {shop.name}
                         </h1>
-                        <p className="text-sm text-slate-400">{shop.description}</p>
+                        {shop.slogan && (
+                          <p className="text-sm text-slate-400 truncate max-w-[200px] md:max-w-[300px]">{shop.slogan}</p>
+                        )}
                       </div>
                     </div>
 
-                    {/* Navigation placeholder */}
-                    <nav className="hidden md:flex items-center gap-6">
+                    {/* Navigation - Adapt based on business type */}
+                    <nav className="hidden md:flex items-center gap-6 flex-shrink-0">
                       <a href={`/${shopId}`} className="text-slate-300 hover:text-white transition-colors">
                         Inicio
                       </a>
-                      <a href={`/${shopId}#servicios`} className="text-slate-300 hover:text-white transition-colors">
-                        Servicios
-                      </a>
-                      <a href={`/${shopId}/book`} className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-lg hover:shadow-lg transition-all">
-                        Reservar
-                      </a>
+                      {/* Only show Servicios for service-based businesses */}
+                      {(shop.businessType === "beauty" || shop.businessType === "repair") && (
+                        <a href={`/${shopId}#servicios`} className="text-slate-300 hover:text-white transition-colors">
+                          Servicios
+                        </a>
+                      )}
+                      {/* Show Productos for retail */}
+                      {(shop.businessType === "retail" || shop.businessType === "technology" || shop.businessType === "restaurant") && (
+                        <a href={`/${shopId}#products`} className="text-slate-300 hover:text-white transition-colors">
+                          Productos
+                        </a>
+                      )}
+                      {/* Only show Reservar for service-based businesses */}
+                      {(shop.businessType === "beauty" || shop.businessType === "repair" || shop.businessType === "rentcar") && (
+                        <a href={`/${shopId}/book`} className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-lg hover:shadow-lg transition-all">
+                          Reservar
+                        </a>
+                      )}
                     </nav>
                   </div>
                 </div>
