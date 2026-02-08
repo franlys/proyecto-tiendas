@@ -4,13 +4,14 @@ import { useState, useEffect } from "react";
 import { Product, ProductVariant, ProductCategory, PRODUCT_CATEGORY_LABELS } from "@/lib/constants";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, Trash2 } from "lucide-react";
-import { MediaUploader } from "@/components/shared";
+import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
 
 interface ProductEditorProps {
     product?: Product; // If null, creating new
     isOpen: boolean;
     onClose: () => void;
     onSave: (product: Product) => void;
+    shopId: string; // Required for image uploads
 }
 
 const EMPTY_PRODUCT: Product = {
@@ -25,7 +26,7 @@ const EMPTY_PRODUCT: Product = {
     variants: [],
 };
 
-export function ProductEditor({ product, isOpen, onClose, onSave }: ProductEditorProps) {
+export function ProductEditor({ product, isOpen, onClose, onSave, shopId }: ProductEditorProps) {
     const [formData, setFormData] = useState<Product>(EMPTY_PRODUCT);
     const [hasVariants, setHasVariants] = useState(false);
 
@@ -152,12 +153,13 @@ export function ProductEditor({ product, isOpen, onClose, onSave }: ProductEdito
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-zinc-400 mb-1">Imagen del Producto</label>
-                                            <MediaUploader
-                                                type="image"
-                                                preset="product"
-                                                currentUrl={formData.image}
-                                                onUploadComplete={(url) => setFormData({ ...formData, image: url })}
-                                                compact
+                                            <FirebaseImageUpload
+                                                value={formData.image}
+                                                onChange={(url) => setFormData({ ...formData, image: url })}
+                                                folder="products"
+                                                shopId={shopId}
+                                                aspectRatio="square"
+                                                maxSizeMB={10}
                                             />
                                         </div>
                                     </div>

@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ProductList } from "@/components/admin/inventory/product-list";
 import { ProductEditor } from "@/components/admin/inventory/product-editor";
 import { Product } from "@/lib/constants";
-import { Plus, Search, Filter, Loader2, Package } from "lucide-react";
-import { useAuth, InventoryProvider, useInventory } from "@/components/shared";
+import { Plus, Search, Filter, Loader2, Package, Store, ChevronDown, ArrowLeft } from "lucide-react";
+import { useAuth, InventoryProvider, useInventory, useShops, ShopsProvider } from "@/components/shared";
+import Link from "next/link";
 
 function InventoryContent({ shopId }: { shopId: string }) {
   const { products, saveProduct, deleteProduct, updateStock, getLowStockProducts, isLoading } = useInventory();
@@ -64,7 +65,7 @@ function InventoryContent({ shopId }: { shopId: string }) {
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Inventario</h1>
           <p className="text-zinc-400 mt-1">
-            Gestión de productos y existencias <span className="text-xs text-zinc-600 bg-zinc-900 px-2 py-0.5 rounded ml-2">ID: {shopId}</span>
+            Gestión de productos y existencias <span className="text-xs text-zinc-600 bg-zinc-900 px-2 py-0.5 rounded ml-2">Tienda: {shopId}</span>
           </p>
         </div>
         <button
@@ -155,18 +156,144 @@ function InventoryContent({ shopId }: { shopId: string }) {
         }}
         onSave={handleSave}
         product={editingProduct}
+        shopId={shopId}
       />
     </div>
   );
 }
 
-export default function InventoryPage() {
-  const { user } = useAuth();
-  const shopId = user?.shopId || "estetica-lola";
+// Shop Selector for Super Admin
+function ShopSelector({ onSelect }: { onSelect: (shopId: string) => void }) {
+  const { shops, isLoading } = useShops();
+  const [isOpen, setIsOpen] = useState(false);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
+
+  if (shops.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Store className="w-16 h-16 text-zinc-500" />
+        <h2 className="text-xl font-bold text-white">No hay tiendas</h2>
+        <p className="text-zinc-400 text-center max-w-md">
+          Crea una tienda primero desde el panel de agencia para poder gestionar su inventario.
+        </p>
+        <Link
+          href="/agency"
+          className="mt-4 px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-medium transition-all"
+        >
+          Ir al Panel de Agencia
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <InventoryProvider shopId={shopId}>
-      <InventoryContent shopId={shopId} />
-    </InventoryProvider>
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
+      <div className="text-center">
+        <Store className="w-16 h-16 text-cyan-400 mx-auto mb-4" />
+        <h2 className="text-2xl font-bold text-white mb-2">Selecciona una Tienda</h2>
+        <p className="text-zinc-400 max-w-md">
+          Como Super Admin, debes seleccionar qué tienda deseas gestionar.
+        </p>
+      </div>
+
+      <div className="grid gap-3 w-full max-w-lg">
+        {shops.map((shop) => (
+          <button
+            key={shop.id}
+            onClick={() => onSelect(shop.slug)}
+            className="flex items-center gap-4 p-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-cyan-500/50 rounded-xl transition-all text-left group"
+          >
+            {shop.logo ? (
+              <img src={shop.logo} alt={shop.name} className="w-12 h-12 rounded-lg object-cover" />
+            ) : (
+              <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-600 flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-bold text-lg">{shop.name.charAt(0)}</span>
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <h3 className="text-white font-medium truncate">{shop.name}</h3>
+              <p className="text-sm text-zinc-500 truncate">/{shop.slug}</p>
+            </div>
+            <ChevronDown className="w-5 h-5 text-zinc-500 group-hover:text-cyan-400 -rotate-90 transition-all" />
+          </button>
+        ))}
+      </div>
+
+      <Link
+        href="/agency"
+        className="text-sm text-zinc-500 hover:text-white flex items-center gap-2 mt-4"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Volver al Panel de Agencia
+      </Link>
+    </div>
+  );
+}
+
+function InventoryPageInner() {
+  const { user, isSuperAdmin } = useAuth();
+  const [selectedShopId, setSelectedShopId] = useState<string | null>(null);
+
+  // For shop owners, use their shopId directly
+  // For super admin, require selection
+  const shopId = isSuperAdmin
+    ? selectedShopId
+    : (user?.shopId || null);
+
+  // If no shop selected (super admin) or no shopId (shop owner without shop)
+  if (!shopId) {
+    if (isSuperAdmin) {
+      return (
+        <div className="min-h-screen bg-background p-6">
+          <ShopSelector onSelect={setSelectedShopId} />
+        </div>
+      );
+    }
+
+    // Shop owner without shopId - error state
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Package className="w-16 h-16 text-zinc-500" />
+        <h2 className="text-xl font-bold text-white">Error de Configuración</h2>
+        <p className="text-zinc-400 text-center max-w-md">
+          Tu cuenta no tiene una tienda asociada. Contacta al administrador.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Show back button for super admin */}
+      {isSuperAdmin && selectedShopId && (
+        <div className="border-b border-zinc-800 px-6 py-3">
+          <button
+            onClick={() => setSelectedShopId(null)}
+            className="text-sm text-zinc-400 hover:text-white flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Cambiar tienda
+          </button>
+        </div>
+      )}
+      <InventoryProvider shopId={shopId}>
+        <InventoryContent shopId={shopId} />
+      </InventoryProvider>
+    </div>
+  );
+}
+
+export default function InventoryPage() {
+  return (
+    <ShopsProvider>
+      <InventoryPageInner />
+    </ShopsProvider>
   );
 }

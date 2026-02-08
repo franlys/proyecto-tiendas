@@ -212,20 +212,24 @@ export function InventoryProvider({ children, shopId }: InventoryProviderProps) 
 
   const saveProduct = useCallback((product: Product): Product => {
     // Adapter for Admin Form
+    // Check if product exists in current state (means we're updating)
     if (products.some(p => p.id === product.id)) {
       updateProduct(product.id, product);
       return product;
     } else {
-      // Since addProduct is async/void, we just fire it. 
-      // The ID logic here is tricky because addProduct generates ID.
-      // For this legacy signature, we might need adjustments.
-      // But assuming the user passes a product *without* ID for creation...
+      // New product - check for temporary IDs (new- or temp- prefix)
       const { id, ...data } = product;
-      if (!id || id.startsWith("temp-")) {
-        addProduct(data as Product);
+      const isTemporaryId = !id || id.startsWith("temp-") || id.startsWith("new-");
+
+      if (isTemporaryId) {
+        // Create new product in Firestore
+        addProduct(data as Omit<Product, "id">);
+        debugLog("Creating new product:", data);
       } else {
-        // Has ID but not found in state? Weird case. Treat as update.
-        updateProduct(id, data);
+        // Has a real-looking ID but not found in state - treat as new anyway
+        // This can happen if state is out of sync
+        addProduct(data as Omit<Product, "id">);
+        debugLog("Creating product (ID not in state):", data);
       }
       return product;
     }
