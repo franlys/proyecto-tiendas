@@ -274,8 +274,24 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
   const updateShop = useCallback(async (shopId: string, data: UpdateShopData) => {
     // Need actual ID, might receive slug
     const shop = shops.find(s => s.id === shopId || s.slug === shopId);
-    if (!shop) return;
-    await setDoc(doc(db, "shops", shop.id), data, { merge: true });
+
+    console.log("🛠️ [DEBUG] updateShop called:", {
+      searchInput: shopId,
+      foundShop: shop?.id,
+      dataToSave: data
+    });
+
+    if (!shop) {
+      console.error("❌ [DEBUG] Shop not found for update:", shopId);
+      return;
+    }
+
+    try {
+      await setDoc(doc(db, "shops", shop.id), data, { merge: true });
+      console.log("✅ [DEBUG] Shop updated in Firestore successfully");
+    } catch (e) {
+      console.error("❌ [DEBUG] Error writing to Firestore:", e);
+    }
   }, [shops]);
 
   const toggleShopStatus = useCallback(async (shopId: string) => {
