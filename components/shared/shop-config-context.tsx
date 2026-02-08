@@ -71,14 +71,14 @@ const defaultConfig: ShopVisualConfig = {
   contextualBackgrounds: {
     home: "https://videos.pexels.com/video-files/3571264/3571264-sd_640_360_30fps.mp4", // Abstract Gold
     shop: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920", // Marble (Clean for products)
-    repair: "https://videos.pexels.com/video-files/857251/857251-sd_640_360_25fps.mp4", // Particles (Tech feel)
+    repair: "https://videos.pexels.com/video-files/3196070/3196070-sd_640_360_25fps.mp4", // Particles (Tech feel) replacement
     admin: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=1920", // Dark texture
   },
   // Phase 20: Section Backgrounds for Scrollytelling
   sectionBackgrounds: {
     hero: "https://videos.pexels.com/video-files/3571264/3571264-sd_640_360_30fps.mp4", // Abstract Gold
     services: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920", // Marble (Clean)
-    products: "https://videos.pexels.com/video-files/857251/857251-sd_640_360_25fps.mp4", // Particles (Tech)
+    products: "https://videos.pexels.com/video-files/3196070/3196070-sd_640_360_25fps.mp4", // Particles (Tech) replacement
     testimonials: "https://videos.pexels.com/video-files/2022395/2022395-sd_640_360_30fps.mp4", // Bokeh Lights
     footer: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=1920", // Dark texture
   },
@@ -208,8 +208,8 @@ export const DEMO_VIDEOS = [
   {
     id: "particles",
     label: "Partículas",
-    url: "https://videos.pexels.com/video-files/857251/857251-sd_640_360_25fps.mp4",
-    thumbnail: "https://images.pexels.com/videos/857251/free-video-857251.jpg?auto=compress&w=200",
+    url: "https://videos.pexels.com/video-files/3196070/3196070-sd_640_360_25fps.mp4",
+    thumbnail: "https://images.pexels.com/videos/3196070/free-video-3196070.jpg?auto=compress&w=200",
   },
   {
     id: "bokeh-lights",

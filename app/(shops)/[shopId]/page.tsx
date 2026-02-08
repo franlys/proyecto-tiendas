@@ -72,8 +72,14 @@ export default function ShopHomePage() {
         const productsData = productsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
         setProducts(productsData);
 
+        console.log("✅ [DEBUG] Real Data Fetched:", {
+          servicesCount: servicesData.length,
+          productsCount: productsData.length,
+          services: servicesData,
+        });
+
       } catch (error) {
-        console.error("Error loading shop data:", error);
+        console.error("❌ [DEBUG] Error loading shop data:", error);
       } finally {
         setLoadingData(false);
       }
