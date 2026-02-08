@@ -6,6 +6,7 @@ import { BackgroundEffects } from "./background-effects";
 
 interface ShopLayoutClientProps {
   children: ReactNode;
+  shop?: any; // We can improve type later (ShopConfig)
 }
 
 function ShopLayoutInner({ children }: ShopLayoutClientProps) {
@@ -32,9 +33,26 @@ function ShopLayoutInner({ children }: ShopLayoutClientProps) {
   );
 }
 
-export function ShopLayoutClient({ children }: ShopLayoutClientProps) {
+export function ShopLayoutClient({ children, shop }: ShopLayoutClientProps & { shop?: any }) {
+  // Convert shop data to ShopVisualConfig format if available
+  const initialConfig = shop ? {
+    shopName: shop.name,
+    // Map Firestore theme/background data to VisualConfig
+    primaryColor: shop.theme?.primaryColor,
+    accentColor: shop.theme?.accentColor,
+    backgroundType: shop.background?.type || "preset",
+    backgroundUrl: shop.background?.type === "video" ? shop.background.video : shop.background?.image,
+    // Support new background structure
+    sectionBackgrounds: {
+      hero: shop.background?.hero,
+      services: shop.background?.services,
+      products: shop.background?.products,
+      contact: shop.background?.contact,
+    }
+  } : undefined;
+
   return (
-    <ShopConfigProvider>
+    <ShopConfigProvider initialConfig={initialConfig}>
       <UIProvider>
         <ShopLayoutInner>{children}</ShopLayoutInner>
       </UIProvider>
