@@ -1191,21 +1191,61 @@ function ShopDetailContent() {
                                     )}
 
                                     {backgroundType === "image" && (
-                                        <div className="space-y-3">
+                                        <div className="space-y-4">
+                                            {/* Custom Upload */}
+                                            <FirebaseImageUpload
+                                                value={backgroundImage}
+                                                onChange={setBackgroundImage}
+                                                folder={`shops/${shop?.slug || "temp"}/backgrounds`}
+                                                shopId={shop?.slug || "temp"}
+                                                label="Subir Imagen de Fondo"
+                                                aspectRatio="video"
+                                                maxSizeMB={25}
+                                            />
+
+                                            {/* Or select from gallery */}
+                                            <div className="relative">
+                                                <div className="absolute inset-0 flex items-center">
+                                                    <div className="w-full border-t border-white/10"></div>
+                                                </div>
+                                                <div className="relative flex justify-center">
+                                                    <span className="px-3 bg-[#0d1520] text-xs text-slate-500">o selecciona de la galería</span>
+                                                </div>
+                                            </div>
+
                                             <BackgroundGallery
                                                 value={backgroundImage}
                                                 onChange={setBackgroundImage}
                                                 businessType={mapToBackgroundCategory(shop?.businessType)}
-                                                label="Imagen de Fondo"
+                                                label=""
                                             />
                                         </div>
                                     )}
 
                                     {backgroundType === "video" && (
-                                        <div className="space-y-3">
-                                            <label className="block text-sm font-medium text-slate-300">
-                                                URL del Video de Fondo
-                                            </label>
+                                        <div className="space-y-4">
+                                            {/* Custom Upload */}
+                                            <FirebaseImageUpload
+                                                value={backgroundVideo}
+                                                onChange={setBackgroundVideo}
+                                                folder={`shops/${shop?.slug || "temp"}/backgrounds`}
+                                                shopId={shop?.slug || "temp"}
+                                                label="Subir Video de Fondo"
+                                                aspectRatio="video"
+                                                accept="video"
+                                                maxSizeMB={100}
+                                            />
+
+                                            {/* Or paste URL */}
+                                            <div className="relative">
+                                                <div className="absolute inset-0 flex items-center">
+                                                    <div className="w-full border-t border-white/10"></div>
+                                                </div>
+                                                <div className="relative flex justify-center">
+                                                    <span className="px-3 bg-[#0d1520] text-xs text-slate-500">o pega una URL</span>
+                                                </div>
+                                            </div>
+
                                             <div className="flex gap-2">
                                                 <div className="px-3 py-3 bg-purple-500/20 border border-purple-500/20 rounded-xl text-purple-400">
                                                     <MonitorPlay className="w-5 h-5" />
@@ -1219,7 +1259,7 @@ function ShopDetailContent() {
                                                 />
                                             </div>
                                             <p className="text-xs text-slate-500">
-                                                Formatos soportados: MP4, WebM. El video se reproducirá en loop sin sonido.
+                                                Formatos soportados: MP4, WebM. Máximo 100MB. El video se reproducirá en loop sin sonido.
                                             </p>
                                         </div>
                                     )}
