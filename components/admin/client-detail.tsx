@@ -227,7 +227,7 @@ export function ClientDetail({
         {client.orders.length > 0 ? (
           <div className="space-y-3">
             {client.orders
-              .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+              .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
               .map((order) => (
                 <div
                   key={order.id}
@@ -236,10 +236,10 @@ export function ClientDetail({
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <p className="text-sm font-medium text-white">
-                        {formatDate(order.date)}
+                        {formatDate(order.createdAt)}
                       </p>
                       <p className="text-xs text-slate-400">
-                        {formatTime(order.date)}
+                        {formatTime(order.createdAt)}
                       </p>
                     </div>
                     <p className="text-sm font-bold text-gold">
@@ -252,7 +252,7 @@ export function ClientDetail({
                         key={idx}
                         className="px-2 py-1 rounded-md bg-white/5 text-xs text-slate-300"
                       >
-                        {item.name}
+                        {item.productName}
                       </span>
                     ))}
                   </div>
