@@ -213,18 +213,22 @@ export async function getAllNotificationPhones(shopId: string): Promise<Notifica
     }
 
     // Si no hay phones, fallback a la tienda principal
-    if (phones.length === 0) {
-      const shopDoc = await db.collection("shops").doc(shopId).get();
-      if (shopDoc.exists) {
-        const data = shopDoc.data();
-        const ownerPhone = data?.ownerPhone || data?.contact?.ownerPhone;
-        if (ownerPhone) {
-          phones.push({
-            phone: ownerPhone,
-            name: "Dueño",
-            role: "owner",
-          });
-        }
+    const shopDoc = await db.collection("shops").doc(shopId).get();
+    if (shopDoc.exists) {
+      const data = shopDoc.data();
+      // Priorities: 
+      // 1. Config ownerNotificationPhone (handled above)
+      // 2. Shop ownerNotificationPhone (new field)
+      // 3. Shop ownerPhone (legacy)
+
+      const notificationPhone = data?.ownerNotificationPhone || data?.ownerPhone || data?.contact?.ownerPhone;
+
+      if (notificationPhone) {
+        phones.push({
+          phone: notificationPhone,
+          name: "Dueño",
+          role: "owner",
+        });
       }
     }
 

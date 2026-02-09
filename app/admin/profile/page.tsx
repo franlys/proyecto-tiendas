@@ -20,6 +20,7 @@ import {
     LayoutDashboard,
     Palette,
     MessageCircle,
+    Bot
 } from "lucide-react";
 import {
     AuthProvider,
@@ -39,6 +40,7 @@ interface ShopProfile {
     email: string;
     address: string;
     city: string;
+    ownerNotificationPhone?: string;
     // Social media
     instagram: string;
     facebook: string;
@@ -98,6 +100,7 @@ function ProfileContent() {
         email: "",
         address: "",
         city: "",
+        ownerNotificationPhone: "",
         instagram: "",
         facebook: "",
         website: "",
@@ -129,6 +132,7 @@ function ProfileContent() {
                     name: prev.name || shop.name,
                     description: prev.description || shop.description || "",
                     phone: prev.phone || shop.contact?.phone || "",
+                    ownerNotificationPhone: prev.ownerNotificationPhone || shop.ownerNotificationPhone || "",
                 }));
             }
         }
@@ -157,7 +161,8 @@ function ProfileContent() {
                 email: profile.email,
                 address: profile.address,
                 city: profile.city
-            }
+            },
+            ownerNotificationPhone: profile.ownerNotificationPhone
         });
 
         setTimeout(() => {
@@ -241,8 +246,8 @@ function ProfileContent() {
                         <button
                             onClick={() => setActiveTab("general")}
                             className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "general"
-                                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                : "text-slate-400 hover:bg-white/5 hover:text-white"
                                 }`}
                         >
                             <div className="flex items-center gap-3">
@@ -253,8 +258,8 @@ function ProfileContent() {
                         <button
                             onClick={() => setActiveTab("contact")}
                             className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "contact"
-                                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                : "text-slate-400 hover:bg-white/5 hover:text-white"
                                 }`}
                         >
                             <div className="flex items-center gap-3">
@@ -265,8 +270,8 @@ function ProfileContent() {
                         <button
                             onClick={() => setActiveTab("schedule")}
                             className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "schedule"
-                                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                : "text-slate-400 hover:bg-white/5 hover:text-white"
                                 }`}
                         >
                             <div className="flex items-center gap-3">
@@ -277,8 +282,8 @@ function ProfileContent() {
                         <button
                             onClick={() => setActiveTab("social")}
                             className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "social"
-                                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                : "text-slate-400 hover:bg-white/5 hover:text-white"
                                 }`}
                         >
                             <div className="flex items-center gap-3">
@@ -289,8 +294,8 @@ function ProfileContent() {
                         <button
                             onClick={() => setActiveTab("theme")}
                             className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "theme"
-                                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                : "text-slate-400 hover:bg-white/5 hover:text-white"
                                 }`}
                         >
                             <div className="flex items-center gap-3">
@@ -427,6 +432,23 @@ function ProfileContent() {
                                             className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white placeholder-slate-500"
                                         />
                                     </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                                        <Bot className="w-4 h-4 inline mr-2 text-gold" />
+                                        Teléfono de Notificaciones (Privado)
+                                    </label>
+                                    <input
+                                        type="tel"
+                                        value={profile.ownerNotificationPhone}
+                                        onChange={(e) => setProfile(prev => ({ ...prev, ownerNotificationPhone: e.target.value }))}
+                                        placeholder="+1 234 567 8900"
+                                        className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white placeholder-slate-500"
+                                    />
+                                    <p className="text-xs text-slate-500 mt-1">
+                                        Este número recibirá alertas de nuevos pedidos y stock bajo. No será visible para los clientes.
+                                    </p>
                                 </div>
 
                                 <div>

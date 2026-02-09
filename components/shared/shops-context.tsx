@@ -57,8 +57,11 @@ export interface ManagedShop extends ShopConfig {
     monthlyRevenue: number;
     activeOrders: number;
     completedOrders: number;
+    completedOrders: number;
     totalCustomers: number;
   };
+  // Contact
+  ownerNotificationPhone?: string;
   // Features
   enabledFeatures?: FeatureId[];
   features?: FeatureId[]; // Legacy compatibility
@@ -178,6 +181,7 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
           theme: data.theme || DEFAULT_THEME,
           // Contact
           contact: data.contact || { phone: "" },
+          ownerNotificationPhone: data.ownerNotificationPhone,
           // Business type
           businessType: data.businessType || data.category || "retail",
           category: data.category || data.businessType || "retail",
