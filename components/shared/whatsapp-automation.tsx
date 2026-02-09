@@ -50,7 +50,7 @@ export function useWhatsAppConnection(shopSlug: string) {
         if (!instanceName) return;
 
         try {
-            const res = await fetch(`/api/whatsapp/status?instance=${instanceName}`);
+            const res = await fetch(`/api/whatsapp/status?instanceName=${instanceName}`);
             const data = await res.json();
 
             setIsConfigured(data.configured);
@@ -117,7 +117,7 @@ export function useWhatsAppConnection(shopSlug: string) {
 
     const getQRCode = async () => {
         try {
-            const res = await fetch(`/api/whatsapp/connect?instance=${instanceName}`);
+            const res = await fetch(`/api/whatsapp/connect?instanceName=${instanceName}`);
             const data = await res.json();
 
             if (data.base64 || data.qrcode?.base64) {
@@ -153,7 +153,7 @@ export function useWhatsAppConnection(shopSlug: string) {
             }
 
             try {
-                const res = await fetch(`/api/whatsapp/connect?instance=${instanceName}`);
+                const res = await fetch(`/api/whatsapp/connect?instanceName=${instanceName}`);
                 const data = await res.json();
 
                 if (data.base64 || data.qrcode?.base64) {
@@ -176,7 +176,7 @@ export function useWhatsAppConnection(shopSlug: string) {
 
     const disconnect = async () => {
         try {
-            await fetch(`/api/whatsapp/instances?instance=${instanceName}`, {
+            await fetch(`/api/whatsapp/instances?instanceName=${instanceName}`, {
                 method: "DELETE",
             });
             setStatus("disconnected");
@@ -594,7 +594,7 @@ export function WhatsAppAutomationPanel({
     useEffect(() => {
         const checkApiConfig = async () => {
             try {
-                const res = await fetch("/api/whatsapp/status?instance=test");
+                const res = await fetch("/api/whatsapp/status?instanceName=test");
                 if (res.status === 503) {
                     setApiStatus("not_configured");
                 } else {

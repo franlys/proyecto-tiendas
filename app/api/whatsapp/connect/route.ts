@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchQRCode, getConnectionState, isEvolutionConfigured } from "@/lib/evolution";
+import { fetchQRCode, getConnectionState, createInstance, isEvolutionConfigured } from "@/lib/evolution";
 
 /**
  * GET /api/whatsapp/connect?instanceName=xxx
  * Get QR code for WhatsApp connection
+ * Auto-creates instance if it doesn't exist
  */
 export async function GET(request: NextRequest) {
   if (!isEvolutionConfigured()) {
@@ -25,7 +26,35 @@ export async function GET(request: NextRequest) {
     }
 
     // First check connection state
-    const state = await getConnectionState(instanceName);
+    let state: { state: string };
+    try {
+      state = await getConnectionState(instanceName);
+    } catch (stateError: any) {
+      // Instance doesn't exist - create it
+      if (stateError.message?.includes("404") || stateError.message?.includes("does not exist")) {
+        console.log(`Instance ${instanceName} doesn't exist, creating...`);
+        try {
+          await createInstance(instanceName);
+          console.log(`Instance ${instanceName} created successfully`);
+          // After creation, try to get QR code directly
+          const qrData = await fetchQRCode(instanceName);
+          return NextResponse.json({
+            connected: false,
+            state: "close",
+            qrcode: qrData.base64,
+            base64: qrData.base64,
+            pairingCode: qrData.pairingCode,
+          });
+        } catch (createError: any) {
+          console.error("Error creating instance:", createError.message);
+          return NextResponse.json(
+            { error: `Failed to create instance: ${createError.message}` },
+            { status: 500 }
+          );
+        }
+      }
+      throw stateError;
+    }
 
     if (state.state === "open") {
       return NextResponse.json({
@@ -42,6 +71,7 @@ export async function GET(request: NextRequest) {
       connected: false,
       state: state.state,
       qrcode: qrData.base64,
+      base64: qrData.base64,
       pairingCode: qrData.pairingCode,
     });
   } catch (error: any) {

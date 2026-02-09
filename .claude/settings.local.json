@@ -46,7 +46,8 @@
       "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nFix second businessType derivation in updateShop function\n\nSeparate category and businessType updates instead of deriving\nbusinessType from category which caused type mismatch.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(cmd /c \"cd /d c:\\\\Users\\\\elmae\\\\proyecto-tiendas && npm run build\")",
       "Bash(firebase deploy:*)",
-      "Bash(npx firebase-tools deploy:*)"
+      "Bash(npx firebase-tools deploy:*)",
+      "Bash(vercel env:*)"
     ]
   }
 }
