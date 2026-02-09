@@ -21,6 +21,7 @@ import { OrdersProvider, useOrders, useAuth, ShopsProvider, useShops, AgencyProv
 import { DashboardKPIs, SalesChart, SubscriptionLock, SupportWidget, AgencyContactCard } from "@/components/admin";
 import { DailyReportCard } from "@/components/admin";
 import { DatabaseSeeder } from "@/components/admin/database-seeder";
+import { NotificationBell } from "@/components/admin/notification-bell";
 import { Button } from "@/components/ui";
 
 // Demo data generator for when there's no real data
@@ -358,6 +359,8 @@ function AdminDashboardWithSubscription() {
                   <span className="hidden sm:inline ml-1">{isSuperAdmin ? "Clientes" : "Billing"}</span>
                 </Button>
               </Link>
+              {/* Notification Bell */}
+              <NotificationBell />
               <Button variant="ghost" size="sm" onClick={handleLogout} className="px-2 sm:px-3">
                 <LogOut className="w-4 h-4" />
                 <span className="hidden sm:inline ml-1">Salir</span>
