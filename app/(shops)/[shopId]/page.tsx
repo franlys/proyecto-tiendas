@@ -39,7 +39,7 @@ export default function ShopHomePage() {
   // Load Data (Real or Mock)
   useEffect(() => {
     async function loadShopData() {
-      if (!shop?.id) return;
+      if (!shop?.id || !shop?.slug) return;
 
       setLoadingData(true);
 
@@ -54,26 +54,32 @@ export default function ShopHomePage() {
       }
 
       // 2. Fetch Real Data from Firestore
+      // IMPORTANT: Products/Services are stored using SLUG as the path (shops/{slug}/products)
+      // because that's how the inventory system saves them
       try {
         const { db } = await import("@/lib/firebase");
         const { collection, getDocs } = await import("firebase/firestore");
 
+        // Use slug for subcollection path (consistent with how inventory saves products)
+        const shopPath = shop.slug;
+
         // Fetch Services
-        const servicesRef = collection(db, "shops", shop.id, "services");
+        const servicesRef = collection(db, "shops", shopPath, "services");
         const servicesSnap = await getDocs(servicesRef);
         const servicesData = servicesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Service));
         setServices(servicesData);
 
         // Fetch Products
-        const productsRef = collection(db, "shops", shop.id, "products");
+        const productsRef = collection(db, "shops", shopPath, "products");
         const productsSnap = await getDocs(productsRef);
         const productsData = productsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
         setProducts(productsData);
 
         console.log("✅ [DEBUG] Real Data Fetched:", {
+          shopPath,
           servicesCount: servicesData.length,
           productsCount: productsData.length,
-          services: servicesData,
+          products: productsData,
         });
 
       } catch (error) {
