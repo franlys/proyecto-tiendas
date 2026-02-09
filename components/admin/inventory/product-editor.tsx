@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { Product, ProductVariant, ProductCategory, PRODUCT_CATEGORY_LABELS } from "@/lib/constants";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, Trash2 } from "lucide-react";
+import { X, Plus, Trash2, Tag } from "lucide-react";
 import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
+import { db } from "@/lib/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 interface ProductEditorProps {
     product?: Product; // If null, creating new
@@ -14,33 +16,113 @@ interface ProductEditorProps {
     shopId: string; // Required for image uploads
 }
 
-const EMPTY_PRODUCT: Product = {
+// Extended product with custom category support
+interface ExtendedProduct extends Omit<Product, 'category'> {
+    category: ProductCategory | string;
+    customCategory?: string; // The display name for custom categories
+}
+
+const EMPTY_PRODUCT: ExtendedProduct = {
     id: "",
     name: "",
     description: "",
     price: 0,
     stock: 0,
     lowStockThreshold: 5,
-    category: "accesorios",
+    category: "otros",
     image: "https://via.placeholder.com/400",
     variants: [],
 };
 
 export function ProductEditor({ product, isOpen, onClose, onSave, shopId }: ProductEditorProps) {
-    const [formData, setFormData] = useState<Product>(EMPTY_PRODUCT);
+    const [formData, setFormData] = useState<ExtendedProduct>(EMPTY_PRODUCT);
     const [hasVariants, setHasVariants] = useState(false);
+    const [customCategories, setCustomCategories] = useState<string[]>([]);
+    const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState("");
+
+    // Load custom categories for this shop
+    useEffect(() => {
+        async function loadCustomCategories() {
+            if (!shopId) return;
+            try {
+                const docRef = doc(db, "shops", shopId, "settings", "categories");
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    setCustomCategories(data.customCategories || []);
+                }
+            } catch (error) {
+                console.error("Error loading custom categories:", error);
+            }
+        }
+        if (isOpen) {
+            loadCustomCategories();
+        }
+    }, [shopId, isOpen]);
 
     useEffect(() => {
         if (isOpen) {
             if (product) {
-                setFormData(product);
+                setFormData(product as ExtendedProduct);
                 setHasVariants(!!(product.variants && product.variants.length > 0));
+                // Check if product has a custom category
+                const isCustom = !Object.keys(PRODUCT_CATEGORY_LABELS).includes(product.category);
+                if (isCustom) {
+                    setShowNewCategoryInput(false); // Already has custom, just show it in dropdown
+                }
             } else {
                 setFormData({ ...EMPTY_PRODUCT, id: `new-${Date.now()}` });
                 setHasVariants(false);
+                setShowNewCategoryInput(false);
+                setNewCategoryName("");
             }
         }
     }, [isOpen, product]);
+
+    // Save new custom category to Firestore
+    const saveCustomCategory = async (categoryName: string) => {
+        if (!shopId || !categoryName.trim()) return;
+
+        const normalizedName = categoryName.trim();
+
+        // Don't add duplicates
+        if (customCategories.includes(normalizedName)) return;
+
+        const newCategories = [...customCategories, normalizedName];
+
+        try {
+            const docRef = doc(db, "shops", shopId, "settings", "categories");
+            await setDoc(docRef, { customCategories: newCategories }, { merge: true });
+            setCustomCategories(newCategories);
+        } catch (error) {
+            console.error("Error saving custom category:", error);
+        }
+    };
+
+    const handleCategoryChange = (value: string) => {
+        if (value === "__new__") {
+            setShowNewCategoryInput(true);
+            setFormData({ ...formData, category: "otros" });
+        } else {
+            setShowNewCategoryInput(false);
+            setFormData({ ...formData, category: value, customCategory: undefined });
+        }
+    };
+
+    const handleAddCustomCategory = () => {
+        if (newCategoryName.trim()) {
+            const categoryKey = newCategoryName.trim().toLowerCase().replace(/\s+/g, '-');
+            saveCustomCategory(newCategoryName.trim());
+            setFormData({
+                ...formData,
+                category: categoryKey,
+                customCategory: newCategoryName.trim()
+            });
+            setShowNewCategoryInput(false);
+            setNewCategoryName("");
+        }
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -49,7 +131,7 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId }: Prod
             ...formData,
             variants: hasVariants ? formData.variants : [],
         };
-        onSave(cleanData);
+        onSave(cleanData as Product);
     };
 
     const addVariant = () => {
@@ -76,6 +158,23 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId }: Prod
         const newVariants = [...(formData.variants || [])];
         newVariants.splice(index, 1);
         setFormData({ ...formData, variants: newVariants });
+    };
+
+    // Get display name for a category
+    const getCategoryLabel = (category: string): string => {
+        // Check if it's a predefined category
+        if (PRODUCT_CATEGORY_LABELS[category as ProductCategory]) {
+            return PRODUCT_CATEGORY_LABELS[category as ProductCategory];
+        }
+        // Check if it's in custom categories or has customCategory field
+        if (formData.customCategory) {
+            return formData.customCategory;
+        }
+        // Try to find in custom categories list
+        const customCat = customCategories.find(c =>
+            c.toLowerCase().replace(/\s+/g, '-') === category
+        );
+        return customCat || category;
     };
 
     return (
@@ -123,7 +222,7 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId }: Prod
                                             value={formData.name}
                                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                             className="w-full bg-zinc-800 border-zinc-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 outline-none"
-                                            placeholder="Ej. Funda iPhone 15 Pro"
+                                            placeholder="Ej. Ramillete de Rosas"
                                         />
                                     </div>
 
@@ -139,17 +238,72 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId }: Prod
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div>
+                                        <div className="space-y-2">
                                             <label className="block text-sm font-medium text-zinc-400 mb-1">Categoría</label>
                                             <select
-                                                value={formData.category}
-                                                onChange={(e) => setFormData({ ...formData, category: e.target.value as ProductCategory })}
+                                                value={showNewCategoryInput ? "__new__" : formData.category}
+                                                onChange={(e) => handleCategoryChange(e.target.value)}
                                                 className="w-full bg-zinc-800 border-zinc-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 outline-none"
                                             >
-                                                {Object.entries(PRODUCT_CATEGORY_LABELS).map(([key, label]) => (
-                                                    <option key={key} value={key}>{label}</option>
-                                                ))}
+                                                {/* Predefined categories */}
+                                                <optgroup label="Categorías Predefinidas">
+                                                    {Object.entries(PRODUCT_CATEGORY_LABELS).map(([key, label]) => (
+                                                        <option key={key} value={key}>{label}</option>
+                                                    ))}
+                                                </optgroup>
+
+                                                {/* Custom categories for this shop */}
+                                                {customCategories.length > 0 && (
+                                                    <optgroup label="Mis Categorías">
+                                                        {customCategories.map((cat) => (
+                                                            <option
+                                                                key={cat}
+                                                                value={cat.toLowerCase().replace(/\s+/g, '-')}
+                                                            >
+                                                                {cat}
+                                                            </option>
+                                                        ))}
+                                                    </optgroup>
+                                                )}
+
+                                                {/* Option to add new */}
+                                                <optgroup label="─────────">
+                                                    <option value="__new__">+ Crear nueva categoría...</option>
+                                                </optgroup>
                                             </select>
+
+                                            {/* New category input */}
+                                            {showNewCategoryInput && (
+                                                <div className="flex gap-2 mt-2">
+                                                    <div className="relative flex-1">
+                                                        <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                                                        <input
+                                                            type="text"
+                                                            value={newCategoryName}
+                                                            onChange={(e) => setNewCategoryName(e.target.value)}
+                                                            placeholder="Ej. Arreglos Florales"
+                                                            className="w-full bg-zinc-800 border border-indigo-500/50 rounded-lg pl-9 pr-4 py-2 text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                                            autoFocus
+                                                        />
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleAddCustomCategory}
+                                                        disabled={!newCategoryName.trim()}
+                                                        className="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white rounded-lg text-sm font-medium transition-colors"
+                                                    >
+                                                        Agregar
+                                                    </button>
+                                                </div>
+                                            )}
+
+                                            {/* Show current custom category if selected */}
+                                            {!showNewCategoryInput && formData.customCategory && (
+                                                <p className="text-xs text-indigo-400 flex items-center gap-1">
+                                                    <Tag className="w-3 h-3" />
+                                                    Categoría personalizada: {formData.customCategory}
+                                                </p>
+                                            )}
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-zinc-400 mb-1">Imagen del Producto</label>

@@ -11,6 +11,24 @@ interface ProductListProps {
     onUpdateStock: (productId: string, newStock: number, variantId?: string) => void;
 }
 
+// Helper to get category display name (handles custom categories)
+function getCategoryLabel(product: Product): string {
+    // Check if it's a predefined category
+    const predefinedLabel = PRODUCT_CATEGORY_LABELS[product.category as ProductCategory];
+    if (predefinedLabel) {
+        return predefinedLabel;
+    }
+    // Check for customCategory field
+    if ((product as any).customCategory) {
+        return (product as any).customCategory;
+    }
+    // Fallback: capitalize the category key
+    return product.category
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
 export function ProductList({ products, onEdit, onDelete, onUpdateStock }: ProductListProps) {
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -41,7 +59,7 @@ export function ProductList({ products, onEdit, onDelete, onUpdateStock }: Produ
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                                 <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-800 text-zinc-400 border border-zinc-700">
-                                    {PRODUCT_CATEGORY_LABELS[product.category]}
+                                    {getCategoryLabel(product)}
                                 </span>
                                 {product.lowStockThreshold >= (product.stock || 0) && (
                                     <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse">
