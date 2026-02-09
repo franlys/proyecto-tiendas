@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
-import { useClients, ClientsProvider, OrdersProvider } from "@/components/shared";
+import { useClients, ClientsProvider, SalesOrdersProvider } from "@/components/shared";
 
 // Customer order type for display
 interface CustomerOrder {
@@ -161,13 +161,13 @@ function ProfilePage() {
           phone: found.phone,
           stamps: stamps === 0 && found.totalVisits > 0 ? 10 : stamps,
           totalVisits: found.totalVisits,
-          favoriteShop: "Mi Tienda", // Should calculate from orders
+          favoriteShop: "Mi Tienda",
           orders: found.orders.map(o => ({
             id: o.id,
-            shopName: o.shopName,
-            items: o.items.map(i => i.name),
+            shopName: "Mi Tienda",
+            items: o.items.map(i => i.productName),
             total: o.total,
-            date: o.date
+            date: o.createdAt
           }))
         });
       } else {
@@ -456,10 +456,10 @@ function ProfilePage() {
 // Wrapper to provide contexts since this is a standalone page
 export default function WrappedProfilePage() {
   return (
-    <OrdersProvider>
+    <SalesOrdersProvider shopId="default">
       <ClientsProvider orders={[]}>
         <ProfilePage />
       </ClientsProvider>
-    </OrdersProvider>
+    </SalesOrdersProvider>
   );
 }
