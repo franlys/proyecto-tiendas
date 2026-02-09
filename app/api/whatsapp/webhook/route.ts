@@ -90,7 +90,10 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Webhook] Event: ${event} from instance: ${instance}`);
 
-    switch (event) {
+    // Normalize event name (Evolution API can send both formats)
+    const normalizedEvent = event.toUpperCase().replace(/\./g, "_");
+
+    switch (normalizedEvent) {
       case "MESSAGES_UPSERT":
         await handleNewMessage(instance, data);
         break;
@@ -106,7 +109,7 @@ export async function POST(request: NextRequest) {
         break;
 
       default:
-        console.log(`[${instance}] Unhandled event: ${event}`);
+        console.log(`[${instance}] Unhandled event: ${event} (normalized: ${normalizedEvent})`);
     }
 
     return NextResponse.json({ success: true });
