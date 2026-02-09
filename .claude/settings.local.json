@@ -47,7 +47,8 @@
       "Bash(cmd /c \"cd /d c:\\\\Users\\\\elmae\\\\proyecto-tiendas && npm run build\")",
       "Bash(firebase deploy:*)",
       "Bash(npx firebase-tools deploy:*)",
-      "Bash(vercel env:*)"
+      "Bash(vercel env:*)",
+      "mcp__claude_ai_Vercel__get_runtime_logs"
     ]
   }
 }
