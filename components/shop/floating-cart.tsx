@@ -4,7 +4,7 @@ import { useState } from "react";
 import { MessageCircle, X, ShoppingBag, Calendar } from "lucide-react";
 import { useCart, useShop, useOrders, useShopConfig } from "@/components/shared";
 import { AppointmentModal } from "./appointment-modal";
-import { cn } from "@/lib/utils";
+import { cn, formatPhoneForWhatsApp } from "@/lib/utils";
 
 export function FloatingCart() {
   const {
@@ -111,9 +111,8 @@ export function FloatingCart() {
 
     message += `💰 *Total: $${totalPrice.toLocaleString()}*`;
 
-    // Clean phone number
-    const cleanPhone = shop.contact.phone.replace(/\D/g, "");
-
+    // Format phone number for WhatsApp (adds country code if needed)
+    const cleanPhone = formatPhoneForWhatsApp(shop.contact.phone);
     const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
 

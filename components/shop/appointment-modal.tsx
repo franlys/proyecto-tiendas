@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useCart, type ServiceCartItem } from "@/components/shared/cart-context";
-import { cn } from "@/lib/utils";
+import { cn, formatPhoneForWhatsApp } from "@/lib/utils";
 
 interface AppointmentModalProps {
   isOpen: boolean;
@@ -113,9 +113,9 @@ ${notes ? `\n📝 *Notas:* ${notes}` : ""}
 
 ¡Gracias!`;
 
-    // Open WhatsApp
+    // Open WhatsApp (formats phone with country code if needed)
+    const cleanPhone = formatPhoneForWhatsApp(shopPhone);
     const encodedMessage = encodeURIComponent(message);
-    const cleanPhone = shopPhone.replace(/\D/g, "");
     window.open(`https://wa.me/${cleanPhone}?text=${encodedMessage}`, "_blank");
 
     // Clear cart and close
