@@ -39,7 +39,7 @@ function getCategoryDisplayInfo(product: ExtendedProduct): CategoryDisplayInfo {
   }
 
   // It's a custom category
-  let label = product.category;
+  let label: string = product.category;
 
   // Check for customCategory field
   if (product.customCategory) {
