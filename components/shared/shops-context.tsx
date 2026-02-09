@@ -57,7 +57,6 @@ export interface ManagedShop extends ShopConfig {
     monthlyRevenue: number;
     activeOrders: number;
     completedOrders: number;
-    completedOrders: number;
     totalCustomers: number;
   };
   // Contact
