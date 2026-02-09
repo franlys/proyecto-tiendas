@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkOrderAssignmentResponse } from "@/lib/handlers/order-assignment.handler";
 import { checkBookingConfirmationResponse } from "@/lib/handlers/booking-confirmation.handler";
 import { checkRentalConfirmationResponse } from "@/lib/handlers/rental-confirmation.handler";
+import { processWhatsAppOrder } from "@/lib/handlers/whatsapp-order.handler";
 import { sendTextMessage } from "@/lib/evolution";
 import {
     getConversationContext,
@@ -51,8 +52,11 @@ interface WebhookPayload {
 const recentContacts = new Map<string, number>();
 
 // Helper to get cooldown in milliseconds from config
+// Returns 0 if cooldown is disabled (cooldownMinutes = 0)
 const getCooldownMs = (config: WhatsAppAutoReplyConfig) => {
-  return (config.cooldownMinutes || 60) * 60 * 1000;
+  const minutes = config.cooldownMinutes ?? 60;
+  if (minutes === 0) return 0; // No cooldown - always respond
+  return minutes * 60 * 1000;
 };
 
 // Check if current time is within business hours
@@ -221,12 +225,32 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
     console.error(`[${instance}] Error checking rental confirmation:`, error);
   }
 
-  // ============================================================
-  // PASO 4: Verificar contexto de conversación
-  // ============================================================
-
   // Extraer shopId del nombre de instancia (shop_xxx -> xxx)
   const shopId = instance.replace("shop_", "").replace(/_/g, "-");
+
+  // ============================================================
+  // PASO 4: Detectar si es un pedido del carrito
+  // ============================================================
+  try {
+    const orderResult = await processWhatsAppOrder(
+      instance,
+      shopId,
+      text,
+      phone,
+      pushName
+    );
+
+    if (orderResult.isOrder) {
+      console.log(`[${instance}] Order detected and processed: ${orderResult.orderNumber}`);
+      return; // El handler ya envió las confirmaciones
+    }
+  } catch (error) {
+    console.error(`[${instance}] Error processing order:`, error);
+  }
+
+  // ============================================================
+  // PASO 5: Verificar contexto de conversación
+  // ============================================================
 
   try {
     const context = await getConversationContext(shopId, phone);
@@ -266,12 +290,12 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
     return;
   }
 
-  // Check auto-reply cooldown
+  // Check auto-reply cooldown (skip if cooldown is 0 = always respond)
   const lastContact = recentContacts.get(phone);
   const now = Date.now();
   const cooldownMs = getCooldownMs(config);
 
-  if (lastContact && now - lastContact < cooldownMs) {
+  if (cooldownMs > 0 && lastContact && now - lastContact < cooldownMs) {
     console.log(`[${instance}] Skipping auto-reply - cooldown active for ${phone}`);
     return;
   }

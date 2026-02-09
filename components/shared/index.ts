@@ -109,3 +109,10 @@ export {
 } from "./agency-context";
 // Background Gallery for Shop Configuration
 export { BackgroundGallery } from "./background-gallery";
+// Real-time Notifications
+export {
+  NotificationsProvider,
+  useNotifications,
+  useNotificationsOptional,
+  type AppNotification,
+} from "./notifications-context";

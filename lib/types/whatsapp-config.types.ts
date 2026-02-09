@@ -30,7 +30,12 @@ export interface WhatsAppAutoReplyConfig {
     timezone: string;            // "America/Santo_Domingo"
 
     // Cooldown entre mensajes automáticos (minutos)
+    // 0 = sin cooldown (responder siempre)
     cooldownMinutes: number;
+
+    // Notificaciones de pedidos
+    ownerNotificationPhone?: string;  // Teléfono personal del dueño para notificaciones
+    notifyOwnerOnOrder?: boolean;     // Enviar notificación WhatsApp al dueño
 
     // Metadata
     updatedAt?: string;

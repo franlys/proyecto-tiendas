@@ -212,9 +212,10 @@ import {
     Calendar,
     ShoppingBag,
     HelpCircle,
-    Edit3,
     ChevronDown,
     ChevronUp,
+    Bell,
+    Phone,
 } from "lucide-react";
 
 // Interface matching the server-side WhatsAppAutoReplyConfig
@@ -260,7 +261,9 @@ function AutoReplyConfig({ shopSlug }: { shopSlug: string }) {
         businessHoursStart: "09:00",
         businessHoursEnd: "18:00",
         timezone: "America/Santo_Domingo",
-        cooldownMinutes: 60,
+        cooldownMinutes: 0, // Default: responder siempre
+        ownerNotificationPhone: "",
+        notifyOwnerOnOrder: true,
     });
     const [shopInfo, setShopInfo] = useState<ShopInfo | null>(null);
     const [saved, setSaved] = useState(false);
@@ -511,6 +514,39 @@ function AutoReplyConfig({ shopSlug }: { shopSlug: string }) {
                             )}
                         </div>
 
+                        {/* Owner Notifications */}
+                        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                            <label className="flex items-center gap-3 cursor-pointer mb-3">
+                                <input
+                                    type="checkbox"
+                                    checked={config.notifyOwnerOnOrder ?? true}
+                                    onChange={(e) => setConfig({ ...config, notifyOwnerOnOrder: e.target.checked })}
+                                    className="w-4 h-4 rounded border-white/20 bg-white/5 text-green-500 focus:ring-green-500/50"
+                                />
+                                <Bell className="w-4 h-4 text-green-400" />
+                                <span className="text-white text-sm">Notificar pedidos por WhatsApp</span>
+                            </label>
+
+                            {config.notifyOwnerOnOrder && (
+                                <div>
+                                    <label className="block text-xs text-slate-400 mb-1">
+                                        <Phone className="w-3 h-3 inline mr-1" />
+                                        Teléfono personal del dueño
+                                    </label>
+                                    <input
+                                        type="tel"
+                                        value={config.ownerNotificationPhone || ""}
+                                        onChange={(e) => setConfig({ ...config, ownerNotificationPhone: e.target.value })}
+                                        className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-purple-500/50"
+                                        placeholder="Ej: 8091234567"
+                                    />
+                                    <p className="text-xs text-slate-500 mt-1">
+                                        Recibirás notificaciones de nuevos pedidos en este número
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
                         {/* Cooldown */}
                         <div className="p-4 rounded-xl bg-white/5 border border-white/10">
                             <label className="block text-sm text-slate-300 mb-2">
@@ -521,6 +557,9 @@ function AutoReplyConfig({ shopSlug }: { shopSlug: string }) {
                                 onChange={(e) => setConfig({ ...config, cooldownMinutes: Number(e.target.value) })}
                                 className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-purple-500/50"
                             >
+                                <option value={0}>🔄 Sin cooldown (responder siempre)</option>
+                                <option value={1}>1 minuto</option>
+                                <option value={5}>5 minutos</option>
                                 <option value={15}>15 minutos</option>
                                 <option value={30}>30 minutos</option>
                                 <option value={60}>1 hora</option>
@@ -528,7 +567,9 @@ function AutoReplyConfig({ shopSlug }: { shopSlug: string }) {
                                 <option value={1440}>24 horas</option>
                             </select>
                             <p className="text-xs text-slate-500 mt-1">
-                                Evita enviar múltiples mensajes automáticos al mismo contacto
+                                {config.cooldownMinutes === 0
+                                    ? "⚠️ Responderá a cada mensaje (puede ser spam)"
+                                    : "Evita enviar múltiples mensajes automáticos al mismo contacto"}
                             </p>
                         </div>
                     </div>
