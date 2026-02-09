@@ -1,0 +1,75 @@
+/**
+ * Configuración de WhatsApp para cada tienda
+ * Almacenado en: shops/{shopId}/whatsapp_bot/config
+ */
+
+export interface WhatsAppAutoReplyConfig {
+    // Estado general
+    enabled: boolean;
+
+    // Mensaje de bienvenida personalizado
+    welcomeMessage: string;
+
+    // Mensaje cuando el negocio está cerrado
+    offlineMessage?: string;
+
+    // Opciones del menú principal (el dueño puede personalizar cuáles mostrar)
+    showCatalogOption: boolean;
+    showBookingOption: boolean;  // Solo para negocios de servicios
+    showQuestionOption: boolean;
+
+    // Textos personalizables para cada opción
+    catalogOptionText: string;
+    bookingOptionText: string;
+    questionOptionText: string;
+
+    // Horario de atención (opcional)
+    businessHoursEnabled: boolean;
+    businessHoursStart: string;  // "09:00"
+    businessHoursEnd: string;    // "18:00"
+    timezone: string;            // "America/Santo_Domingo"
+
+    // Cooldown entre mensajes automáticos (minutos)
+    cooldownMinutes: number;
+
+    // Metadata
+    updatedAt?: string;
+    updatedBy?: string;
+}
+
+// Configuración por defecto según tipo de negocio
+export function getDefaultWhatsAppConfig(businessType: string): WhatsAppAutoReplyConfig {
+    const isServiceBusiness = ["beauty", "repair", "health", "education"].includes(businessType);
+
+    return {
+        enabled: true,
+        welcomeMessage: "¡Hola! 👋 Gracias por contactarnos.\n\n¿En qué podemos ayudarte?",
+        offlineMessage: "Gracias por tu mensaje. En este momento estamos fuera de horario, te responderemos pronto.",
+
+        showCatalogOption: true,
+        showBookingOption: isServiceBusiness,
+        showQuestionOption: true,
+
+        catalogOptionText: "📋 *CATÁLOGO* - Ver productos",
+        bookingOptionText: "📅 *CITA* - Agendar una cita",
+        questionOptionText: "❓ *PREGUNTA* - Escribe tu consulta",
+
+        businessHoursEnabled: false,
+        businessHoursStart: "09:00",
+        businessHoursEnd: "18:00",
+        timezone: "America/Santo_Domingo",
+
+        cooldownMinutes: 60,
+    };
+}
+
+// Interfaz para la información básica de la tienda
+export interface ShopBasicInfo {
+    id: string;
+    slug: string;
+    name: string;
+    businessType: string;
+    contact?: {
+        phone?: string;
+    };
+}

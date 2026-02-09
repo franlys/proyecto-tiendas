@@ -207,88 +207,129 @@ export function useWhatsAppConnection(shopSlug: string) {
     };
 }
 
-import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { useShops } from "@/components/shared";
+import {
+    Calendar,
+    ShoppingBag,
+    HelpCircle,
+    Edit3,
+    ChevronDown,
+    ChevronUp,
+} from "lucide-react";
 
-// ... existing imports ...
-
-// Connection Status and Hook (useWhatsAppConnection) remains the same ...
-
-// Components Logic
-
-interface AutoReplySettings {
+// Interface matching the server-side WhatsAppAutoReplyConfig
+interface WhatsAppAutoReplyConfig {
     enabled: boolean;
     welcomeMessage: string;
-    includeShopLink: boolean;
-    alwaysSendWelcome: boolean;
-    businessHoursOnly: boolean;
-    startHour: string;
-    endHour: string;
+    offlineMessage?: string;
+    showCatalogOption: boolean;
+    showBookingOption: boolean;
+    showQuestionOption: boolean;
+    catalogOptionText: string;
+    bookingOptionText: string;
+    questionOptionText: string;
+    businessHoursEnabled: boolean;
+    businessHoursStart: string;
+    businessHoursEnd: string;
+    timezone: string;
+    cooldownMinutes: number;
+}
+
+interface ShopInfo {
+    id: string;
+    slug: string;
+    name: string;
+    businessType: string;
 }
 
 function AutoReplyConfig({ shopSlug }: { shopSlug: string }) {
     const { getShop } = useShops();
-    // Resolve shop to get the real ID (slug might be passed)
     const shop = getShop(shopSlug);
 
-    const [settings, setSettings] = useState<AutoReplySettings>({
+    const [config, setConfig] = useState<WhatsAppAutoReplyConfig>({
         enabled: true,
-        welcomeMessage: "¡Hola! 👋 Gracias por contactarnos.\n\nVisita nuestra tienda para ver todos nuestros productos y servicios.",
-        includeShopLink: true,
-        alwaysSendWelcome: true,
-        businessHoursOnly: false,
-        startHour: "09:00",
-        endHour: "18:00",
+        welcomeMessage: "Gracias por contactarnos.\n\n¿En qué podemos ayudarte?",
+        offlineMessage: "Gracias por tu mensaje. En este momento estamos fuera de horario, te responderemos pronto.",
+        showCatalogOption: true,
+        showBookingOption: false,
+        showQuestionOption: true,
+        catalogOptionText: "📋 *CATÁLOGO* - Ver productos",
+        bookingOptionText: "📅 *CITA* - Agendar una cita",
+        questionOptionText: "❓ *PREGUNTA* - Escribe tu consulta",
+        businessHoursEnabled: false,
+        businessHoursStart: "09:00",
+        businessHoursEnd: "18:00",
+        timezone: "America/Santo_Domingo",
+        cooldownMinutes: 60,
     });
+    const [shopInfo, setShopInfo] = useState<ShopInfo | null>(null);
     const [saved, setSaved] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [loadingConfig, setLoadingConfig] = useState(true);
+    const [showAdvanced, setShowAdvanced] = useState(false);
 
-    // Load from Firestore
+    // Load config from API
     useEffect(() => {
-        if (!shop?.id) return;
+        if (!shop?.id && !shopSlug) return;
 
-        const loadSettings = async () => {
+        const loadConfig = async () => {
+            setLoadingConfig(true);
             try {
-                const shopRef = doc(db, "shops", shop.id);
-                const snap = await getDoc(shopRef);
+                const res = await fetch(`/api/shops/${shop?.slug || shopSlug}/whatsapp-config`);
+                const data = await res.json();
 
-                if (snap.exists()) {
-                    const data = snap.data();
-                    if (data.whatsappConfig) {
-                        setSettings(prev => ({
-                            ...prev,
-                            ...data.whatsappConfig
-                        }));
-                    }
+                if (data.success && data.config) {
+                    setConfig(data.config);
+                }
+                if (data.shop) {
+                    setShopInfo(data.shop);
                 }
             } catch (error) {
                 console.error("Error loading WhatsApp config:", error);
+            } finally {
+                setLoadingConfig(false);
             }
         };
 
-        loadSettings();
-    }, [shop?.id]);
+        loadConfig();
+    }, [shop?.id, shop?.slug, shopSlug]);
 
     const handleSave = async () => {
-        if (!shop?.id) return;
+        if (!shop?.slug && !shopSlug) return;
 
         setIsLoading(true);
         try {
-            const shopRef = doc(db, "shops", shop.id);
-            // Save to a specific field 'whatsappConfig'
-            await setDoc(shopRef, {
-                whatsappConfig: settings
-            }, { merge: true });
+            const res = await fetch(`/api/shops/${shop?.slug || shopSlug}/whatsapp-config`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(config),
+            });
 
-            setSaved(true);
-            setTimeout(() => setSaved(false), 2000);
+            if (res.ok) {
+                setSaved(true);
+                setTimeout(() => setSaved(false), 2000);
+            }
         } catch (error) {
             console.error("Error saving WhatsApp config:", error);
         } finally {
             setIsLoading(false);
         }
     };
+
+    // Determine if shop is service-based (to suggest booking option)
+    const isServiceBusiness = shopInfo?.businessType &&
+        ["beauty", "repair", "health", "education", "services"].includes(shopInfo.businessType);
+
+    if (loadingConfig) {
+        return (
+            <div className="glass-panel rounded-2xl p-6 border border-white/10">
+                <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 text-purple-400 animate-spin" />
+                    <span className="ml-2 text-slate-400">Cargando configuración...</span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="glass-panel rounded-2xl p-6 border border-white/10">
@@ -299,101 +340,196 @@ function AutoReplyConfig({ shopSlug }: { shopSlug: string }) {
                     </div>
                     <div>
                         <h2 className="text-lg font-semibold text-white">Auto-Respuesta</h2>
-                        <p className="text-sm text-slate-400">Mensaje automático para nuevos contactos</p>
+                        <p className="text-sm text-slate-400">
+                            {shopInfo?.businessType ? `Tipo: ${shopInfo.businessType}` : "Mensaje automático"}
+                        </p>
                     </div>
                 </div>
-                {/* Checkbox for Enable/Disable */}
                 <label className="relative inline-flex items-center cursor-pointer">
                     <input
                         type="checkbox"
-                        checked={settings.enabled}
-                        onChange={(e) => setSettings({ ...settings, enabled: e.target.checked })}
+                        checked={config.enabled}
+                        onChange={(e) => setConfig({ ...config, enabled: e.target.checked })}
                         className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
                 </label>
             </div>
 
-            <div className={cn("space-y-4", !settings.enabled && "opacity-50 pointer-events-none")}>
+            <div className={cn("space-y-4", !config.enabled && "opacity-50 pointer-events-none")}>
+                {/* Welcome Message */}
                 <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2">
                         Mensaje de Bienvenida
                     </label>
                     <textarea
-                        rows={4}
-                        value={settings.welcomeMessage}
-                        onChange={(e) => setSettings({ ...settings, welcomeMessage: e.target.value })}
+                        rows={3}
+                        value={config.welcomeMessage}
+                        onChange={(e) => setConfig({ ...config, welcomeMessage: e.target.value })}
                         className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/50 resize-none"
                         placeholder="Escribe tu mensaje de bienvenida..."
                     />
-                    <p className="text-xs text-slate-500 mt-1">
-                        Tip: Usa emojis para hacer el mensaje más amigable 👋
-                    </p>
                 </div>
 
-                <div className="space-y-3">
-                    <label className="flex items-center gap-3 p-3 rounded-xl bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
-                        <input
-                            type="checkbox"
-                            checked={settings.includeShopLink}
-                            onChange={(e) => setSettings({ ...settings, includeShopLink: e.target.checked })}
-                            className="w-4 h-4 rounded border-white/20 bg-white/5 text-green-500 focus:ring-green-500/50"
-                        />
-                        <div className="flex-1">
-                            <p className="text-white text-sm">Incluir link de la tienda</p>
-                            <p className="text-xs text-slate-500">Agrega automáticamente el link a tu tienda</p>
-                        </div>
-                        <LinkIcon className="w-4 h-4 text-slate-400" />
+                {/* Menu Options */}
+                <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-3">
+                        Opciones del Menú
                     </label>
+                    <div className="space-y-3">
+                        {/* Catalog Option */}
+                        <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                            <label className="flex items-center gap-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={config.showCatalogOption}
+                                    onChange={(e) => setConfig({ ...config, showCatalogOption: e.target.checked })}
+                                    className="w-4 h-4 rounded border-white/20 bg-white/5 text-green-500 focus:ring-green-500/50"
+                                />
+                                <ShoppingBag className="w-4 h-4 text-blue-400" />
+                                <span className="text-white text-sm flex-1">Ver Catálogo</span>
+                            </label>
+                            {config.showCatalogOption && (
+                                <input
+                                    type="text"
+                                    value={config.catalogOptionText}
+                                    onChange={(e) => setConfig({ ...config, catalogOptionText: e.target.value })}
+                                    className="w-full mt-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:border-purple-500/50"
+                                    placeholder="Texto del botón..."
+                                />
+                            )}
+                        </div>
 
-                    <label className="flex items-center gap-3 p-3 rounded-xl bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
-                        <input
-                            type="checkbox"
-                            checked={settings.alwaysSendWelcome}
-                            onChange={(e) => setSettings({ ...settings, alwaysSendWelcome: e.target.checked })}
-                            className="w-4 h-4 rounded border-white/20 bg-white/5 text-green-500 focus:ring-green-500/50"
-                        />
-                        <div className="flex-1">
-                            <p className="text-white text-sm">Responder siempre (Modo Portal)</p>
-                            <p className="text-xs text-slate-500">Envía el mensaje en cada interacción</p>
+                        {/* Booking Option */}
+                        <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                            <label className="flex items-center gap-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={config.showBookingOption}
+                                    onChange={(e) => setConfig({ ...config, showBookingOption: e.target.checked })}
+                                    className="w-4 h-4 rounded border-white/20 bg-white/5 text-green-500 focus:ring-green-500/50"
+                                />
+                                <Calendar className="w-4 h-4 text-purple-400" />
+                                <span className="text-white text-sm flex-1">Agendar Cita</span>
+                                {!isServiceBusiness && config.showBookingOption && (
+                                    <span className="text-xs text-amber-400">⚠️ No es negocio de servicios</span>
+                                )}
+                            </label>
+                            {config.showBookingOption && (
+                                <input
+                                    type="text"
+                                    value={config.bookingOptionText}
+                                    onChange={(e) => setConfig({ ...config, bookingOptionText: e.target.value })}
+                                    className="w-full mt-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:border-purple-500/50"
+                                    placeholder="Texto del botón..."
+                                />
+                            )}
                         </div>
-                        <RotateCcw className="w-4 h-4 text-slate-400" />
-                    </label>
 
-                    <label className="flex items-center gap-3 p-3 rounded-xl bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
-                        <input
-                            type="checkbox"
-                            checked={settings.businessHoursOnly}
-                            onChange={(e) => setSettings({ ...settings, businessHoursOnly: e.target.checked })}
-                            className="w-4 h-4 rounded border-white/20 bg-white/5 text-green-500 focus:ring-green-500/50"
-                        />
-                        <div className="flex-1">
-                            <p className="text-white text-sm">Solo en horario de atención</p>
-                            <p className="text-xs text-slate-500">Responder solo durante horas laborales</p>
+                        {/* Question Option */}
+                        <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                            <label className="flex items-center gap-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={config.showQuestionOption}
+                                    onChange={(e) => setConfig({ ...config, showQuestionOption: e.target.checked })}
+                                    className="w-4 h-4 rounded border-white/20 bg-white/5 text-green-500 focus:ring-green-500/50"
+                                />
+                                <HelpCircle className="w-4 h-4 text-green-400" />
+                                <span className="text-white text-sm flex-1">Hacer Pregunta</span>
+                            </label>
+                            {config.showQuestionOption && (
+                                <input
+                                    type="text"
+                                    value={config.questionOptionText}
+                                    onChange={(e) => setConfig({ ...config, questionOptionText: e.target.value })}
+                                    className="w-full mt-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:border-purple-500/50"
+                                    placeholder="Texto del botón..."
+                                />
+                            )}
                         </div>
-                        <Clock className="w-4 h-4 text-slate-400" />
-                    </label>
+                    </div>
                 </div>
 
-                {settings.businessHoursOnly && (
-                    <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-white/5">
-                        <div>
-                            <label className="block text-xs text-slate-400 mb-1">Hora inicio</label>
-                            <input
-                                type="time"
-                                value={settings.startHour}
-                                onChange={(e) => setSettings({ ...settings, startHour: e.target.value })}
-                                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-purple-500/50"
-                            />
+                {/* Advanced Settings Toggle */}
+                <button
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                    className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors w-full"
+                >
+                    {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    <span>Opciones avanzadas</span>
+                </button>
+
+                {showAdvanced && (
+                    <div className="space-y-4 pt-2">
+                        {/* Business Hours */}
+                        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                            <label className="flex items-center gap-3 cursor-pointer mb-3">
+                                <input
+                                    type="checkbox"
+                                    checked={config.businessHoursEnabled}
+                                    onChange={(e) => setConfig({ ...config, businessHoursEnabled: e.target.checked })}
+                                    className="w-4 h-4 rounded border-white/20 bg-white/5 text-green-500 focus:ring-green-500/50"
+                                />
+                                <Clock className="w-4 h-4 text-amber-400" />
+                                <span className="text-white text-sm">Solo en horario de atención</span>
+                            </label>
+
+                            {config.businessHoursEnabled && (
+                                <>
+                                    <div className="grid grid-cols-2 gap-4 mb-3">
+                                        <div>
+                                            <label className="block text-xs text-slate-400 mb-1">Hora inicio</label>
+                                            <input
+                                                type="time"
+                                                value={config.businessHoursStart}
+                                                onChange={(e) => setConfig({ ...config, businessHoursStart: e.target.value })}
+                                                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-purple-500/50"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-slate-400 mb-1">Hora fin</label>
+                                            <input
+                                                type="time"
+                                                value={config.businessHoursEnd}
+                                                onChange={(e) => setConfig({ ...config, businessHoursEnd: e.target.value })}
+                                                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-purple-500/50"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-slate-400 mb-1">Mensaje fuera de horario</label>
+                                        <textarea
+                                            rows={2}
+                                            value={config.offlineMessage || ""}
+                                            onChange={(e) => setConfig({ ...config, offlineMessage: e.target.value })}
+                                            className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:border-purple-500/50 resize-none"
+                                            placeholder="Mensaje cuando estés fuera de horario..."
+                                        />
+                                    </div>
+                                </>
+                            )}
                         </div>
-                        <div>
-                            <label className="block text-xs text-slate-400 mb-1">Hora fin</label>
-                            <input
-                                type="time"
-                                value={settings.endHour}
-                                onChange={(e) => setSettings({ ...settings, endHour: e.target.value })}
+
+                        {/* Cooldown */}
+                        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                            <label className="block text-sm text-slate-300 mb-2">
+                                Tiempo entre mensajes automáticos
+                            </label>
+                            <select
+                                value={config.cooldownMinutes}
+                                onChange={(e) => setConfig({ ...config, cooldownMinutes: Number(e.target.value) })}
                                 className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-purple-500/50"
-                            />
+                            >
+                                <option value={15}>15 minutos</option>
+                                <option value={30}>30 minutos</option>
+                                <option value={60}>1 hora</option>
+                                <option value={120}>2 horas</option>
+                                <option value={1440}>24 horas</option>
+                            </select>
+                            <p className="text-xs text-slate-500 mt-1">
+                                Evita enviar múltiples mensajes automáticos al mismo contacto
+                            </p>
                         </div>
                     </div>
                 )}

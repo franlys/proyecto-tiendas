@@ -9,9 +9,11 @@ import {
     clearConversationContext,
     detectMessageIntent,
 } from "@/lib/services/conversation-context.service";
+import { getWhatsAppConfigWithDefaults } from "@/lib/services/whatsapp-config.service";
+import { WhatsAppAutoReplyConfig, ShopBasicInfo } from "@/lib/types/whatsapp-config.types";
 
-// App URL for links in messages (fallback to production URL)
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://proyecto-tiendas.vercel.app";
+// App URL for links in messages
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://linko-app-pied.vercel.app";
 
 /**
  * Webhook para recibir eventos de Evolution API
@@ -47,30 +49,57 @@ interface WebhookPayload {
 
 // Store for tracking recent contacts (in production, use Redis or DB)
 const recentContacts = new Map<string, number>();
-const COOLDOWN_MS = 60 * 60 * 1000; // 1 hour cooldown for auto-reply
 
-// Auto-reply configuration (in production, load from DB per shop)
-const getAutoReplyConfig = (instanceName: string) => {
-  // Default config - would be loaded from DB per shop
-  return {
-    enabled: true,
-    welcomeMessage: `¡Hola! 👋 Gracias por contactarnos.
-
-Visita nuestra tienda para ver todos nuestros productos y servicios:
-🛍️ https://tu-tienda.com
-
-¿En qué podemos ayudarte?`,
-    businessHoursOnly: false,
-    startHour: 9,
-    endHour: 18,
-  };
+// Helper to get cooldown in milliseconds from config
+const getCooldownMs = (config: WhatsAppAutoReplyConfig) => {
+  return (config.cooldownMinutes || 60) * 60 * 1000;
 };
 
 // Check if current time is within business hours
-function isBusinessHours(startHour: number, endHour: number): boolean {
+function isBusinessHours(config: WhatsAppAutoReplyConfig): boolean {
+  if (!config.businessHoursEnabled) return true;
+
   const now = new Date();
-  const hour = now.getHours();
-  return hour >= startHour && hour < endHour;
+  const currentTime = now.getHours() * 60 + now.getMinutes();
+
+  const [startHour, startMin] = config.businessHoursStart.split(":").map(Number);
+  const [endHour, endMin] = config.businessHoursEnd.split(":").map(Number);
+
+  const startTime = startHour * 60 + startMin;
+  const endTime = endHour * 60 + endMin;
+
+  return currentTime >= startTime && currentTime < endTime;
+}
+
+// Generate the main menu message based on config
+function generateMenuMessage(
+  config: WhatsAppAutoReplyConfig,
+  shop: ShopBasicInfo | null,
+  pushName?: string
+): string {
+  const greeting = pushName ? ` ${pushName}` : "";
+  const shopName = shop?.name || "nuestra tienda";
+
+  // Build options list based on config
+  const options: string[] = [];
+  if (config.showCatalogOption) {
+    options.push(config.catalogOptionText);
+  }
+  if (config.showBookingOption) {
+    options.push(config.bookingOptionText);
+  }
+  if (config.showQuestionOption) {
+    options.push(config.questionOptionText);
+  }
+
+  const optionsText = options.length > 0 ? `\n\n${options.join("\n")}` : "";
+
+  // Replace placeholders in welcome message
+  const welcomeMsg = config.welcomeMessage
+    .replace("{nombre}", pushName || "")
+    .replace("{tienda}", shopName);
+
+  return `¡Hola${greeting}! 👋 ${welcomeMsg}${optionsText}`;
 }
 
 // Extract phone number from JID
@@ -216,12 +245,49 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
   // PASO 5: Mensaje genérico (sin contexto previo)
   // ============================================================
 
+  // Load shop config from Firestore
+  let config: WhatsAppAutoReplyConfig;
+  let shop: ShopBasicInfo | null = null;
+
+  try {
+    const configResult = await getWhatsAppConfigWithDefaults(shopId);
+    config = configResult.config;
+    shop = configResult.shop;
+    console.log(`[${instance}] Loaded config for shop ${shopId}, type: ${shop?.businessType || "unknown"}`);
+  } catch (error) {
+    console.error(`[${instance}] Error loading config, using defaults:`, error);
+    // Use retail defaults if config loading fails
+    const { getDefaultWhatsAppConfig } = await import("@/lib/types/whatsapp-config.types");
+    config = getDefaultWhatsAppConfig("retail");
+  }
+
+  if (!config.enabled) {
+    console.log(`[${instance}] Auto-reply disabled for shop ${shopId}`);
+    return;
+  }
+
   // Check auto-reply cooldown
   const lastContact = recentContacts.get(phone);
   const now = Date.now();
+  const cooldownMs = getCooldownMs(config);
 
-  if (lastContact && now - lastContact < COOLDOWN_MS) {
+  if (lastContact && now - lastContact < cooldownMs) {
     console.log(`[${instance}] Skipping auto-reply - cooldown active for ${phone}`);
+    return;
+  }
+
+  // Check business hours if configured
+  if (!isBusinessHours(config)) {
+    console.log(`[${instance}] Outside business hours`);
+    // Send offline message if configured
+    if (config.offlineMessage) {
+      try {
+        await sendTextMessage(instance, phone, config.offlineMessage);
+        recentContacts.set(phone, now);
+      } catch (err) {
+        console.error(`[${instance}] Failed to send offline message:`, err);
+      }
+    }
     return;
   }
 
@@ -229,22 +295,8 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
   const { intent, confidence } = detectMessageIntent(text);
   console.log(`[${instance}] Detected intent: ${intent} (confidence: ${confidence})`);
 
-  // Get auto-reply config for this instance
-  const config = getAutoReplyConfig(instance);
-
-  if (!config.enabled) {
-    console.log(`[${instance}] Auto-reply disabled`);
-    return;
-  }
-
-  // Check business hours if configured
-  if (config.businessHoursOnly && !isBusinessHours(config.startHour, config.endHour)) {
-    console.log(`[${instance}] Outside business hours`);
-    return;
-  }
-
-  // Enviar respuesta según la intención detectada
-  let responseMessage = config.welcomeMessage;
+  // Generar respuesta según la intención detectada
+  let responseMessage: string;
 
   if (intent === "catalog") {
     responseMessage = `¡Hola${pushName ? ` ${pushName}` : ""}! 👋
@@ -258,23 +310,31 @@ Aquí puedes ver nuestro catálogo completo:
     await setConversationContext(shopId, phone, "catalog_request", "idle", {
       customerName: pushName,
     });
-  } else if (intent === "service") {
+  } else if (intent === "service" && config.showBookingOption) {
     responseMessage = `¡Hola${pushName ? ` ${pushName}` : ""}! 👋
 
 Para agendar una cita, visita nuestra página de servicios:
 📅 ${APP_URL}/${shopId}/book
 
 O dime qué servicio te interesa y te ayudo a reservar.`;
-  } else if (intent === "greeting" || intent === "unknown") {
-    responseMessage = `¡Hola${pushName ? ` ${pushName}` : ""}! 👋 Gracias por contactarnos.
+  } else {
+    // Greeting or unknown intent - send menu with configured options
+    const options: string[] = [];
+    if (config.showCatalogOption) {
+      options.push(config.catalogOptionText);
+    }
+    if (config.showBookingOption) {
+      options.push(config.bookingOptionText);
+    }
+    if (config.showQuestionOption) {
+      options.push(config.questionOptionText);
+    }
 
-¿En qué podemos ayudarte?
+    const optionsText = options.length > 0 ? `\n\n${options.join("\n")}` : "";
 
-📋 *CATÁLOGO* - Ver productos y servicios
-📅 *CITA* - Agendar una cita
-❓ *PREGUNTA* - Escribe tu consulta
+    responseMessage = `¡Hola${pushName ? ` ${pushName}` : ""}! 👋 ${config.welcomeMessage}${optionsText}
 
-O visita nuestra tienda:
+Visita nuestra tienda:
 🛍️ ${APP_URL}/${shopId}`;
   }
 
