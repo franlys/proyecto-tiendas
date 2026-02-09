@@ -43,7 +43,10 @@
       "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" add lib/constants.ts)",
       "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nFix BUSINESS_TYPE_CONFIG type to use MainBusinessCategory\n\nThe BUSINESS_TYPE_CONFIG only has 6 entries for UI config, not all 40+ BusinessType values.\nCreated MainBusinessCategory type and mapToMainCategory helper function.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" add lib/services/shops.service.ts)",
-      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nFix second businessType derivation in updateShop function\n\nSeparate category and businessType updates instead of deriving\nbusinessType from category which caused type mismatch.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nFix second businessType derivation in updateShop function\n\nSeparate category and businessType updates instead of deriving\nbusinessType from category which caused type mismatch.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(cmd /c \"cd /d c:\\\\Users\\\\elmae\\\\proyecto-tiendas && npm run build\")",
+      "Bash(firebase deploy:*)",
+      "Bash(npx firebase-tools deploy:*)"
     ]
   }
 }

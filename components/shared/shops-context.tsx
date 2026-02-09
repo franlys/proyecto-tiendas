@@ -197,6 +197,8 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
           // Features
           enabledFeatures: data.enabledFeatures ?? data.features ?? [],
           features: data.features ?? data.enabledFeatures ?? [],
+          // Invoice reminders
+          invoiceReminders: data.invoiceReminders ?? false,
           // Stats - Always ensure it exists
           stats: data.stats ? { ...defaultStats, ...data.stats } : defaultStats,
           // Appearance (from agency panel)
@@ -265,6 +267,7 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
       subscriptionStatus: "trial",
       nextPaymentDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
       monthlyPrice: data.monthlyPrice || 0, // Set the custom price
+      invoiceReminders: false, // Default: no payment reminders
       features: DEFAULT_FEATURES as FeatureId[],
       enabledFeatures: DEFAULT_FEATURES as FeatureId[],
       stats: { monthlyRevenue: 0, activeOrders: 0, completedOrders: 0, totalCustomers: 0 }
