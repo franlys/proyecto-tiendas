@@ -48,7 +48,7 @@ export function ProductList({ products, onEdit, onDelete, onUpdateStock }: Produ
                                         Low Stock
                                     </span>
                                 )}
-                                {product.variants && (
+                                {product.variants && product.variants.length > 0 && (
                                     <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30">
                                         {product.variants.length} Variantes
                                     </span>
@@ -70,18 +70,18 @@ export function ProductList({ products, onEdit, onDelete, onUpdateStock }: Produ
 
                             <div className="text-right">
                                 <p className="text-sm text-zinc-400">Stock</p>
-                                {/* Inline Editing for Simple Products */}
-                                {!product.variants ? (
+                                {/* Inline Editing for Simple Products (no variants or empty variants) */}
+                                {!product.variants || product.variants.length === 0 ? (
                                     <div className="flex items-center gap-2">
                                         <button
-                                            onClick={() => onUpdateStock(product.id, Math.max(0, product.stock - 1))}
+                                            onClick={() => onUpdateStock(product.id, Math.max(0, (product.stock || 0) - 1))}
                                             className="w-6 h-6 flex items-center justify-center rounded bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
                                         >
                                             -
                                         </button>
-                                        <span className="font-mono w-8 text-center">{product.stock}</span>
+                                        <span className="font-mono w-8 text-center text-zinc-200">{product.stock || 0}</span>
                                         <button
-                                            onClick={() => onUpdateStock(product.id, product.stock + 1)}
+                                            onClick={() => onUpdateStock(product.id, (product.stock || 0) + 1)}
                                             className="w-6 h-6 flex items-center justify-center rounded bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
                                         >
                                             +
@@ -97,7 +97,7 @@ export function ProductList({ products, onEdit, onDelete, onUpdateStock }: Produ
 
                         {/* Edit / Expand Buttons */}
                         <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0 justify-end">
-                            {product.variants && (
+                            {product.variants && product.variants.length > 0 && (
                                 <button
                                     onClick={() => toggleExpand(product.id)}
                                     className="p-2 rounded-lg bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
@@ -115,7 +115,7 @@ export function ProductList({ products, onEdit, onDelete, onUpdateStock }: Produ
                     </div>
 
                     {/* Variants Expansion */}
-                    {product.variants && (
+                    {product.variants && product.variants.length > 0 && (
                         <AnimatePresence>
                             {expandedId === product.id && (
                                 <motion.div

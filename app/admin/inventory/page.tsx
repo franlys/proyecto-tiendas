@@ -104,18 +104,18 @@ function InventoryContent({ shopId }: { shopId: string }) {
       </div>
 
       {/* Search & Toolbar */}
-      <div className="flex gap-3 sticky top-0 bg-black/80 backdrop-blur-md py-4 z-10">
+      <div className="flex gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
           <input
             type="text"
             placeholder="Buscar por nombre, categoría o SKU..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-4 py-2.5 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
+            className="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl pl-11 pr-4 py-3 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 outline-none transition-all"
           />
         </div>
-        <button className="px-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-400 hover:text-white">
+        <button className="px-4 py-3 bg-zinc-900/80 border border-zinc-700 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors">
           <Filter size={18} />
         </button>
       </div>
