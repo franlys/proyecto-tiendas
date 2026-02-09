@@ -679,7 +679,7 @@ function AutoReplyConfig({ shopSlug }: { shopSlug: string }) {
                             <select
                                 value={config.cooldownMinutes}
                                 onChange={(e) => setConfig({ ...config, cooldownMinutes: Number(e.target.value) })}
-                                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-purple-500/50"
+                                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-white/10 text-white focus:outline-none focus:border-purple-500/50 [&>option]:bg-slate-800 [&>option]:text-white"
                             >
                                 <option value={0}>🔄 Sin cooldown (responder siempre)</option>
                                 <option value={1}>1 minuto</option>
@@ -854,7 +854,7 @@ function NotificationRouting() {
                                 <p className="text-xs text-slate-500">{item.desc}</p>
                             </div>
                         </div>
-                        <select className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-cyan-500/50">
+                        <select className="px-3 py-2 rounded-lg bg-slate-800 border border-white/10 text-white text-sm focus:outline-none focus:border-cyan-500/50 [&>option]:bg-slate-800 [&>option]:text-white">
                             <option>Automático</option>
                             <option>Manual</option>
                             <option>Desactivado</option>

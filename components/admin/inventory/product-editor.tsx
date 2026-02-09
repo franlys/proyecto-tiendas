@@ -315,7 +315,7 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId }: Prod
                                             <select
                                                 value={showNewCategoryInput ? "__new__" : formData.category}
                                                 onChange={(e) => handleCategoryChange(e.target.value)}
-                                                className="w-full bg-zinc-800 border-zinc-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                                                className="w-full bg-zinc-800 border-zinc-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 outline-none [&>option]:bg-zinc-800 [&>option]:text-white [&>optgroup]:bg-zinc-800 [&>optgroup]:text-zinc-400"
                                             >
                                                 {/* Predefined categories */}
                                                 <optgroup label="Categorías Predefinidas">
@@ -419,7 +419,7 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId }: Prod
                                                                 <select
                                                                     value={newCategoryTextColor}
                                                                     onChange={(e) => setNewCategoryTextColor(e.target.value)}
-                                                                    className="bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs text-white"
+                                                                    className="bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs text-white [&>option]:bg-zinc-900 [&>option]:text-white"
                                                                 >
                                                                     <option value="#ffffff">Texto Blanco</option>
                                                                     <option value="#000000">Texto Negro</option>

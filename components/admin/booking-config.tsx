@@ -165,7 +165,7 @@ export function BookingConfigPanel({ shopId }: BookingConfigPanelProps) {
                       slotDurationMinutes: parseInt(e.target.value),
                     }))
                   }
-                  className="w-full px-4 py-2 bg-surface rounded-lg border border-white/10 text-white"
+                  className="w-full px-4 py-2 bg-slate-800 rounded-lg border border-white/10 text-white [&>option]:bg-slate-800 [&>option]:text-white"
                 >
                   <option value={15}>15 minutos</option>
                   <option value={30}>30 minutos</option>
@@ -239,7 +239,7 @@ export function BookingConfigPanel({ shopId }: BookingConfigPanelProps) {
                       reminderHoursBefore: parseInt(e.target.value),
                     }))
                   }
-                  className="w-full sm:w-48 px-4 py-2 bg-surface rounded-lg border border-white/10 text-white"
+                  className="w-full sm:w-48 px-4 py-2 bg-slate-800 rounded-lg border border-white/10 text-white [&>option]:bg-slate-800 [&>option]:text-white"
                 >
                   <option value={2}>2 horas</option>
                   <option value={4}>4 horas</option>
