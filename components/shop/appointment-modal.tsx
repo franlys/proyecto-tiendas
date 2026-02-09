@@ -11,10 +11,14 @@ import {
   Sparkles,
   ChevronRight,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useCart, type ServiceCartItem } from "@/components/shared/cart-context";
+import { useShop } from "@/components/shared";
 import { cn, formatPhoneForWhatsApp } from "@/lib/utils";
+import { db } from "@/lib/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 interface AppointmentModalProps {
   isOpen: boolean;
@@ -66,11 +70,14 @@ export function AppointmentModal({
   shopName,
   shopPhone,
 }: AppointmentModalProps) {
-  const { services, totalDuration, totalPrice, clearCart } = useCart();
+  const { services, totalDuration, totalPrice, clearCart, tableId } = useCart();
+  const shop = useShop(); // Get full shop data for slug and owner phone
+
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const timeSlots = useMemo(() => generateTimeSlots(), []);
   const availableDates = useMemo(() => getAvailableDates(), []);
@@ -90,16 +97,73 @@ export function AppointmentModal({
     });
   };
 
-  const handleConfirm = () => {
-    if (!selectedDate || !selectedTime) return;
+  const handleConfirm = async () => {
+    if (!selectedDate || !selectedTime || !shop?.slug) return;
 
-    // Build WhatsApp message
-    const servicesList = services
-      .map((s) => `- ${s.name}`)
-      .join("\n");
+    setIsSubmitting(true);
 
-    const dateStr = formatDate(selectedDate);
-    const message = `Hola ${shopName}, quiero agendar una cita:
+    try {
+      const dateStr = formatDate(selectedDate);
+      const appointmentNote = `Cita: ${dateStr} a las ${selectedTime}\n${notes ? `Notas: ${notes}` : ""}`;
+
+      // 1. Create Order in Firestore (Real Data for Admin)
+      const orderData = {
+        orderNumber: `ORD-${Date.now().toString().slice(-6)}`, // Temporary ID
+        customerName: "Cliente WhatsApp", // Default
+        customerPhone: "",
+        items: services.map((s) => ({
+          productId: s.id,
+          productName: s.name,
+          quantity: 1,
+          unitPrice: s.price,
+          total: s.price
+        })),
+        subtotal: totalPrice,
+        tax: 0,
+        total: totalPrice,
+        status: "pending",
+        paymentStatus: "pending",
+        isWholesale: false,
+        source: "whatsapp",
+        tableId: tableId || null,
+        notes: appointmentNote,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        // Extra metadata for appointment
+        appointmentDate: selectedDate,
+        appointmentTime: selectedTime,
+      };
+
+      // Write to Firestore: shops/{slug}/orders
+      const docRef = await addDoc(collection(db, "shops", shop.slug, "orders"), orderData);
+      console.log("✅ Appointment Order created:", docRef.id);
+
+      // 1.5 Create Notification
+      try {
+        await addDoc(collection(db, "shops", shop.slug, "notifications"), {
+          type: "new_booking",
+          title: "Nueva Cita Agendada",
+          message: `Cita para ${dateStr} - ${selectedTime}`,
+          read: false,
+          createdAt: serverTimestamp(),
+          data: {
+            orderId: docRef.id,
+            total: totalPrice,
+            date: selectedDate,
+            time: selectedTime
+          }
+        });
+      } catch (e) {
+        console.error("Error creating notification", e);
+      }
+
+      // Build WhatsApp message
+      const servicesList = services
+        .map((s) => `- ${s.name}`)
+        .join("\n");
+
+      let message = `Hola ${shopName}, quiero agendar una cita:
+🆔 Ref: ${docRef.id.slice(0, 5).toUpperCase()}
 
 📅 *Fecha:* ${dateStr}
 🕐 *Hora:* ${selectedTime}
@@ -113,18 +177,25 @@ ${notes ? `\n📝 *Notas:* ${notes}` : ""}
 
 ¡Gracias!`;
 
-    // Open WhatsApp (formats phone with country code if needed)
-    const cleanPhone = formatPhoneForWhatsApp(shopPhone);
-    const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/${cleanPhone}?text=${encodedMessage}`, "_blank");
+      // Open WhatsApp (use ownerNotificationPhone if available)
+      const targetPhone = shop.ownerNotificationPhone || shopPhone;
+      const cleanPhone = formatPhoneForWhatsApp(targetPhone);
+      const encodedMessage = encodeURIComponent(message);
+      window.open(`https://wa.me/${cleanPhone}?text=${encodedMessage}`, "_blank");
 
-    // Clear cart and close
-    clearCart();
-    onClose();
-    setStep(1);
-    setSelectedDate(null);
-    setSelectedTime(null);
-    setNotes("");
+      // Clear cart and close
+      clearCart();
+      onClose();
+      setStep(1);
+      setSelectedDate(null);
+      setSelectedTime(null);
+      setNotes("");
+    } catch (error) {
+      console.error("Error creating appointment:", error);
+      alert("Hubo un error al agendar la cita.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const canProceedToStep2 = services.length > 0;

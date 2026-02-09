@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle, X, ShoppingBag, Calendar } from "lucide-react";
+import { MessageCircle, X, ShoppingBag, Calendar, Loader2 } from "lucide-react";
 import { useCart, useShop, useOrders, useShopConfig } from "@/components/shared";
 import { AppointmentModal } from "./appointment-modal";
 import { cn, formatPhoneForWhatsApp } from "@/lib/utils";
+import { db } from "@/lib/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 export function FloatingCart() {
   const {
@@ -18,7 +20,9 @@ export function FloatingCart() {
   } = useCart();
   const shop = useShop();
   const { config } = useShopConfig();
-  const { addOrder } = useOrders();
+  const { addOrder } = useOrders(); // Legacy local storage
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Phase 22: Appointment modal state
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
@@ -40,84 +44,157 @@ export function FloatingCart() {
     }
   };
 
-  const handleWhatsAppClick = () => {
-    if (!shop?.contact.phone) return;
+  const handleWhatsAppClick = async () => {
+    if (!shop?.contact.phone || !shop?.slug) return;
 
-    // Save the order to localStorage
-    addOrder({
-      shopId: shop.slug,
-      shopName: shop.name,
-      items: [
-        ...services.map((s) => ({
-          id: s.id,
-          name: s.name,
-          price: s.price,
-          type: "service" as const,
-        })),
-        ...products.map((p) => ({
-          id: p.id,
-          name: p.name + (p.variantName ? ` (${p.variantName})` : ""),
-          price: (p.promoPrice || p.price) * p.quantity,
-          quantity: p.quantity,
-          type: "product" as const,
-        })),
-      ],
-      total: totalPrice,
-      tableId: tableId || undefined,
-      orderType: tableId ? "dine-in" : "takeout",
-    });
+    setIsSubmitting(true);
 
-    // Build the WhatsApp message with separate sections
-    let message = `Hola, quiero hacer un pedido en *${shop.name}*:\n\n`;
+    try {
+      // 1. Create Order in Firestore (Real Data for Admin)
+      const orderData = {
+        orderNumber: `ORD-${Date.now().toString().slice(-6)}`, // Temporary ID
+        customerName: "Cliente WhatsApp", // Default
+        customerPhone: "", // Phone is not known until they send msg
+        items: [
+          ...services.map((s) => ({
+            productId: s.id,
+            productName: s.name,
+            quantity: 1,
+            unitPrice: s.price,
+            total: s.price
+          })),
+          ...products.map((p) => ({
+            productId: p.id,
+            productName: p.name + (p.variantName ? ` (${p.variantName})` : ""),
+            quantity: p.quantity,
+            unitPrice: p.promoPrice || p.price,
+            total: (p.promoPrice || p.price) * p.quantity
+          })),
+        ],
+        subtotal: totalPrice,
+        tax: 0,
+        total: totalPrice,
+        status: "pending",
+        paymentStatus: "pending",
+        isWholesale: false,
+        source: "whatsapp",
+        tableId: tableId || null,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
 
-    // Add Table Info if exists
-    if (tableId) {
-      message += `📍 *Mesa ${tableId}*\n\n`; // High visibility
-    }
+      // Write to Firestore: shops/{slug}/orders
+      // Note: Admin listens to this collection
+      const docRef = await addDoc(collection(db, "shops", shop.slug, "orders"), orderData);
 
-    // Services section (for mixed orders)
-    if (hasServices) {
-      message += `💇‍♀️ *Servicios:*\n`;
-      services.forEach((service) => {
-        message += `- ${service.name}: $${service.price.toLocaleString()}\n`;
-      });
-      if (totalDuration > 0) {
-        const hours = Math.floor(totalDuration / 60);
-        const mins = totalDuration % 60;
-        const durationStr = hours > 0
-          ? `${hours}h ${mins > 0 ? `${mins}min` : ''}`
-          : `${mins}min`;
-        message += `⏱️ Duración estimada: ${durationStr}\n`;
+      console.log("✅ Order created in Firestore:", docRef.id);
+
+      // 1.5 Create Notification for Admin Dashboard
+      try {
+        await addDoc(collection(db, "shops", shop.slug, "notifications"), {
+          type: "new_order",
+          title: "Nuevo Pedido WhatsApp",
+          message: `Pedido #${orderData.orderNumber} de $${totalPrice}`,
+          read: false,
+          createdAt: serverTimestamp(),
+          data: {
+            orderId: docRef.id,
+            total: totalPrice
+          }
+        });
+      } catch (notifError) {
+        console.error("Error creating notification:", notifError);
+        // Don't block the main flow
       }
-      message += `\n`;
-    }
 
-    // Products section
-    if (hasProducts) {
-      message += `🛍️ *Productos:*\n`;
-      products.forEach((product) => {
-        const price = product.promoPrice || product.price;
-        const subtotal = price * product.quantity;
-        const variantLabel = product.variantName ? ` [${product.variantName}]` : "";
-
-        if (product.quantity > 1) {
-          message += `- ${product.name}${variantLabel} (x${product.quantity}): $${subtotal.toLocaleString()}\n`;
-        } else {
-          message += `- ${product.name}${variantLabel}: $${subtotal.toLocaleString()}\n`;
-        }
+      // 2. Legacy Local Storage (for history)
+      addOrder({
+        shopId: shop.slug,
+        shopName: shop.name,
+        items: [
+          ...services.map((s) => ({
+            id: s.id,
+            name: s.name,
+            price: s.price,
+            type: "service" as const,
+          })),
+          ...products.map((p) => ({
+            id: p.id,
+            name: p.name + (p.variantName ? ` (${p.variantName})` : ""),
+            price: (p.promoPrice || p.price) * p.quantity,
+            quantity: p.quantity,
+            type: "product" as const,
+          })),
+        ],
+        total: totalPrice,
+        tableId: tableId || undefined,
+        orderType: tableId ? "dine-in" : "takeout",
       });
-      message += `\n`;
+
+      // 3. Build WhatsApp Message
+      let message = `Hola, quiero hacer un pedido en *${shop.name}*:\n`;
+      message += `🆔 Pedido: ${docRef.id.slice(0, 5).toUpperCase()}\n\n`; // Add ID ref
+
+      // Add Table Info if exists
+      if (tableId) {
+        message += `📍 *Mesa ${tableId}*\n\n`; // High visibility
+      }
+
+      // Services section (for mixed orders)
+      if (hasServices) {
+        message += `💇‍♀️ *Servicios:*\n`;
+        services.forEach((service) => {
+          message += `- ${service.name}: $${service.price.toLocaleString()}\n`;
+        });
+        if (totalDuration > 0) {
+          const hours = Math.floor(totalDuration / 60);
+          const mins = totalDuration % 60;
+          const durationStr = hours > 0
+            ? `${hours}h ${mins > 0 ? `${mins}min` : ''}`
+            : `${mins}min`;
+          message += `⏱️ Duración estimada: ${durationStr}\n`;
+        }
+        message += `\n`;
+      }
+
+      // Products section
+      if (hasProducts) {
+        message += `🛍️ *Productos:*\n`;
+        products.forEach((product) => {
+          const price = product.promoPrice || product.price;
+          const subtotal = price * product.quantity;
+          const variantLabel = product.variantName ? ` [${product.variantName}]` : "";
+
+          if (product.quantity > 1) {
+            message += `- ${product.name}${variantLabel} (x${product.quantity}): $${subtotal.toLocaleString()}\n`;
+          } else {
+            message += `- ${product.name}${variantLabel}: $${subtotal.toLocaleString()}\n`;
+          }
+        });
+        message += `\n`;
+      }
+
+      message += `💰 *Total: $${totalPrice.toLocaleString()}*`;
+
+      // 4. Send Message to Owner (Prefer private notification phone)
+      const targetPhone = shop.ownerNotificationPhone || shop.contact.phone;
+      if (targetPhone) {
+        const cleanPhone = formatPhoneForWhatsApp(targetPhone);
+        const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+        window.open(url, "_blank");
+      } else {
+        alert("No hay número de teléfono configurado para recibir pedidos.");
+      }
+
+      // 5. Clear cart
+      clearCart();
+
+    } catch (error) {
+      console.error("❌ Error creating order:", error);
+      alert("Hubo un error al procesar el pedido. Por favor intenta de nuevo.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    message += `💰 *Total: $${totalPrice.toLocaleString()}*`;
-
-    // Format phone number for WhatsApp (adds country code if needed)
-    const cleanPhone = formatPhoneForWhatsApp(shop.contact.phone);
-    const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
-    window.open(url, "_blank");
-
-    // Clear cart after order
-    clearCart();
   };
 
   // Don't render if cart is empty
@@ -202,6 +279,7 @@ export function FloatingCart() {
 
             <button
               onClick={handleClick}
+              disabled={isSubmitting}
               className={cn(
                 "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl",
                 "text-white font-medium text-sm",
@@ -209,10 +287,13 @@ export function FloatingCart() {
                 "shadow-lg hover:shadow-xl",
                 shouldUseAppointmentFlow
                   ? "bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-500/90"
-                  : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                  : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700",
+                isSubmitting && "opacity-70 cursor-not-allowed"
               )}
             >
-              {shouldUseAppointmentFlow ? (
+              {isSubmitting ? (
+                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+              ) : shouldUseAppointmentFlow ? (
                 <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
               ) : (
                 <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -225,6 +306,7 @@ export function FloatingCart() {
             {/* Clear cart button */}
             <button
               onClick={clearCart}
+              disabled={isSubmitting}
               className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
               aria-label="Limpiar carrito"
             >

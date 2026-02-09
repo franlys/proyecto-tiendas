@@ -207,6 +207,7 @@ export interface ShopConfig {
   };
   social?: ShopSocialMedia;
   schedule?: ShopSchedule;
+  ownerNotificationPhone?: string;
   // Phase 13: Business Type & Wholesale
   businessType?: BusinessType;
   wholesaleCode?: string;
