@@ -8,6 +8,20 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import { db } from "@/lib/firebase";
+import {
+  collection,
+  query,
+  onSnapshot,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  orderBy,
+  where,
+  serverTimestamp,
+  Timestamp
+} from "firebase/firestore";
 
 export type OrderStatus = "pending" | "confirmed" | "preparing" | "dispatched" | "delivered" | "cancelled";
 
@@ -84,6 +98,8 @@ export interface SalesOrder {
   confirmedAt?: string;
   dispatchedAt?: string;
   deliveredAt?: string;
+  tableId?: string; // Phase 26
+  source?: string; // whatsapp, web, manual
 }
 
 interface NotificationConfig {
@@ -96,11 +112,11 @@ interface NotificationConfig {
 interface SalesOrdersContextType {
   orders: SalesOrder[];
   getOrder: (id: string) => SalesOrder | undefined;
-  createOrder: (order: Omit<SalesOrder, "id" | "orderNumber" | "createdAt" | "updatedAt">) => SalesOrder;
-  updateOrderStatus: (id: string, status: OrderStatus) => void;
-  updatePaymentStatus: (id: string, status: SalesOrder["paymentStatus"]) => void;
-  updateOrder: (id: string, updates: Partial<SalesOrder>) => void;
-  deleteOrder: (id: string) => void;
+  createOrder: (order: Omit<SalesOrder, "id" | "orderNumber" | "createdAt" | "updatedAt">) => Promise<SalesOrder | null>;
+  updateOrderStatus: (id: string, status: OrderStatus) => Promise<void>;
+  updatePaymentStatus: (id: string, status: SalesOrder["paymentStatus"]) => Promise<void>;
+  updateOrder: (id: string, updates: Partial<SalesOrder>) => Promise<void>;
+  deleteOrder: (id: string) => Promise<void>;
   getOrdersByStatus: (status: OrderStatus) => SalesOrder[];
   getPendingOrders: () => SalesOrder[];
   getTodayOrders: () => SalesOrder[];
@@ -116,10 +132,8 @@ interface SalesOrdersProviderProps {
   shopId: string;
 }
 
-const getStorageKey = (shopId: string) => `sales-orders-${shopId}`;
 const getNotificationKey = (shopId: string) => `notification-config-${shopId}`;
 
-// Generate order number
 function generateOrderNumber(): string {
   const date = new Date();
   const prefix = `ORD`;
@@ -128,72 +142,6 @@ function generateOrderNumber(): string {
   return `${prefix}-${datePart}-${random}`;
 }
 
-// Demo orders
-const DEMO_ORDERS: SalesOrder[] = [
-  {
-    id: "so1",
-    orderNumber: "ORD-260129-A1B2",
-    customerName: "Juan Martínez",
-    customerPhone: "555-123-4567",
-    customerEmail: "juan@email.com",
-    customerAddress: "Calle Principal 123, Col. Centro",
-    items: [
-      { productId: "p1", productName: "Shampoo Hidratante Premium", quantity: 2, unitPrice: 280, total: 560 },
-      { productId: "p2", productName: "Mascarilla Keratina", quantity: 1, unitPrice: 380, total: 380 },
-    ],
-    subtotal: 940,
-    tax: 150.40,
-    total: 1090.40,
-    status: "pending",
-    paymentStatus: "pending",
-    isWholesale: false,
-    createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 min ago
-    updatedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "so2",
-    orderNumber: "ORD-260129-C3D4",
-    customerName: "María López",
-    customerPhone: "555-987-6543",
-    items: [
-      { productId: "p5", productName: "Crema Facial Vitamina C", quantity: 3, unitPrice: 580, total: 1740 },
-    ],
-    subtotal: 1740,
-    tax: 278.40,
-    total: 2018.40,
-    status: "confirmed",
-    paymentStatus: "paid",
-    paymentMethod: "Transferencia",
-    isWholesale: false,
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-    updatedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-    confirmedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "so3",
-    orderNumber: "ORD-260128-E5F6",
-    customerName: "Distribuidora García",
-    customerPhone: "555-456-7890",
-    customerAddress: "Av. Industrial 500, Zona Norte",
-    items: [
-      { productId: "p1", productName: "Shampoo Hidratante Premium", quantity: 24, unitPrice: 180, total: 4320 },
-      { productId: "p3", productName: "Aceite de Argán", quantity: 12, unitPrice: 200, total: 2400 },
-      { productId: "p4", productName: "Serum Anti-Frizz", quantity: 12, unitPrice: 140, total: 1680 },
-    ],
-    subtotal: 8400,
-    tax: 1344,
-    total: 9744,
-    status: "preparing",
-    paymentStatus: "paid",
-    paymentMethod: "Crédito 30 días",
-    notes: "Pedido mayorista - Entregar en almacén",
-    isWholesale: true,
-    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // Yesterday
-    updatedAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-    confirmedAt: new Date(Date.now() - 20 * 60 * 60 * 1000).toISOString(),
-  },
-];
-
 const DEFAULT_NOTIFICATION_CONFIG: NotificationConfig = {
   new_order: [],
   payment_alert: [],
@@ -201,42 +149,77 @@ const DEFAULT_NOTIFICATION_CONFIG: NotificationConfig = {
   order_update: [],
 };
 
+// Helper to convert Firestore timestamp to ISO string
+const formatDate = (date: any): string => {
+  if (!date) return new Date().toISOString();
+  if (date instanceof Timestamp) return date.toDate().toISOString();
+  if (date.toDate) return date.toDate().toISOString(); // Handle legacy
+  if (typeof date === 'string') return date;
+  return new Date().toISOString();
+};
+
 export function SalesOrdersProvider({ children, shopId }: SalesOrdersProviderProps) {
   const [orders, setOrders] = useState<SalesOrder[]>([]);
   const [notificationConfig, setNotificationConfig] = useState<NotificationConfig>(DEFAULT_NOTIFICATION_CONFIG);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load orders from localStorage
+  // Sync with Firestore
   useEffect(() => {
-    const storageKey = getStorageKey(shopId);
-    const notificationKey = getNotificationKey(shopId);
-    try {
-      const stored = localStorage.getItem(storageKey);
-      if (stored) {
-        setOrders(JSON.parse(stored));
-      } else {
-        setOrders(DEMO_ORDERS);
-        localStorage.setItem(storageKey, JSON.stringify(DEMO_ORDERS));
-      }
-
-      const storedNotifications = localStorage.getItem(notificationKey);
-      if (storedNotifications) {
-        setNotificationConfig(JSON.parse(storedNotifications));
-      }
-    } catch (error) {
-      console.error("Error loading orders:", error);
-      setOrders(DEMO_ORDERS);
-    } finally {
+    if (!shopId || shopId === "default") {
       setIsLoading(false);
+      return;
     }
-  }, [shopId]);
 
-  // Save to localStorage when orders change
-  useEffect(() => {
-    if (!isLoading) {
-      localStorage.setItem(getStorageKey(shopId), JSON.stringify(orders));
+    setIsLoading(true);
+    const q = query(
+      collection(db, "shops", shopId, "orders"),
+      orderBy("createdAt", "desc")
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedOrders: SalesOrder[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        fetchedOrders.push({
+          id: doc.id,
+          orderNumber: data.orderNumber || doc.id,
+          customerName: data.customerName || "Cliente",
+          customerPhone: data.customerPhone || "",
+          customerEmail: data.customerEmail,
+          customerAddress: data.customerAddress,
+          items: data.items || [],
+          subtotal: data.subtotal || 0,
+          tax: data.tax || 0,
+          total: data.total || 0,
+          status: data.status || "pending",
+          paymentStatus: data.paymentStatus || "pending",
+          paymentMethod: data.paymentMethod,
+          notes: data.notes,
+          isWholesale: data.isWholesale || false,
+          createdAt: formatDate(data.createdAt),
+          updatedAt: formatDate(data.updatedAt),
+          confirmedAt: data.confirmedAt ? formatDate(data.confirmedAt) : undefined,
+          dispatchedAt: data.dispatchedAt ? formatDate(data.dispatchedAt) : undefined,
+          deliveredAt: data.deliveredAt ? formatDate(data.deliveredAt) : undefined,
+          tableId: data.tableId,
+          source: data.source
+        });
+      });
+      setOrders(fetchedOrders);
+      setIsLoading(false);
+    }, (error) => {
+      console.error("Error fetching orders:", error);
+      setIsLoading(false);
+    });
+
+    // Load notification config from localStorage (client preference) or could be Firestore too
+    const storedNotifications = localStorage.getItem(getNotificationKey(shopId));
+    if (storedNotifications) {
+      setNotificationConfig(JSON.parse(storedNotifications));
     }
-  }, [orders, isLoading, shopId]);
+
+    return () => unsubscribe();
+  }, [shopId]);
 
   const getOrder = useCallback(
     (id: string) => orders.find((o) => o.id === id),
@@ -244,64 +227,82 @@ export function SalesOrdersProvider({ children, shopId }: SalesOrdersProviderPro
   );
 
   const createOrder = useCallback(
-    (orderData: Omit<SalesOrder, "id" | "orderNumber" | "createdAt" | "updatedAt">): SalesOrder => {
-      const now = new Date().toISOString();
-      const newOrder: SalesOrder = {
-        ...orderData,
-        id: `so-${Date.now()}`,
-        orderNumber: generateOrderNumber(),
-        createdAt: now,
-        updatedAt: now,
-      };
-      setOrders((prev) => [newOrder, ...prev]);
+    async (orderData: Omit<SalesOrder, "id" | "orderNumber" | "createdAt" | "updatedAt">): Promise<SalesOrder | null> => {
+      try {
+        const now = new Date();
+        const orderNumber = generateOrderNumber();
+        const newOrderData = {
+          ...orderData,
+          orderNumber,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        };
 
-      // Trigger notification (would call Evolution API in production)
-      console.log(`[Notification] New order ${newOrder.orderNumber} - notify: ${notificationConfig.new_order.join(", ")}`);
+        const docRef = await addDoc(collection(db, "shops", shopId, "orders"), newOrderData);
 
-      return newOrder;
+        // Optimistic update handled by onSnapshot, but we return the object for UI
+        return {
+          ...orderData,
+          id: docRef.id,
+          orderNumber,
+          createdAt: now.toISOString(),
+          updatedAt: now.toISOString(),
+        } as SalesOrder;
+
+      } catch (error) {
+        console.error("Error creating order:", error);
+        return null;
+      }
     },
-    [notificationConfig]
+    [shopId]
   );
 
-  const updateOrderStatus = useCallback((id: string, status: OrderStatus) => {
-    setOrders((prev) =>
-      prev.map((o) => {
-        if (o.id === id) {
-          const updates: Partial<SalesOrder> = {
-            status,
-            updatedAt: new Date().toISOString(),
-          };
+  const updateOrderStatus = useCallback(async (id: string, status: OrderStatus) => {
+    try {
+      const updates: any = {
+        status,
+        updatedAt: serverTimestamp(),
+      };
 
-          if (status === "confirmed") updates.confirmedAt = new Date().toISOString();
-          if (status === "dispatched") updates.dispatchedAt = new Date().toISOString();
-          if (status === "delivered") updates.deliveredAt = new Date().toISOString();
+      if (status === "confirmed") updates.confirmedAt = serverTimestamp();
+      if (status === "dispatched") updates.dispatchedAt = serverTimestamp();
+      if (status === "delivered") updates.deliveredAt = serverTimestamp();
 
-          return { ...o, ...updates };
-        }
-        return o;
-      })
-    );
-  }, []);
+      await updateDoc(doc(db, "shops", shopId, "orders", id), updates);
+    } catch (error) {
+      console.error("Error updating order status:", error);
+    }
+  }, [shopId]);
 
-  const updatePaymentStatus = useCallback((id: string, paymentStatus: SalesOrder["paymentStatus"]) => {
-    setOrders((prev) =>
-      prev.map((o) =>
-        o.id === id ? { ...o, paymentStatus, updatedAt: new Date().toISOString() } : o
-      )
-    );
-  }, []);
+  const updatePaymentStatus = useCallback(async (id: string, paymentStatus: SalesOrder["paymentStatus"]) => {
+    try {
+      await updateDoc(doc(db, "shops", shopId, "orders", id), {
+        paymentStatus,
+        updatedAt: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error("Error updating payment status:", error);
+    }
+  }, [shopId]);
 
-  const updateOrder = useCallback((id: string, updates: Partial<SalesOrder>) => {
-    setOrders((prev) =>
-      prev.map((o) =>
-        o.id === id ? { ...o, ...updates, updatedAt: new Date().toISOString() } : o
-      )
-    );
-  }, []);
+  const updateOrder = useCallback(async (id: string, updates: Partial<SalesOrder>) => {
+    try {
+      await updateDoc(doc(db, "shops", shopId, "orders", id), {
+        ...updates,
+        updatedAt: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error("Error updating order:", error);
+    }
+  }, [shopId]);
 
-  const deleteOrder = useCallback((id: string) => {
-    setOrders((prev) => prev.filter((o) => o.id !== id));
-  }, []);
+  const deleteOrder = useCallback(async (id: string) => {
+    try {
+      await deleteDoc(doc(db, "shops", shopId, "orders", id));
+    } catch (error) {
+      console.error("Error deleting order:", error);
+    }
+  }, [shopId]);
 
   const getOrdersByStatus = useCallback(
     (status: OrderStatus) => orders.filter((o) => o.status === status),
@@ -314,6 +315,7 @@ export function SalesOrdersProvider({ children, shopId }: SalesOrdersProviderPro
   );
 
   const getTodayOrders = useCallback(() => {
+    // Careful with timezone, but using simple string match for now
     const today = new Date().toISOString().split("T")[0];
     return orders.filter((o) => o.createdAt.startsWith(today));
   }, [orders]);

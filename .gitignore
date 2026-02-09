@@ -43,3 +43,5 @@ next-env.d.ts
 # firebase
 firebase-credentials.json
 test-firebase.js
+
+.vercel

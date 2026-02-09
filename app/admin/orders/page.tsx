@@ -66,15 +66,29 @@ function OrderDetailModal({
     }
   };
 
-  const sendWhatsApp = () => {
-    const statusMsg = ORDER_STATUS_CONFIG[order.status];
-    const message = encodeURIComponent(
-      `Hola ${order.customerName}!\n\n` +
-      `Tu pedido *${order.orderNumber}* está: ${statusMsg.icon} ${statusMsg.label}\n\n` +
-      `Total: $${order.total.toFixed(2)}\n\n` +
-      `Gracias por tu compra! 🙏`
-    );
-    window.open(`https://wa.me/${order.customerPhone.replace(/\D/g, "")}?text=${message}`, "_blank");
+  const sendWhatsApp = (type: "status" | "ready_pickup" | "ready_delivery" | "on_way_location") => {
+    let message = "";
+    const cleanPhone = order.customerPhone.replace(/\D/g, "");
+
+    switch (type) {
+      case "ready_pickup":
+        message = `Hola ${order.customerName} 👋\n\nTu pedido *${order.orderNumber}* está LISTO ✅.\n\nPuedes pasar a recogerlo cuando gustes.\n\nTotal a pagar: $${order.total.toFixed(2)}`;
+        break;
+      case "ready_delivery":
+        message = `Hola ${order.customerName} 👋\n\nTu pedido *${order.orderNumber}* está LISTO ✅.\n\n¿Prefieres pasar por él o te lo enviamos a domicilio? 🛵`;
+        break;
+      case "on_way_location":
+        message = `Hola ${order.customerName} 👋\n\nTu pedido va en camino 🛵.\n\nPor favor, compártenos tu ubicación actual para facilitar la entrega 📍.\n\nTotal: $${order.total.toFixed(2)}`;
+        break;
+      default:
+        const statusMsg = ORDER_STATUS_CONFIG[order.status];
+        message = `Hola ${order.customerName}!\n\n` +
+          `Tu pedido *${order.orderNumber}* está: ${statusMsg.icon} ${statusMsg.label}\n\n` +
+          `Total: $${order.total.toFixed(2)}\n\n` +
+          `Gracias por tu compra! 🙏`;
+    }
+
+    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, "_blank");
   };
 
   return (
@@ -229,10 +243,19 @@ function OrderDetailModal({
               </Button>
             )}
 
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" onClick={() => sendWhatsApp("ready_pickup")} className="text-green-400 border-green-500/30 hover:bg-green-500/10 text-xs">
+                <CheckCircle className="w-3 h-3 mr-1" /> Listo (Recoger)
+              </Button>
+              <Button variant="outline" onClick={() => sendWhatsApp("on_way_location")} className="text-blue-400 border-blue-500/30 hover:bg-blue-500/10 text-xs">
+                <Truck className="w-3 h-3 mr-1" /> Enviar (Pedir Ubicación)
+              </Button>
+            </div>
+
             <div className="grid grid-cols-3 gap-3">
-              <Button variant="outline" onClick={sendWhatsApp} className="text-green-400 border-green-500/30 hover:bg-green-500/10">
+              <Button variant="outline" onClick={() => sendWhatsApp("status")} className="text-slate-400 border-slate-500/30 hover:bg-slate-500/10">
                 <MessageCircle className="w-4 h-4 mr-2" />
-                WhatsApp
+                Info
               </Button>
               <Button variant="outline">
                 <FileText className="w-4 h-4 mr-2" />
@@ -245,7 +268,7 @@ function OrderDetailModal({
                   className="text-red-400 border-red-500/30 hover:bg-red-500/10"
                 >
                   <XCircle className="w-4 h-4 mr-2" />
-                  Cancelar
+                  Cancel
                 </Button>
               )}
             </div>
@@ -476,8 +499,12 @@ function OrdersContent() {
 }
 
 export default function OrdersPage() {
+  const { user } = useAuth();
+
+  if (!user) return <div className="p-8 text-center text-slate-400">Cargando sesión...</div>;
+
   return (
-    <SalesOrdersProvider shopId="default">
+    <SalesOrdersProvider shopId={user.shopId || "default"}>
       <OrdersContent />
     </SalesOrdersProvider>
   );

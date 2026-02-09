@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { FileText, Send, CheckCircle, Clock, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui";
-import type { Order } from "@/components/shared";
+import type { SalesOrder } from "@/components/shared/sales-orders-context";
 import { cn } from "@/lib/utils";
 
 interface DailyReportCardProps {
   shopName: string;
-  orders: Order[];
+  orders: SalesOrder[];
   totalSales: number;
   totalOrders: number;
   topService: string | null;
@@ -117,7 +117,7 @@ export function DailyReportCard({
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-400" />
                   <span className="text-sm text-white">
-                    {order.items.map((i) => i.name).join(", ")}
+                    {order.items.map((i) => i.productName).join(", ")}
                   </span>
                 </div>
                 <span className="text-sm font-medium text-gold">

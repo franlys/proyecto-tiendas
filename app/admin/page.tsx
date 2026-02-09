@@ -17,7 +17,7 @@ import {
   Package,
   Bot,
 } from "lucide-react";
-import { OrdersProvider, useOrders, useAuth, ShopsProvider, useShops, AgencyProvider } from "@/components/shared";
+import { OrdersProvider, useOrders, useAuth, ShopsProvider, useShops, AgencyProvider, SalesOrdersProvider, useSalesOrders } from "@/components/shared";
 import { DashboardKPIs, SalesChart, SubscriptionLock, SupportWidget, AgencyContactCard } from "@/components/admin";
 import { DailyReportCard } from "@/components/admin";
 import { DatabaseSeeder } from "@/components/admin/database-seeder";
@@ -50,8 +50,8 @@ function generateDemoData() {
   return data;
 }
 
-function DashboardContent({ isSuperAdmin, shop }: { isSuperAdmin: boolean; shop?: { slug: string; name: string } | null }) {
-  const { getTodayStats, getLast7DaysStats, getTodayOrders, orders } = useOrders();
+function DashboardContent({ isSuperAdmin, shop }: { isSuperAdmin: boolean; shop?: any | null }) {
+  const { orders, getTodayOrders } = useSalesOrders();
   const [isClient, setIsClient] = useState(false);
 
   // Ensure we're on the client
@@ -67,9 +67,54 @@ function DashboardContent({ isSuperAdmin, shop }: { isSuperAdmin: boolean; shop?
     );
   }
 
-  const todayStats = getTodayStats();
-  const chartData = getLast7DaysStats();
+  // Calculate Stats
   const todayOrders = getTodayOrders();
+  const totalSales = todayOrders.reduce((sum, o) => sum + o.total, 0);
+  const totalOrders = todayOrders.length;
+  const averageTicket = totalOrders > 0 ? totalSales / totalOrders : 0;
+
+  // Calculate Top Service
+  const serviceCount: Record<string, number> = {};
+  todayOrders.forEach((order) => {
+    order.items.forEach((item) => {
+      serviceCount[item.productName] = (serviceCount[item.productName] || 0) + 1;
+    });
+  });
+
+  let topService: string | null = null;
+  let maxCount = 0;
+  Object.entries(serviceCount).forEach(([name, count]) => {
+    if (count > maxCount) {
+      maxCount = count;
+      topService = name;
+    }
+  });
+
+  const todayStats = {
+    totalSales,
+    totalOrders,
+    averageTicket,
+    topService
+  };
+
+  // Calculate Last 7 Days Stats
+  const chartData = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().split("T")[0];
+    const days = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
+    const dayOrders = orders.filter(o => o.createdAt.startsWith(dateStr));
+
+    chartData.push({
+      date: dateStr,
+      day: days[d.getDay()],
+      sales: dayOrders.reduce((sum, o) => sum + o.total, 0),
+      orders: dayOrders.length
+    });
+  }
+
 
   // Mix demo data with real data if no orders exist
   const hasRealData = orders.length > 0;
@@ -108,7 +153,7 @@ function DashboardContent({ isSuperAdmin, shop }: { isSuperAdmin: boolean; shop?
                 totalSales={todayStats.totalSales}
                 totalOrders={todayStats.totalOrders}
                 topService={todayStats.topService}
-                ownerPhone="+34600123456"
+                ownerPhone={shop?.contact?.phone || ""}
               />
             </div>
           </div>
@@ -371,9 +416,9 @@ function AdminDashboardWithSubscription() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <OrdersProvider>
+        <SalesOrdersProvider shopId={user?.shopId || "default"}>
           <DashboardContent isSuperAdmin={isSuperAdmin} shop={shop} />
-        </OrdersProvider>
+        </SalesOrdersProvider>
       </main>
 
       {/* Floating Support Widget */}
@@ -391,3 +436,4 @@ export default function AdminDashboardPage() {
     </ShopsProvider>
   );
 }
+
