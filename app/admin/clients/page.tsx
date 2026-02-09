@@ -11,8 +11,8 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 import {
-  OrdersProvider,
-  useOrders,
+  SalesOrdersProvider,
+  useSalesOrders,
   ClientsProvider,
   useClients,
   AuthProvider,
@@ -24,7 +24,7 @@ import { Button } from "@/components/ui";
 
 function CRMContent() {
   const { user } = useAuth();
-  const { orders } = useOrders();
+  // const { orders } = useOrders(); // Removed
   const { clients, addNote, deleteNote, toggleVIP } = useClients();
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -112,11 +112,10 @@ function CRMContent() {
 
         <button
           onClick={() => setFilterVIP(!filterVIP)}
-          className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-all ${
-            filterVIP
-              ? "bg-gold/20 border-gold/30 text-gold"
-              : "bg-white/5 border-white/10 text-slate-400 hover:border-gold/30"
-          }`}
+          className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-all ${filterVIP
+            ? "bg-gold/20 border-gold/30 text-gold"
+            : "bg-white/5 border-white/10 text-slate-400 hover:border-gold/30"
+            }`}
         >
           <Star className={`w-4 h-4 ${filterVIP && "fill-current"}`} />
           Solo VIP
@@ -165,67 +164,85 @@ function CRMContent() {
 }
 
 function CRMWrapper() {
-  const { orders } = useOrders();
+  const { orders } = useSalesOrders();
+  const { user } = useAuth();
 
   return (
-    <ClientsProvider orders={orders}>
+    <ClientsProvider orders={orders} shopId={user?.shopId}>
       <CRMContent />
     </ClientsProvider>
   );
 }
 
 export default function AdminClientsPage() {
+  const { user } = useAuth();
+
   return (
     <AuthProvider>
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-white/10 py-6">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Link
-                href="/admin"
-                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-rose-500 to-orange-400 flex items-center justify-center">
-                <Users className="w-5 h-5 text-white" />
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <header className="border-b border-white/10 py-6">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/admin"
+                  className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </Link>
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-rose-500 to-orange-400 flex items-center justify-center">
+                  <Users className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h1 className="font-display text-2xl font-bold text-white">
+                    CRM Clientes
+                  </h1>
+                  <p className="text-slate-400 text-sm">
+                    Gestiona tus clientes y notas privadas
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="font-display text-2xl font-bold text-white">
-                  CRM Clientes
-                </h1>
-                <p className="text-slate-400 text-sm">
-                  Gestiona tus clientes y notas privadas
-                </p>
-              </div>
+
+              <nav className="flex items-center gap-2">
+                <Link href="/admin">
+                  <Button variant="ghost" size="sm">
+                    <LayoutDashboard className="w-4 h-4" />
+                    Dashboard
+                  </Button>
+                </Link>
+                <Link href="/admin/settings">
+                  <Button variant="ghost" size="sm">
+                    <Settings className="w-4 h-4" />
+                    Config
+                  </Button>
+                </Link>
+              </nav>
             </div>
-
-            <nav className="flex items-center gap-2">
-              <Link href="/admin">
-                <Button variant="ghost" size="sm">
-                  <LayoutDashboard className="w-4 h-4" />
-                  Dashboard
-                </Button>
-              </Link>
-              <Link href="/admin/settings">
-                <Button variant="ghost" size="sm">
-                  <Settings className="w-4 h-4" />
-                  Config
-                </Button>
-              </Link>
-            </nav>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <OrdersProvider>
-          <CRMWrapper />
-        </OrdersProvider>
-      </main>
-    </div>
+        <main className="container mx-auto px-4 py-8">
+          <ClientPageContent />
+        </main>
+      </div>
     </AuthProvider>
   );
+}
+
+function ClientPageContent() {
+  const { user } = useAuth();
+
+  // We need to wrap with SalesOrdersProvider here to access shopId from useAuth
+  // But useAuth needs AuthProvider which is already wrapping AdminClientsPage
+
+  if (!user?.shopId) {
+    return <div className="text-white">Cargando...</div>;
+  }
+
+  return (
+    <SalesOrdersProvider shopId={user.shopId}>
+      <CRMWrapper />
+    </SalesOrdersProvider>
+  )
 }

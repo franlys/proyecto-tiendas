@@ -8,7 +8,9 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import type { Order } from "./orders-context";
+import type { SalesOrder } from "./sales-orders-context";
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 
 export interface ClientNote {
   id: string;
@@ -26,7 +28,7 @@ export interface Client {
   totalSpent: number;
   totalVisits: number;
   lastVisit: string;
-  orders: Order[];
+  orders: SalesOrder[];
 }
 
 interface ClientsContextValue {
@@ -35,7 +37,8 @@ interface ClientsContextValue {
   addNote: (clientId: string, note: string) => void;
   deleteNote: (clientId: string, noteId: string) => void;
   toggleVIP: (clientId: string) => void;
-  refreshClients: (orders: Order[]) => void;
+  refreshClients: (orders: SalesOrder[]) => void;
+  firestoreCustomers: any[];
 }
 
 const NOTES_STORAGE_KEY = "client_notes";
@@ -45,18 +48,15 @@ const ClientsContext = createContext<ClientsContextValue | undefined>(undefined)
 
 interface ClientsProviderProps {
   children: ReactNode;
-  orders: Order[];
+  orders: SalesOrder[];
+  shopId?: string;
 }
 
-// Generate client ID from name (simplified, in production would use phone/email)
-function generateClientId(shopName: string): string {
-  return `client_${shopName.toLowerCase().replace(/\s+/g, "_")}`;
-}
-
-export function ClientsProvider({ children, orders }: ClientsProviderProps) {
+export function ClientsProvider({ children, orders, shopId }: ClientsProviderProps) {
   const [clientNotes, setClientNotes] = useState<Record<string, ClientNote[]>>({});
   const [clientVIP, setClientVIP] = useState<Record<string, boolean>>({});
   const [clients, setClients] = useState<Client[]>([]);
+  const [firestoreCustomers, setFirestoreCustomers] = useState<any[]>([]);
 
   // Load notes and VIP status from localStorage
   useEffect(() => {
@@ -93,21 +93,40 @@ export function ClientsProvider({ children, orders }: ClientsProviderProps) {
     }
   }, [clientVIP]);
 
-  // Extract unique clients from orders
+  // Subscribe to Firestore Customers
+  useEffect(() => {
+    if (!shopId || shopId === "default") return;
+
+    const q = query(
+      collection(db, "shops", shopId, "customers"),
+      orderBy("lastActive", "desc")
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const customers = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setFirestoreCustomers(customers);
+    }, (error) => {
+      console.error("Error fetching customers:", error);
+    });
+
+    return () => unsubscribe();
+  }, [shopId]);
+
+  // Extract unique clients from orders AND Firestore
   const refreshClients = useCallback(
-    (ordersList: Order[]) => {
+    (ordersList: SalesOrder[]) => {
       const clientMap = new Map<string, Client>();
 
+      // 1. Process Orders first
       ordersList.forEach((order) => {
-        // Phase 9: Use Phone as unique identifier
-        // If no phone, we use a fallback (e.g. for content created before this feature)
-        // In a real app we'd enforce phone on checkout.
         const clientId = order.customerPhone
           ? order.customerPhone.replace(/\D/g, "")
           : `guest_${order.id}`;
 
         if (!order.customerPhone) {
-          // Skip guest orders for loyalty tracking (or handle differently)
           return;
         }
 
@@ -118,8 +137,9 @@ export function ClientsProvider({ children, orders }: ClientsProviderProps) {
           existing.orders.push(order);
 
           // Update last visit if this order is more recent
-          if (new Date(order.date) > new Date(existing.lastVisit)) {
-            existing.lastVisit = order.date;
+          // SalesOrder uses createdAt, Order used date
+          if (new Date(order.createdAt) > new Date(existing.lastVisit)) {
+            existing.lastVisit = order.createdAt;
           }
         } else {
           clientMap.set(clientId, {
@@ -130,8 +150,35 @@ export function ClientsProvider({ children, orders }: ClientsProviderProps) {
             notes: clientNotes[clientId] || [],
             totalSpent: order.total,
             totalVisits: 1,
-            lastVisit: order.date,
+            lastVisit: order.createdAt,
             orders: [order],
+          });
+        }
+      });
+
+      // 2. Merge with Firestore Customers
+      firestoreCustomers.forEach(customer => {
+        // ID in Firestore is usually the phone number
+        const clientId = customer.id;
+
+        if (clientMap.has(clientId)) {
+          // Update existing with Firestore data (name might be better?)
+          const existing = clientMap.get(clientId)!;
+          if (customer.name && existing.name === "Cliente") {
+            existing.name = customer.name;
+          }
+        } else {
+          // Add new client from Firestore (WhatsApp contact without orders)
+          clientMap.set(clientId, {
+            id: clientId,
+            name: customer.name || "Cliente WhatsApp",
+            phone: customer.phone || clientId,
+            isVIP: clientVIP[clientId] || false,
+            notes: clientNotes[clientId] || [],
+            totalSpent: 0,
+            totalVisits: 0,
+            lastVisit: customer.lastActive || new Date().toISOString(),
+            orders: [],
           });
         }
       });
@@ -143,13 +190,13 @@ export function ClientsProvider({ children, orders }: ClientsProviderProps) {
 
       setClients(clientsList);
     },
-    [clientNotes, clientVIP]
+    [clientNotes, clientVIP, firestoreCustomers]
   );
 
-  // Refresh clients when orders change
+  // Refresh clients when orders change or firestore customers change
   useEffect(() => {
     refreshClients(orders);
-  }, [orders, refreshClients]);
+  }, [orders, firestoreCustomers, refreshClients]);
 
   const getClient = useCallback(
     (clientId: string): Client | undefined => {
@@ -217,6 +264,7 @@ export function ClientsProvider({ children, orders }: ClientsProviderProps) {
         deleteNote,
         toggleVIP,
         refreshClients,
+        firestoreCustomers
       }}
     >
       {children}

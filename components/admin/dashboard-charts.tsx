@@ -9,7 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { TrendingUp, DollarSign, Calendar, Sparkles } from "lucide-react";
+import { TrendingUp, DollarSign, Calendar, Sparkles, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface KPICardProps {
@@ -165,6 +165,7 @@ interface DashboardKPIsProps {
   totalOrders: number;
   averageTicket: number;
   topService: string | null;
+  businessType?: "retail" | "service" | "rental" | "restaurant";
 }
 
 export function DashboardKPIs({
@@ -172,7 +173,10 @@ export function DashboardKPIs({
   totalOrders,
   averageTicket,
   topService,
+  businessType = "service", // Default to service for backward compatibility
 }: DashboardKPIsProps) {
+  const isService = businessType === "service" || businessType === "rental";
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <KPICard
@@ -181,20 +185,29 @@ export function DashboardKPIs({
         icon={<DollarSign className="w-6 h-6" />}
         variant="primary"
       />
+
+      {/* Conditionally show Appointments or Orders */}
       <KPICard
-        title="Citas Hoy"
+        title={isService ? "Citas Hoy" : "Pedidos Hoy"}
         value={totalOrders}
-        subtitle={totalOrders === 1 ? "cita agendada" : "citas agendadas"}
-        icon={<Calendar className="w-6 h-6" />}
+        subtitle={
+          totalOrders === 1
+            ? (isService ? "cita agendada" : "pedido recibido")
+            : (isService ? "citas agendadas" : "pedidos recibidos")
+        }
+        icon={isService ? <Calendar className="w-6 h-6" /> : <Package className="w-6 h-6" />}
         variant="gold"
       />
+
       <KPICard
         title="Ticket Promedio"
         value={`$${Math.round(averageTicket).toLocaleString()}`}
         icon={<TrendingUp className="w-6 h-6" />}
       />
+
+      {/* Show Top Service/Product or specific metric based on type */}
       <KPICard
-        title="Top Servicio"
+        title={isService ? "Top Servicio" : "Top Producto"}
         value={topService || "—"}
         subtitle="Más solicitado hoy"
         icon={<Sparkles className="w-6 h-6" />}

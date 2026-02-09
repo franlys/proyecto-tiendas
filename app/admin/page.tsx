@@ -16,6 +16,7 @@ import {
   CreditCard,
   Package,
   Bot,
+  Megaphone,
 } from "lucide-react";
 import { OrdersProvider, useOrders, useAuth, ShopsProvider, useShops, AgencyProvider, SalesOrdersProvider, useSalesOrders } from "@/components/shared";
 import { DashboardKPIs, SalesChart, SubscriptionLock, SupportWidget, AgencyContactCard } from "@/components/admin";
@@ -125,12 +126,13 @@ function DashboardContent({ isSuperAdmin, shop }: { isSuperAdmin: boolean; shop?
       {/* Phase 21: Hide financial widgets for Super Admin (privacy) */}
       {!isSuperAdmin ? (
         <>
-          {/* KPI Cards */}
+          {/* Dashboard Content */}
           <DashboardKPIs
             totalSales={todayStats.totalSales}
             totalOrders={todayStats.totalOrders}
             averageTicket={todayStats.averageTicket}
             topService={todayStats.topService}
+            businessType={shop?.businessType}
           />
 
           {/* Charts and Report Section */}
@@ -371,6 +373,12 @@ function AdminDashboardWithSubscription() {
                 <Button variant="ghost" size="sm" className="px-2 sm:px-3">
                   <Bot className="w-4 h-4" />
                   <span className="hidden sm:inline ml-1">Bot WA</span>
+                </Button>
+              </Link>
+              <Link href="/admin/marketing">
+                <Button variant="ghost" size="sm" className="px-2 sm:px-3">
+                  <Megaphone className="w-4 h-4" />
+                  <span className="hidden sm:inline ml-1">Marketing</span>
                 </Button>
               </Link>
               <Link href="/admin/promos">
