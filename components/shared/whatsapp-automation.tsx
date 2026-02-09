@@ -216,7 +216,18 @@ import {
     ChevronUp,
     Bell,
     Phone,
+    Plus,
+    UserPlus,
 } from "lucide-react";
+
+// Staff phone interface
+interface StaffNotificationPhone {
+    id: string;
+    phone: string;
+    name: string;
+    enabled: boolean;
+    role?: string;
+}
 
 // Interface matching the server-side WhatsAppAutoReplyConfig
 interface WhatsAppAutoReplyConfig {
@@ -234,6 +245,9 @@ interface WhatsAppAutoReplyConfig {
     businessHoursEnd: string;
     timezone: string;
     cooldownMinutes: number;
+    ownerNotificationPhone?: string;
+    notifyOwnerOnOrder?: boolean;
+    staffNotificationPhones?: StaffNotificationPhone[];
 }
 
 interface ShopInfo {
@@ -264,7 +278,10 @@ function AutoReplyConfig({ shopSlug }: { shopSlug: string }) {
         cooldownMinutes: 0, // Default: responder siempre
         ownerNotificationPhone: "",
         notifyOwnerOnOrder: true,
+        staffNotificationPhones: [],
     });
+    const [newStaffName, setNewStaffName] = useState("");
+    const [newStaffPhone, setNewStaffPhone] = useState("");
     const [shopInfo, setShopInfo] = useState<ShopInfo | null>(null);
     const [saved, setSaved] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -322,6 +339,41 @@ function AutoReplyConfig({ shopSlug }: { shopSlug: string }) {
     // Determine if shop is service-based (to suggest booking option)
     const isServiceBusiness = shopInfo?.businessType &&
         ["beauty", "repair", "health", "education", "services"].includes(shopInfo.businessType);
+
+    // Staff management functions
+    const addStaffPhone = () => {
+        if (!newStaffName.trim() || !newStaffPhone.trim()) return;
+
+        const newStaff: StaffNotificationPhone = {
+            id: `staff-${Date.now()}`,
+            name: newStaffName.trim(),
+            phone: newStaffPhone.replace(/\D/g, ""),
+            enabled: true,
+        };
+
+        setConfig({
+            ...config,
+            staffNotificationPhones: [...(config.staffNotificationPhones || []), newStaff],
+        });
+        setNewStaffName("");
+        setNewStaffPhone("");
+    };
+
+    const removeStaffPhone = (id: string) => {
+        setConfig({
+            ...config,
+            staffNotificationPhones: (config.staffNotificationPhones || []).filter(s => s.id !== id),
+        });
+    };
+
+    const toggleStaffPhone = (id: string) => {
+        setConfig({
+            ...config,
+            staffNotificationPhones: (config.staffNotificationPhones || []).map(s =>
+                s.id === id ? { ...s, enabled: !s.enabled } : s
+            ),
+        });
+    };
 
     if (loadingConfig) {
         return (
@@ -528,21 +580,93 @@ function AutoReplyConfig({ shopSlug }: { shopSlug: string }) {
                             </label>
 
                             {config.notifyOwnerOnOrder && (
-                                <div>
-                                    <label className="block text-xs text-slate-400 mb-1">
-                                        <Phone className="w-3 h-3 inline mr-1" />
-                                        Teléfono personal del dueño
-                                    </label>
-                                    <input
-                                        type="tel"
-                                        value={config.ownerNotificationPhone || ""}
-                                        onChange={(e) => setConfig({ ...config, ownerNotificationPhone: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-purple-500/50"
-                                        placeholder="Ej: 8091234567"
-                                    />
-                                    <p className="text-xs text-slate-500 mt-1">
-                                        Recibirás notificaciones de nuevos pedidos en este número
-                                    </p>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-xs text-slate-400 mb-1">
+                                            <Phone className="w-3 h-3 inline mr-1" />
+                                            Teléfono personal del dueño
+                                        </label>
+                                        <input
+                                            type="tel"
+                                            value={config.ownerNotificationPhone || ""}
+                                            onChange={(e) => setConfig({ ...config, ownerNotificationPhone: e.target.value })}
+                                            className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-purple-500/50"
+                                            placeholder="Ej: 8091234567"
+                                        />
+                                    </div>
+
+                                    {/* Staff Phones List */}
+                                    <div>
+                                        <label className="block text-xs text-slate-400 mb-2">
+                                            <UserPlus className="w-3 h-3 inline mr-1" />
+                                            Empleados para notificar (opcional)
+                                        </label>
+
+                                        {/* Existing staff */}
+                                        {(config.staffNotificationPhones || []).length > 0 && (
+                                            <div className="space-y-2 mb-3">
+                                                {config.staffNotificationPhones!.map((staff) => (
+                                                    <div
+                                                        key={staff.id}
+                                                        className={cn(
+                                                            "flex items-center gap-2 p-2 rounded-lg border",
+                                                            staff.enabled
+                                                                ? "bg-green-500/10 border-green-500/20"
+                                                                : "bg-white/5 border-white/10 opacity-50"
+                                                        )}
+                                                    >
+                                                        <label className="relative inline-flex items-center cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={staff.enabled}
+                                                                onChange={() => toggleStaffPhone(staff.id)}
+                                                                className="sr-only peer"
+                                                            />
+                                                            <div className="w-8 h-4 bg-white/10 rounded-full peer peer-checked:bg-green-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:after:translate-x-4"></div>
+                                                        </label>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm text-white truncate">{staff.name}</p>
+                                                            <p className="text-xs text-slate-400">{staff.phone}</p>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => removeStaffPhone(staff.id)}
+                                                            className="p-1 hover:bg-red-500/20 rounded text-red-400"
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Add new staff */}
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={newStaffName}
+                                                onChange={(e) => setNewStaffName(e.target.value)}
+                                                className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-purple-500/50"
+                                                placeholder="Nombre"
+                                            />
+                                            <input
+                                                type="tel"
+                                                value={newStaffPhone}
+                                                onChange={(e) => setNewStaffPhone(e.target.value)}
+                                                className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-purple-500/50"
+                                                placeholder="Teléfono"
+                                            />
+                                            <button
+                                                onClick={addStaffPhone}
+                                                disabled={!newStaffName.trim() || !newStaffPhone.trim()}
+                                                className="px-3 py-2 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                <Plus className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                        <p className="text-xs text-slate-500 mt-2">
+                                            Todos los teléfonos activos recibirán notificaciones de pedidos
+                                        </p>
+                                    </div>
                                 </div>
                             )}
                         </div>

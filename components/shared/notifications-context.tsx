@@ -66,10 +66,24 @@ export function NotificationsProvider({
     const [hasNotificationPermission, setHasNotificationPermission] = useState(false);
     const [lastNotificationId, setLastNotificationId] = useState<string | null>(null);
 
-    // Check notification permission on mount
+    // Check notification permission and register service worker on mount
     useEffect(() => {
-        if (typeof window !== "undefined" && "Notification" in window) {
+        if (typeof window === "undefined") return;
+
+        // Check notification permission
+        if ("Notification" in window) {
             setHasNotificationPermission(Notification.permission === "granted");
+        }
+
+        // Register service worker for push notifications
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("/sw.js")
+                .then((registration) => {
+                    console.log("[Notifications] Service Worker registered:", registration.scope);
+                })
+                .catch((error) => {
+                    console.error("[Notifications] Service Worker registration failed:", error);
+                });
         }
     }, []);
 
@@ -111,8 +125,8 @@ export function NotificationsProvider({
         try {
             const browserNotification = new Notification(notification.title, {
                 body: notification.message,
-                icon: "/icon-192.png",
-                badge: "/icon-72.png",
+                icon: "/icons/icon-192.png",
+                badge: "/icons/icon-192.png",
                 tag: notification.id,
                 requireInteraction: notification.type === "new_order",
             });

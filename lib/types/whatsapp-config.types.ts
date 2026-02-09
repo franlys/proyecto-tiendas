@@ -3,6 +3,15 @@
  * Almacenado en: shops/{shopId}/whatsapp_bot/config
  */
 
+// Teléfono de staff para notificaciones
+export interface StaffNotificationPhone {
+    id: string;          // ID único
+    phone: string;       // Número de teléfono
+    name: string;        // Nombre del empleado
+    enabled: boolean;    // Si está activo
+    role?: string;       // Rol opcional (dueño, vendedor, etc.)
+}
+
 export interface WhatsAppAutoReplyConfig {
     // Estado general
     enabled: boolean;
@@ -36,6 +45,9 @@ export interface WhatsAppAutoReplyConfig {
     // Notificaciones de pedidos
     ownerNotificationPhone?: string;  // Teléfono personal del dueño para notificaciones
     notifyOwnerOnOrder?: boolean;     // Enviar notificación WhatsApp al dueño
+
+    // Múltiples teléfonos de staff para notificaciones
+    staffNotificationPhones?: StaffNotificationPhone[];
 
     // Metadata
     updatedAt?: string;

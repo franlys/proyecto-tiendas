@@ -7,6 +7,7 @@
 import { adminDb } from "@/lib/firebase-admin";
 import { sendTextMessage } from "@/lib/evolution";
 import { FieldValue } from "firebase-admin/firestore";
+import { sendOrderPushNotification } from "@/lib/services/push-notification.service";
 
 // Patrones para detectar pedidos
 const ORDER_PATTERNS = {
@@ -158,15 +159,23 @@ export async function saveWhatsAppOrder(
   }
 }
 
+interface NotificationPhone {
+  phone: string;
+  name: string;
+  role?: string;
+}
+
 /**
- * Obtiene el teléfono personal del dueño de la tienda
+ * Obtiene todos los teléfonos para notificaciones (dueño + staff)
  */
-export async function getOwnerPhone(shopId: string): Promise<string | null> {
+export async function getAllNotificationPhones(shopId: string): Promise<NotificationPhone[]> {
   const db = adminDb();
-  if (!db) return null;
+  if (!db) return [];
+
+  const phones: NotificationPhone[] = [];
 
   try {
-    // Primero intentar desde whatsapp_bot/config
+    // Obtener configuración de WhatsApp
     const configDoc = await db
       .collection("shops")
       .doc(shopId)
@@ -176,24 +185,63 @@ export async function getOwnerPhone(shopId: string): Promise<string | null> {
 
     if (configDoc.exists) {
       const data = configDoc.data();
+
+      // Agregar teléfono del dueño si existe
       if (data?.ownerNotificationPhone) {
-        return data.ownerNotificationPhone;
+        phones.push({
+          phone: data.ownerNotificationPhone,
+          name: "Dueño",
+          role: "owner",
+        });
+      }
+
+      // Agregar teléfonos de staff habilitados
+      if (data?.staffNotificationPhones && Array.isArray(data.staffNotificationPhones)) {
+        for (const staff of data.staffNotificationPhones) {
+          if (staff.enabled && staff.phone) {
+            // Evitar duplicados con el teléfono del dueño
+            if (!phones.some(p => p.phone === staff.phone)) {
+              phones.push({
+                phone: staff.phone,
+                name: staff.name || "Staff",
+                role: staff.role || "staff",
+              });
+            }
+          }
+        }
       }
     }
 
-    // Fallback: buscar en la tienda principal
-    const shopDoc = await db.collection("shops").doc(shopId).get();
-    if (shopDoc.exists) {
-      const data = shopDoc.data();
-      // Puede estar en contact.ownerPhone o en ownerPhone
-      return data?.ownerPhone || data?.contact?.ownerPhone || null;
+    // Si no hay phones, fallback a la tienda principal
+    if (phones.length === 0) {
+      const shopDoc = await db.collection("shops").doc(shopId).get();
+      if (shopDoc.exists) {
+        const data = shopDoc.data();
+        const ownerPhone = data?.ownerPhone || data?.contact?.ownerPhone;
+        if (ownerPhone) {
+          phones.push({
+            phone: ownerPhone,
+            name: "Dueño",
+            role: "owner",
+          });
+        }
+      }
     }
 
-    return null;
+    return phones;
   } catch (error) {
-    console.error("[WhatsApp Order] Error getting owner phone:", error);
-    return null;
+    console.error("[WhatsApp Order] Error getting notification phones:", error);
+    return [];
   }
+}
+
+/**
+ * Obtiene el teléfono personal del dueño de la tienda (legacy - mantener compatibilidad)
+ */
+export async function getOwnerPhone(shopId: string): Promise<string | null> {
+  const phones = await getAllNotificationPhones(shopId);
+  const owner = phones.find(p => p.role === "owner");
+  return owner?.phone || phones[0]?.phone || null;
 }
 
 /**
@@ -338,28 +386,57 @@ export async function processWhatsAppOrder(
     console.error("[WhatsApp Order] Error sending customer confirmation:", error);
   }
 
-  // 4. Notificar al dueño por WhatsApp
+  // 4. Notificar a TODOS los teléfonos configurados (dueño + staff)
   try {
-    const ownerPhone = await getOwnerPhone(shopId);
+    const notificationPhones = await getAllNotificationPhones(shopId);
 
-    if (ownerPhone) {
-      const ownerMessage = generateOwnerNotification(
+    if (notificationPhones.length > 0) {
+      const staffMessage = generateOwnerNotification(
         savedOrder.orderNumber,
         order,
         customerPhone,
         customerName
       );
-      await sendTextMessage(instanceName, ownerPhone, ownerMessage);
-      console.log(`[WhatsApp Order] Sent notification to owner ${ownerPhone}`);
+
+      // Enviar a todos en paralelo
+      const notificationPromises = notificationPhones.map(async (staff) => {
+        try {
+          await sendTextMessage(instanceName, staff.phone, staffMessage);
+          console.log(`[WhatsApp Order] Sent notification to ${staff.name} (${staff.role}): ${staff.phone}`);
+          return { success: true, phone: staff.phone };
+        } catch (error) {
+          console.error(`[WhatsApp Order] Failed to notify ${staff.phone}:`, error);
+          return { success: false, phone: staff.phone, error };
+        }
+      });
+
+      const results = await Promise.all(notificationPromises);
+      const successCount = results.filter(r => r.success).length;
+      console.log(`[WhatsApp Order] Notified ${successCount}/${notificationPhones.length} staff members`);
     } else {
-      console.log(`[WhatsApp Order] No owner phone configured for shop ${shopId}`);
+      console.log(`[WhatsApp Order] No notification phones configured for shop ${shopId}`);
     }
   } catch (error) {
-    console.error("[WhatsApp Order] Error notifying owner:", error);
+    console.error("[WhatsApp Order] Error notifying staff:", error);
   }
 
   // 5. Crear notificación en el panel admin
   await createAdminNotification(shopId, savedOrder.orderNumber, order, customerPhone, customerName);
+
+  // 6. Enviar push notification a dispositivos suscritos
+  try {
+    const pushResult = await sendOrderPushNotification(
+      shopId,
+      savedOrder.orderNumber,
+      customerName || "Cliente",
+      order.total
+    );
+    if (pushResult.sent > 0) {
+      console.log(`[WhatsApp Order] Push notification sent to ${pushResult.sent} devices`);
+    }
+  } catch (error) {
+    console.error("[WhatsApp Order] Error sending push notification:", error);
+  }
 
   return {
     isOrder: true,
