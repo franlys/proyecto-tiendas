@@ -199,7 +199,9 @@ export async function sendTextMessage(
     method: "POST",
     body: JSON.stringify({
       number: cleanPhone,
-      text: message,
+      textMessage: {
+        text: message,
+      },
     }),
   });
 }
