@@ -14,22 +14,49 @@ interface ProductGridProps {
   products: Product[];
 }
 
-// Helper to get category display name (handles custom categories)
-function getCategoryLabel(product: Product): string {
+// Extended product type with custom category colors
+interface ExtendedProduct extends Product {
+  customCategory?: string;
+  categoryColors?: {
+    backgroundColor: string;
+    textColor: string;
+  };
+}
+
+// Category display info with optional colors
+interface CategoryDisplayInfo {
+  label: string;
+  backgroundColor?: string;
+  isCustom: boolean;
+}
+
+// Helper to get category display info (handles custom categories with colors)
+function getCategoryDisplayInfo(product: ExtendedProduct): CategoryDisplayInfo {
   // Check if it's a predefined category
   const predefinedLabel = PRODUCT_CATEGORY_LABELS[product.category as ProductCategory];
   if (predefinedLabel) {
-    return predefinedLabel;
+    return { label: predefinedLabel, isCustom: false };
   }
+
+  // It's a custom category
+  let label = product.category;
+
   // Check for customCategory field
-  if ((product as any).customCategory) {
-    return (product as any).customCategory;
+  if (product.customCategory) {
+    label = product.customCategory;
+  } else {
+    // Fallback: capitalize the category key
+    label = product.category
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   }
-  // Fallback: capitalize the category key
-  return product.category
-    .split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+
+  return {
+    label,
+    backgroundColor: product.categoryColors?.backgroundColor,
+    isCustom: true,
+  };
 }
 
 export function ProductGrid({ products }: ProductGridProps) {
@@ -70,34 +97,46 @@ export function ProductGrid({ products }: ProductGridProps) {
     );
   }
 
-  // Get the display label for a category (from first product in that category)
-  const getCategoryDisplayLabel = (categoryKey: string): string => {
+  // Get the display info for a category (from first product in that category)
+  const getCategoryInfo = (categoryKey: string): CategoryDisplayInfo => {
     const firstProduct = productsByCategory[categoryKey]?.[0];
     if (firstProduct) {
-      return getCategoryLabel(firstProduct);
+      return getCategoryDisplayInfo(firstProduct as ExtendedProduct);
     }
     // Fallback
     const predefinedLabel = PRODUCT_CATEGORY_LABELS[categoryKey as ProductCategory];
     if (predefinedLabel) {
-      return predefinedLabel;
+      return { label: predefinedLabel, isCustom: false };
     }
-    return categoryKey
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    return {
+      label: categoryKey
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' '),
+      isCustom: false,
+    };
   };
 
   return (
     <div className="space-y-12">
-      {categories.map((category, categoryIndex) => (
+      {categories.map((category, categoryIndex) => {
+        const catInfo = getCategoryInfo(category);
+        return (
         <div key={category}>
           {/* Category Header */}
           <ScrollReveal delay={categoryIndex * 0.1}>
             <div className="mb-8">
               <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-2">
-                {getCategoryDisplayLabel(category)}
+                {catInfo.label}
               </h2>
-              <div className="w-20 h-1 bg-gradient-to-r from-gold to-orange-400 rounded-full" />
+              {catInfo.isCustom && catInfo.backgroundColor ? (
+                <div
+                  className="w-20 h-1 rounded-full"
+                  style={{ backgroundColor: catInfo.backgroundColor }}
+                />
+              ) : (
+                <div className="w-20 h-1 bg-gradient-to-r from-gold to-orange-400 rounded-full" />
+              )}
             </div>
           </ScrollReveal>
 
@@ -113,7 +152,8 @@ export function ProductGrid({ products }: ProductGridProps) {
             ))}
           </StaggerContainer>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

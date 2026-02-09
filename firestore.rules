@@ -35,7 +35,13 @@ service cloud.firestore {
         allow read: if true;
         allow write: if isShopOwner(shopId);
       }
-      
+
+      // SHOP SETTINGS (custom categories, etc.)
+      match /settings/{settingId} {
+        allow read: if true;
+        allow write: if isShopOwner(shopId);
+      }
+
       // STAFF & CONFIG
       match /staff/{staffId} {
         allow read: if true;

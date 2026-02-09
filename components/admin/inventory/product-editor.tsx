@@ -3,10 +3,16 @@
 import { useState, useEffect } from "react";
 import { Product, ProductVariant, ProductCategory, PRODUCT_CATEGORY_LABELS } from "@/lib/constants";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, Trash2, Tag } from "lucide-react";
+import { X, Plus, Trash2, Tag, Palette, Check } from "lucide-react";
 import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import {
+    CustomCategory,
+    CATEGORY_COLOR_PRESETS,
+    DEFAULT_CATEGORY_COLORS,
+    generateCategoryId
+} from "@/lib/types/custom-category.types";
 
 interface ProductEditorProps {
     product?: Product; // If null, creating new
@@ -20,6 +26,10 @@ interface ProductEditorProps {
 interface ExtendedProduct extends Omit<Product, 'category'> {
     category: ProductCategory | string;
     customCategory?: string; // The display name for custom categories
+    categoryColors?: {
+        backgroundColor: string;
+        textColor: string;
+    };
 }
 
 const EMPTY_PRODUCT: ExtendedProduct = {
@@ -37,9 +47,12 @@ const EMPTY_PRODUCT: ExtendedProduct = {
 export function ProductEditor({ product, isOpen, onClose, onSave, shopId }: ProductEditorProps) {
     const [formData, setFormData] = useState<ExtendedProduct>(EMPTY_PRODUCT);
     const [hasVariants, setHasVariants] = useState(false);
-    const [customCategories, setCustomCategories] = useState<string[]>([]);
+    const [customCategories, setCustomCategories] = useState<CustomCategory[]>([]);
     const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState("");
+    const [newCategoryBgColor, setNewCategoryBgColor] = useState(DEFAULT_CATEGORY_COLORS.backgroundColor);
+    const [newCategoryTextColor, setNewCategoryTextColor] = useState(DEFAULT_CATEGORY_COLORS.textColor);
+    const [showColorPicker, setShowColorPicker] = useState(false);
 
     // Load custom categories for this shop
     useEffect(() => {
@@ -50,7 +63,20 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId }: Prod
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    setCustomCategories(data.customCategories || []);
+                    const cats = data.customCategories || [];
+                    // Handle backwards compatibility: convert old string[] format to CustomCategory[]
+                    const normalizedCats: CustomCategory[] = cats.map((cat: string | CustomCategory) => {
+                        if (typeof cat === 'string') {
+                            return {
+                                id: generateCategoryId(cat),
+                                name: cat,
+                                backgroundColor: DEFAULT_CATEGORY_COLORS.backgroundColor,
+                                textColor: DEFAULT_CATEGORY_COLORS.textColor,
+                            };
+                        }
+                        return cat;
+                    });
+                    setCustomCategories(normalizedCats);
                 }
             } catch (error) {
                 console.error("Error loading custom categories:", error);
@@ -76,52 +102,100 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId }: Prod
                 setHasVariants(false);
                 setShowNewCategoryInput(false);
                 setNewCategoryName("");
+                setNewCategoryBgColor(DEFAULT_CATEGORY_COLORS.backgroundColor);
+                setNewCategoryTextColor(DEFAULT_CATEGORY_COLORS.textColor);
+                setShowColorPicker(false);
             }
         }
     }, [isOpen, product]);
 
     // Save new custom category to Firestore
-    const saveCustomCategory = async (categoryName: string) => {
-        if (!shopId || !categoryName.trim()) return;
+    const saveCustomCategory = async (categoryName: string, bgColor: string, textColor: string): Promise<CustomCategory | null> => {
+        if (!shopId || !categoryName.trim()) return null;
 
         const normalizedName = categoryName.trim();
+        const categoryId = generateCategoryId(normalizedName);
 
         // Don't add duplicates
-        if (customCategories.includes(normalizedName)) return;
+        if (customCategories.some(c => c.id === categoryId)) return null;
 
-        const newCategories = [...customCategories, normalizedName];
+        const newCategory: CustomCategory = {
+            id: categoryId,
+            name: normalizedName,
+            backgroundColor: bgColor,
+            textColor: textColor,
+        };
+
+        const newCategories = [...customCategories, newCategory];
 
         try {
             const docRef = doc(db, "shops", shopId, "settings", "categories");
             await setDoc(docRef, { customCategories: newCategories }, { merge: true });
             setCustomCategories(newCategories);
+            return newCategory;
         } catch (error) {
             console.error("Error saving custom category:", error);
+            return null;
         }
     };
 
     const handleCategoryChange = (value: string) => {
         if (value === "__new__") {
             setShowNewCategoryInput(true);
-            setFormData({ ...formData, category: "otros" });
+            setShowColorPicker(false);
+            setNewCategoryBgColor(DEFAULT_CATEGORY_COLORS.backgroundColor);
+            setNewCategoryTextColor(DEFAULT_CATEGORY_COLORS.textColor);
+            setFormData({ ...formData, category: "otros", categoryColors: undefined });
         } else {
             setShowNewCategoryInput(false);
-            setFormData({ ...formData, category: value, customCategory: undefined });
+            setShowColorPicker(false);
+            // Check if it's a custom category and get its colors
+            const customCat = customCategories.find(c => c.id === value);
+            if (customCat) {
+                setFormData({
+                    ...formData,
+                    category: value,
+                    customCategory: customCat.name,
+                    categoryColors: {
+                        backgroundColor: customCat.backgroundColor,
+                        textColor: customCat.textColor,
+                    }
+                });
+            } else {
+                setFormData({ ...formData, category: value, customCategory: undefined, categoryColors: undefined });
+            }
         }
     };
 
-    const handleAddCustomCategory = () => {
+    const handleAddCustomCategory = async () => {
         if (newCategoryName.trim()) {
-            const categoryKey = newCategoryName.trim().toLowerCase().replace(/\s+/g, '-');
-            saveCustomCategory(newCategoryName.trim());
-            setFormData({
-                ...formData,
-                category: categoryKey,
-                customCategory: newCategoryName.trim()
-            });
+            const savedCategory = await saveCustomCategory(
+                newCategoryName.trim(),
+                newCategoryBgColor,
+                newCategoryTextColor
+            );
+            if (savedCategory) {
+                setFormData({
+                    ...formData,
+                    category: savedCategory.id,
+                    customCategory: savedCategory.name,
+                    categoryColors: {
+                        backgroundColor: savedCategory.backgroundColor,
+                        textColor: savedCategory.textColor,
+                    }
+                });
+            }
             setShowNewCategoryInput(false);
+            setShowColorPicker(false);
             setNewCategoryName("");
+            setNewCategoryBgColor(DEFAULT_CATEGORY_COLORS.backgroundColor);
+            setNewCategoryTextColor(DEFAULT_CATEGORY_COLORS.textColor);
         }
+    };
+
+    const handleColorPresetClick = (bg: string, text: string) => {
+        setNewCategoryBgColor(bg);
+        setNewCategoryTextColor(text);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -171,10 +245,8 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId }: Prod
             return formData.customCategory;
         }
         // Try to find in custom categories list
-        const customCat = customCategories.find(c =>
-            c.toLowerCase().replace(/\s+/g, '-') === category
-        );
-        return customCat || category;
+        const customCat = customCategories.find(c => c.id === category);
+        return customCat?.name || category;
     };
 
     return (
@@ -257,10 +329,10 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId }: Prod
                                                     <optgroup label="Mis Categorías">
                                                         {customCategories.map((cat) => (
                                                             <option
-                                                                key={cat}
-                                                                value={cat.toLowerCase().replace(/\s+/g, '-')}
+                                                                key={cat.id}
+                                                                value={cat.id}
                                                             >
-                                                                {cat}
+                                                                {cat.name}
                                                             </option>
                                                         ))}
                                                     </optgroup>
@@ -274,25 +346,96 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId }: Prod
 
                                             {/* New category input */}
                                             {showNewCategoryInput && (
-                                                <div className="flex gap-2 mt-2">
-                                                    <div className="relative flex-1">
-                                                        <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-                                                        <input
-                                                            type="text"
-                                                            value={newCategoryName}
-                                                            onChange={(e) => setNewCategoryName(e.target.value)}
-                                                            placeholder="Ej. Arreglos Florales"
-                                                            className="w-full bg-zinc-800 border border-indigo-500/50 rounded-lg pl-9 pr-4 py-2 text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                            autoFocus
-                                                        />
+                                                <div className="space-y-3 mt-2 p-3 bg-zinc-800/50 rounded-lg border border-indigo-500/30">
+                                                    {/* Name input */}
+                                                    <div className="flex gap-2">
+                                                        <div className="relative flex-1">
+                                                            <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                                                            <input
+                                                                type="text"
+                                                                value={newCategoryName}
+                                                                onChange={(e) => setNewCategoryName(e.target.value)}
+                                                                placeholder="Ej. Arreglos Florales"
+                                                                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg pl-9 pr-4 py-2 text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                                                autoFocus
+                                                            />
+                                                        </div>
                                                     </div>
+
+                                                    {/* Color picker toggle */}
+                                                    <div className="flex items-center justify-between">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowColorPicker(!showColorPicker)}
+                                                            className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors"
+                                                        >
+                                                            <Palette className="w-4 h-4" />
+                                                            Personalizar color
+                                                        </button>
+                                                        {/* Preview badge */}
+                                                        <span
+                                                            className="px-3 py-1 rounded-full text-xs font-medium"
+                                                            style={{
+                                                                backgroundColor: newCategoryBgColor,
+                                                                color: newCategoryTextColor
+                                                            }}
+                                                        >
+                                                            {newCategoryName || "Vista previa"}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Color presets */}
+                                                    {showColorPicker && (
+                                                        <div className="space-y-2">
+                                                            <p className="text-xs text-zinc-500">Elige un color:</p>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {CATEGORY_COLOR_PRESETS.map((preset) => (
+                                                                    <button
+                                                                        key={preset.name}
+                                                                        type="button"
+                                                                        onClick={() => handleColorPresetClick(preset.bg, preset.text)}
+                                                                        className="relative w-8 h-8 rounded-full transition-transform hover:scale-110 focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-zinc-900"
+                                                                        style={{ backgroundColor: preset.bg }}
+                                                                        title={preset.name}
+                                                                    >
+                                                                        {newCategoryBgColor === preset.bg && (
+                                                                            <Check
+                                                                                className="absolute inset-0 m-auto w-4 h-4"
+                                                                                style={{ color: preset.text }}
+                                                                            />
+                                                                        )}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                            {/* Custom color input */}
+                                                            <div className="flex gap-2 items-center mt-2">
+                                                                <label className="text-xs text-zinc-500">Color personalizado:</label>
+                                                                <input
+                                                                    type="color"
+                                                                    value={newCategoryBgColor}
+                                                                    onChange={(e) => setNewCategoryBgColor(e.target.value)}
+                                                                    className="w-8 h-8 rounded cursor-pointer bg-transparent border-0"
+                                                                />
+                                                                <select
+                                                                    value={newCategoryTextColor}
+                                                                    onChange={(e) => setNewCategoryTextColor(e.target.value)}
+                                                                    className="bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs text-white"
+                                                                >
+                                                                    <option value="#ffffff">Texto Blanco</option>
+                                                                    <option value="#000000">Texto Negro</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Add button */}
                                                     <button
                                                         type="button"
                                                         onClick={handleAddCustomCategory}
                                                         disabled={!newCategoryName.trim()}
-                                                        className="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white rounded-lg text-sm font-medium transition-colors"
+                                                        className="w-full px-3 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white rounded-lg text-sm font-medium transition-colors"
                                                     >
-                                                        Agregar
+                                                        Crear Categoría
                                                     </button>
                                                 </div>
                                             )}

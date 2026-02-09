@@ -3,6 +3,16 @@
 import { useState } from "react";
 import { Product, ProductVariant, PRODUCT_CATEGORY_LABELS, ProductCategory } from "@/lib/constants";
 import { motion, AnimatePresence } from "framer-motion";
+import { Trash2 } from "lucide-react";
+
+// Extended product type with custom category colors
+interface ExtendedProduct extends Product {
+    customCategory?: string;
+    categoryColors?: {
+        backgroundColor: string;
+        textColor: string;
+    };
+}
 
 interface ProductListProps {
     products: Product[];
@@ -11,22 +21,41 @@ interface ProductListProps {
     onUpdateStock: (productId: string, newStock: number, variantId?: string) => void;
 }
 
-// Helper to get category display name (handles custom categories)
-function getCategoryLabel(product: Product): string {
+// Helper to get category display info (handles custom categories with colors)
+interface CategoryDisplayInfo {
+    label: string;
+    backgroundColor?: string;
+    textColor?: string;
+    isCustom: boolean;
+}
+
+function getCategoryDisplayInfo(product: ExtendedProduct): CategoryDisplayInfo {
     // Check if it's a predefined category
     const predefinedLabel = PRODUCT_CATEGORY_LABELS[product.category as ProductCategory];
     if (predefinedLabel) {
-        return predefinedLabel;
+        return { label: predefinedLabel, isCustom: false };
     }
+
+    // It's a custom category
+    let label = product.category;
+
     // Check for customCategory field
-    if ((product as any).customCategory) {
-        return (product as any).customCategory;
+    if (product.customCategory) {
+        label = product.customCategory;
+    } else {
+        // Fallback: capitalize the category key
+        label = product.category
+            .split('-')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
     }
-    // Fallback: capitalize the category key
-    return product.category
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
+
+    return {
+        label,
+        backgroundColor: product.categoryColors?.backgroundColor,
+        textColor: product.categoryColors?.textColor,
+        isCustom: true,
+    };
 }
 
 export function ProductList({ products, onEdit, onDelete, onUpdateStock }: ProductListProps) {
@@ -58,9 +87,25 @@ export function ProductList({ products, onEdit, onDelete, onUpdateStock }: Produ
                         {/* Info */}
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-800 text-zinc-400 border border-zinc-700">
-                                    {getCategoryLabel(product)}
-                                </span>
+                                {(() => {
+                                    const catInfo = getCategoryDisplayInfo(product as ExtendedProduct);
+                                    return (
+                                        <span
+                                            className="px-2 py-0.5 rounded-full text-xs font-medium border"
+                                            style={catInfo.isCustom && catInfo.backgroundColor ? {
+                                                backgroundColor: catInfo.backgroundColor,
+                                                color: catInfo.textColor || '#ffffff',
+                                                borderColor: 'transparent',
+                                            } : {
+                                                backgroundColor: 'rgb(39 39 42)',
+                                                color: 'rgb(161 161 170)',
+                                                borderColor: 'rgb(63 63 70)',
+                                            }}
+                                        >
+                                            {catInfo.label}
+                                        </span>
+                                    );
+                                })()}
                                 {product.lowStockThreshold >= (product.stock || 0) && (
                                     <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse">
                                         Low Stock
@@ -128,6 +173,13 @@ export function ProductList({ products, onEdit, onDelete, onUpdateStock }: Produ
                                 className="px-3 py-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 text-sm font-medium transition-colors"
                             >
                                 Editar
+                            </button>
+                            <button
+                                onClick={() => onDelete(product.id)}
+                                className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                                title="Eliminar producto"
+                            >
+                                <Trash2 size={16} />
                             </button>
                         </div>
                     </div>

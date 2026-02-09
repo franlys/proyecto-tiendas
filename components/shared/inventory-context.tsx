@@ -130,7 +130,11 @@ export function InventoryProvider({ children, shopId }: InventoryProviderProps) 
       // Write to Cloud
       // If we want auto-ID from firestore:
       const colRef = getCollectionRef();
-      const docRef = await addDoc(colRef, product);
+      // Remove undefined values to avoid Firestore error
+      const cleanProduct = Object.fromEntries(
+        Object.entries(product).filter(([_, v]) => v !== undefined)
+      );
+      const docRef = await addDoc(colRef, cleanProduct);
 
       // Update with real ID
       const finalProduct = { ...product, id: docRef.id };
@@ -154,7 +158,11 @@ export function InventoryProvider({ children, shopId }: InventoryProviderProps) 
 
     try {
       const docRef = doc(db, "shops", shopId, "products", id);
-      await updateDoc(docRef, updates);
+      // Remove undefined values to avoid Firestore error
+      const cleanUpdates = Object.fromEntries(
+        Object.entries(updates).filter(([_, v]) => v !== undefined)
+      );
+      await updateDoc(docRef, cleanUpdates);
     } catch (e) {
       console.error("Error updating product in cloud:", e);
     }

@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import { ProductList } from "@/components/admin/inventory/product-list";
 import { ProductEditor } from "@/components/admin/inventory/product-editor";
 import { Product } from "@/lib/constants";
-import { Plus, Search, Filter, Loader2, Package, Store, ChevronDown, ArrowLeft } from "lucide-react";
-import { useAuth, InventoryProvider, useInventory, useShops, ShopsProvider } from "@/components/shared";
+import { Plus, Search, Filter, Loader2, Package, Store, ChevronDown, ArrowLeft, Tag } from "lucide-react";
 import Link from "next/link";
+import { useAuth, InventoryProvider, useInventory, useShops, ShopsProvider } from "@/components/shared";
 
 function InventoryContent({ shopId }: { shopId: string }) {
   const { products, saveProduct, deleteProduct, updateStock, getLowStockProducts, isLoading } = useInventory();
@@ -68,13 +68,22 @@ function InventoryContent({ shopId }: { shopId: string }) {
             Gestión de productos y existencias <span className="text-xs text-zinc-600 bg-zinc-900 px-2 py-0.5 rounded ml-2">Tienda: {shopId}</span>
           </p>
         </div>
-        <button
-          onClick={handleCreate}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95"
-        >
-          <Plus size={20} />
-          Nuevo Producto
-        </button>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/admin/categories"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-600 transition-all"
+          >
+            <Tag size={18} />
+            <span className="hidden sm:inline">Categorías</span>
+          </Link>
+          <button
+            onClick={handleCreate}
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95"
+          >
+            <Plus size={20} />
+            Nuevo Producto
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards (Mini) */}
