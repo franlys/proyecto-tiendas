@@ -18,13 +18,193 @@ import {
   Bot,
   Megaphone,
   ShoppingBag,
+  Clock,
+  CheckCircle,
+  Truck,
+  ChevronRight,
+  Phone,
+  Calendar,
 } from "lucide-react";
-import { OrdersProvider, useOrders, useAuth, ShopsProvider, useShops, AgencyProvider, SalesOrdersProvider, useSalesOrders } from "@/components/shared";
+import { OrdersProvider, useOrders, useAuth, ShopsProvider, useShops, AgencyProvider, SalesOrdersProvider, useSalesOrders, ORDER_STATUS_CONFIG, type OrderStatus, type SalesOrder } from "@/components/shared";
 import { DashboardKPIs, SalesChart, SubscriptionLock, SupportWidget, AgencyContactCard } from "@/components/admin";
 import { DailyReportCard } from "@/components/admin";
 import { DatabaseSeeder } from "@/components/admin/database-seeder";
 import { NotificationBell } from "@/components/admin/notification-bell";
 import { Button } from "@/components/ui";
+
+// Pending Orders Widget for Dashboard
+function PendingOrdersWidget({ shopId }: { shopId: string }) {
+  const { orders, updateOrderStatus, getPendingOrders } = useSalesOrders();
+  const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+
+  // Get orders that need attention (pending, confirmed, preparing)
+  const activeOrders = orders.filter(o =>
+    ["pending", "confirmed", "preparing", "dispatched"].includes(o.status)
+  ).slice(0, 5); // Show max 5
+
+  const statusOrder: OrderStatus[] = ["pending", "confirmed", "preparing", "dispatched", "delivered"];
+
+  const handleAdvance = async (order: SalesOrder) => {
+    const currentIndex = statusOrder.indexOf(order.status);
+    if (currentIndex < statusOrder.length - 1 && order.status !== "cancelled") {
+      const nextStatus = statusOrder[currentIndex + 1];
+      await updateOrderStatus(order.id, nextStatus);
+
+      // Send notification to customer if they have phone
+      if (order.customerPhone) {
+        try {
+          await fetch("/api/orders/notify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              shopId,
+              orderId: order.id,
+              orderNumber: order.orderNumber,
+              customerPhone: order.customerPhone,
+              customerName: order.customerName,
+              status: nextStatus,
+              total: order.total,
+            }),
+          });
+        } catch (e) {
+          console.error("Error sending notification:", e);
+        }
+      }
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
+      pending: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+      confirmed: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+      preparing: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+      dispatched: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+      delivered: "bg-green-500/20 text-green-400 border-green-500/30",
+      cancelled: "bg-red-500/20 text-red-400 border-red-500/30",
+    };
+    return colors[status] || "bg-slate-500/20 text-slate-400";
+  };
+
+  if (activeOrders.length === 0) {
+    return (
+      <div className="glass-panel rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+            <ShoppingBag className="w-5 h-5 text-amber-400" />
+            Pedidos Activos
+          </h3>
+        </div>
+        <div className="text-center py-8 text-slate-400">
+          <CheckCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
+          <p>No hay pedidos pendientes</p>
+          <p className="text-xs mt-1">Los nuevos pedidos aparecerán aquí</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="glass-panel rounded-2xl p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+          <ShoppingBag className="w-5 h-5 text-amber-400" />
+          Pedidos Activos
+          {activeOrders.length > 0 && (
+            <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold">
+              {activeOrders.length}
+            </span>
+          )}
+        </h3>
+        <Link href="/admin/orders" className="text-sm text-primary hover:underline">
+          Ver todos
+        </Link>
+      </div>
+
+      <div className="space-y-3">
+        {activeOrders.map((order) => {
+          const config = ORDER_STATUS_CONFIG[order.status];
+          const currentIndex = statusOrder.indexOf(order.status);
+          const canAdvance = currentIndex < statusOrder.length - 1 && order.status !== "cancelled";
+          const nextStatus = canAdvance ? statusOrder[currentIndex + 1] : null;
+          const isExpanded = expandedOrder === order.id;
+
+          return (
+            <div
+              key={order.id}
+              className="rounded-xl bg-white/5 border border-white/10 overflow-hidden"
+            >
+              {/* Order Header */}
+              <div
+                className="p-4 cursor-pointer hover:bg-white/5 transition-colors"
+                onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{config.icon}</span>
+                    <div>
+                      <p className="font-semibold text-white">#{order.orderNumber}</p>
+                      <p className="text-sm text-slate-400">{order.customerName}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(order.status)}`}>
+                      {config.label}
+                    </span>
+                    <span className="font-bold text-emerald-400">${order.total.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Expanded Details */}
+              {isExpanded && (
+                <div className="px-4 pb-4 border-t border-white/10 pt-3 space-y-3">
+                  {/* Items */}
+                  <div className="text-sm text-slate-400">
+                    {order.items.slice(0, 3).map((item, idx) => (
+                      <p key={idx}>• {item.productName} x{item.quantity}</p>
+                    ))}
+                    {order.items.length > 3 && (
+                      <p className="text-xs text-slate-500">+{order.items.length - 3} más...</p>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 flex-wrap">
+                    {canAdvance && nextStatus && (
+                      <Button
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAdvance(order);
+                        }}
+                        className="flex-1"
+                      >
+                        <ChevronRight className="w-4 h-4 mr-1" />
+                        {ORDER_STATUS_CONFIG[nextStatus].label}
+                      </Button>
+                    )}
+                    {order.customerPhone && (
+                      <a
+                        href={`https://wa.me/${order.customerPhone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola ${order.customerName}, sobre tu pedido #${order.orderNumber}...`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="px-3 py-1.5 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 text-sm flex items-center gap-1"
+                      >
+                        <Phone className="w-3 h-3" />
+                        WhatsApp
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 // Demo data generator for when there's no real data
 function generateDemoData() {
@@ -135,6 +315,9 @@ function DashboardContent({ isSuperAdmin, shop }: { isSuperAdmin: boolean; shop?
             topService={todayStats.topService}
             businessType={shop?.businessType}
           />
+
+          {/* Pending Orders Widget - Front and Center */}
+          <PendingOrdersWidget shopId={shop?.slug || "default"} />
 
           {/* Charts and Report Section */}
           <div className="grid lg:grid-cols-3 gap-6">
