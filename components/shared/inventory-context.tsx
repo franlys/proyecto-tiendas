@@ -93,7 +93,10 @@ export function InventoryProvider({ children, shopId }: InventoryProviderProps) 
           const stored = localStorage.getItem(getStorageKey(shopId));
 
           if (stored) {
-            const localProducts = JSON.parse(stored);
+            const localProducts = JSON.parse(stored).map((p: Product) => ({
+              ...p,
+              variants: p.variants || [], // Ensure variants is always an array
+            }));
             setProducts(localProducts);
             debugLog("INVENTORY: Loaded from LocalStorage 💾");
 
@@ -110,7 +113,13 @@ export function InventoryProvider({ children, shopId }: InventoryProviderProps) 
         console.error("Error loading inventory:", error);
         // Fallback to local on error
         const stored = localStorage.getItem(getStorageKey(shopId));
-        if (stored) setProducts(JSON.parse(stored));
+        if (stored) {
+          const localProducts = JSON.parse(stored).map((p: Product) => ({
+            ...p,
+            variants: p.variants || [], // Ensure variants is always an array
+          }));
+          setProducts(localProducts);
+        }
       } finally {
         setIsLoading(false);
       }
