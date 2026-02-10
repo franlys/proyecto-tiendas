@@ -73,10 +73,15 @@ export function InventoryProvider({ children, shopId }: InventoryProviderProps) 
         const snapshot = await getDocs(q);
 
         if (!snapshot.empty) {
-          const cloudProducts = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          })) as Product[];
+          const cloudProducts = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              ...data,
+              // Ensure variants is always an array (Firestore might not return it if empty/undefined)
+              variants: data.variants || [],
+            } as Product;
+          });
 
           setProducts(cloudProducts);
           // Update local cache
