@@ -78,6 +78,38 @@ service cloud.firestore {
          allow read: if true;
          allow write: if true; // Public booking
       }
+
+      // ORDERS - Public can create (from cart), owners can manage
+      match /orders/{orderId} {
+        allow read: if true;
+        allow create: if true; // Anyone can place an order
+        allow update, delete: if isShopOwner(shopId);
+      }
+
+      // NOTIFICATIONS - For admin dashboard alerts
+      match /notifications/{notifId} {
+        allow read: if true;
+        allow create: if true; // System/public can create
+        allow update, delete: if isShopOwner(shopId);
+      }
+
+      // PUSH SUBSCRIPTIONS - For PWA push notifications
+      match /pushSubscriptions/{subId} {
+        allow read: if true;
+        allow write: if true; // Browsers need to subscribe
+      }
+
+      // CUSTOMERS - CRM data
+      match /customers/{customerId} {
+        allow read: if true;
+        allow write: if true; // WhatsApp webhook creates customers
+      }
+
+      // BOOKINGS - Service appointments
+      match /bookings/{bookingId} {
+        allow read: if true;
+        allow write: if true; // Public booking flow
+      }
     }
     
     // PRODUCTS: If stored as root collection (optional architecture)
