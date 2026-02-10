@@ -345,6 +345,34 @@ export async function createAdminNotification(
 }
 
 /**
+ * Obtiene el nombre del cliente desde Firestore (si está registrado)
+ */
+async function getRegisteredCustomerName(shopId: string, phone: string): Promise<string | null> {
+  const db = adminDb();
+  if (!db) return null;
+
+  try {
+    const snapshot = await db
+      .collection("shops")
+      .doc(shopId)
+      .collection("customers")
+      .where("phone", "==", phone)
+      .where("registrationState", "==", "completed")
+      .limit(1)
+      .get();
+
+    if (!snapshot.empty) {
+      const customer = snapshot.docs[0].data();
+      return customer.name || null;
+    }
+  } catch (error) {
+    console.error("[WhatsApp Order] Error getting customer name:", error);
+  }
+
+  return null;
+}
+
+/**
  * Procesa un pedido completo: detectar, guardar y notificar
  */
 export async function processWhatsAppOrder(
@@ -361,13 +389,17 @@ export async function processWhatsAppOrder(
     return { isOrder: false };
   }
 
-  console.log(`[WhatsApp Order] Detected order from ${customerPhone}:`, {
+  // Obtener nombre registrado del cliente (si existe)
+  const registeredName = await getRegisteredCustomerName(shopId, customerPhone);
+  const finalCustomerName = registeredName || customerName || "Cliente WhatsApp";
+
+  console.log(`[WhatsApp Order] Detected order from ${customerPhone} (${finalCustomerName}):`, {
     items: order.items.length,
     total: order.total,
   });
 
   // 2. Guardar en Firestore
-  const savedOrder = await saveWhatsAppOrder(shopId, order, customerPhone, customerName);
+  const savedOrder = await saveWhatsAppOrder(shopId, order, customerPhone, finalCustomerName);
 
   if (!savedOrder) {
     return {
@@ -399,7 +431,7 @@ export async function processWhatsAppOrder(
         savedOrder.orderNumber,
         order,
         customerPhone,
-        customerName
+        finalCustomerName
       );
 
       // Enviar a todos en paralelo
@@ -425,14 +457,14 @@ export async function processWhatsAppOrder(
   }
 
   // 5. Crear notificación en el panel admin
-  await createAdminNotification(shopId, savedOrder.orderNumber, order, customerPhone, customerName);
+  await createAdminNotification(shopId, savedOrder.orderNumber, order, customerPhone, finalCustomerName);
 
   // 6. Enviar push notification a dispositivos suscritos
   try {
     const pushResult = await sendOrderPushNotification(
       shopId,
       savedOrder.orderNumber,
-      customerName || "Cliente",
+      finalCustomerName,
       order.total
     );
     if (pushResult.sent > 0) {
