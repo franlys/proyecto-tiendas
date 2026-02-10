@@ -35,11 +35,15 @@ import { cn } from "@/lib/utils";
 function OrderDetailModal({
   order,
   onClose,
+  shopId,
 }: {
   order: SalesOrder | null;
   onClose: () => void;
+  shopId: string;
 }) {
   const { updateOrderStatus, updatePaymentStatus } = useSalesOrders();
+  const [isNotifying, setIsNotifying] = useState(false);
+  const [autoNotify, setAutoNotify] = useState(true); // Auto-notify enabled by default
 
   if (!order) return null;
 
@@ -49,9 +53,53 @@ function OrderDetailModal({
   const canAdvance = currentIndex < statusOrder.length - 1 && order.status !== "cancelled";
   const nextStatus = canAdvance ? statusOrder[currentIndex + 1] : null;
 
-  const handleAdvance = () => {
+  // Send notification via API or fallback to WhatsApp link
+  const sendStatusNotification = async (status: OrderStatus) => {
+    if (!order.customerPhone) {
+      console.log("No customer phone available");
+      return;
+    }
+
+    setIsNotifying(true);
+    try {
+      const response = await fetch("/api/orders/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          shopId,
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          customerPhone: order.customerPhone,
+          customerName: order.customerName,
+          status,
+          total: order.total,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        console.log("✅ Notification sent via Evolution API");
+      } else if (data.whatsappUrl) {
+        // Fallback: open WhatsApp link
+        window.open(data.whatsappUrl, "_blank");
+      }
+    } catch (error) {
+      console.error("Error sending notification:", error);
+    } finally {
+      setIsNotifying(false);
+    }
+  };
+
+  const handleAdvance = async () => {
     if (nextStatus) {
       updateOrderStatus(order.id, nextStatus);
+
+      // Send notification if auto-notify is enabled and customer has phone
+      if (autoNotify && order.customerPhone) {
+        await sendStatusNotification(nextStatus);
+      }
+
       // Play sound effect
       if (typeof window !== "undefined") {
         const audio = new Audio("/sounds/notification.mp3");
@@ -234,12 +282,41 @@ function OrderDetailModal({
             </div>
           )}
 
+          {/* Auto-notify toggle */}
+          {order.customerPhone && (
+            <div className="flex items-center justify-between p-4 rounded-xl bg-white/5">
+              <div className="flex items-center gap-2">
+                <MessageCircle className="w-5 h-5 text-green-400" />
+                <span className="text-slate-400">Notificar al cliente automáticamente</span>
+              </div>
+              <button
+                onClick={() => setAutoNotify(!autoNotify)}
+                className={cn(
+                  "relative w-12 h-6 rounded-full transition-colors",
+                  autoNotify ? "bg-green-500" : "bg-slate-600"
+                )}
+              >
+                <span
+                  className={cn(
+                    "absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform",
+                    autoNotify && "translate-x-6"
+                  )}
+                />
+              </button>
+            </div>
+          )}
+
           {/* Actions */}
           <div className="space-y-3">
             {canAdvance && nextStatus && (
-              <Button onClick={handleAdvance} className="w-full">
-                <ChevronRight className="w-4 h-4 mr-2" />
+              <Button onClick={handleAdvance} className="w-full" disabled={isNotifying}>
+                {isNotifying ? (
+                  <Clock className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <ChevronRight className="w-4 h-4 mr-2" />
+                )}
                 Avanzar a: {ORDER_STATUS_CONFIG[nextStatus].label}
+                {autoNotify && order.customerPhone && " + Notificar"}
               </Button>
             )}
 
@@ -372,7 +449,7 @@ function KanbanColumn({ status, orders, onOrderClick }: {
   );
 }
 
-function OrdersContent() {
+function OrdersContent({ shopId }: { shopId: string }) {
   const { orders, getOrdersByStatus, getPendingOrders } = useSalesOrders();
   const [selectedOrder, setSelectedOrder] = useState<SalesOrder | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -493,7 +570,7 @@ function OrdersContent() {
       </main>
 
       {/* Order Detail Modal */}
-      <OrderDetailModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
+      <OrderDetailModal order={selectedOrder} onClose={() => setSelectedOrder(null)} shopId={shopId} />
     </div>
   );
 }
@@ -503,9 +580,11 @@ export default function OrdersPage() {
 
   if (!user) return <div className="p-8 text-center text-slate-400">Cargando sesión...</div>;
 
+  const shopId = user.shopId || "default";
+
   return (
-    <SalesOrdersProvider shopId={user.shopId || "default"}>
-      <OrdersContent />
+    <SalesOrdersProvider shopId={shopId}>
+      <OrdersContent shopId={shopId} />
     </SalesOrdersProvider>
   );
 }

@@ -1,0 +1,145 @@
+/**
+ * API Route para enviar notificaciones de estado de pedido via WhatsApp
+ *
+ * POST /api/orders/notify
+ * Body: { shopId, orderId, orderNumber, customerPhone, customerName, status, total }
+ */
+
+import { NextRequest, NextResponse } from "next/server";
+import { adminDb } from "@/lib/firebase-admin";
+import { sendTextMessage, isEvolutionConfigured, getInstanceName } from "@/lib/evolution";
+import { formatPhoneForWhatsApp } from "@/lib/utils";
+
+interface NotifyRequest {
+    shopId: string;
+    orderId: string;
+    orderNumber: string;
+    customerPhone: string;
+    customerName: string;
+    status: string;
+    total: number;
+}
+
+// Status messages in Spanish
+const STATUS_MESSAGES: Record<string, (name: string, orderNum: string, total: number) => string> = {
+    confirmed: (name, orderNum, total) =>
+        `Hola ${name} 👋\n\n✅ Tu pedido *#${orderNum}* ha sido *CONFIRMADO*.\n\nEstamos preparando tu orden.\n💰 Total: $${total.toLocaleString()}\n\n¡Gracias por tu compra!`,
+
+    preparing: (name, orderNum, total) =>
+        `Hola ${name} 👋\n\n📦 Tu pedido *#${orderNum}* está siendo *PREPARADO*.\n\nPronto estará listo.\n💰 Total: $${total.toLocaleString()}`,
+
+    dispatched: (name, orderNum, total) =>
+        `Hola ${name} 👋\n\n🚚 Tu pedido *#${orderNum}* ha sido *DESPACHADO*.\n\n¡Va en camino!\n💰 Total: $${total.toLocaleString()}\n\n📍 Por favor comparte tu ubicación si necesitas entrega a domicilio.`,
+
+    delivered: (name, orderNum, total) =>
+        `Hola ${name} 👋\n\n🎉 Tu pedido *#${orderNum}* ha sido *ENTREGADO*.\n\n¡Gracias por tu compra!\n💰 Total: $${total.toLocaleString()}\n\n⭐ Esperamos que disfrutes tu pedido. ¡Vuelve pronto!`,
+
+    cancelled: (name, orderNum, total) =>
+        `Hola ${name} 👋\n\n❌ Tu pedido *#${orderNum}* ha sido *CANCELADO*.\n\nSi tienes alguna pregunta, no dudes en contactarnos.\n\nDisculpa las molestias.`,
+};
+
+export async function POST(request: NextRequest) {
+    try {
+        const body: NotifyRequest = await request.json();
+        const { shopId, orderId, orderNumber, customerPhone, customerName, status, total } = body;
+
+        // Validate required fields
+        if (!shopId || !customerPhone || !status) {
+            return NextResponse.json(
+                { error: "Missing required fields: shopId, customerPhone, status" },
+                { status: 400 }
+            );
+        }
+
+        // Check if Evolution API is configured
+        if (!isEvolutionConfigured()) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    method: "fallback",
+                    message: "Evolution API not configured. Use WhatsApp link instead.",
+                    whatsappUrl: generateWhatsAppUrl(customerPhone, customerName, orderNumber, status, total)
+                },
+                { status: 200 }
+            );
+        }
+
+        // Get the message generator for this status
+        const messageGenerator = STATUS_MESSAGES[status];
+        if (!messageGenerator) {
+            return NextResponse.json(
+                { error: `Unknown status: ${status}` },
+                { status: 400 }
+            );
+        }
+
+        // Generate message
+        const message = messageGenerator(customerName || "Cliente", orderNumber || orderId, total || 0);
+
+        // Get instance name for this shop
+        const instanceName = getInstanceName(shopId);
+
+        // Format phone number
+        const formattedPhone = formatPhoneForWhatsApp(customerPhone);
+
+        // Send via Evolution API
+        try {
+            const result = await sendTextMessage(instanceName, formattedPhone, message);
+
+            // Log notification to Firestore
+            const db = adminDb();
+            if (db) {
+                await db.collection("shops").doc(shopId).collection("orderNotifications").add({
+                    orderId,
+                    orderNumber,
+                    customerPhone: formattedPhone,
+                    status,
+                    message,
+                    sentAt: new Date().toISOString(),
+                    method: "evolution_api",
+                    success: true,
+                    messageId: result.key?.id
+                });
+            }
+
+            return NextResponse.json({
+                success: true,
+                method: "evolution_api",
+                messageId: result.key?.id
+            });
+        } catch (evolutionError: any) {
+            console.error("[Notify] Evolution API error:", evolutionError);
+
+            // Return fallback URL
+            return NextResponse.json({
+                success: false,
+                method: "fallback",
+                error: evolutionError.message,
+                whatsappUrl: generateWhatsAppUrl(customerPhone, customerName, orderNumber, status, total)
+            });
+        }
+
+    } catch (error: any) {
+        console.error("[Notify] Error:", error);
+        return NextResponse.json(
+            { error: error.message || "Internal server error" },
+            { status: 500 }
+        );
+    }
+}
+
+function generateWhatsAppUrl(
+    phone: string,
+    name: string,
+    orderNumber: string,
+    status: string,
+    total: number
+): string {
+    const messageGenerator = STATUS_MESSAGES[status];
+    if (!messageGenerator) return "";
+
+    const message = messageGenerator(name || "Cliente", orderNumber, total || 0);
+    const cleanPhone = formatPhoneForWhatsApp(phone);
+
+    return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+}
