@@ -4,7 +4,7 @@ import { useState } from "react";
 import { FileText, Send, CheckCircle, Clock, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui";
 import type { SalesOrder } from "@/components/shared/sales-orders-context";
-import { cn } from "@/lib/utils";
+import { cn, formatPhoneForWhatsApp } from "@/lib/utils";
 
 interface DailyReportCardProps {
   shopName: string;
@@ -55,7 +55,7 @@ export function DailyReportCard({
 
   const handleSendReport = () => {
     const message = buildReportMessage();
-    const cleanPhone = ownerPhone.replace(/\D/g, "");
+    const cleanPhone = formatPhoneForWhatsApp(ownerPhone || "");
 
     // Open WhatsApp with the report message
     const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
