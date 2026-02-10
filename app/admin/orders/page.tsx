@@ -17,6 +17,7 @@ import {
   FileText,
   Bell,
   Volume2,
+  Store,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import {
@@ -27,6 +28,7 @@ import {
   type OrderStatus,
 } from "@/components/shared/sales-orders-context";
 import { useAuth } from "@/components/shared/auth-context";
+import { useShops, ShopsProvider } from "@/components/shared/shops-context";
 import { InvoiceTemplate } from "@/components/admin/invoice-template";
 import { pdf } from "@react-pdf/renderer";
 import { cn } from "@/lib/utils";
@@ -93,17 +95,27 @@ function OrderDetailModal({
 
   const handleAdvance = async () => {
     if (nextStatus) {
-      updateOrderStatus(order.id, nextStatus);
+      console.log(`[OrderDetail] Advancing order ${order.id} from ${order.status} to ${nextStatus}`);
 
-      // Send notification if auto-notify is enabled and customer has phone
-      if (autoNotify && order.customerPhone) {
-        await sendStatusNotification(nextStatus);
-      }
+      try {
+        await updateOrderStatus(order.id, nextStatus);
+        console.log(`[OrderDetail] ✅ Order advanced successfully`);
 
-      // Play sound effect
-      if (typeof window !== "undefined") {
-        const audio = new Audio("/sounds/notification.mp3");
-        audio.play().catch(() => { });
+        // Send notification if auto-notify is enabled and customer has phone
+        if (autoNotify && order.customerPhone) {
+          await sendStatusNotification(nextStatus);
+        }
+
+        // Play sound effect
+        if (typeof window !== "undefined") {
+          const audio = new Audio("/sounds/notification.mp3");
+          audio.play().catch(() => { });
+        }
+
+        // Close modal after successful update
+        onClose();
+      } catch (error) {
+        console.error(`[OrderDetail] ❌ Error advancing order:`, error);
       }
     }
   };
@@ -575,16 +587,92 @@ function OrdersContent({ shopId }: { shopId: string }) {
   );
 }
 
-export default function OrdersPage() {
-  const { user } = useAuth();
+// Shop Selector for Super Admin
+function ShopSelector({ selectedShopId, onSelect }: { selectedShopId: string; onSelect: (id: string) => void }) {
+  const { shops, isLoading } = useShops();
+
+  if (isLoading) {
+    return <div className="text-slate-400">Cargando tiendas...</div>;
+  }
+
+  return (
+    <div className="flex items-center gap-3">
+      <Store className="w-5 h-5 text-slate-400" />
+      <select
+        value={selectedShopId}
+        onChange={(e) => onSelect(e.target.value)}
+        className="px-4 py-2 rounded-lg bg-slate-800 border border-white/10 text-white focus:outline-none focus:border-primary/50 [&>option]:bg-slate-800 [&>option]:text-white"
+      >
+        <option value="">Selecciona una tienda</option>
+        {shops.map((shop) => (
+          <option key={shop.slug} value={shop.slug}>
+            {shop.name}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function OrdersPage() {
+  const { user, isSuperAdmin } = useAuth();
+  const [selectedShopId, setSelectedShopId] = useState<string>("");
 
   if (!user) return <div className="p-8 text-center text-slate-400">Cargando sesión...</div>;
 
-  const shopId = user.shopId || "default";
+  // Super Admin needs to select a shop
+  const shopId = isSuperAdmin ? selectedShopId : (user.shopId || "");
+
+  // Show shop selector for Super Admin if no shop selected
+  if (isSuperAdmin && !selectedShopId) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="glass-panel rounded-2xl p-8 max-w-md w-full mx-4">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-400 flex items-center justify-center mx-auto mb-4">
+              <Package className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-white mb-2">Centro de Pedidos</h1>
+            <p className="text-slate-400">Como Super Admin, selecciona una tienda para ver sus pedidos</p>
+          </div>
+          <ShopSelector selectedShopId={selectedShopId} onSelect={setSelectedShopId} />
+        </div>
+      </div>
+    );
+  }
+
+  // No shop available
+  if (!shopId) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center text-slate-400">
+          <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <p>No hay tienda asignada a tu cuenta</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <SalesOrdersProvider shopId={shopId}>
-      <OrdersContent shopId={shopId} />
+      <div className="relative">
+        {/* Shop selector for Super Admin at top */}
+        {isSuperAdmin && (
+          <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-white/10 px-4 py-3">
+            <ShopSelector selectedShopId={selectedShopId} onSelect={setSelectedShopId} />
+          </div>
+        )}
+        <OrdersContent shopId={shopId} />
+      </div>
     </SalesOrdersProvider>
+  );
+}
+
+// Wrap with ShopsProvider for Super Admin shop selection
+export default function OrdersPageWrapper() {
+  return (
+    <ShopsProvider>
+      <OrdersPage />
+    </ShopsProvider>
   );
 }

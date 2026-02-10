@@ -258,6 +258,7 @@ export function SalesOrdersProvider({ children, shopId }: SalesOrdersProviderPro
   );
 
   const updateOrderStatus = useCallback(async (id: string, status: OrderStatus) => {
+    console.log(`[Orders] Updating order ${id} to status: ${status} for shop: ${shopId}`);
     try {
       const updates: any = {
         status,
@@ -269,8 +270,13 @@ export function SalesOrdersProvider({ children, shopId }: SalesOrdersProviderPro
       if (status === "delivered") updates.deliveredAt = serverTimestamp();
 
       await updateDoc(doc(db, "shops", shopId, "orders", id), updates);
-    } catch (error) {
-      console.error("Error updating order status:", error);
+      console.log(`[Orders] ✅ Order ${id} updated to ${status}`);
+    } catch (error: any) {
+      console.error("[Orders] ❌ Error updating order status:", error);
+      // Show error to user
+      if (typeof window !== "undefined") {
+        alert(`Error al actualizar el pedido: ${error.message || "Error desconocido"}`);
+      }
     }
   }, [shopId]);
 
