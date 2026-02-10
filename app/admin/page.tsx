@@ -761,83 +761,85 @@ function AdminDashboardWithSubscription() {
               </div>
             </div>
 
-            <nav className="flex items-center gap-1 sm:gap-2 overflow-x-auto">
-              {isSuperAdmin && (
-                <Link href="/agency">
-                  <Button variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300 px-2 sm:px-3">
-                    <Shield className="w-4 h-4" />
-                    <span className="hidden sm:inline ml-1">Agency</span>
+            <div className="flex items-center gap-2">
+              <nav className="flex items-center gap-1 sm:gap-2 overflow-x-auto">
+                {isSuperAdmin && (
+                  <Link href="/agency">
+                    <Button variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300 px-2 sm:px-3">
+                      <Shield className="w-4 h-4" />
+                      <span className="hidden sm:inline ml-1">Agency</span>
+                    </Button>
+                  </Link>
+                )}
+                <Link href="/admin/orders">
+                  <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-amber-400 hover:text-amber-300">
+                    <ShoppingBag className="w-4 h-4" />
+                    <span className="hidden sm:inline ml-1">Pedidos</span>
                   </Button>
                 </Link>
-              )}
-              <Link href="/admin/orders">
-                <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-amber-400 hover:text-amber-300">
-                  <ShoppingBag className="w-4 h-4" />
-                  <span className="hidden sm:inline ml-1">Pedidos</span>
-                </Button>
-              </Link>
-              <Link href="/admin/inventory">
-                <Button variant="ghost" size="sm" className="px-2 sm:px-3">
-                  <Package className="w-4 h-4" />
-                  <span className="hidden sm:inline ml-1">Inventario</span>
-                </Button>
-              </Link>
-              <Link href="/admin/clients">
-                <Button variant="ghost" size="sm" className="px-2 sm:px-3">
-                  <Users className="w-4 h-4" />
-                  <span className="hidden sm:inline ml-1">CRM</span>
-                </Button>
-              </Link>
-              <Link href="/admin/automation">
-                <Button variant="ghost" size="sm" className="px-2 sm:px-3">
-                  <Bot className="w-4 h-4" />
-                  <span className="hidden sm:inline ml-1">Bot WA</span>
-                </Button>
-              </Link>
-              <Link href="/admin/marketing">
-                <Button variant="ghost" size="sm" className="px-2 sm:px-3">
-                  <Megaphone className="w-4 h-4" />
-                  <span className="hidden sm:inline ml-1">Marketing</span>
-                </Button>
-              </Link>
-              <Link href="/admin/promos">
-                <Button variant="ghost" size="sm" className="px-2 sm:px-3">
-                  <Image className="w-4 h-4" />
-                  <span className="hidden sm:inline ml-1">Promos</span>
-                </Button>
-              </Link>
-              {/* Phase 21: Settings only visible to Super Admin */}
-              {isSuperAdmin && (
-                <Link href="/admin/settings">
+                <Link href="/admin/inventory">
                   <Button variant="ghost" size="sm" className="px-2 sm:px-3">
-                    <Settings className="w-4 h-4" />
-                    <span className="hidden sm:inline ml-1">Config</span>
+                    <Package className="w-4 h-4" />
+                    <span className="hidden sm:inline ml-1">Inventario</span>
                   </Button>
                 </Link>
-              )}
-              {/* Shop Profile for Shop Owners */}
-              {!isSuperAdmin && (
-                <Link href="/admin/profile">
+                <Link href="/admin/clients">
                   <Button variant="ghost" size="sm" className="px-2 sm:px-3">
-                    <Store className="w-4 h-4" />
-                    <span className="hidden sm:inline ml-1">Mi Negocio</span>
+                    <Users className="w-4 h-4" />
+                    <span className="hidden sm:inline ml-1">CRM</span>
                   </Button>
                 </Link>
-              )}
-              {/* Phase 21: Billing redirects based on role */}
-              <Link href={isSuperAdmin ? "/agency" : "/admin/billing"}>
-                <Button variant="ghost" size="sm" className="px-2 sm:px-3">
-                  <CreditCard className="w-4 h-4" />
-                  <span className="hidden sm:inline ml-1">{isSuperAdmin ? "Clientes" : "Billing"}</span>
+                <Link href="/admin/automation">
+                  <Button variant="ghost" size="sm" className="px-2 sm:px-3">
+                    <Bot className="w-4 h-4" />
+                    <span className="hidden sm:inline ml-1">Bot WA</span>
+                  </Button>
+                </Link>
+                <Link href="/admin/marketing">
+                  <Button variant="ghost" size="sm" className="px-2 sm:px-3">
+                    <Megaphone className="w-4 h-4" />
+                    <span className="hidden sm:inline ml-1">Marketing</span>
+                  </Button>
+                </Link>
+                <Link href="/admin/promos">
+                  <Button variant="ghost" size="sm" className="px-2 sm:px-3">
+                    <Image className="w-4 h-4" />
+                    <span className="hidden sm:inline ml-1">Promos</span>
+                  </Button>
+                </Link>
+                {/* Phase 21: Settings only visible to Super Admin */}
+                {isSuperAdmin && (
+                  <Link href="/admin/settings">
+                    <Button variant="ghost" size="sm" className="px-2 sm:px-3">
+                      <Settings className="w-4 h-4" />
+                      <span className="hidden sm:inline ml-1">Config</span>
+                    </Button>
+                  </Link>
+                )}
+                {/* Shop Profile for Shop Owners */}
+                {!isSuperAdmin && (
+                  <Link href="/admin/profile">
+                    <Button variant="ghost" size="sm" className="px-2 sm:px-3">
+                      <Store className="w-4 h-4" />
+                      <span className="hidden sm:inline ml-1">Mi Negocio</span>
+                    </Button>
+                  </Link>
+                )}
+                {/* Phase 21: Billing redirects based on role */}
+                <Link href={isSuperAdmin ? "/agency" : "/admin/billing"}>
+                  <Button variant="ghost" size="sm" className="px-2 sm:px-3">
+                    <CreditCard className="w-4 h-4" />
+                    <span className="hidden sm:inline ml-1">{isSuperAdmin ? "Clientes" : "Billing"}</span>
+                  </Button>
+                </Link>
+                <Button variant="ghost" size="sm" onClick={handleLogout} className="px-2 sm:px-3">
+                  <LogOut className="w-4 h-4" />
+                  <span className="hidden sm:inline ml-1">Salir</span>
                 </Button>
-              </Link>
-              {/* Notification Bell */}
+              </nav>
+              {/* Notification Bell - Outside nav to avoid overflow clipping */}
               <NotificationBell />
-              <Button variant="ghost" size="sm" onClick={handleLogout} className="px-2 sm:px-3">
-                <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline ml-1">Salir</span>
-              </Button>
-            </nav>
+            </div>
           </div>
         </div>
       </header>

@@ -36,6 +36,12 @@ const STATUS_MESSAGES: Record<string, (name: string, orderNum: string, total: nu
 
     cancelled: (name, orderNum, total) =>
         `Hola ${name} 👋\n\n❌ Tu pedido *#${orderNum}* ha sido *CANCELADO*.\n\nSi tienes alguna pregunta, no dudes en contactarnos.\n\nDisculpa las molestias.`,
+
+    payment_reminder: (name, orderNum, total) =>
+        `Hola ${name} 👋\n\n💳 *RECORDATORIO DE PAGO*\n\nTu pedido *#${orderNum}* está pendiente de pago.\n\n💰 *Total a pagar:* $${total.toLocaleString()}\n\n¿Tienes alguna duda sobre el pago? Estamos para ayudarte. 🙏`,
+
+    payment_confirmed: (name, orderNum, total) =>
+        `Hola ${name} 👋\n\n✅ *PAGO CONFIRMADO*\n\nHemos recibido tu pago de *$${total.toLocaleString()}* para el pedido *#${orderNum}*.\n\n¡Muchas gracias! 🙏`,
 };
 
 export async function POST(request: NextRequest) {

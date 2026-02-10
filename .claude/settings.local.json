@@ -51,7 +51,20 @@
       "mcp__claude_ai_Vercel__get_runtime_logs",
       "Bash(npx vercel login:*)",
       "Bash(npx vercel env:*)",
-      "Bash(npx vercel:*)"
+      "Bash(npx vercel:*)",
+      "Bash(git pull:*)",
+      "Bash(npx firebase deploy:*)",
+      "Bash(timeout:*)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" add app/admin/orders/page.tsx app/api/orders/notify/route.ts)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nfeat: add automatic WhatsApp notifications for order status changes\n\n- Add /api/orders/notify endpoint for sending status notifications\n- Integrate auto-notify toggle in order detail modal\n- Send WhatsApp message when advancing order status\n- Fallback to wa.me link if Evolution API not configured\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" add lib/handlers/whatsapp-order.handler.ts)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nfeat: use registered customer name in WhatsApp orders\n\n- Add getRegisteredCustomerName\\(\\) to lookup customer from Firestore\n- Prioritize registered name over WhatsApp pushName\n- Update all notification functions to use the correct customer name\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" log --oneline -10)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" add components/shared/inventory-context.tsx)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nfix: deep clean undefined values before saving to Firestore\n\n- Add cleanForFirestore helper to recursively remove undefined values\n- Fix variants with undefined nested properties causing Firestore errors\n- Add console logs to help debug save issues\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" add lib/utils.ts lib/services/booking.service.ts lib/services/rental.service.ts)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nfix: prevent undefined values from being sent to Firestore\n\n- Add cleanForFirestore utility function in lib/utils.ts\n- Fix booking.service.ts: only include optional fields if they have values\n- Fix rental.service.ts: use deleteField\\(\\) to remove currentRentalId\n- Fix rental.service.ts: omit rentalId field when releasing days\n\nFirestore doesn''t accept undefined values, which was causing silent failures.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git reset:*)"
     ]
   }
 }

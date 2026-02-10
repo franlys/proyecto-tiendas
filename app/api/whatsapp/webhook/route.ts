@@ -41,6 +41,12 @@ interface WebhookPayload {
       extendedTextMessage?: {
         text: string;
       };
+      locationMessage?: {
+        degreesLatitude: number;
+        degreesLongitude: number;
+        name?: string;
+        address?: string;
+      };
     };
     messageTimestamp?: number;
     status?: string;
@@ -165,6 +171,13 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
 
   const phone = getPhoneFromJid(key.remoteJid);
   const text = message.conversation || message.extendedTextMessage?.text || "";
+
+  // Check if it's a location message
+  if (message.locationMessage) {
+    console.log(`[${instance}] Location message received from ${pushName || phone}`);
+    await handleLocationMessage(instance, phone, message.locationMessage, pushName);
+    return;
+  }
 
   console.log(`[${instance}] New message from ${pushName || phone}: ${text}`);
 
@@ -491,6 +504,143 @@ ${APP_URL}/${shopId}/book`;
     default:
       // Contexto no manejado, respuesta genérica
       console.log(`[${instance}] Unhandled context source: ${context.source}`);
+  }
+}
+
+/**
+ * Maneja mensajes de ubicación de clientes
+ * - Busca si hay un pedido activo esperando ubicación
+ * - Envía la ubicación al dueño de la tienda
+ * - Actualiza el pedido con la ubicación
+ */
+async function handleLocationMessage(
+  instance: string,
+  phone: string,
+  location: NonNullable<WebhookPayload["data"]["message"]>["locationMessage"],
+  pushName?: string
+) {
+  if (!location) return;
+
+  const { degreesLatitude, degreesLongitude, name, address } = location;
+  const shopId = instance.replace("shop_", "").replace(/_/g, "-");
+
+  console.log(`[${instance}] Location received: ${degreesLatitude}, ${degreesLongitude}`);
+
+  // Try to find an active order for this customer
+  try {
+    const { adminDb } = await import("@/lib/firebase-admin");
+    const { getAllNotificationPhones } = await import("@/lib/handlers/whatsapp-order.handler");
+
+    const db = adminDb();
+    if (!db) {
+      console.error(`[${instance}] No database connection`);
+      return;
+    }
+
+    // Find active orders for this customer (dispatched status - waiting for delivery)
+    const ordersSnapshot = await db
+      .collection("shops")
+      .doc(shopId)
+      .collection("orders")
+      .where("customerPhone", "==", phone)
+      .where("status", "in", ["dispatched", "preparing", "confirmed"])
+      .orderBy("createdAt", "desc")
+      .limit(1)
+      .get();
+
+    let orderNumber = "";
+
+    if (!ordersSnapshot.empty) {
+      const orderDoc = ordersSnapshot.docs[0];
+      const orderData = orderDoc.data();
+      orderNumber = orderData.orderNumber || orderDoc.id;
+
+      // Update order with customer location
+      await orderDoc.ref.update({
+        customerLocation: {
+          latitude: degreesLatitude,
+          longitude: degreesLongitude,
+          name: name || null,
+          address: address || null,
+          receivedAt: new Date().toISOString(),
+        },
+        updatedAt: new Date().toISOString(),
+      });
+
+      console.log(`[${instance}] Updated order ${orderNumber} with customer location`);
+    }
+
+    // Get customer name from database
+    let customerName = pushName || "Cliente";
+    try {
+      const { getCustomerByPhone } = await import("@/lib/services/customer.service");
+      const customer = await getCustomerByPhone(shopId, phone);
+      if (customer?.name) {
+        customerName = customer.name;
+      }
+    } catch (e) {
+      // Ignore error, use pushName or default
+    }
+
+    // Generate Google Maps link
+    const mapsUrl = `https://www.google.com/maps?q=${degreesLatitude},${degreesLongitude}`;
+
+    // Get all notification phones to forward the location
+    const notificationPhones = await getAllNotificationPhones(shopId);
+
+    if (notificationPhones.length > 0) {
+      const locationMessage = `📍 *UBICACIÓN RECIBIDA*
+
+👤 *Cliente:* ${customerName}
+📱 *Teléfono:* ${phone}
+${orderNumber ? `📦 *Pedido:* #${orderNumber}` : ""}
+${address ? `📌 *Dirección:* ${address}` : ""}
+${name ? `🏷️ *Lugar:* ${name}` : ""}
+
+🗺️ *Ver en Google Maps:*
+${mapsUrl}
+
+⏰ ${new Date().toLocaleString("es-DO", { timeZone: "America/Santo_Domingo" })}`;
+
+      // Send location to all notification phones in parallel
+      const notificationPromises = notificationPhones.map(async (staff) => {
+        try {
+          await sendTextMessage(instance, staff.phone, locationMessage);
+          console.log(`[${instance}] Location forwarded to ${staff.name} (${staff.role}): ${staff.phone}`);
+          return { success: true, phone: staff.phone };
+        } catch (error) {
+          console.error(`[${instance}] Failed to forward location to ${staff.phone}:`, error);
+          return { success: false, phone: staff.phone, error };
+        }
+      });
+
+      const results = await Promise.all(notificationPromises);
+      const successCount = results.filter((r) => r.success).length;
+      console.log(`[${instance}] Location forwarded to ${successCount}/${notificationPhones.length} staff members`);
+    } else {
+      console.log(`[${instance}] No notification phones configured for shop ${shopId}`);
+    }
+
+    // Send confirmation to customer
+    const confirmationMessage = orderNumber
+      ? `✅ ¡Ubicación recibida!\n\nTu pedido *#${orderNumber}* será entregado en esta ubicación.\n\n¡Gracias por tu compra! 🙏`
+      : `✅ ¡Ubicación recibida!\n\nGracias por compartir tu ubicación. Te contactaremos pronto. 🙏`;
+
+    await sendTextMessage(instance, phone, confirmationMessage);
+    console.log(`[${instance}] Location confirmation sent to customer ${phone}`);
+  } catch (error) {
+    console.error(`[${instance}] Error handling location message:`, error);
+
+    // Send fallback message to customer
+    try {
+      await sendTextMessage(
+        instance,
+        phone,
+        "✅ ¡Ubicación recibida! Gracias por compartirla. Te contactaremos pronto."
+      );
+    } catch (e) {
+      console.error(`[${instance}] Failed to send location confirmation:`, e);
+    }
   }
 }
 

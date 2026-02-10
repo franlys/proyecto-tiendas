@@ -44,10 +44,45 @@ function OrderDetailModal({
   shopId: string;
 }) {
   const { updateOrderStatus, updatePaymentStatus } = useSalesOrders();
+  const { getShop } = useShops();
   const [isNotifying, setIsNotifying] = useState(false);
   const [autoNotify, setAutoNotify] = useState(true); // Auto-notify enabled by default
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
 
   if (!order) return null;
+
+  const shop = getShop(shopId);
+
+  // Generate and download invoice PDF
+  const handleGenerateInvoice = async () => {
+    if (!shop) {
+      alert("No se pudo cargar la información de la tienda");
+      return;
+    }
+
+    setIsGeneratingPdf(true);
+    try {
+      const blob = await pdf(
+        <InvoiceTemplate
+          order={order}
+          shop={shop}
+        />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Factura-${order.orderNumber}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Error al generar la factura. Intenta de nuevo.");
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
 
   const statusConfig = ORDER_STATUS_CONFIG[order.status];
   const statusOrder: OrderStatus[] = ["pending", "confirmed", "preparing", "dispatched", "delivered"];
@@ -104,6 +139,28 @@ function OrderDetailModal({
         // Send notification if auto-notify is enabled and customer has phone
         if (autoNotify && order.customerPhone) {
           await sendStatusNotification(nextStatus);
+        }
+
+        // If order is being delivered and payment is pending, send payment reminder
+        if (nextStatus === "delivered" && order.paymentStatus === "pending" && order.customerPhone) {
+          try {
+            await fetch("/api/orders/notify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                shopId,
+                orderId: order.id,
+                orderNumber: order.orderNumber,
+                customerPhone: order.customerPhone,
+                customerName: order.customerName,
+                status: "payment_reminder",
+                total: order.total,
+              }),
+            });
+            console.log(`[OrderDetail] Payment reminder sent for unpaid order`);
+          } catch (e) {
+            console.error("Error sending payment reminder:", e);
+          }
         }
 
         // Play sound effect
@@ -258,39 +315,158 @@ function OrderDetailModal({
           </div>
 
           {/* Payment Status */}
-          <div className="flex items-center justify-between p-4 rounded-xl bg-white/5">
-            <div className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-slate-400" />
-              <span className="text-slate-400">Estado de pago</span>
-            </div>
-            <div className="flex items-center gap-2">
+          <div className="p-4 rounded-xl bg-white/5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-slate-400" />
+                <span className="text-slate-400">Estado de pago</span>
+              </div>
               <span className={cn(
                 "px-2 py-1 rounded-full text-xs font-medium",
                 order.paymentStatus === "paid" && "bg-green-500/20 text-green-400",
                 order.paymentStatus === "pending" && "bg-amber-500/20 text-amber-400",
                 order.paymentStatus === "refunded" && "bg-red-500/20 text-red-400"
               )}>
-                {order.paymentStatus === "paid" && "Pagado"}
-                {order.paymentStatus === "pending" && "Pendiente"}
-                {order.paymentStatus === "refunded" && "Reembolsado"}
+                {order.paymentStatus === "paid" && "💰 Pagado"}
+                {order.paymentStatus === "pending" && "⏳ Pendiente"}
+                {order.paymentStatus === "refunded" && "↩️ Reembolsado"}
               </span>
-              {order.paymentStatus === "pending" && (
+            </div>
+            {order.paymentStatus === "pending" && (
+              <div className="flex gap-2">
                 <Button
                   size="sm"
-                  variant="outline"
-                  onClick={() => updatePaymentStatus(order.id, "paid")}
-                  className="text-green-400 border-green-500/30 hover:bg-green-500/10"
+                  onClick={async () => {
+                    await updatePaymentStatus(order.id, "paid");
+                    // Send payment confirmed notification
+                    if (order.customerPhone) {
+                      try {
+                        await fetch("/api/orders/notify", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            shopId,
+                            orderId: order.id,
+                            orderNumber: order.orderNumber,
+                            customerPhone: order.customerPhone,
+                            customerName: order.customerName,
+                            status: "payment_confirmed",
+                            total: order.total,
+                          }),
+                        });
+                      } catch (e) {
+                        console.error("Error sending payment confirmation:", e);
+                      }
+                    }
+                  }}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
                 >
+                  <CheckCircle className="w-4 h-4 mr-2" />
                   Marcar Pagado
                 </Button>
-              )}
-            </div>
+                {order.customerPhone && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch("/api/orders/notify", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            shopId,
+                            orderId: order.id,
+                            orderNumber: order.orderNumber,
+                            customerPhone: order.customerPhone,
+                            customerName: order.customerName,
+                            status: "payment_reminder",
+                            total: order.total,
+                          }),
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                          alert("✅ Recordatorio de pago enviado");
+                        } else if (data.whatsappUrl) {
+                          window.open(data.whatsappUrl, "_blank");
+                        }
+                      } catch (e) {
+                        console.error("Error sending payment reminder:", e);
+                        alert("Error al enviar recordatorio");
+                      }
+                    }}
+                    className="text-amber-400 border-amber-500/30 hover:bg-amber-500/10"
+                  >
+                    <Bell className="w-4 h-4 mr-2" />
+                    Recordar Pago
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Notes */}
           {order.notes && (
             <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
               <p className="text-amber-400 text-sm">📝 {order.notes}</p>
+            </div>
+          )}
+
+          {/* Order Details (toggle with Info button) */}
+          {showDetails && (
+            <div className="p-4 rounded-xl bg-slate-800/50 border border-white/10 space-y-3">
+              <h4 className="font-medium text-white flex items-center gap-2">
+                <FileText className="w-4 h-4 text-slate-400" />
+                Detalles del Pedido
+              </h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-slate-400">Número de Orden</p>
+                  <p className="text-white font-mono">{order.orderNumber}</p>
+                </div>
+                <div>
+                  <p className="text-slate-400">Fecha</p>
+                  <p className="text-white">
+                    {new Date(order.createdAt).toLocaleDateString("es-MX", {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-slate-400">Hora</p>
+                  <p className="text-white">
+                    {new Date(order.createdAt).toLocaleTimeString("es-MX", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-slate-400">Origen</p>
+                  <p className="text-white capitalize">{order.source || "web"}</p>
+                </div>
+                <div>
+                  <p className="text-slate-400">Cliente</p>
+                  <p className="text-white">{order.customerName}</p>
+                </div>
+                <div>
+                  <p className="text-slate-400">Teléfono</p>
+                  <p className="text-white">{order.customerPhone || "No registrado"}</p>
+                </div>
+              </div>
+              {order.customerPhone && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => sendWhatsApp("status")}
+                  className="w-full mt-2 text-green-400 border-green-500/30 hover:bg-green-500/10"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Enviar resumen por WhatsApp
+                </Button>
+              )}
             </div>
           )}
 
@@ -342,12 +518,28 @@ function OrderDetailModal({
             </div>
 
             <div className="grid grid-cols-3 gap-3">
-              <Button variant="outline" onClick={() => sendWhatsApp("status")} className="text-slate-400 border-slate-500/30 hover:bg-slate-500/10">
-                <MessageCircle className="w-4 h-4 mr-2" />
+              <Button
+                variant="outline"
+                onClick={() => setShowDetails(!showDetails)}
+                className={cn(
+                  "border-slate-500/30",
+                  showDetails ? "bg-slate-500/20 text-white" : "text-slate-400 hover:bg-slate-500/10"
+                )}
+              >
+                <FileText className="w-4 h-4 mr-2" />
                 Info
               </Button>
-              <Button variant="outline">
-                <FileText className="w-4 h-4 mr-2" />
+              <Button
+                variant="outline"
+                onClick={handleGenerateInvoice}
+                disabled={isGeneratingPdf}
+                className="text-blue-400 border-blue-500/30 hover:bg-blue-500/10"
+              >
+                {isGeneratingPdf ? (
+                  <Clock className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <FileText className="w-4 h-4 mr-2" />
+                )}
                 Factura
               </Button>
               {order.status !== "cancelled" && order.status !== "delivered" && (

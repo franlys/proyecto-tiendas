@@ -121,7 +121,7 @@ export function NotificationBell() {
                     />
 
                     {/* Panel */}
-                    <div className="absolute right-0 top-full mt-2 w-80 max-h-[70vh] bg-surface border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden">
+                    <div className="absolute right-0 top-full mt-2 w-80 max-h-[70vh] bg-slate-900 border border-white/10 rounded-xl shadow-2xl ring-1 ring-black/5 z-50 overflow-hidden">
                         {/* Header */}
                         <div className="flex items-center justify-between p-4 border-b border-white/10">
                             <h3 className="text-white font-semibold">Notificaciones</h3>
