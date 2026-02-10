@@ -20,6 +20,7 @@ import {
     limit,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { usePushNotifications } from "@/lib/hooks/use-push-notifications";
 
 export interface AppNotification {
     id: string;
@@ -102,23 +103,13 @@ export function NotificationsProvider({
     const [lastNotificationId, setLastNotificationId] = useState<string | null>(null);
 
     // Check notification permission and register service worker on mount
+    // Check notification permission on mount
     useEffect(() => {
         if (typeof window === "undefined") return;
 
         // Check notification permission
         if ("Notification" in window) {
             setHasNotificationPermission(Notification.permission === "granted");
-        }
-
-        // Register service worker for push notifications
-        if ("serviceWorker" in navigator) {
-            navigator.serviceWorker.register("/sw.js")
-                .then((registration) => {
-                    console.log("[Notifications] Service Worker registered:", registration.scope);
-                })
-                .catch((error) => {
-                    console.error("[Notifications] Service Worker registration failed:", error);
-                });
         }
     }, []);
 
@@ -127,7 +118,20 @@ export function NotificationsProvider({
         playNotificationChime(0.4);
     }, []);
 
-    // Request notification permission
+    // Use push notifications hook
+    const { subscribe, isSubscribed, isLoading: isPushLoading } = usePushNotifications(shopId);
+
+    // Auto-subscribe if permission is granted but not subscribed
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+
+        if (Notification.permission === "granted" && !isSubscribed && !isPushLoading) {
+            console.log("[Notifications] Permission granted but not subscribed, auto-subscribing...");
+            subscribe().catch(err => console.error("[Notifications] Auto-subscribe failed:", err));
+        }
+    }, [isSubscribed, isPushLoading, subscribe]);
+
+    // Request notification permission & subscribe to push
     const requestNotificationPermission = useCallback(async () => {
         if (typeof window === "undefined" || !("Notification" in window)) {
             return false;
@@ -142,11 +146,16 @@ export function NotificationsProvider({
             const permission = await Notification.requestPermission();
             const granted = permission === "granted";
             setHasNotificationPermission(granted);
+
+            if (granted) {
+                await subscribe();
+            }
+
             return granted;
         }
 
         return false;
-    }, []);
+    }, [subscribe]);
 
     // Show browser notification
     const showBrowserNotification = useCallback((notification: AppNotification) => {
