@@ -170,12 +170,26 @@ interface NotificationPhone {
  */
 export async function getAllNotificationPhones(shopId: string): Promise<NotificationPhone[]> {
   const db = adminDb();
-  if (!db) return [];
+  if (!db) {
+    console.error("[WhatsApp Order] No database connection");
+    return [];
+  }
 
   const phones: NotificationPhone[] = [];
+  const addedPhones = new Set<string>(); // Track added phones to avoid duplicates
+
+  const addPhone = (phone: string, name: string, role: string) => {
+    // Normalize phone number (remove spaces, dashes, etc.)
+    const normalizedPhone = phone.replace(/[\s\-\(\)]/g, "");
+    if (normalizedPhone && !addedPhones.has(normalizedPhone)) {
+      addedPhones.add(normalizedPhone);
+      phones.push({ phone: normalizedPhone, name, role });
+      console.log(`[WhatsApp Order] Added notification phone: ${name} (${role}): ${normalizedPhone}`);
+    }
+  };
 
   try {
-    // Obtener configuración de WhatsApp
+    // 1. Obtener configuración de WhatsApp Bot
     const configDoc = await db
       .collection("shops")
       .doc(shopId)
@@ -185,53 +199,52 @@ export async function getAllNotificationPhones(shopId: string): Promise<Notifica
 
     if (configDoc.exists) {
       const data = configDoc.data();
+      console.log(`[WhatsApp Order] Found whatsapp_bot config for ${shopId}`);
 
       // Agregar teléfono del dueño si existe
       if (data?.ownerNotificationPhone) {
-        phones.push({
-          phone: data.ownerNotificationPhone,
-          name: "Dueño",
-          role: "owner",
-        });
+        addPhone(data.ownerNotificationPhone, "Dueño", "owner");
       }
 
       // Agregar teléfonos de staff habilitados
       if (data?.staffNotificationPhones && Array.isArray(data.staffNotificationPhones)) {
         for (const staff of data.staffNotificationPhones) {
           if (staff.enabled && staff.phone) {
-            // Evitar duplicados con el teléfono del dueño
-            if (!phones.some(p => p.phone === staff.phone)) {
-              phones.push({
-                phone: staff.phone,
-                name: staff.name || "Staff",
-                role: staff.role || "staff",
-              });
-            }
+            addPhone(staff.phone, staff.name || "Staff", staff.role || "staff");
           }
         }
       }
+    } else {
+      console.log(`[WhatsApp Order] No whatsapp_bot config found for ${shopId}`);
     }
 
-    // Si no hay phones, fallback a la tienda principal
-    const shopDoc = await db.collection("shops").doc(shopId).get();
-    if (shopDoc.exists) {
-      const data = shopDoc.data();
-      // Priorities: 
-      // 1. Config ownerNotificationPhone (handled above)
-      // 2. Shop ownerNotificationPhone (new field)
-      // 3. Shop ownerPhone (legacy)
+    // 2. Si no se encontró teléfono del dueño, buscar en el documento de la tienda
+    if (!phones.some(p => p.role === "owner")) {
+      console.log(`[WhatsApp Order] No owner phone from config, checking shop document...`);
 
-      const notificationPhone = data?.ownerNotificationPhone || data?.ownerPhone || data?.contact?.ownerPhone;
+      const shopDoc = await db.collection("shops").doc(shopId).get();
+      if (shopDoc.exists) {
+        const data = shopDoc.data();
 
-      if (notificationPhone) {
-        phones.push({
-          phone: notificationPhone,
-          name: "Dueño",
-          role: "owner",
-        });
+        // Buscar en múltiples campos posibles
+        const ownerPhone =
+          data?.ownerNotificationPhone ||
+          data?.ownerPhone ||
+          data?.contact?.ownerPhone ||
+          data?.contact?.phone;
+
+        if (ownerPhone) {
+          addPhone(ownerPhone, data?.name || "Dueño", "owner");
+        } else {
+          console.warn(`[WhatsApp Order] No owner phone found in shop document for ${shopId}`);
+          console.log(`[WhatsApp Order] Shop data keys: ${Object.keys(data || {}).join(", ")}`);
+        }
+      } else {
+        console.error(`[WhatsApp Order] Shop document not found: ${shopId}`);
       }
     }
 
+    console.log(`[WhatsApp Order] Total notification phones for ${shopId}: ${phones.length}`);
     return phones;
   } catch (error) {
     console.error("[WhatsApp Order] Error getting notification phones:", error);
