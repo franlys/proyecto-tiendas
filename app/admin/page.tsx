@@ -17,6 +17,7 @@ import {
   Package,
   Bot,
   Megaphone,
+  ShoppingBag,
 } from "lucide-react";
 import { OrdersProvider, useOrders, useAuth, ShopsProvider, useShops, AgencyProvider, SalesOrdersProvider, useSalesOrders } from "@/components/shared";
 import { DashboardKPIs, SalesChart, SubscriptionLock, SupportWidget, AgencyContactCard } from "@/components/admin";
@@ -357,6 +358,12 @@ function AdminDashboardWithSubscription() {
                   </Button>
                 </Link>
               )}
+              <Link href="/admin/orders">
+                <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-amber-400 hover:text-amber-300">
+                  <ShoppingBag className="w-4 h-4" />
+                  <span className="hidden sm:inline ml-1">Pedidos</span>
+                </Button>
+              </Link>
               <Link href="/admin/inventory">
                 <Button variant="ghost" size="sm" className="px-2 sm:px-3">
                   <Package className="w-4 h-4" />
