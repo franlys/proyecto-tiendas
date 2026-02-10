@@ -761,8 +761,8 @@ function AdminDashboardWithSubscription() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <nav className="flex items-center gap-1 sm:gap-2 overflow-x-auto">
+            <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
+              <nav className="flex items-center gap-1 sm:gap-2 overflow-x-auto mask-linear-fade">
                 {isSuperAdmin && (
                   <Link href="/agency">
                     <Button variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300 px-2 sm:px-3">

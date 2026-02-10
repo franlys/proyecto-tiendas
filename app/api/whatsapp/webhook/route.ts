@@ -169,7 +169,11 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
   // Ignore group messages
   if (isGroupMessage(key.remoteJid)) return;
 
-  const phone = getPhoneFromJid(key.remoteJid);
+  const { formatPhoneForWhatsApp } = await import("@/lib/utils");
+  // Ensure we use the strict format (e.g. adding 1 for DR numbers)
+  const rawPhone = getPhoneFromJid(key.remoteJid);
+  const phone = formatPhoneForWhatsApp(rawPhone);
+
   const text = message.conversation || message.extendedTextMessage?.text || "";
 
   // Check if it's a location message
@@ -297,9 +301,156 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
 
 
   // ============================================================
-  // PASO 4: Detectar si es un pedido del carrito
+  // PASO 4: Detectar si es un pedido del carrito (Draft -> Pending)
+  // Y Lógica de "Bot para el Dueño"
   // ============================================================
   try {
+    const { adminDb } = await import("@/lib/firebase-admin");
+    const { getAllNotificationPhones } = await import("@/lib/handlers/whatsapp-order.handler");
+    const db = adminDb();
+
+    // ------------------------------------------------------------
+    // A. COMANDOS DEL DUEÑO (Owner -> Business Bot)
+    // ------------------------------------------------------------
+    // Patrón: "Confirmar [ID]" (Case insensitive)
+    const confirmMatch = text.match(/^confirmar\s+([a-zA-Z0-9-]+)/i);
+
+    if (confirmMatch && db) {
+      const orderId = confirmMatch[1]; // Can be full ID or partial
+      console.log(`[${instance}] Owner command 'Confirm' for order: ${orderId}`);
+
+      // Verify if sender is an Owner/Staff
+      const notificationPhones = await getAllNotificationPhones(shopId);
+      const isStaff = notificationPhones.some(p => p.phone && phone.includes(p.phone.replace(/\D/g, "")));
+
+      if (isStaff) {
+        // Search for the order (exact ID or OrderNumber)
+        // We'll search by ID first, then orderNumber
+        let orderRef = db.collection("shops").doc(shopId).collection("orders").doc(orderId);
+        let orderSnap = await orderRef.get();
+
+        if (!orderSnap.exists) {
+          // Try searching by orderNumber
+          const query = await db.collection("shops").doc(shopId).collection("orders")
+            .where("orderNumber", "==", orderId)
+            .limit(1)
+            .get();
+
+          if (!query.empty) {
+            orderRef = query.docs[0].ref;
+            orderSnap = query.docs[0];
+          }
+        }
+
+        if (orderSnap.exists) {
+          const orderData = orderSnap.data();
+
+          if (orderData?.status === "pending") {
+            // Update Status to Confirmed
+            await orderRef.update({
+              status: "confirmed",
+              updatedAt: new Date().toISOString()
+            });
+
+            // Reply to Owner
+            await sendTextMessage(instance, phone, `✅ Pedido *${orderData.orderNumber}* confirmado correctamente.`);
+
+            // Notify Customer
+            if (orderData.customerPhone) {
+              await sendTextMessage(instance, orderData.customerPhone, `✅ Tu pedido *${orderData.orderNumber}* ha sido confirmado. Estamos preparándolo.`);
+            }
+
+          } else {
+            await sendTextMessage(instance, phone, `⚠️ El pedido ${orderData?.orderNumber} ya está en estado: *${orderData?.status}*`);
+          }
+        } else {
+          await sendTextMessage(instance, phone, `❌ No encontré ningún pedido con ID/Número: ${orderId}`);
+        }
+        return; // Command handled
+      }
+    }
+
+
+    // ------------------------------------------------------------
+    // B. ACTIVACIÓN DE PEDIDOS (Customer -> Business)
+    // ------------------------------------------------------------
+    // Matches: 🆔 Pedido: [ID]
+    const draftOrderMatch = text.match(/🆔 Pedido: ([a-zA-Z0-9]+)/);
+
+    if (draftOrderMatch) {
+      const orderId = draftOrderMatch[1];
+      console.log(`[${instance}] Draft order activation attempt for: ${orderId}`);
+
+      if (db) {
+        const orderRef = db.collection("shops").doc(shopId).collection("orders").doc(orderId);
+        const orderSnap = await orderRef.get();
+
+        if (orderSnap.exists) {
+          const orderData = orderSnap.data();
+
+          // Only activate if it's a draft
+          if (orderData?.status === "draft") {
+            const customerNameData = pushName || "Cliente WhatsApp";
+
+            // Activate Order
+            await orderRef.update({
+              status: "pending", // Activate!
+              customerPhone: phone, // Bind phone now
+              customerName: customerNameData, // Bind name now
+              source: "whatsapp_verified",
+              updatedAt: new Date().toISOString()
+            });
+
+            console.log(`[${instance}] ✅ Order ${orderId} activated (draft -> pending)`);
+
+            // Create Notification (Server-side)
+            await db.collection("shops").doc(shopId).collection("notifications").add({
+              type: "new_order",
+              title: "Nuevo Pedido WhatsApp",
+              message: `Pedido #${orderData.orderNumber} de $${orderData.total}`,
+              read: false,
+              createdAt: new Date().toISOString(),
+              data: {
+                orderId: orderId,
+                total: orderData.total
+              }
+            });
+
+            // Send Confirmation to Customer
+            const confirmMsg = `✅ *PEDIDO RECIBIDO*\n\nGracias ${customerNameData}, hemos recibido tu pedido *#${orderData.orderNumber}* correctamente.\n\nEn breve lo confirmaremos.`;
+            await sendTextMessage(instance, phone, confirmMsg);
+
+            // ------------------------------------------------------------
+            // C. NOTIFICAR AL DUEÑO (Business -> Owner)
+            // ------------------------------------------------------------
+            const notificationPhones = await getAllNotificationPhones(shopId);
+            const ownerMsg = `🔔 *NUEVO PEDIDO RECIBIDO*\n\n` +
+              `📦 Pedido: *${orderData.orderNumber}*\n` +
+              `👤 Cliente: ${customerNameData} (${phone})\n` +
+              `💰 Total: $${orderData.total.toLocaleString()}\n\n` +
+              `📝 *Items:*\n${orderData.items.map((i: any) => `- ${i.quantity}x ${i.productName}`).join("\n")}\n\n` +
+              `👉 Responde: *Confirmar ${orderData.orderNumber}*\n` +
+              `para procesarlo automáticamente.`;
+
+            // Broadcast to all staff/owners
+            for (const staff of notificationPhones) {
+              try {
+                await sendTextMessage(instance, staff.phone, ownerMsg);
+                console.log(`[${instance}] Forwarded order to staff: ${staff.phone}`);
+              } catch (err) {
+                console.error(`[${instance}] Failed to notify staff ${staff.phone}`, err);
+              }
+            }
+
+            return; // Stop processing
+          } else if (orderData?.status !== "draft") {
+            console.log(`[${instance}] Order ${orderId} already active (status: ${orderData?.status})`);
+          }
+        }
+      }
+    }
+
+    // Legacy parser (still useful for text-based orders if any)
     const orderResult = await processWhatsAppOrder(
       instance,
       shopId,

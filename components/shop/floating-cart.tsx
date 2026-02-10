@@ -74,7 +74,7 @@ export function FloatingCart() {
         subtotal: totalPrice,
         tax: 0,
         total: totalPrice,
-        status: "pending",
+        status: "draft", // Start as draft/initiating
         paymentStatus: "pending",
         isWholesale: false,
         source: "whatsapp",
@@ -87,25 +87,10 @@ export function FloatingCart() {
       // Note: Admin listens to this collection
       const docRef = await addDoc(collection(db, "shops", shop.slug, "orders"), orderData);
 
-      console.log("✅ Order created in Firestore:", docRef.id);
+      console.log("✅ Order created as draft:", docRef.id);
 
-      // 1.5 Create Notification for Admin Dashboard
-      try {
-        await addDoc(collection(db, "shops", shop.slug, "notifications"), {
-          type: "new_order",
-          title: "Nuevo Pedido WhatsApp",
-          message: `Pedido #${orderData.orderNumber} de $${totalPrice}`,
-          read: false,
-          createdAt: serverTimestamp(),
-          data: {
-            orderId: docRef.id,
-            total: totalPrice
-          }
-        });
-      } catch (notifError) {
-        console.error("Error creating notification:", notifError);
-        // Don't block the main flow
-      }
+      // Notification is now handled by the Webhook upon receiving the message
+      // preventing "ghost orders" notifications.
 
       // 2. Legacy Local Storage (for history)
       addOrder({
@@ -133,7 +118,7 @@ export function FloatingCart() {
 
       // 3. Build WhatsApp Message
       let message = `Hola, quiero hacer un pedido en *${shop.name}*:\n`;
-      message += `🆔 Pedido: ${docRef.id.slice(0, 5).toUpperCase()}\n\n`; // Add ID ref
+      message += `🆔 Pedido: ${docRef.id}\n\n`; // Use full DOC ID for easier parsing
 
       // Add Table Info if exists
       if (tableId) {
@@ -176,12 +161,15 @@ export function FloatingCart() {
 
       message += `💰 *Total: $${totalPrice.toLocaleString()}*`;
 
-      // 4. Send Message to Owner (Prefer private notification phone)
-      const targetPhone = shop.ownerNotificationPhone || shop.contact.phone;
+      // 4. Send Message to Business Phone (Customer -> Business)
+      // We prioritize the public contact phone for the initial interaction
+      const targetPhone = shop.contact.phone;
       if (targetPhone) {
         const cleanPhone = formatPhoneForWhatsApp(targetPhone);
         const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
-        window.open(url, "_blank");
+
+        // Use location.href for better mobile Safari compatibility
+        window.location.href = url;
       } else {
         alert("No hay número de teléfono configurado para recibir pedidos.");
       }

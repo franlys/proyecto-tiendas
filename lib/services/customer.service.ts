@@ -11,6 +11,11 @@ const getDb = () => {
     return db;
 }
 
+// Import formatPhoneForWhatsApp
+import { formatPhoneForWhatsApp } from "@/lib/utils";
+
+// ... existing code ...
+
 /**
  * Creates a new customer for a specific shop
  */
@@ -23,14 +28,15 @@ export async function createCustomer(
 
     // Create auto-generated ID
     const docRef = collectionRef.doc();
-
     const now = new Date().toISOString();
+
+    // STRICT FORMATTING: Ensure phone is formatted
+    const formattedPhone = formatPhoneForWhatsApp(data.phone);
 
     const newCustomer: Customer = {
         ...data,
         id: docRef.id,
-        // Phone is in data, but ensure it's set if spread overrides or if needed for clarity
-        // phone: data.phone, 
+        phone: formattedPhone, // Use formatted phone
         name: data.name || "",
         email: data.email || undefined,
         source: "whatsapp",
@@ -54,9 +60,13 @@ export async function getCustomerByPhone(
     phone: string
 ): Promise<Customer | null> {
     const db = getDb();
+
+    // STRICT FORMATTING: Ensure query uses formatted phone
+    const formattedPhone = formatPhoneForWhatsApp(phone);
+
     const snapshot = await db
         .collection(`shops/${shopId}/${COLLECTION_NAME}`)
-        .where("phone", "==", phone)
+        .where("phone", "==", formattedPhone)
         .limit(1)
         .get();
 

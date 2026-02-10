@@ -178,9 +178,15 @@ export async function getAllNotificationPhones(shopId: string): Promise<Notifica
   const phones: NotificationPhone[] = [];
   const addedPhones = new Set<string>(); // Track added phones to avoid duplicates
 
+  // Import formatPhoneForWhatsApp
+  const { formatPhoneForWhatsApp } = await import("@/lib/utils");
+
   const addPhone = (phone: string, name: string, role: string) => {
-    // Normalize phone number (remove spaces, dashes, etc.)
-    const normalizedPhone = phone.replace(/[\s\-\(\)]/g, "");
+    if (!phone) return;
+
+    // Normalize phone number using strict detailed formatting
+    const normalizedPhone = formatPhoneForWhatsApp(phone);
+
     if (normalizedPhone && !addedPhones.has(normalizedPhone)) {
       addedPhones.add(normalizedPhone);
       phones.push({ phone: normalizedPhone, name, role });

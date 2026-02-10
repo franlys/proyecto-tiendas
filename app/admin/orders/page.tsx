@@ -183,9 +183,9 @@ function OrderDetailModal({
     }
   };
 
-  const sendWhatsApp = (type: "status" | "ready_pickup" | "ready_delivery" | "on_way_location") => {
+  const getWhatsAppUrl = (type: "status" | "ready_pickup" | "ready_delivery" | "on_way_location") => {
     let message = "";
-    const cleanPhone = order.customerPhone.replace(/\D/g, "");
+    const cleanPhone = order.customerPhone?.replace(/\D/g, "") || "";
 
     switch (type) {
       case "ready_pickup":
@@ -205,7 +205,7 @@ function OrderDetailModal({
           `Gracias por tu compra! 🙏`;
     }
 
-    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, "_blank");
+    return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
   };
 
   return (
@@ -457,15 +457,18 @@ function OrderDetailModal({
                 </div>
               </div>
               {order.customerPhone && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => sendWhatsApp("status")}
-                  className="w-full mt-2 text-green-400 border-green-500/30 hover:bg-green-500/10"
+                <a
+                  href={getWhatsAppUrl("status")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    "flex items-center justify-center w-full mt-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors",
+                    "text-green-400 border border-green-500/30 hover:bg-green-500/10"
+                  )}
                 >
                   <MessageCircle className="w-4 h-4 mr-2" />
                   Enviar resumen por WhatsApp
-                </Button>
+                </a>
               )}
             </div>
           )}
@@ -509,12 +512,22 @@ function OrderDetailModal({
             )}
 
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" onClick={() => sendWhatsApp("ready_pickup")} className="text-green-400 border-green-500/30 hover:bg-green-500/10 text-xs">
+              <a
+                href={getWhatsAppUrl("ready_pickup")}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium text-green-400 border border-green-500/30 hover:bg-green-500/10 transition-colors"
+              >
                 <CheckCircle className="w-3 h-3 mr-1" /> Listo (Recoger)
-              </Button>
-              <Button variant="outline" onClick={() => sendWhatsApp("on_way_location")} className="text-blue-400 border-blue-500/30 hover:bg-blue-500/10 text-xs">
+              </a>
+              <a
+                href={getWhatsAppUrl("on_way_location")}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium text-blue-400 border border-blue-500/30 hover:bg-blue-500/10 transition-colors"
+              >
                 <Truck className="w-3 h-3 mr-1" /> Enviar (Pedir Ubicación)
-              </Button>
+              </a>
             </div>
 
             <div className="grid grid-cols-3 gap-3">
