@@ -18,6 +18,7 @@ import {
   getDocs,
   updateDoc,
   deleteDoc,
+  deleteField,
   query,
   where,
   orderBy,
@@ -286,10 +287,10 @@ async function releaseDaysForRental(
 
       for (const day of days) {
         if (updatedDays[day]?.rentalId === rentalId) {
+          // Set to available and remove rentalId (Firestore doesn't accept undefined)
           updatedDays[day] = {
             date: updatedDays[day].date,
             status: "available",
-            rentalId: undefined,
           };
         }
       }
@@ -624,11 +625,13 @@ export async function returnVehicle(
     updatedAt: serverTimestamp(),
   });
 
-  // Actualizar vehículo
-  await updateVehicle(shopId, rental.vehicleId, {
+  // Actualizar vehículo - use deleteField() to remove currentRentalId
+  const vehicleDocRef = doc(db, getVehiclesCollection(shopId), rental.vehicleId);
+  await updateDoc(vehicleDocRef, {
     status: "available",
-    currentRentalId: undefined,
+    currentRentalId: deleteField(),
     currentMileage: data.mileage,
+    updatedAt: serverTimestamp(),
   });
 
   // Liberar días futuros (si devolvió antes)

@@ -34,3 +34,23 @@ export function openWhatsApp(phone: string, message: string): void {
   const encodedMessage = encodeURIComponent(message);
   window.open(`https://wa.me/${cleanPhone}?text=${encodedMessage}`, "_blank");
 }
+
+/**
+ * Deep clean an object for Firestore
+ * Removes all undefined values recursively (Firestore doesn't accept undefined)
+ * Keeps null, empty strings, empty arrays, and 0 values
+ */
+export function cleanForFirestore<T>(obj: T): T {
+  if (obj === null || obj === undefined) return null as T;
+  if (Array.isArray(obj)) {
+    return obj.map(item => cleanForFirestore(item)) as T;
+  }
+  if (typeof obj === 'object' && obj !== null) {
+    return Object.fromEntries(
+      Object.entries(obj)
+        .filter(([_, v]) => v !== undefined)
+        .map(([k, v]) => [k, cleanForFirestore(v)])
+    ) as T;
+  }
+  return obj;
+}

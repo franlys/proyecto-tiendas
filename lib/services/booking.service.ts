@@ -89,11 +89,11 @@ export async function createBooking(
 ): Promise<Booking> {
   const endTime = calculateEndTime(input.time, input.serviceDuration);
 
-  const bookingData = {
+  // Build booking data, only including optional fields if they have values
+  const bookingData: Record<string, unknown> = {
     shopId,
     customerName: input.customerName,
     customerPhone: input.customerPhone,
-    customerEmail: input.customerEmail || undefined,
     serviceId: input.serviceId,
     serviceName: input.serviceName,
     serviceDuration: input.serviceDuration,
@@ -101,18 +101,20 @@ export async function createBooking(
     date: input.date,
     time: input.time,
     endTime,
-    status: "pending" as const,
+    status: "pending",
     reminderSentAt: null,
     reminderMessageId: null,
     customerResponse: null,
     customerRespondedAt: null,
-    assignedStaffId: input.assignedStaffId || undefined,
-    assignedStaffName: input.assignedStaffName || undefined,
-    notes: input.notes || undefined,
-    internalNotes: undefined,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
+
+  // Add optional fields only if they have values (Firestore doesn't accept undefined)
+  if (input.customerEmail) bookingData.customerEmail = input.customerEmail;
+  if (input.assignedStaffId) bookingData.assignedStaffId = input.assignedStaffId;
+  if (input.assignedStaffName) bookingData.assignedStaffName = input.assignedStaffName;
+  if (input.notes) bookingData.notes = input.notes;
 
   const docRef = await addDoc(
     collection(db, getBookingsCollection(shopId)),
