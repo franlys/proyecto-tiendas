@@ -18,19 +18,245 @@ import {
   Bot,
   Megaphone,
   ShoppingBag,
-  Clock,
   CheckCircle,
-  Truck,
   ChevronRight,
   Phone,
   Calendar,
 } from "lucide-react";
-import { OrdersProvider, useOrders, useAuth, ShopsProvider, useShops, AgencyProvider, SalesOrdersProvider, useSalesOrders, ORDER_STATUS_CONFIG, type OrderStatus, type SalesOrder } from "@/components/shared";
+import { useAuth, ShopsProvider, useShops, AgencyProvider, SalesOrdersProvider, useSalesOrders, ORDER_STATUS_CONFIG, type OrderStatus, type SalesOrder } from "@/components/shared";
 import { DashboardKPIs, SalesChart, SubscriptionLock, SupportWidget, AgencyContactCard } from "@/components/admin";
+import { getBookingsForDate, confirmBooking, cancelBooking } from "@/lib/services/booking.service";
+import type { Booking, BookingStatus } from "@/lib/types/booking.types";
 import { DailyReportCard } from "@/components/admin";
 import { DatabaseSeeder } from "@/components/admin/database-seeder";
 import { NotificationBell } from "@/components/admin/notification-bell";
 import { Button } from "@/components/ui";
+
+// Upcoming Bookings Widget for Dashboard
+function BookingsWidget({ shopId }: { shopId: string }) {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [expandedBooking, setExpandedBooking] = useState<string | null>(null);
+
+  // Fetch today's bookings
+  useEffect(() => {
+    async function fetchBookings() {
+      if (!shopId || shopId === "default") {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const today = new Date().toISOString().split("T")[0];
+        const todayBookings = await getBookingsForDate(shopId, today);
+
+        // Also get tomorrow's bookings
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = tomorrow.toISOString().split("T")[0];
+        const tomorrowBookings = await getBookingsForDate(shopId, tomorrowStr);
+
+        setBookings([...todayBookings, ...tomorrowBookings].slice(0, 5));
+      } catch (error) {
+        console.error("Error fetching bookings:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchBookings();
+    // Refresh every minute
+    const interval = setInterval(fetchBookings, 60000);
+    return () => clearInterval(interval);
+  }, [shopId]);
+
+  const handleConfirm = async (bookingId: string) => {
+    try {
+      await confirmBooking(shopId, bookingId);
+      setBookings(prev => prev.map(b =>
+        b.id === bookingId ? { ...b, status: "confirmed" as BookingStatus } : b
+      ));
+    } catch (error) {
+      console.error("Error confirming booking:", error);
+    }
+  };
+
+  const handleCancel = async (bookingId: string) => {
+    if (!confirm("¿Cancelar esta cita?")) return;
+    try {
+      await cancelBooking(shopId, bookingId);
+      setBookings(prev => prev.filter(b => b.id !== bookingId));
+    } catch (error) {
+      console.error("Error cancelling booking:", error);
+    }
+  };
+
+  const getStatusBadge = (status: BookingStatus) => {
+    const styles: Record<BookingStatus, string> = {
+      pending: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+      confirmed: "bg-green-500/20 text-green-400 border-green-500/30",
+      rescheduled: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+      cancelled: "bg-red-500/20 text-red-400 border-red-500/30",
+      completed: "bg-slate-500/20 text-slate-400 border-slate-500/30",
+      no_show: "bg-red-500/20 text-red-400 border-red-500/30",
+    };
+    const labels: Record<BookingStatus, string> = {
+      pending: "Pendiente",
+      confirmed: "Confirmada",
+      rescheduled: "Reagendada",
+      cancelled: "Cancelada",
+      completed: "Completada",
+      no_show: "No asistió",
+    };
+    return (
+      <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${styles[status]}`}>
+        {labels[status]}
+      </span>
+    );
+  };
+
+  const formatDate = (dateStr: string) => {
+    const today = new Date().toISOString().split("T")[0];
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split("T")[0];
+
+    if (dateStr === today) return "Hoy";
+    if (dateStr === tomorrowStr) return "Mañana";
+    return new Date(dateStr + "T12:00:00").toLocaleDateString("es", { weekday: "short", day: "numeric" });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="glass-panel rounded-2xl p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Calendar className="w-5 h-5 text-purple-400" />
+          <h3 className="text-lg font-semibold text-white">Próximas Citas</h3>
+        </div>
+        <div className="text-center py-8 text-slate-400">Cargando...</div>
+      </div>
+    );
+  }
+
+  if (bookings.length === 0) {
+    return (
+      <div className="glass-panel rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-purple-400" />
+            Próximas Citas
+          </h3>
+        </div>
+        <div className="text-center py-8 text-slate-400">
+          <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
+          <p>No hay citas programadas</p>
+          <p className="text-xs mt-1">Las citas aparecerán aquí</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="glass-panel rounded-2xl p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-purple-400" />
+          Próximas Citas
+          <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 text-xs font-bold">
+            {bookings.length}
+          </span>
+        </h3>
+        <Link href="/admin/bookings" className="text-sm text-primary hover:underline">
+          Ver todas
+        </Link>
+      </div>
+
+      <div className="space-y-3">
+        {bookings.map((booking) => {
+          const isExpanded = expandedBooking === booking.id;
+
+          return (
+            <div
+              key={booking.id}
+              className="rounded-xl bg-white/5 border border-white/10 overflow-hidden"
+            >
+              <div
+                className="p-4 cursor-pointer hover:bg-white/5 transition-colors"
+                onClick={() => setExpandedBooking(isExpanded ? null : booking.id)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="text-center min-w-[50px]">
+                      <p className="text-xs text-slate-400">{formatDate(booking.date)}</p>
+                      <p className="text-lg font-bold text-white">{booking.time}</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-white">{booking.customerName}</p>
+                      <p className="text-sm text-slate-400">{booking.serviceName}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {getStatusBadge(booking.status)}
+                  </div>
+                </div>
+              </div>
+
+              {isExpanded && (
+                <div className="px-4 pb-4 border-t border-white/10 pt-3 space-y-3">
+                  <div className="text-sm text-slate-400">
+                    <p>📱 {booking.customerPhone}</p>
+                    <p>⏱️ {booking.serviceDuration} min - ${booking.servicePrice.toLocaleString()}</p>
+                  </div>
+
+                  <div className="flex gap-2 flex-wrap">
+                    {booking.status === "pending" && (
+                      <Button
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleConfirm(booking.id);
+                        }}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        Confirmar
+                      </Button>
+                    )}
+                    {(booking.status === "pending" || booking.status === "confirmed") && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCancel(booking.id);
+                        }}
+                        className="text-red-400 border-red-500/30 hover:bg-red-500/10"
+                      >
+                        Cancelar
+                      </Button>
+                    )}
+                    {booking.customerPhone && (
+                      <a
+                        href={`https://wa.me/${booking.customerPhone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola ${booking.customerName}, sobre tu cita del ${formatDate(booking.date)} a las ${booking.time}...`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="px-3 py-1.5 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 text-sm flex items-center gap-1"
+                      >
+                        <Phone className="w-3 h-3" />
+                        WhatsApp
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 // Pending Orders Widget for Dashboard
 function PendingOrdersWidget({ shopId }: { shopId: string }) {
@@ -316,8 +542,11 @@ function DashboardContent({ isSuperAdmin, shop }: { isSuperAdmin: boolean; shop?
             businessType={shop?.businessType}
           />
 
-          {/* Pending Orders Widget - Front and Center */}
-          <PendingOrdersWidget shopId={shop?.slug || "default"} />
+          {/* Orders and Bookings Widgets - Front and Center */}
+          <div className="grid lg:grid-cols-2 gap-6">
+            <PendingOrdersWidget shopId={shop?.slug || "default"} />
+            <BookingsWidget shopId={shop?.slug || "default"} />
+          </div>
 
           {/* Charts and Report Section */}
           <div className="grid lg:grid-cols-3 gap-6">

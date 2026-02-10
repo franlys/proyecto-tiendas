@@ -43,16 +43,51 @@ interface NotificationsContextType {
 
 const NotificationsContext = createContext<NotificationsContextType | undefined>(undefined);
 
-// Audio for notification sound
-let notificationAudio: HTMLAudioElement | null = null;
+// Audio for notification sound - using Web Audio API for a pleasant chime
+let audioContext: AudioContext | null = null;
 
-// Initialize audio on client side
-if (typeof window !== "undefined") {
-    // Create audio element with a simple notification sound
-    notificationAudio = new Audio();
-    // Use a data URI for a simple beep sound (more reliable than external files)
-    notificationAudio.src = "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleGN0s+L/q2hHLFWJ1O/YmXVFPXahy97GhVQnOm6c1fL/uY5dJyhSgcXb5LyPaDoiQW+Vzej/0aZ2Rys+ZY7K4euthlkqKkx6r9Tm/8GcaT4nPGGIxN/vtZNkMChGcJ/N5P7EoG1BJzpdhL/c77+ZazUsQ26cyOL+yKRxRSs6XIC62+/CnG5EKThdgLvY7sKcbkQpOF2Autjuwptu";
-    notificationAudio.volume = 0.5;
+// Play a pleasant notification chime using Web Audio API
+function playNotificationChime(volume: number = 0.4) {
+    if (typeof window === "undefined") return;
+
+    try {
+        // Create or reuse AudioContext
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        }
+
+        // Resume context if suspended (browser autoplay policy)
+        if (audioContext.state === "suspended") {
+            audioContext.resume();
+        }
+
+        const now = audioContext.currentTime;
+
+        // Create a pleasant two-tone chime
+        const frequencies = [880, 1108.73]; // A5 and C#6 - pleasant major third
+        const duration = 0.15;
+
+        frequencies.forEach((freq, index) => {
+            const oscillator = audioContext!.createOscillator();
+            const gainNode = audioContext!.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext!.destination);
+
+            oscillator.type = "sine";
+            oscillator.frequency.setValueAtTime(freq, now);
+
+            // Envelope for smooth sound
+            gainNode.gain.setValueAtTime(0, now + (index * 0.08));
+            gainNode.gain.linearRampToValueAtTime(volume, now + (index * 0.08) + 0.02);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + (index * 0.08) + duration);
+
+            oscillator.start(now + (index * 0.08));
+            oscillator.stop(now + (index * 0.08) + duration + 0.1);
+        });
+    } catch (err) {
+        console.log("Could not play notification sound:", err);
+    }
 }
 
 export function NotificationsProvider({
@@ -89,12 +124,7 @@ export function NotificationsProvider({
 
     // Play notification sound
     const playNotificationSound = useCallback(() => {
-        if (notificationAudio) {
-            notificationAudio.currentTime = 0;
-            notificationAudio.play().catch(err => {
-                console.log("Could not play notification sound:", err);
-            });
-        }
+        playNotificationChime(0.4);
     }, []);
 
     // Request notification permission
