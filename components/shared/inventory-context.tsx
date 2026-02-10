@@ -133,6 +133,22 @@ export function InventoryProvider({ children, shopId }: InventoryProviderProps) 
     [products]
   );
 
+  // Helper to deeply clean undefined values from objects (Firestore doesn't accept undefined)
+  const cleanForFirestore = (obj: any): any => {
+    if (obj === null || obj === undefined) return null;
+    if (Array.isArray(obj)) {
+      return obj.map(item => cleanForFirestore(item));
+    }
+    if (typeof obj === 'object') {
+      return Object.fromEntries(
+        Object.entries(obj)
+          .filter(([_, v]) => v !== undefined)
+          .map(([k, v]) => [k, cleanForFirestore(v)])
+      );
+    }
+    return obj;
+  };
+
   const addProduct = useCallback(async (product: Omit<Product, "id">) => {
     // Optimistic Update
     const tempId = `temp-${Date.now()}`;
@@ -142,12 +158,10 @@ export function InventoryProvider({ children, shopId }: InventoryProviderProps) 
 
     try {
       // Write to Cloud
-      // If we want auto-ID from firestore:
       const colRef = getCollectionRef();
-      // Remove undefined values to avoid Firestore error
-      const cleanProduct = Object.fromEntries(
-        Object.entries(product).filter(([_, v]) => v !== undefined)
-      );
+      // Deep clean undefined values to avoid Firestore error
+      const cleanProduct = cleanForFirestore(product);
+      console.log("[Inventory] Saving product to Firestore:", cleanProduct);
       const docRef = await addDoc(colRef, cleanProduct);
 
       // Update with real ID
@@ -172,10 +186,9 @@ export function InventoryProvider({ children, shopId }: InventoryProviderProps) 
 
     try {
       const docRef = doc(db, "shops", shopId, "products", id);
-      // Remove undefined values to avoid Firestore error
-      const cleanUpdates = Object.fromEntries(
-        Object.entries(updates).filter(([_, v]) => v !== undefined)
-      );
+      // Deep clean undefined values to avoid Firestore error
+      const cleanUpdates = cleanForFirestore(updates);
+      console.log("[Inventory] Updating product in Firestore:", id, cleanUpdates);
       await updateDoc(docRef, cleanUpdates);
     } catch (e) {
       console.error("Error updating product in cloud:", e);
