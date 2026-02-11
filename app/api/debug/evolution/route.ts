@@ -64,11 +64,33 @@ export async function GET() {
             });
         }
 
+        // 3. FETCH DB LOGS (New addition)
+        let logs: any[] = [];
+        try {
+            const { adminDb } = await import("@/lib/firebase-admin");
+            const db = adminDb();
+            if (db) {
+                const logsSnap = await db.collection("webhook_debug_logs")
+                    .orderBy("timestamp", "desc")
+                    .limit(10)
+                    .get();
+
+                logs = logsSnap.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                    payload: "TRUNCATED_FOR_VIEW_PREVIEW" // Don't flood the browser
+                }));
+            }
+        } catch (dbError: any) {
+            logs.push({ error: "Failed to read DB logs", details: dbError.message });
+        }
+
         return NextResponse.json({
             timestamp: new Date().toISOString(),
             baseUrl,
             count: diagnostics.length,
-            diagnostics
+            diagnostics,
+            recent_webhook_logs: logs
         }, { status: 200 });
 
     } catch (error: any) {
