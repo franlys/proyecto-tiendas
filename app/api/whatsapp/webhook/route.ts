@@ -176,6 +176,16 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
 
   const text = message.conversation || message.extendedTextMessage?.text || "";
 
+  // ============================================================
+  // DIAGNOSTIC: PING COMMAND
+  // Bypasses all checks to confirm connectivity
+  // ============================================================
+  if (text.trim().toUpperCase() === "PING") {
+    console.log(`[${instance}] PING received from ${pushName || phone}`);
+    await sendTextMessage(instance, phone, "🏓 PONG! El webhook está activo y escuchando.");
+    return;
+  }
+
   // Check if it's a location message
   if (message.locationMessage) {
     console.log(`[${instance}] Location message received from ${pushName || phone}`);
