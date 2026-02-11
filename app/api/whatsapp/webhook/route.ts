@@ -188,6 +188,23 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
   // ============================================================
   if (text.trim().toUpperCase() === "PING") {
     console.log(`[${instance}] PING received from ${pushName || phone}`);
+
+    // LOG TO FIRESTORE: Proof of Life
+    try {
+      const shopId = instance.replace("shop_", "").replace(/_/g, "-");
+      const { adminDb } = await import("@/lib/firebase-admin");
+      const db = adminDb();
+      if (db) {
+        await db.collection("shops").doc(shopId).collection("whatsappConfig").doc("status").set({
+          lastPingReceived: new Date().toISOString(),
+          lastPingFrom: phone
+        }, { merge: true });
+        console.log(`[${instance}] Logged PING to Firestore for ${shopId}`);
+      }
+    } catch (dbError) {
+      console.error(`[${instance}] Failed to log PING to DB:`, dbError);
+    }
+
     await sendTextMessage(instance, phone, "🏓 PONG! El webhook está activo y escuchando.");
     return;
   }
