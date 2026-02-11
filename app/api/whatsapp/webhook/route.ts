@@ -136,6 +136,26 @@ export async function POST(request: NextRequest) {
 
     const { event, instance, data } = payload;
 
+    // DEBUG: Force Log EVERYTHING from this instance to Firestore
+    // This confirms if Vercel is receiving the webhook at all
+    if (instance?.includes("surprise_gifts")) {
+      try {
+        const { adminDb } = await import("@/lib/firebase-admin");
+        const db = adminDb();
+        if (db) {
+          await db.collection("webhook_debug_logs").add({
+            instance,
+            event,
+            timestamp: new Date().toISOString(),
+            payload: JSON.stringify(payload).substring(0, 5000)
+          });
+          console.log(`[DEBUG] Logged raw webhook to Firestore for ${instance}`);
+        }
+      } catch (e) {
+        console.error("Debug log failed:", e);
+      }
+    }
+
     console.log(`[Webhook] Event: ${event} from instance: ${instance}`);
 
     // Normalize event name (Evolution API can send both formats)
