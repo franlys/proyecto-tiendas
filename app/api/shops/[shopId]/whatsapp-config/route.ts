@@ -27,13 +27,26 @@ export async function GET(
         // Fetch current webhook status from Evolution
         // This helps debug if the webhook is actually set correctly
         let webhookStatus = null;
+        let webhookStatusLog = null;
+
         if (shop) {
             try {
+                // Check Evolution Status
                 const { getInstanceName, getWebhook } = await import("@/lib/evolution");
                 const instanceName = getInstanceName(shop.slug);
                 webhookStatus = await getWebhook(instanceName);
+
+                // Check Internal Firestore Log (Proof of Life)
+                const { adminDb } = await import("@/lib/firebase-admin");
+                const db = adminDb();
+                if (db) {
+                    const statusDoc = await db.collection("shops").doc(shopId).collection("whatsappConfig").doc("status").get();
+                    if (statusDoc.exists) {
+                        webhookStatusLog = statusDoc.data();
+                    }
+                }
             } catch (e) {
-                console.error("Failed to fetch webhook status:", e);
+                console.error("Failed to fetch webhook status/logs:", e);
             }
         }
 
@@ -42,6 +55,7 @@ export async function GET(
             config,
             shop,
             webhook: webhookStatus,
+            diagnostics: webhookStatusLog, // Exposed for debugging
         });
     } catch (error: any) {
         console.error("Error getting WhatsApp config:", error);

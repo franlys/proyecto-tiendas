@@ -328,5 +328,8 @@ export function isEvolutionConfigured(): boolean {
 }
 
 export function getInstanceName(shopSlug: string): string {
-  return `shop_${shopSlug.replace(/-/g, "_")}`;
+  // VERSION 2: Forcing a new instance to clear "Waiting for message" encryption issues
+  // Old: shop_surprise_gifts
+  // New: shop_surprise_gifts_v2
+  return `shop_${shopSlug.replace(/-/g, "_")}_v2`;
 }
