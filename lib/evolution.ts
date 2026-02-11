@@ -111,7 +111,8 @@ export async function getInstance(instanceName: string): Promise<EvolutionInstan
  * Obtener estado de conexión de una instancia
  */
 export async function getConnectionState(instanceName: string): Promise<{ state: string }> {
-  return evolutionFetch<{ state: string }>(`/instance/connectionState/${instanceName}`);
+  const response = await evolutionFetch<any>(`/instance/connectionState/${instanceName}`);
+  return response.instance || response;
 }
 
 /**

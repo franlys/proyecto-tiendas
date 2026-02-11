@@ -126,6 +126,8 @@ function isGroupMessage(jid: string): boolean {
 export async function POST(request: NextRequest) {
   try {
     const payload: WebhookPayload = await request.json();
+    console.log("[Webhook TRACE] Raw Payload:", JSON.stringify(payload, null, 2));
+
     const { event, instance, data } = payload;
 
     console.log(`[Webhook] Event: ${event} from instance: ${instance}`);
@@ -162,13 +164,22 @@ export async function POST(request: NextRequest) {
 async function handleNewMessage(instance: string, data: WebhookPayload["data"]) {
   const { key, message, pushName } = data;
 
-  if (!key || !message) return;
+  if (!key || !message) {
+    console.log(`[${instance}] Ignored: Missing key or message data`);
+    return;
+  }
 
   // Ignore own messages
-  if (key.fromMe) return;
+  if (key.fromMe) {
+    console.log(`[${instance}] Ignored: Message fromMe`);
+    return;
+  }
 
   // Ignore group messages
-  if (isGroupMessage(key.remoteJid)) return;
+  if (isGroupMessage(key.remoteJid)) {
+    console.log(`[${instance}] Ignored: Group message`);
+    return;
+  }
 
   const { formatPhoneForWhatsApp } = await import("@/lib/utils");
   // Ensure we use the strict format (e.g. adding 1 for DR numbers)
@@ -176,6 +187,8 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
   const phone = formatPhoneForWhatsApp(rawPhone);
 
   const text = message.conversation || message.extendedTextMessage?.text || "";
+
+  console.log(`[${instance}] Processing message from ${phone} (Raw: ${rawPhone}). Text: "${text}"`);
 
   // ============================================================
   // DIAGNOSTIC: PING COMMAND
