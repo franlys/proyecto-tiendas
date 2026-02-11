@@ -123,6 +123,12 @@ function isGroupMessage(jid: string): boolean {
   return jid.includes("@g.us");
 }
 
+// Simple GET handler for health check/verification
+export async function GET() {
+  console.log("[Webhook] Health check (GET request received)");
+  return NextResponse.json({ status: "active", message: "Webhook is listening" });
+}
+
 export async function POST(request: NextRequest) {
   try {
     const payload: WebhookPayload = await request.json();
