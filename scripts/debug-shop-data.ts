@@ -108,9 +108,11 @@ async function main() {
             const botConfigSnap = await db.collection("shops").doc(doc.id).collection("whatsapp_bot").doc("config").get();
             if (botConfigSnap.exists) {
                 const botData = botConfigSnap.data();
-                console.log(`[Bot Config] Enabled: ${botData.enabled}`);
-                console.log(`[Bot Config] Owner Notif Phone: ${botData.ownerNotificationPhone}`);
-                console.log(`[Bot Config] Staff Phones: ${JSON.stringify(botData.staffNotificationPhones || [])}`);
+                if (botData) {
+                    console.log(`[Bot Config] Enabled: ${botData.enabled}`);
+                    console.log(`[Bot Config] Owner Notif Phone: ${botData.ownerNotificationPhone}`);
+                    console.log(`[Bot Config] Staff Phones: ${JSON.stringify(botData.staffNotificationPhones || [])}`);
+                }
             } else {
                 console.log(`[Bot Config] NOT FOUND`);
             }
