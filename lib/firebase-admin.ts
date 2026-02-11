@@ -46,9 +46,23 @@ export function initAdmin() {
     }
 
     // 2. Load & Sanitize Credentials
-    const projectId = cleanEnv(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
-    const clientEmail = cleanEnv(process.env.FIREBASE_ADMIN_CLIENT_EMAIL);
-    const rawPrivateKey = (process.env.FIREBASE_ADMIN_PRIVATE_KEY || "").trim();
+    // 2. Load & Sanitize Credentials
+    let projectId = cleanEnv(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+    let clientEmail = cleanEnv(process.env.FIREBASE_ADMIN_CLIENT_EMAIL);
+    let rawPrivateKey = (process.env.FIREBASE_ADMIN_PRIVATE_KEY || "").trim();
+
+    // NEW: Support for full JSON Service Account Key (Standard Vercel/Firebase pattern)
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+        try {
+            const jsonCreds = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+            if (jsonCreds.project_id) projectId = jsonCreds.project_id;
+            if (jsonCreds.client_email) clientEmail = jsonCreds.client_email;
+            if (jsonCreds.private_key) rawPrivateKey = jsonCreds.private_key;
+            console.log("✅ [FIREBASE ADMIN] Loaded credentials from FIREBASE_SERVICE_ACCOUNT_KEY JSON");
+        } catch (e) {
+            console.error("❌ [FIREBASE ADMIN] Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY JSON:", e);
+        }
+    }
 
     // 3. Validation
     const missing = [];
