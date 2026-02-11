@@ -27,13 +27,33 @@ export async function GET(request: NextRequest) {
       headers: { apikey: EVOLUTION_KEY },
     });
 
-    const instances = response.data.map((item: any) => ({
+    let instances = response.data.map((item: any) => ({
       instanceName: item.instance?.instanceName || item.name,
       status: item.instance?.status || item.state || "close",
       owner: item.instance?.owner,
       profileName: item.instance?.profileName,
       profilePictureUrl: item.instance?.profilePictureUrl,
     }));
+
+    // Filter if instanceName param is present
+    const { searchParams } = new URL(request.url);
+    const targetInstance = searchParams.get("instanceName");
+
+    if (targetInstance) {
+      const specificInstance = instances.find((i: any) => i.instanceName === targetInstance);
+
+      return NextResponse.json({
+        configured: true,
+        connected: specificInstance?.status === "open",
+        exists: !!specificInstance,
+        status: specificInstance?.status || "disconnected",
+        profile: specificInstance ? {
+          name: specificInstance.profileName,
+          phone: specificInstance.owner,
+          picture: specificInstance.profilePictureUrl
+        } : null
+      });
+    }
 
     const connectedInstances = instances.filter(
       (i: any) => i.status === "open"

@@ -1,0 +1,23 @@
+Fetching instances...
+Status: 200
+Data Type: object
+Is Array? true
+Data Preview: [
+  {
+    "instance": {
+      "instanceName": "shop_surprise_gifts",
+      "instanceId": "f4b46de2-efb3-4f47-a726-5dc94cf2dafa",
+      "owner": "18092328741@s.whatsapp.net",
+      "profileName": "Franlys",
+      "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/491877292_970036525335876_9169938900742194399_n.jpg?ccb=11-4&oh=01_Q5Aa3wGIF9ZwBScgKJA3-HExehF2c-BAPbmoty_GJYAb0baYqw&oe=6998C386&_nc_sid=5e03e0&_nc_cat=104",
+      "profileStatus": "",
+      "status": "open",
+      "serverUrl": "evolution-api-production-0fa7.up.railway.app",
+      "apikey": "02C930DD-2CE0-46CE-B696-2F1B1442018C",
+      "integration": {
+        "integration": "WHATSAPP-BAILEYS",
+        "webhook_wa_business": "evolution-api-production-0fa7.up.railway.app/webhook/whatsapp/shop_surprise_gifts"
+      }
+    }
+  }
+]

