@@ -175,18 +175,6 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
     return;
   }
 
-  // Ignore own messages
-  if (key.fromMe) {
-    console.log(`[${instance}] Ignored: Message fromMe`);
-    return;
-  }
-
-  // Ignore group messages
-  if (isGroupMessage(key.remoteJid)) {
-    console.log(`[${instance}] Ignored: Group message`);
-    return;
-  }
-
   const { formatPhoneForWhatsApp } = await import("@/lib/utils");
   // Ensure we use the strict format (e.g. adding 1 for DR numbers)
   const rawPhone = getPhoneFromJid(key.remoteJid);
@@ -194,15 +182,19 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
 
   const text = message.conversation || message.extendedTextMessage?.text || "";
 
-  console.log(`[${instance}] Processing message from ${phone} (Raw: ${rawPhone}). Text: "${text}"`);
-
   // ============================================================
   // DIAGNOSTIC: PING COMMAND
-  // Bypasses all checks to confirm connectivity
+  // Bypasses all checks (including fromMe) to confirm connectivity
   // ============================================================
   if (text.trim().toUpperCase() === "PING") {
     console.log(`[${instance}] PING received from ${pushName || phone}`);
     await sendTextMessage(instance, phone, "🏓 PONG! El webhook está activo y escuchando.");
+    return;
+  }
+
+  // Ignore own messages
+  if (key.fromMe) {
+    console.log(`[${instance}] Ignored: Message fromMe`);
     return;
   }
 
