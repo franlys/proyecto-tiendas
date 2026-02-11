@@ -13,7 +13,7 @@ import {
     isEvolutionConfigured,
 } from "@/lib/evolution";
 
-const WEBHOOK_BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://proyecto-tiendas.vercel.app";
+const WEBHOOK_BASE_URL = "https://linko-app-pied.vercel.app";
 
 /**
  * GET /api/shops/{shopId}/whatsapp/connect
@@ -141,11 +141,25 @@ export async function DELETE(
             );
         }
 
-        // Desconectar de Evolution API
+        // Best effort logout
         try {
             await logoutInstance(config.mainInstanceName);
         } catch (error) {
-            console.error("Error logging out instance:", error);
+            console.warn("Logout failed (proceeding to delete):", error);
+        }
+
+        // Force delete instance
+        try {
+            const { deleteInstance } = await import("@/lib/evolution");
+            await deleteInstance(config.mainInstanceName);
+        } catch (deleteError: any) {
+            const msg = deleteError.message || "";
+            if (msg.includes("404") || msg.includes("not found")) {
+                console.log(`Instance ${config.mainInstanceName} already deleted (404)`);
+            } else {
+                console.warn("Delete instance failed:", deleteError);
+                // We don't throw here to ensure we clean up the DB below
+            }
         }
 
         // Actualizar estado en DB

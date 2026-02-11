@@ -94,6 +94,20 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // Ensure webhook is set before fetching QR (even if instance exists)
+    try {
+      // HARDCODED URL: Force production URL to avoid undefined/localhost issues
+      const appUrl = "https://linko-app-pied.vercel.app";
+      const webhookUrl = `${appUrl}/api/whatsapp/webhook`;
+
+      const { setWebhook } = await import("@/lib/evolution");
+      await setWebhook(instanceName, webhookUrl);
+
+      console.log(`[Connect] Webhook ensured for ${instanceName} (while getting QR)`);
+    } catch (e) {
+      console.error("Webhook set failed:", e);
+    }
+
     // Get QR code if not connected
     const qrData = await fetchQRCode(instanceName);
 

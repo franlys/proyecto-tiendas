@@ -25,9 +25,15 @@ export async function GET(request: NextRequest) {
 
   try {
     // Fetch all instances
+    console.log("[Status Debug] Fetching instances from Evolution...");
     const response = await axios.get(`${EVOLUTION_URL}/instance/fetchInstances`, {
       headers: { apikey: EVOLUTION_KEY },
     });
+
+    console.log(`[Status Debug] Raw instances count: ${response.data.length}`);
+    if (response.data.length > 0) {
+      console.log(`[Status Debug] First instance sample structure:`, JSON.stringify(response.data[0], null, 2));
+    }
 
     let instances = response.data.map((item: any) => ({
       instanceName: item.instance?.instanceName || item.name,
@@ -37,12 +43,15 @@ export async function GET(request: NextRequest) {
       profilePictureUrl: item.instance?.profilePictureUrl,
     }));
 
+    console.log(`[Status Debug] Mapped instances statuses: ${instances.map((i: any) => `${i.instanceName}:${i.status}`).join(", ")}`);
+
     // Filter if instanceName param is present
     const { searchParams } = new URL(request.url);
     const targetInstance = searchParams.get("instanceName");
 
     if (targetInstance) {
       const specificInstance = instances.find((i: any) => i.instanceName === targetInstance);
+      console.log(`[Status Debug] Target instance ${targetInstance} found? ${!!specificInstance}. Status: ${specificInstance?.status}`);
 
       return NextResponse.json({
         configured: true,
