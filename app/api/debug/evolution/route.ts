@@ -78,7 +78,7 @@ export async function GET() {
                 logs = logsSnap.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data(),
-                    payload: "TRUNCATED_FOR_VIEW_PREVIEW" // Don't flood the browser
+                    payloadJSON: JSON.parse(doc.data().payload || "{}") // Attempt to parse for cleaner view
                 }));
             }
         } catch (dbError: any) {
