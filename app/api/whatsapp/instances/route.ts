@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   createInstance,
+  createShopInstance,
   deleteInstance,
   getConnectionState,
   isEvolutionConfigured,
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const instance = await createInstance(shopSlug);
+    const instance = await createShopInstance(shopSlug);
 
     // Automatically set webhook
     try {

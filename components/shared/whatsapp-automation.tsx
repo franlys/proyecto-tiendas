@@ -91,6 +91,7 @@ export function useWhatsAppConnection(shopSlug: string) {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
+                    shopSlug, // Required by backend to use consistent naming
                     instanceName,
                     qrcode: true,
                     integration: "WHATSAPP-BAILEYS",
