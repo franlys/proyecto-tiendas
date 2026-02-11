@@ -326,6 +326,24 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
   shopId = shopId.replace(/_/g, "-");
 
   // ============================================================
+  // PASO 3.3: Comandos de Dueño (Prioridad Alta)
+  // ============================================================
+  try {
+    const { handleOwnerCommand } = await import("@/lib/handlers/owner-commands.handler");
+    const cmdResult = await handleOwnerCommand(instance, shopId, phone, text);
+
+    if (cmdResult.handled) {
+      console.log(`[${instance}] Owner command handled for ${phone}`);
+      // If it returned a message (like for errors), we might want to send it here if not sent inside?
+      // The handler sends success messages, but let's double check.
+      // Yes, the handler uses sendTextMessage.
+      return;
+    }
+  } catch (err) {
+    console.error(`[${instance}] Error handling owner command:`, err);
+  }
+
+  // ============================================================
   // PASO 3.5: Gestión de Clientes (Registro y Nombre)
   // ============================================================
   try {
