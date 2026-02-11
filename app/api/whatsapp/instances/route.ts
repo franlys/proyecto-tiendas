@@ -69,6 +69,20 @@ export async function POST(request: NextRequest) {
 
     const instance = await createInstance(shopSlug);
 
+    // Automatically set webhook
+    try {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://linko-app-pied.vercel.app";
+      const webhookUrl = `${appUrl}/api/whatsapp/webhook`;
+
+      const { setWebhook } = await import("@/lib/evolution");
+      await setWebhook(instance.instanceName, webhookUrl);
+
+      console.log(`Webhook set for ${instance.instanceName} to ${webhookUrl}`);
+    } catch (webhookError) {
+      console.error("Failed to set webhook:", webhookError);
+      // We don't fail the request, but we log it
+    }
+
     return NextResponse.json({
       success: true,
       instance,

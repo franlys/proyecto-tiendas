@@ -56,6 +56,7 @@ async function evolutionFetch<T>(
   const url = `${EVOLUTION_API_URL}${endpoint}`;
   const response = await fetch(url, {
     ...options,
+    cache: "no-store", // Ensure we always get fresh data
     headers: {
       "Content-Type": "application/json",
       apikey: EVOLUTION_API_KEY,

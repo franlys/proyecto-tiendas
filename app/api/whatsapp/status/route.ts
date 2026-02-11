@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { isEvolutionConfigured } from "@/lib/evolution";
 import axios from "axios";
 
+export const dynamic = "force-dynamic";
+
 const EVOLUTION_URL = process.env.EVOLUTION_API_URL || "";
 const EVOLUTION_KEY = process.env.EVOLUTION_API_KEY || "";
 
@@ -58,6 +60,34 @@ export async function GET(request: NextRequest) {
     const connectedInstances = instances.filter(
       (i: any) => i.status === "open"
     );
+
+    // Self-healing: Ensure connected instances have webhook set
+    if (connectedInstances.length > 0) {
+      try {
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://linko-app-pied.vercel.app";
+        const targetWebhookUrl = `${appUrl}/api/whatsapp/webhook`;
+        const { getWebhook, setWebhook } = await import("@/lib/evolution");
+
+        // Check first connected instance (most likely the one being used)
+        // In a real multi-tenant scenario we might want to check all, but let's be careful with rate limits
+        const instanceToCheck = connectedInstances[0];
+
+        // We do this async to not block the status check
+        (async () => {
+          try {
+            const currentWebhook = await getWebhook(instanceToCheck.instanceName);
+            if (!currentWebhook || currentWebhook.url !== targetWebhookUrl || !currentWebhook.webhook_by_events) {
+              console.log(`[Status Fix] Setting missing/wrong webhook for ${instanceToCheck.instanceName}`);
+              await setWebhook(instanceToCheck.instanceName, targetWebhookUrl);
+            }
+          } catch (err) {
+            console.error(`[Status Fix] Failed to check/set webhook for ${instanceToCheck.instanceName}`, err);
+          }
+        })();
+      } catch (e) {
+        // ignore setup errors
+      }
+    }
 
     return NextResponse.json({
       configured: true,

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchQRCode, getConnectionState, createInstance, isEvolutionConfigured } from "@/lib/evolution";
 
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/whatsapp/connect?instanceName=xxx
  * Get QR code for WhatsApp connection
@@ -38,6 +40,20 @@ export async function GET(request: NextRequest) {
           console.log(`Instance ${instanceName} created successfully`);
           // After creation, try to get QR code directly
           const qrData = await fetchQRCode(instanceName);
+
+          // Automatically set webhook
+          try {
+            const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://linko-app-pied.vercel.app";
+            const webhookUrl = `${appUrl}/api/whatsapp/webhook`;
+
+            const { setWebhook } = await import("@/lib/evolution");
+            await setWebhook(instanceName, webhookUrl);
+
+            console.log(`Webhook set for ${instanceName} to ${webhookUrl}`);
+          } catch (webhookError) {
+            console.error("Failed to set webhook:", webhookError);
+          }
+
           return NextResponse.json({
             connected: false,
             state: "close",
@@ -57,6 +73,18 @@ export async function GET(request: NextRequest) {
     }
 
     if (state.state === "open") {
+      // Ensure webhook is set even if already connected (self-healing)
+      try {
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://linko-app-pied.vercel.app";
+        const webhookUrl = `${appUrl}/api/whatsapp/webhook`;
+
+        const { setWebhook } = await import("@/lib/evolution");
+        // We do this asynchronously to not block the response
+        setWebhook(instanceName, webhookUrl).catch(e => console.error("Background webhook set failed:", e));
+      } catch (e) {
+        // ignore
+      }
+
       return NextResponse.json({
         connected: true,
         state: "open",
