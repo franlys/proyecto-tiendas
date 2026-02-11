@@ -27,6 +27,35 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const forceWebhook = searchParams.get("forceWebhook") === "true";
+
+    if (forceWebhook) {
+      try {
+        const appUrl = "https://linko-app-pied.vercel.app";
+        const webhookUrl = `${appUrl}/api/whatsapp/webhook`;
+
+        const { setWebhook, getWebhook } = await import("@/lib/evolution");
+        await setWebhook(instanceName, webhookUrl);
+
+        // Verify it was set
+        const status = await getWebhook(instanceName);
+
+        console.log(`[Force Webhook] Updated ${instanceName} to ${webhookUrl}`);
+
+        return NextResponse.json({
+          success: true,
+          message: "Webhook forced update successful",
+          webhook: status
+        });
+      } catch (e: any) {
+        console.error("Force webhook failed:", e);
+        return NextResponse.json(
+          { error: `Failed to force webhook: ${e.message}` },
+          { status: 500 }
+        );
+      }
+    }
+
     // First check connection state
     let state: { state: string };
     try {

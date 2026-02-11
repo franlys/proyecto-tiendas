@@ -19,6 +19,7 @@ import {
     X,
     Trash2,
     RotateCcw,
+    Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -193,6 +194,21 @@ export function useWhatsAppConnection(shopSlug: string) {
         await getQRCode();
     };
 
+    const forceWebhookUpdate = async () => {
+        try {
+            // Re-use connect endpoint which enforces webhook
+            const res = await fetch(`/api/whatsapp/connect?instanceName=${instanceName}&forceWebhook=true`);
+            const data = await res.json();
+            if (data.webhook) {
+                return true;
+            }
+            return false;
+        } catch (err) {
+            console.error("Error forcing webhook:", err);
+            return false;
+        }
+    };
+
     return {
         status,
         qrCode,
@@ -204,6 +220,7 @@ export function useWhatsAppConnection(shopSlug: string) {
         disconnect,
         refreshQR,
         checkStatus,
+        forceWebhookUpdate,
     };
 }
 
@@ -889,6 +906,7 @@ export function WhatsAppAutomationPanel({
         disconnect,
         refreshQR,
         checkStatus,
+        forceWebhookUpdate,
     } = useWhatsAppConnection(shopSlug);
 
     // Check if Evolution API is configured on mount
@@ -1144,6 +1162,37 @@ export function WhatsAppAutomationPanel({
                         Las notificaciones de pedidos y citas se envían automáticamente
                     </li>
                 </ul>
+            </div>
+
+            {/* Diagnostics Section */}
+            <div className="mt-8 p-6 rounded-2xl bg-white/5 border border-white/10">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-amber-400" />
+                    Diagnóstico
+                </h3>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-sm text-white font-medium">Estado del Webhook</p>
+                        <p className="text-xs text-slate-400">
+                            Si no recibes respuestas automáticas, intenta forzar la actualización del webhook.
+                        </p>
+                    </div>
+                    <Button
+                        onClick={async () => {
+                            const success = await forceWebhookUpdate();
+                            if (success) {
+                                alert("Webhook actualizado correctamente");
+                            } else {
+                                alert("Error al actualizar webhook");
+                            }
+                        }}
+                        variant="outline"
+                        className="border-amber-500/50 text-amber-400 hover:bg-amber-500/10"
+                    >
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        Forzar Actualización
+                    </Button>
+                </div>
             </div>
 
             <QRModal

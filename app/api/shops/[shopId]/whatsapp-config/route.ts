@@ -24,10 +24,24 @@ export async function GET(
 
         const { config, shop } = await getWhatsAppConfigWithDefaults(shopId);
 
+        // Fetch current webhook status from Evolution
+        // This helps debug if the webhook is actually set correctly
+        let webhookStatus = null;
+        if (shop) {
+            try {
+                const { getInstanceName, getWebhook } = await import("@/lib/evolution");
+                const instanceName = getInstanceName(shop.slug);
+                webhookStatus = await getWebhook(instanceName);
+            } catch (e) {
+                console.error("Failed to fetch webhook status:", e);
+            }
+        }
+
         return NextResponse.json({
             success: true,
             config,
             shop,
+            webhook: webhookStatus,
         });
     } catch (error: any) {
         console.error("Error getting WhatsApp config:", error);
