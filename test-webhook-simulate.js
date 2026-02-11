@@ -6,7 +6,7 @@ const payload = {
     instance: "shop_surprise_gifts_v2",
     data: {
         key: {
-            remoteJid: "1234567890@s.whatsapp.net",
+            remoteJid: "18092328741@s.whatsapp.net",
             fromMe: false,
             id: "TEST_ID_12345"
         },
@@ -29,8 +29,10 @@ async function testWebhook() {
         console.log(`📄 Data:`, response.data);
     } catch (error) {
         if (error.response) {
-            console.error("❌ Linko Fatal Error:", error.response.status);
-            console.error(JSON.stringify(error.response.data, null, 2));
+            console.error("❌ Fatal Error:", error.response.status);
+            console.error("DETAILS:", error.response.data?.details || "No Details");
+            console.error("STACK:", error.response.data?.stack || "No Stack");
+            console.error("ENV CHECK:", JSON.stringify(error.response.data?.env_check, null, 2));
         } else {
             console.error("❌ Error:", error.message);
         }
