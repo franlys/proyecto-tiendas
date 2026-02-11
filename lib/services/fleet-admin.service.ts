@@ -69,7 +69,8 @@ export async function createOrUpdateWhatsAppConfig(
             });
         } else {
             // Crear con valores por defecto
-            const mainInstanceName = `shop_${shopId.replace(/-/g, "_")}`;
+            const { getInstanceName } = await import("@/lib/evolution");
+            const mainInstanceName = getInstanceName(shopId);
             await docRef.set({
                 ...DEFAULT_WHATSAPP_CONFIG,
                 mainInstanceName,

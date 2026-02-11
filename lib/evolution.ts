@@ -96,7 +96,7 @@ export async function createInstance(instanceName: string): Promise<EvolutionIns
  * @param shopSlug - Identificador de la tienda (ej: "estetica-lola")
  */
 export async function createShopInstance(shopSlug: string): Promise<EvolutionInstance> {
-  const instanceName = `shop_${shopSlug.replace(/-/g, "_")}`;
+  const instanceName = getInstanceName(shopSlug);
   return createInstance(instanceName);
 }
 

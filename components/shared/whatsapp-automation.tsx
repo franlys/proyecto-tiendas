@@ -33,6 +33,9 @@ interface WhatsAppProfile {
 }
 
 // Hook logic moved here
+// Helper to ensure consistency with backend (lib/evolution.ts)
+const getInstanceNameFromSlug = (slug: string) => `shop_${slug.replace(/-/g, "_")}_v2`;
+
 export function useWhatsAppConnection(shopSlug: string) {
     const [status, setStatus] = useState<ConnectionStatus>("disconnected");
     const [qrCode, setQrCode] = useState<string | null>(null);
@@ -43,7 +46,7 @@ export function useWhatsAppConnection(shopSlug: string) {
 
     useEffect(() => {
         if (shopSlug) {
-            setInstanceName(`shop_${shopSlug.replace(/-/g, "_")}`);
+            setInstanceName(getInstanceNameFromSlug(shopSlug));
         }
     }, [shopSlug]);
 

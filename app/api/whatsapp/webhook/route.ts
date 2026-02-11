@@ -191,7 +191,13 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
 
     // LOG TO FIRESTORE: Proof of Life
     try {
-      const shopId = instance.replace("shop_", "").replace(/_/g, "-");
+      // Handle v2 instance names for shopId extraction
+      let shopId = instance.replace("shop_", "");
+      if (shopId.endsWith("_v2")) {
+        shopId = shopId.slice(0, -3);
+      }
+      shopId = shopId.replace(/_/g, "-");
+
       const { adminDb } = await import("@/lib/firebase-admin");
       const db = adminDb();
       if (db) {
@@ -281,8 +287,15 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
     console.error(`[${instance}] Error checking rental confirmation:`, error);
   }
 
-  // Extraer shopId del nombre de instancia (shop_xxx -> xxx)
-  const shopId = instance.replace("shop_", "").replace(/_/g, "-");
+  // Extraer shopId del nombre de instancia (shop_xxx_v2 -> xxx)
+  // Handles both legacy (shop_xxx) and v2 (shop_xxx_v2) formats
+  let shopId = instance.replace("shop_", "");
+
+  if (shopId.endsWith("_v2")) {
+    shopId = shopId.slice(0, -3); // remove _v2
+  }
+
+  shopId = shopId.replace(/_/g, "-");
 
   // ============================================================
   // PASO 3.5: Gestión de Clientes (Registro y Nombre)
