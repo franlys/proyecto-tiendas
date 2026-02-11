@@ -43,7 +43,8 @@ export async function GET(request: NextRequest) {
 
           // Automatically set webhook
           try {
-            const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://linko-app-pied.vercel.app";
+            // HARDCODED URL: Force production URL to avoid undefined/localhost issues
+            const appUrl = "https://linko-app-pied.vercel.app";
             const webhookUrl = `${appUrl}/api/whatsapp/webhook`;
 
             const { setWebhook } = await import("@/lib/evolution");
@@ -75,7 +76,8 @@ export async function GET(request: NextRequest) {
     if (state.state === "open") {
       // Ensure webhook is set even if already connected (self-healing)
       try {
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://linko-app-pied.vercel.app";
+        // HARDCODED URL: Force production URL to avoid undefined/localhost issues
+        const appUrl = "https://linko-app-pied.vercel.app";
         const webhookUrl = `${appUrl}/api/whatsapp/webhook`;
 
         const { setWebhook } = await import("@/lib/evolution");

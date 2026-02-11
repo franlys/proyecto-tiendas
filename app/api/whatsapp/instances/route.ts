@@ -71,7 +71,8 @@ export async function POST(request: NextRequest) {
 
     // Automatically set webhook
     try {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://linko-app-pied.vercel.app";
+      // HARDCODED URL: Force production URL to avoid undefined/localhost issues
+      const appUrl = "https://linko-app-pied.vercel.app";
       const webhookUrl = `${appUrl}/api/whatsapp/webhook`;
 
       const { setWebhook } = await import("@/lib/evolution");
@@ -119,21 +120,33 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Try to logout first (best practice)
+    // Try to logout first (best effort)
     try {
       if (instanceName) {
-        // We import axios here or use the lib function if available. 
-        // Since lib/evolution doesn't export logoutInstance by default in this context (it does, but let's use it).
-        // Wait, I need to check if logoutInstance is imported. It is NOT imported in the original file.
-        // I will trust deleteInstance to handle it, OR I can try to import logoutInstance.
-        // For now, I'll just improve logging. 
-        // Actually, let's just Log what happened.
+        // Dynamic import to avoid circular dependency issues if any
+        const { logoutInstance } = await import("@/lib/evolution");
+        await logoutInstance(instanceName);
+        console.log(`Logout successful for ${instanceName}`);
       }
-    } catch (e) {
-      // ignore
+    } catch (e: any) {
+      console.warn(`Logout failed for ${instanceName} (proceeding to delete):`, e.message);
     }
 
-    await deleteInstance(instanceName);
+    // Attempt to delete with robust error handling
+    try {
+      await deleteInstance(instanceName);
+    } catch (deleteError: any) {
+      // If error is 404/not found, consider it success (idempotency)
+      const msg = deleteError.message || "";
+      if (msg.includes("404") || msg.includes("not found") || msg.includes("does not exist")) {
+        console.log(`Instance ${instanceName} already deleted (404), returning success`);
+        return NextResponse.json({
+          success: true,
+          message: `Instance ${instanceName} deleted (was missing)`,
+        });
+      }
+      throw deleteError;
+    }
 
     return NextResponse.json({
       success: true,
@@ -141,9 +154,9 @@ export async function DELETE(request: NextRequest) {
     });
   } catch (error: any) {
     console.error("Error deleting instance:", error.message);
-    if (error.response) {
-      console.error("Evolution API Error Response:", JSON.stringify(error.response.data));
-    }
+
+    // Even on error, we might want to tell client it's disconnected so UI updates
+    // But for now, returning 500 is safer to alert user
     return NextResponse.json(
       { error: error.message || "Failed to delete instance" },
       { status: 500 }

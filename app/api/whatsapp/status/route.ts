@@ -64,7 +64,8 @@ export async function GET(request: NextRequest) {
     // Self-healing: Ensure connected instances have webhook set
     if (connectedInstances.length > 0) {
       try {
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://linko-app-pied.vercel.app";
+        // HARDCODED URL: Force production URL to avoid undefined/localhost issues
+        const appUrl = "https://linko-app-pied.vercel.app";
         const targetWebhookUrl = `${appUrl}/api/whatsapp/webhook`;
         const { getWebhook, setWebhook } = await import("@/lib/evolution");
 

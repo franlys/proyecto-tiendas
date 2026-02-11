@@ -19,8 +19,14 @@ export function formatPhoneForWhatsApp(phone: string): string {
 
   // Dominican Republic area codes: 809, 829, 849
   // If 10 digits starting with these, add country code "1"
-  if (cleanPhone.length === 10 && /^(809|829|849)/.test(cleanPhone)) {
-    cleanPhone = "1" + cleanPhone;
+  if (cleanPhone.length === 10) {
+    if (/^(809|829|849)/.test(cleanPhone)) {
+      cleanPhone = "1" + cleanPhone;
+    } else {
+      // Assume US/Global standard if not explicitly another country code
+      // For now, we'll keep it simple: if 10 digits, add 1 (common for US/DR)
+      cleanPhone = "1" + cleanPhone;
+    }
   }
 
   return cleanPhone;

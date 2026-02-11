@@ -14,7 +14,8 @@ import { getWhatsAppConfigWithDefaults } from "@/lib/services/whatsapp-config.se
 import { WhatsAppAutoReplyConfig, ShopBasicInfo } from "@/lib/types/whatsapp-config.types";
 
 // App URL for links in messages
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://linko-app-pied.vercel.app";
+// HARDCODED URL: Force production URL to avoid undefined/localhost issues
+const APP_URL = "https://linko-app-pied.vercel.app";
 
 /**
  * Webhook para recibir eventos de Evolution API
