@@ -186,7 +186,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       error: "Internal error",
       details: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined
+      env_check: {
+        hasEvolutionUrl: !!process.env.EVOLUTION_API_URL,
+        hasEvolutionKey: !!process.env.EVOLUTION_API_KEY,
+        hasFirebase: !!process.env.FIREBASE_SERVICE_ACCOUNT_KEY
+      }
     }, { status: 500 });
   }
 }

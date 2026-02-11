@@ -28,10 +28,12 @@ async function testWebhook() {
         console.log(`✅ Status: ${response.status}`);
         console.log(`📄 Data:`, response.data);
     } catch (error) {
-        console.error(`❌ Error:`, error.response ? {
-            status: error.response.status,
-            data: error.response.data
-        } : error.message);
+        if (error.response) {
+            console.error("❌ Linko Fatal Error:", error.response.status);
+            console.error(JSON.stringify(error.response.data, null, 2));
+        } else {
+            console.error("❌ Error:", error.message);
+        }
     }
 }
 
