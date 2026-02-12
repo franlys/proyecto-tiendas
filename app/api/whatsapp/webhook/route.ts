@@ -203,8 +203,38 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
     return;
   }
 
+  // ============================================================
+  // PRE-PROCESS: Resolve Shop ID from Instance Name
+  // ============================================================
+  // The instance name contains the SQL/Slug (e.g. shop_surprise_gifts_v2 -> surprise-gifts)
+  // BUT the Database uses UUIDs (e.g. shop-173...).
+  // We MUST resolve the real UUID to ensure we write to the correct document.
+
+  let shopSlug = instance.replace("shop_", "");
+  if (shopSlug.endsWith("_v2")) {
+    shopSlug = shopSlug.slice(0, -3); // remove _v2
+  }
+  shopSlug = shopSlug.replace(/_/g, "-");
+
+  // Default to slug, but try to resolve real ID
+  let shopId = shopSlug;
+
+  try {
+    const { getShopBasicInfo } = await import("@/lib/services/whatsapp-config.service");
+    const shopInfo = await getShopBasicInfo(shopSlug); // Looks up by ID first, then Slug
+
+    if (shopInfo) {
+      shopId = shopInfo.id;
+      console.log(`[${instance}] ✅ Resolved Shop ID: ${shopId} (from slug: ${shopSlug})`);
+    } else {
+      console.warn(`[${instance}] ⚠️ Shop not found for slug: ${shopSlug}. Using slug as ID.`);
+    }
+  } catch (error) {
+    console.error(`[${instance}] ❌ Error resolving shop ID:`, error);
+  }
+
   const { formatPhoneForWhatsApp } = await import("@/lib/utils");
-  // Ensure we use the strict format (e.g. adding 1 for DR numbers)
+  // Check strict format
   const rawPhone = getPhoneFromJid(key.remoteJid);
   const phone = formatPhoneForWhatsApp(rawPhone);
 
@@ -212,26 +242,21 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
 
   // ============================================================
   // DIAGNOSTIC: PING COMMAND
-  // Bypasses all checks (including fromMe) to confirm connectivity
   // ============================================================
   if (text.trim().toUpperCase() === "PING") {
     console.log(`[${instance}] PING received from ${pushName || phone}`);
 
     // LOG TO FIRESTORE: Proof of Life
     try {
-      // Handle v2 instance names for shopId extraction
-      let shopId = instance.replace("shop_", "");
-      if (shopId.endsWith("_v2")) {
-        shopId = shopId.slice(0, -3);
-      }
-      shopId = shopId.replace(/_/g, "-");
-
       const { adminDb } = await import("@/lib/firebase-admin");
       const db = adminDb();
       if (db) {
+        // Use the RESOLVED shopId here!
         await db.collection("shops").doc(shopId).collection("whatsappConfig").doc("status").set({
           lastPingReceived: new Date().toISOString(),
-          lastPingFrom: phone
+          lastPingFrom: phone,
+          debugShopId: shopId, // Log which ID we used
+          conversationId: instance
         }, { merge: true });
         console.log(`[${instance}] Logged PING to Firestore for ${shopId}`);
       }
@@ -252,7 +277,8 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
   // Check if it's a location message
   if (message.locationMessage) {
     console.log(`[${instance}] Location message received from ${pushName || phone}`);
-    await handleLocationMessage(instance, phone, message.locationMessage, pushName);
+    // Pass the resolved shopId!
+    await handleLocationMessage(instance, shopId, phone, message.locationMessage, pushName);
     return;
   }
 
@@ -315,15 +341,8 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
     console.error(`[${instance}] Error checking rental confirmation:`, error);
   }
 
-  // Extraer shopId del nombre de instancia (shop_xxx_v2 -> xxx)
-  // Handles both legacy (shop_xxx) and v2 (shop_xxx_v2) formats
-  let shopId = instance.replace("shop_", "");
-
-  if (shopId.endsWith("_v2")) {
-    shopId = shopId.slice(0, -3); // remove _v2
-  }
-
-  shopId = shopId.replace(/_/g, "-");
+  // Shop ID is already resolved at the top of this function!
+  // We use the 'shopId' variable which now contains the UUID (or Slug if not found)
 
   // ============================================================
   // PASO 3.3: Comandos de Dueño (Prioridad Alta)
@@ -757,6 +776,7 @@ ${APP_URL}/${shopId}/book`;
  */
 async function handleLocationMessage(
   instance: string,
+  shopId: string, // Added shopId argument
   phone: string,
   location: NonNullable<WebhookPayload["data"]["message"]>["locationMessage"],
   pushName?: string
@@ -764,9 +784,9 @@ async function handleLocationMessage(
   if (!location) return;
 
   const { degreesLatitude, degreesLongitude, name, address } = location;
-  const shopId = instance.replace("shop_", "").replace(/_/g, "-");
+  // shopId is passed in now! No need to extract from slug.
 
-  console.log(`[${instance}] Location received: ${degreesLatitude}, ${degreesLongitude}`);
+  console.log(`[${instance}] Location received: ${degreesLatitude}, ${degreesLongitude} for shop ${shopId}`);
 
   // Try to find an active order for this customer
   try {

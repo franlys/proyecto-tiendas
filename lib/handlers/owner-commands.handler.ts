@@ -66,11 +66,21 @@ export async function handleOwnerCommand(
     // 2. CHECK AUTHORIZATION (For all other commands)
     // ------------------------------------------------------------
     const notificationPhones = await getAllNotificationPhones(shopId);
+
+    // DEBUG: Log authorization attempt
+    console.log(`[OwnerCmd] Checking auth for ${phone} in shop ${shopId}`);
+    console.log(`[OwnerCmd] Authorized phones:`, notificationPhones.map(p => p.phone));
+
     // Strict verify: Clean phone must match one of the registered ones
-    const isOwnerOrStaff = notificationPhones.some(p => p.phone && phone.includes(p.phone.replace(/\D/g, "")));
+    const isOwnerOrStaff = notificationPhones.some(p => {
+        const cleanStored = p.phone?.replace(/\D/g, "") || "";
+        const match = phone.includes(cleanStored);
+        if (match) console.log(`[OwnerCmd] Match found: ${phone} includes ${cleanStored}`);
+        return p.phone && match;
+    });
 
     if (!isOwnerOrStaff) {
-        // Not authorized, ignore command (let it fall through to normal auto-reply or chatbot)
+        console.log(`[OwnerCmd] Authorization failed for ${phone}`);
         return { handled: false };
     }
 
