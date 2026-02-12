@@ -92,7 +92,9 @@ export async function getShopBasicInfo(shopId: string): Promise<ShopBasicInfo | 
             id: doc.id,
             slug: data.slug || doc.id,
             name: data.name || "Tienda",
+            logoUrl: data.logoUrl || "",
             businessType: data.businessType || data.category || "retail",
+            ownerNotificationPhone: data.ownerNotificationPhone,
             contact: data.contact,
         };
     } catch (error) {
