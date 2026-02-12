@@ -380,6 +380,51 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
     return;
   }
 
+  if (cleanCmd === "DEBUG_LOGS") {
+    console.log(`[${instance}] DEBUG_LOGS requested by ${phone}`);
+    try {
+      const { adminDb } = await import("@/lib/firebase-admin");
+      const db = adminDb();
+      if (db) {
+        const logsSnap = await db.collection("shops").doc(shopId).collection("request_logs")
+          .orderBy("timestamp", "desc")
+          .limit(5)
+          .get();
+
+        const lines = logsSnap.docs.map(d => {
+          const dat = d.data();
+          const t = dat.timestamp?.toDate ? dat.timestamp.toDate().toLocaleTimeString() : "??";
+          return `[${t}] ${dat.phone}: ${dat.text.substring(0, 10)}`;
+        });
+
+        await sendTextMessage(instance, phone, `*LAST 5 HITS:*\n${lines.join("\n")}`);
+      }
+    } catch (e) {
+      await sendTextMessage(instance, phone, `Error reading logs: ${e}`);
+    }
+    return;
+  }
+
+  // ============================================================
+  // LOG REQUEST TO FIRESTORE (DIAGNOSTIC)
+  // ============================================================
+  try {
+    const { adminDb } = await import("@/lib/firebase-admin");
+    const { FieldValue } = await import("firebase-admin/firestore");
+    const db = adminDb();
+    if (db) {
+      // Fire and forget
+      db.collection("shops").doc(shopId).collection("request_logs").add({
+        instance,
+        phone,
+        text: text || "[media]",
+        timestamp: FieldValue.serverTimestamp()
+      }).catch(err => console.error("Log write failed", err));
+    }
+  } catch (e) {
+    console.error("Log init failed", e);
+  }
+
   // ============================================================
   // PASO 3.3: Comandos de Dueño (Prioridad Alta)
   // ============================================================
@@ -409,17 +454,29 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
       // Nuevo cliente - Primer contacto
       console.log(`[${instance}] New customer detected: ${phone}`);
 
-      // Registrar silenciosamente y dejar pasar al flujo normal (mensaje de bienvenida configurado)
-      await createCustomer(shopId, {
-        phone,
-        name: pushName || "Cliente WhatsApp", // Usar nombre de WhatsApp si existe
-        registrationState: "completed", // Marcar como completado para no pedir nombre después
-        source: "whatsapp"
-      });
+      // Timeout wrapper to prevent hanging
+      const performCustomerParams = async () => {
+        // Registrar silenciosamente y dejar pasar al flujo normal
+        await createCustomer(shopId, {
+          phone,
+          name: pushName || "Cliente WhatsApp",
+          registrationState: "completed",
+          source: "whatsapp"
+        });
+        console.log(`[${instance}] Customer created successfully`);
+      };
+
+      // Race against 2s timeout
+      const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Customer DB Timeout")), 2000));
+
+      try {
+        await Promise.race([performCustomerParams(), timeout]);
+      } catch (raceErr) {
+        console.error(`[${instance}] Customer creation timed out or failed (proceeding anyway):`, raceErr);
+      }
 
       // NO retornamos aquí.
       // Dejamos que el código continúe al PASO 5 para enviar el mensaje de bienvenida estándar
-      // configurado por el usuario (e.g. "Hola! Bienvenido a [Tienda]...")
     }
 
     // Si el cliente existía pero estaba pendiente de nombre (caso legacy o si decidimos reactivarlo)
