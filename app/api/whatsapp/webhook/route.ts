@@ -401,7 +401,9 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
           const t = dat.timestamp?.toDate ? dat.timestamp.toDate().toLocaleTimeString() : "??";
           // Show participant if exists
           const part = dat.participant ? ` (P: ${dat.participant.split('@')[0]})` : "";
-          return `[${t}] ${dat.phone}${part}: ${dat.text.substring(0, 10)}`;
+          // Show status/error
+          const stat = dat.status === "error" ? ` ❌ ${dat.error}` : (dat.status ? ` ${dat.status}` : "");
+          return `[${t}] ${dat.phone}${part}${stat}: ${dat.text.substring(0, 10)}`;
         });
 
         await sendTextMessage(instance, phone, `*LAST 5 HITS 🕵️:*\n${lines.join("\n")}`);
@@ -412,9 +414,6 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
     return;
   }
 
-  // ============================================================
-  // LOG REQUEST TO FIRESTORE (DIAGNOSTIC)
-  // ============================================================
   // ============================================================
   // LOG REQUEST TO FIRESTORE (DIAGNOSTIC)
   // ============================================================
