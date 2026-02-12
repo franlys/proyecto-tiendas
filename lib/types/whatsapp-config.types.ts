@@ -85,7 +85,9 @@ export interface ShopBasicInfo {
     id: string;
     slug: string;
     name: string;
-    businessType: string;
+    logoUrl: string;
+    businessType?: "retail" | "service" | "food" | "other";
+    ownerNotificationPhone?: string;
     contact?: {
         phone?: string;
     };
