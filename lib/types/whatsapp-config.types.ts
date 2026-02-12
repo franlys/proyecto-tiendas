@@ -92,7 +92,12 @@ export interface ShopBasicInfo {
     businessType?: string;
     ownerNotificationPhone?: string;
     bankAccounts?: ShopBankAccount[];
+    // Extended for NLP/Bot
+    website?: string;
     contact?: {
         phone?: string;
+        address?: string; // For "Ubicacion"
+        city?: string;
+        googleMapsUrl?: string;
     };
 }
