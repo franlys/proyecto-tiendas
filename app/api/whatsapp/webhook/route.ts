@@ -35,6 +35,7 @@ interface WebhookPayload {
       remoteJid: string;
       fromMe: boolean;
       id: string;
+      participant?: string; // Add participant
     };
     pushName?: string;
     message?: {
@@ -398,10 +399,12 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
         const lines = logsSnap.docs.map(d => {
           const dat = d.data();
           const t = dat.timestamp?.toDate ? dat.timestamp.toDate().toLocaleTimeString() : "??";
-          return `[${t}] ${dat.phone}: ${dat.text.substring(0, 10)}`;
+          // Show participant if exists
+          const part = dat.participant ? ` (P: ${dat.participant.split('@')[0]})` : "";
+          return `[${t}] ${dat.phone}${part}: ${dat.text.substring(0, 10)}`;
         });
 
-        await sendTextMessage(instance, phone, `*LAST 5 HITS:*\n${lines.join("\n")}`);
+        await sendTextMessage(instance, phone, `*LAST 5 HITS 🕵️:*\n${lines.join("\n")}`);
       }
     } catch (e) {
       await sendTextMessage(instance, phone, `Error reading logs: ${e}`);
@@ -421,6 +424,7 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
       db.collection("shops").doc(shopId).collection("request_logs").add({
         instance,
         phone,
+        participant: key?.participant || null, // Log participant
         text: text || "[media]",
         timestamp: FieldValue.serverTimestamp()
       }).catch(err => console.error("Log write failed", err));
