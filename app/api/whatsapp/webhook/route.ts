@@ -345,6 +345,42 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
   // We use the 'shopId' variable which now contains the UUID (or Slug if not found)
 
   // ============================================================
+  // DEBUG COMMANDS (HIDDEN)
+  // ============================================================
+  const cleanCmd = (text || "").trim();
+
+  if (cleanCmd === "DEBUG_STATUS") {
+    console.log(`[${instance}] DEBUG_STATUS requested by ${phone}`);
+    const { getWhatsAppConfigWithDefaults } = await import("@/lib/services/whatsapp-config.service");
+    const configResult = await getWhatsAppConfigWithDefaults(shopId);
+    const cfg = configResult.config;
+
+    const statusMsg = `*DEBUG STATUS* 🛠️\n\n` +
+      `Instance: ${instance}\n` +
+      `ShopID: ${shopId}\n` +
+      `Resolved Slug: ${shopSlug}\n` +
+      `Enabled: ${cfg.enabled}\n` +
+      `BizHours: ${cfg.businessHoursEnabled}\n` +
+      `Cooldown: ${cfg.cooldownMinutes}m\n` +
+      `Welcome Len: ${cfg.welcomeMessage?.length || 0}\n` +
+      `Server Time: ${new Date().toISOString()}`;
+
+    await sendTextMessage(instance, phone, statusMsg);
+    return;
+  }
+
+  if (cleanCmd === "TEST_AUTO_REPLY") {
+    console.log(`[${instance}] TEST_AUTO_REPLY requested by ${phone}`);
+    const { getWhatsAppConfigWithDefaults } = await import("@/lib/services/whatsapp-config.service");
+    const configResult = await getWhatsAppConfigWithDefaults(shopId);
+    const cfg = configResult.config;
+
+    const reply = cfg.welcomeMessage || "No welcome message set.";
+    await sendTextMessage(instance, phone, `*TEST AUTO REPLY:*\n\n${reply}`);
+    return;
+  }
+
+  // ============================================================
   // PASO 3.3: Comandos de Dueño (Prioridad Alta)
   // ============================================================
   try {
