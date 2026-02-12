@@ -8,6 +8,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import { updateOrderStatusAction, updatePaymentStatusAction } from "@/lib/actions/order-actions";
 import { db } from "@/lib/firebase";
 import {
   collection,
@@ -23,7 +24,8 @@ import {
   Timestamp
 } from "firebase/firestore";
 
-export type OrderStatus = "pending" | "confirmed" | "preparing" | "dispatched" | "delivered" | "cancelled";
+import { SalesOrder, OrderStatus, SalesOrderItem } from "@/lib/types/order.types";
+export type { SalesOrder, OrderStatus, SalesOrderItem };
 
 export const ORDER_STATUS_CONFIG: Record<OrderStatus, {
   label: string;
@@ -32,34 +34,34 @@ export const ORDER_STATUS_CONFIG: Record<OrderStatus, {
   description: string;
 }> = {
   pending: {
-    label: "Por Confirmar",
-    color: "amber",
-    icon: "🔔",
-    description: "Esperando confirmación",
+    label: "Pendiente",
+    color: "yellow",
+    icon: "⏳",
+    description: "Pedido recibido, en espera de confirmación",
   },
   confirmed: {
     label: "Confirmado",
     color: "blue",
     icon: "✅",
-    description: "Pedido confirmado",
+    description: "Pedido confirmado, en proceso",
   },
   preparing: {
     label: "Preparando",
-    color: "purple",
-    icon: "📦",
-    description: "En preparación",
+    color: "orange",
+    icon: "🍳",
+    description: "Pedido en preparación",
   },
   dispatched: {
     label: "Despachado",
-    color: "cyan",
+    color: "purple",
     icon: "🚚",
-    description: "En camino",
+    description: "Pedido enviado o listo para retiro",
   },
   delivered: {
     label: "Entregado",
     color: "green",
     icon: "🎉",
-    description: "Pedido completado",
+    description: "Pedido entregado con éxito",
   },
   cancelled: {
     label: "Cancelado",
@@ -68,39 +70,6 @@ export const ORDER_STATUS_CONFIG: Record<OrderStatus, {
     description: "Pedido cancelado",
   },
 };
-
-export interface SalesOrderItem {
-  productId: string;
-  productName: string;
-  quantity: number;
-  unitPrice: number;
-  total: number;
-}
-
-export interface SalesOrder {
-  id: string;
-  orderNumber: string;
-  customerName: string;
-  customerPhone: string;
-  customerEmail?: string;
-  customerAddress?: string;
-  items: SalesOrderItem[];
-  subtotal: number;
-  tax: number;
-  total: number;
-  status: OrderStatus;
-  paymentStatus: "pending" | "paid" | "refunded";
-  paymentMethod?: string;
-  notes?: string;
-  isWholesale: boolean;
-  createdAt: string;
-  updatedAt: string;
-  confirmedAt?: string;
-  dispatchedAt?: string;
-  deliveredAt?: string;
-  tableId?: string; // Phase 26
-  source?: string; // whatsapp, web, manual
-}
 
 interface NotificationConfig {
   new_order: string[];
@@ -280,14 +249,16 @@ export function SalesOrdersProvider({ children, shopId }: SalesOrdersProviderPro
     }
   }, [shopId]);
 
-  const updatePaymentStatus = useCallback(async (id: string, paymentStatus: SalesOrder["paymentStatus"]) => {
+  const updatePaymentStatus = useCallback(async (id: string, status: SalesOrder["paymentStatus"]) => {
     try {
-      await updateDoc(doc(db, "shops", shopId, "orders", id), {
-        paymentStatus,
-        updatedAt: serverTimestamp(),
-      });
+      // Use Server Action to trigger side effects (Invoice)
+      const result = await updatePaymentStatusAction(shopId, id, status);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
     } catch (error) {
       console.error("Error updating payment status:", error);
+      throw error;
     }
   }, [shopId]);
 

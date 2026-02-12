@@ -162,6 +162,7 @@ export function SalesChart({ data }: SalesChartProps) {
 
 interface DashboardKPIsProps {
   totalSales: number;
+  paidSales?: number;
   totalOrders: number;
   averageTicket: number;
   topService: string | null;
@@ -170,6 +171,7 @@ interface DashboardKPIsProps {
 
 export function DashboardKPIs({
   totalSales,
+  paidSales,
   totalOrders,
   averageTicket,
   topService,
@@ -184,6 +186,8 @@ export function DashboardKPIs({
         value={`$${totalSales.toLocaleString()}`}
         icon={<DollarSign className="w-6 h-6" />}
         variant="primary"
+        trend={paidSales !== undefined ? { value: Math.round((paidSales / (totalSales || 1)) * 100), isPositive: true } : undefined}
+        subtitle={paidSales !== undefined ? `Cobrado: $${paidSales.toLocaleString()}` : undefined}
       />
 
       {/* Conditionally show Appointments or Orders */}

@@ -20,7 +20,8 @@ import {
     LayoutDashboard,
     Palette,
     MessageCircle,
-    Bot
+    Bot,
+    CreditCard
 } from "lucide-react";
 import {
     AuthProvider,
@@ -29,6 +30,9 @@ import {
     useShops,
 } from "@/components/shared";
 import { Button } from "@/components/ui";
+
+import { BankAccountsManager } from "@/components/admin/bank-accounts-manager";
+import { ShopBankAccount } from "@/lib/constants";
 
 interface ShopProfile {
     logo: string;
@@ -41,6 +45,8 @@ interface ShopProfile {
     address: string;
     city: string;
     ownerNotificationPhone?: string;
+    // Bank Accounts
+    bankAccounts: ShopBankAccount[];
     // Social media
     instagram: string;
     facebook: string;
@@ -88,7 +94,7 @@ function ProfileContent() {
 
     const [saving, setSaving] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
-    const [activeTab, setActiveTab] = useState<"general" | "contact" | "schedule" | "social" | "theme">("general");
+    const [activeTab, setActiveTab] = useState<"general" | "contact" | "schedule" | "social" | "theme" | "payment">("general");
 
     const [profile, setProfile] = useState<ShopProfile>({
         logo: "",
@@ -101,6 +107,7 @@ function ProfileContent() {
         address: "",
         city: "",
         ownerNotificationPhone: "",
+        bankAccounts: [],
         instagram: "",
         facebook: "",
         website: "",
@@ -133,6 +140,7 @@ function ProfileContent() {
                     description: prev.description || shop.description || "",
                     phone: prev.phone || shop.contact?.phone || "",
                     ownerNotificationPhone: prev.ownerNotificationPhone || shop.ownerNotificationPhone || "",
+                    bankAccounts: prev.bankAccounts.length > 0 ? prev.bankAccounts : (shop.bankAccounts || []),
                 }));
             }
         }
@@ -162,7 +170,8 @@ function ProfileContent() {
                 address: profile.address,
                 city: profile.city
             },
-            ownerNotificationPhone: profile.ownerNotificationPhone
+            ownerNotificationPhone: profile.ownerNotificationPhone,
+            bankAccounts: profile.bankAccounts,
         });
 
         setTimeout(() => {
@@ -301,6 +310,18 @@ function ProfileContent() {
                             <div className="flex items-center gap-3">
                                 <Palette className="w-4 h-4" />
                                 <span>Tema y Colores</span>
+                            </div>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("payment")}
+                            className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "payment"
+                                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                }`}
+                        >
+                            <div className="flex items-center gap-3">
+                                <CreditCard className="w-4 h-4" />
+                                <span>Métodos de Pago</span>
                             </div>
                         </button>
                     </div>
@@ -711,6 +732,25 @@ function ProfileContent() {
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        )}
+
+                        {/* Payment Tab */}
+                        {activeTab === "payment" && (
+                            <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-6">
+                                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                    <CreditCard className="w-5 h-5 text-emerald-400" />
+                                    Cuentas Bancarias
+                                </h3>
+                                <p className="text-sm text-slate-400 mb-6">
+                                    Agrega las cuentas donde tus clientes podrán realizar depósitos o transferencias.
+                                    Esta información se enviará automáticamente por WhatsApp al confirmar un pedido.
+                                </p>
+
+                                <BankAccountsManager
+                                    accounts={profile.bankAccounts}
+                                    onChange={(accounts) => setProfile(prev => ({ ...prev, bankAccounts: accounts }))}
+                                />
                             </div>
                         )}
 

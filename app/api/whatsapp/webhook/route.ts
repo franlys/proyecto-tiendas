@@ -114,6 +114,17 @@ function generateMenuMessage(
   return `¡Hola${greeting}! 👋 ${welcomeMsg}${optionsText}`;
 }
 
+// Helper to format Bank Accounts
+function formatBankAccounts(shop: ShopBasicInfo): string {
+  if (!shop.bankAccounts || shop.bankAccounts.length === 0) return "";
+
+  const accounts = shop.bankAccounts.map(acc =>
+    `🏦 *${acc.bankName}*\n   Cuenta: ${acc.accountNumber}\n   Tipo: ${acc.accountType}\n   Titular: ${acc.accountHolder}${acc.identification ? `\n   ID: ${acc.identification}` : ""}${acc.instructions ? `\n   📝 ${acc.instructions}` : ""}`
+  ).join("\n\n");
+
+  return `\n\n💳 *DATOS DE PAGO / TRANSFERENCIA*:\n${accounts}\n\n📸 *Por favor envía una foto del comprobante aquí para validar tu pago.*`;
+}
+
 // Helper to extract phone OR handle LID (Linked Device ID)
 // If it's a LID, we MUST use the participant (real phone JID) if available
 const getPhoneFromJid = (key: any) => {
@@ -205,6 +216,8 @@ export async function POST(request: NextRequest) {
 
 async function handleNewMessage(instance: string, data: WebhookPayload["data"]) {
   const { key, message, pushName } = data;
+  const { getShopBasicInfo } = await import("@/lib/services/whatsapp-config.service");
+  const { deductStock } = await import("@/lib/services/inventory.service");
 
   if (!key || !message) {
     console.log(`[${instance}] Ignored: Missing key or message data`);
@@ -228,7 +241,6 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
   let shopId = shopSlug;
 
   try {
-    const { getShopBasicInfo } = await import("@/lib/services/whatsapp-config.service");
     const shopInfo = await getShopBasicInfo(shopSlug); // Looks up by ID first, then Slug
 
     if (shopInfo) {
@@ -284,6 +296,11 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
     return;
   }
 
+  // 1. Identify Message Type
+  const messageContentData = data.message || {};
+  const messageType = Object.keys(messageContentData)[0];
+
+  console.log(`[${instance}] 📩 processing ${messageType} from ${phone}`);
   // Check if it's a location message
   if (message.locationMessage) {
     console.log(`[${instance}] Location message received from ${pushName || phone}`);
@@ -564,6 +581,93 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
     const { getAllNotificationPhones } = await import("@/lib/handlers/whatsapp-order.handler");
     const db = adminDb();
 
+    // ---------------------------------------------------------
+    // 4. NLP & DOMINICAN SLANG DETECTION
+    // ---------------------------------------------------------
+    const { detectIntent } = await import("@/lib/nlp/dominican-slang");
+    const detectedIntent = detectIntent(text);
+
+    if (detectedIntent !== "UNKNOWN") {
+      console.log(`🇩🇴 [NLP] Detected Intent: ${detectedIntent} for message: "${text}"`);
+
+      let responseText = "";
+
+      // Assuming `cfg` (whatsapp config) and `shopInfo` (shop basic info) are available here.
+      // If not, they would need to be fetched or passed.
+      // For now, using `cfg` for welcomeMessage and assuming `shopInfo` can be fetched.
+      // Use existing services to get Shop Info
+      const { getWhatsAppConfigWithDefaults, getShopBasicInfo } = await import("@/lib/services/whatsapp-config.service");
+      const shopInfo = await getShopBasicInfo(shopId);
+      const configResult = await getWhatsAppConfigWithDefaults(shopId);
+      const cfg = configResult.config;
+
+
+      switch (detectedIntent) {
+        case "GREETING":
+          responseText = `¡Klk! 👋 Bienvenido a *${shopInfo?.name || "nuestra tienda"}*. \n¿En qué te puedo ayudar hoy? \n\nUsa *Menú* para ver opciones.`;
+          break;
+
+        case "PRICE_INQUIRY":
+          responseText = `Para ver los precios, por favor chequea nuestro catálogo aquí: \n${shopInfo?.website || "https://mitienda.com"}/shop/${shopInfo?.slug}`;
+          break;
+
+        case "ADDRESS_INQUIRY":
+          if (shopInfo?.contact?.address) {
+            responseText = `📍 Estamos ubicados en:\n*${shopInfo.contact.address}*\n${shopInfo.contact.city || ""}\n\n¡Cáele cuando quieras!`;
+            // Optional: Send Location Request to Evolution API if supported
+          } else {
+            responseText = "Operamos principalmente online 🌐. ¡Hacemos envíos a todo el país!";
+          }
+          break;
+
+        case "PAYMENT_PROOF":
+          // This overlaps with existing image logic, but handles text-only proofs better
+          console.log("💰 [NLP] Payment Proof Text Detected");
+          await sendTextMessage(
+            instance,
+            phone,
+            "¡Nítido! 🇩🇴 He notificado al dueño de tu pago. \nSi tienes una foto del comprobante, mándala por aquí para confirmar más rápido."
+          );
+
+          // Forward to Owner
+          const ownerPhone = shopInfo?.ownerNotificationPhone;
+          if (ownerPhone) {
+            await sendTextMessage(
+              instance,
+              ownerPhone,
+              `🇩🇴💸 *Posible Pago Reportado* (Texto)\n\nCliente: ${pushName || phone} (${phone})\nDijo: "${text}"`
+            );
+          }
+          return; // Stop further processing to avoid double reply
+
+        case "HUMAN_HANDOVER":
+          responseText = "Tranquilo, ya le avisé a un humano real 👤. \nAlguien te responderá en breve. (Si es urgente, llámanos)";
+          const ownerPhoneHandover = shopInfo?.ownerNotificationPhone;
+          if (ownerPhoneHandover) {
+            await sendTextMessage(
+              instance,
+              ownerPhoneHandover,
+              `🚨 *Cliente Pide Hablar con Humano*\n\nCliente: ${pushName || phone} (${phone})\nDijo: "${text}"`
+            );
+          }
+          break;
+
+        case "CATALOG_INQUIRY":
+          // Allow fall-through to standard catalog flow or send link
+          responseText = `Claro, aquí tienes nuestro catálogo: \n${shopInfo?.website || "https://mitienda.com"}/shop/${shopInfo?.slug}`;
+          break;
+      }
+
+      if (responseText) {
+        await sendTextMessage(instance, phone, responseText);
+        return;
+      }
+    }
+
+    // ---------------------------------------------------------
+    // 5. EXISTING AI / FLOW LOGIC
+    // ---------------------------------------------------------
+
     // ------------------------------------------------------------
     // A. COMANDOS DEL DUEÑO (Owner -> Business Bot)
     // ------------------------------------------------------------
@@ -601,19 +705,32 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
           const orderData = orderSnap.data();
 
           if (orderData?.status === "pending") {
-            // Update Status to Confirmed
+            // 3. Update Order Status
             await orderRef.update({
               status: "confirmed",
-              updatedAt: new Date().toISOString()
+              confirmedAt: new Date().toISOString()
             });
+
+            // 4. Deduct Inventory (New)
+            if (orderData.items && Array.isArray(orderData.items)) {
+              await deductStock(shopId, orderData.items);
+            }
+
+            console.log(`[${instance}] ✅ Order ${orderId} confirmed via WhatsApp command`);
+
+            // 5. Notify Customer (with Bank Info if avail)
+            const shopInfo = await getShopBasicInfo(shopId);
+            let replyText = `✅ *PEDIDO #${orderData.orderNumber} CONFIRMADO*\n\nSu pedido está siendo procesado.`;
+
+            if (shopInfo) {
+              replyText += formatBankAccounts(shopInfo);
+            }
+
+            await sendTextMessage(instance, orderData.customerPhone, replyText);
 
             // Reply to Owner
             await sendTextMessage(instance, phone, `✅ Pedido *${orderData.orderNumber}* confirmado correctamente.`);
 
-            // Notify Customer
-            if (orderData.customerPhone) {
-              await sendTextMessage(instance, orderData.customerPhone, `✅ Tu pedido *${orderData.orderNumber}* ha sido confirmado. Estamos preparándolo.`);
-            }
 
           } else {
             await sendTextMessage(instance, phone, `⚠️ El pedido ${orderData?.orderNumber} ya está en estado: *${orderData?.status}*`);
@@ -676,8 +793,40 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
             await sendTextMessage(instance, phone, confirmMsg);
 
             // ------------------------------------------------------------
-            // C. NOTIFICAR AL DUEÑO (Business -> Owner)
+            // D. PAYMENT PROOF HANDLING (Customer -> Owner)
             // ------------------------------------------------------------
+            const paymentKeywords = ["pago", "transferencia", "comprobante", "ya pagué", "listo", "pagado"];
+            const isPaymentMsg = paymentKeywords.some(kw => text.toLowerCase().includes(kw));
+
+            // Forward if it's an image OR text with keywords
+            if (messageType === "imageMessage" || (messageType === "conversation" && isPaymentMsg) || (messageType === "extendedTextMessage" && isPaymentMsg)) {
+
+              // Get Owner Phone
+              const shopInfo = await getShopBasicInfo(shopId);
+              const ownerPhone = shopInfo?.ownerNotificationPhone;
+
+              if (ownerPhone) {
+                console.log(`[${instance}] 📸 Payment proof detected. Forwarding to owner: ${ownerPhone}`);
+
+                const caption = `📩 *COMPROBANTE/MENSAJE DE PAGO*\n\nDe: ${pushName || phone}\nTel: ${phone}\n\n${text ? `"${text}"` : ""}`;
+
+                // IF IMAGE
+                if (messageType === "imageMessage") {
+                  // We need the media content. Evolution API webhook provides mediaUrl if we configure it, or we might need to download.
+                  // For now, let's assume Evolution sends `data.message.imageMessage` with `url` or we use `sendImageMessage` if we had the URL. 
+                  // BUT webhook usually gives base64 or url.
+
+                  // Complex: Evolution webhook structure for media.
+                  // If we can't easily forward the image without downloading, let's just notify the owner:
+                  // "El cliente envió una imagen. Por favor revisa el chat."
+
+                  await sendTextMessage(instance, ownerPhone, `📸 *FOTO RECIBIDA - POSIBLE PAGO*\n\nCliente: ${pushName} (${phone})\n\n⚠️ El bot no puede reenviar la imagen aún. Por favor revisa el chat con el cliente.`);
+                } else {
+                  // TEXT
+                  await sendTextMessage(instance, ownerPhone, caption);
+                }
+              }
+            }
             const notificationPhones = await getAllNotificationPhones(shopId);
             const ownerMsg = `🔔 *NUEVO PEDIDO RECIBIDO*\n\n` +
               `📦 Pedido: *${orderData.orderNumber}*\n` +

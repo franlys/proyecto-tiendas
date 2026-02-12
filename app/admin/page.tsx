@@ -478,6 +478,10 @@ function DashboardContent({ isSuperAdmin, shop }: { isSuperAdmin: boolean; shop?
   // Calculate Stats
   const todayOrders = getTodayOrders();
   const totalSales = todayOrders.reduce((sum, o) => sum + o.total, 0);
+  const paidSales = todayOrders
+    .filter(o => o.paymentStatus === "paid")
+    .reduce((sum, o) => sum + o.total, 0);
+
   const totalOrders = todayOrders.length;
   const averageTicket = totalOrders > 0 ? totalSales / totalOrders : 0;
 
@@ -500,6 +504,7 @@ function DashboardContent({ isSuperAdmin, shop }: { isSuperAdmin: boolean; shop?
 
   const todayStats = {
     totalSales,
+    paidSales,
     totalOrders,
     averageTicket,
     topService
@@ -536,6 +541,7 @@ function DashboardContent({ isSuperAdmin, shop }: { isSuperAdmin: boolean; shop?
           {/* Dashboard Content */}
           <DashboardKPIs
             totalSales={todayStats.totalSales}
+            paidSales={todayStats.paidSales}
             totalOrders={todayStats.totalOrders}
             averageTicket={todayStats.averageTicket}
             topService={todayStats.topService}

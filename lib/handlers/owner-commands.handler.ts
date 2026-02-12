@@ -87,15 +87,48 @@ export async function handleOwnerCommand(
     // ------------------------------------------------------------
     // 3. COMMAND: "Ayuda" or "Comandos"
     // ------------------------------------------------------------
-    if (command === "ayuda" || command === "comandos" || command === "menu") {
-        const helpMsg = `🤖 *COMANDOS DE ADMINISTRACIÓN*\n\n` +
-            `📊 *Resumen*: Ventas y pedidos de hoy.\n` +
-            `📦 *Pedidos*: Ver lista de pendientes.\n` +
-            `✅ *Confirmar [ID]*: Aceptar un pedido.\n` +
-            `ℹ️ *Info*: Estado de la tienda.\n\n` +
-            `_Solo tú puedes ver este menú._`;
+    if (command === "ayuda" || command === "comandos" || command === "menu" || command === "help") {
+        const helpMsg = `🤖 *PANEL DE CONTROL (Dueño)*\n\n` +
+            `Aquí tienes los comandos que puedes usar para gestionar tu tienda desde WhatsApp:\n\n` +
+            `📊 *Resumen*\n` +
+            `Ver total de ventas y pedidos de hoy.\n\n` +
+            `📦 *Pedidos* (o *Pendientes*)\n` +
+            `Lista los últimos 10 pedidos que necesitan atención.\n\n` +
+            `✅ *Confirmar [ID]*\n` +
+            `Acepta un pedido, reduce inventario y notifica al cliente.\n` +
+            `_Ejemplo: Confirmar 1054_\n\n` +
+            `ℹ️ *Info*\n` +
+            `Ver estado de conexión y datos de la tienda.\n\n` +
+            `🆔 *Soy el dueño [Password]*\n` +
+            `Vincula tu número actual para recibir notificaciones.\n\n` +
+            `_Tip: Los comandos no distinguen mayúsculas._`;
 
         await sendTextMessage(instanceName, phone, helpMsg);
+        return { handled: true };
+    }
+
+    // ------------------------------------------------------------
+    // 3.5. COMMAND: "Info" (Shop Status)
+    // ------------------------------------------------------------
+    if (command === "info" || command === "estado" || command === "status") {
+        const shopDoc = await db.collection("shops").doc(shopId).get();
+        if (!shopDoc.exists) {
+            await sendTextMessage(instanceName, phone, "❌ Error: La tienda no existe en la base de datos.");
+            return { handled: true };
+        }
+        const data = shopDoc.data();
+
+        const msg = `ℹ️ *ESTADO DE LA TIENDA*\n` +
+            `--------------------------------\n` +
+            `🏪 *Nombre:* ${data?.name}\n` +
+            `🔗 *Slug:* ${data?.slug}\n` +
+            `📱 *Bot:* Activo (Conectado)\n` +
+            `👤 *Dueño (Notif):* ${data?.ownerNotificationPhone || "No registrado"}\n` +
+            `🕒 *Hora Servidor:* ${new Date().toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit', hour12: true })}\n` +
+            `--------------------------------\n` +
+            `_Todo funcionando correctamente._`;
+
+        await sendTextMessage(instanceName, phone, msg);
         return { handled: true };
     }
 

@@ -189,6 +189,16 @@ export interface ShopSchedule {
   sunday?: { open: string; close: string; closed?: boolean };
 }
 
+export interface ShopBankAccount {
+  id: string;
+  bankName: string;
+  accountNumber: string;
+  accountType: "ahorros" | "corriente";
+  accountHolder: string;
+  identification?: string; // Cédula/RNC
+  instructions?: string; // "Enviar comprobante a..."
+}
+
 export interface ShopConfig {
   id: string;
   name: string;
@@ -208,6 +218,8 @@ export interface ShopConfig {
   social?: ShopSocialMedia;
   schedule?: ShopSchedule;
   ownerNotificationPhone?: string;
+  // Phase 14: Payment & Bank Info
+  bankAccounts?: ShopBankAccount[];
   // Phase 13: Business Type & Wholesale
   businessType?: BusinessType;
   wholesaleCode?: string;

@@ -90,12 +90,19 @@ export async function getShopBasicInfo(shopId: string): Promise<ShopBasicInfo | 
 
         return {
             id: doc.id,
-            slug: data.slug || doc.id,
             name: data.name || "Tienda",
-            logoUrl: data.logoUrl || "",
+            slug: data.slug || doc.id,
+            phone: data.contact?.phone || "",
+            logoUrl: data.logo,
             businessType: data.businessType || data.category || "retail",
             ownerNotificationPhone: data.ownerNotificationPhone,
-            contact: data.contact,
+            bankAccounts: data.bankAccounts || [], // Fetch bank accounts
+            website: data.customDomain || `https://linko-app-pied.vercel.app/shop/${data.slug}`,
+            contact: {
+                phone: data.contact?.phone,
+                address: data.contact?.address,
+                city: data.contact?.city,
+            },
         };
     } catch (error) {
         console.error(`Error getting shop info for ${shopId}:`, error);

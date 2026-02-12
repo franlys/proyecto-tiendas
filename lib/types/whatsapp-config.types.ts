@@ -81,13 +81,17 @@ export function getDefaultWhatsAppConfig(businessType: string): WhatsAppAutoRepl
 }
 
 // Interfaz para la información básica de la tienda
+import { ShopBankAccount } from "@/lib/constants";
+
 export interface ShopBasicInfo {
     id: string;
-    slug: string;
     name: string;
-    logoUrl: string;
-    businessType?: "retail" | "service" | "food" | "other";
+    slug: string;
+    phone: string;
+    logoUrl?: string;
+    businessType?: string;
     ownerNotificationPhone?: string;
+    bankAccounts?: ShopBankAccount[];
     contact?: {
         phone?: string;
     };
