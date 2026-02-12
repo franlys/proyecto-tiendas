@@ -419,6 +419,33 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
     return;
   }
 
+  if (cleanCmd === "DEBUG_PAYLOAD") {
+    try {
+      const { adminDb } = await import("@/lib/firebase-admin");
+      const db = adminDb();
+      if (db) {
+        const logsSnap = await db.collection("shops").doc(shopId).collection("request_logs")
+          .orderBy("timestamp", "desc")
+          .limit(1) // Get the very last one
+          .get();
+
+        if (!logsSnap.empty) {
+          const lastLog = logsSnap.docs[0].data();
+          const payloadStr = lastLog.payload || "No payload saved";
+          // Split if too long
+          const chunks = payloadStr.match(/.{1,3000}/g) || [payloadStr];
+          await sendTextMessage(instance, phone, `*LAST PAYLOAD START:*`);
+          await sendTextMessage(instance, phone, chunks[0]); // Send first chunk mostly
+        } else {
+          await sendTextMessage(instance, phone, "No logs found.");
+        }
+      }
+    } catch (e) {
+      await sendTextMessage(instance, phone, `Error: ${e}`);
+    }
+    return;
+  }
+
   // ============================================================
   // LOG REQUEST TO FIRESTORE (DIAGNOSTIC)
   // ============================================================
@@ -435,6 +462,7 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
         participant: key?.participant || null, // Log participant
         text: text || "[media]",
         status: "received",
+        payload: JSON.stringify(data), // Save FULL payload
         timestamp: FieldValue.serverTimestamp()
       });
     }
