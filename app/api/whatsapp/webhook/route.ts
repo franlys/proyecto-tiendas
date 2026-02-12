@@ -114,12 +114,7 @@ function generateMenuMessage(
   return `¡Hola${greeting}! 👋 ${welcomeMsg}${optionsText}`;
 }
 
-// Helper to extract phone OR handle LID (Linked Device ID)
-// If it's a LID, return the full JID so we can reply to it.
-const getPhoneFromJid = (jid: string) => {
-  if (jid.includes("@lid")) return jid; // Return full JID for LIDs
-  return jid.split("@")[0];
-};
+// Helper removed (moved inside handleNewMessage for access to key)
 
 // Check if message is from a group
 function isGroupMessage(jid: string): boolean {
