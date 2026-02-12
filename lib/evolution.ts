@@ -194,8 +194,8 @@ export async function sendTextMessage(
   phone: string,
   message: string
 ): Promise<SendMessageResponse> {
-  // Limpiar número (solo dígitos)
-  const cleanPhone = phone.replace(/\D/g, "");
+  // Limpiar número (solo dígitos) si NO es un JID (contiene @)
+  const cleanPhone = phone.includes("@") ? phone : phone.replace(/\D/g, "");
 
   return evolutionFetch<SendMessageResponse>(`/message/sendText/${instanceName}`, {
     method: "POST",

@@ -113,10 +113,12 @@ function generateMenuMessage(
   return `¡Hola${greeting}! 👋 ${welcomeMsg}${optionsText}`;
 }
 
-// Extract phone number from JID
-function getPhoneFromJid(jid: string): string {
+// Helper to extract phone OR handle LID (Linked Device ID)
+// If it's a LID, return the full JID so we can reply to it.
+const getPhoneFromJid = (jid: string) => {
+  if (jid.includes("@lid")) return jid; // Return full JID for LIDs
   return jid.split("@")[0];
-}
+};
 
 // Check if message is from a group
 function isGroupMessage(jid: string): boolean {
@@ -236,7 +238,9 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
   const { formatPhoneForWhatsApp } = await import("@/lib/utils");
   // Check strict format
   const rawPhone = getPhoneFromJid(key.remoteJid);
-  const phone = formatPhoneForWhatsApp(rawPhone);
+
+  // Only format if it's NOT a JID (doesn't contain @)
+  const phone = rawPhone.includes("@") ? rawPhone : formatPhoneForWhatsApp(rawPhone);
 
   const text = message.conversation || message.extendedTextMessage?.text || "";
 
