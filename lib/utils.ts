@@ -15,6 +15,9 @@ export function cn(...inputs: ClassValue[]) {
  * - Adds country code if missing (Dominican Republic: +1)
  */
 export function formatPhoneForWhatsApp(phone: string): string {
+  // If it's a JID (contains @), don't format it
+  if (phone.includes("@")) return phone;
+
   let cleanPhone = phone.replace(/\D/g, "");
 
   // Dominican Republic area codes: 809, 829, 849

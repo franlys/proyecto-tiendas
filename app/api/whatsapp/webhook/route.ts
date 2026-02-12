@@ -415,19 +415,24 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
   // ============================================================
   // LOG REQUEST TO FIRESTORE (DIAGNOSTIC)
   // ============================================================
+  // ============================================================
+  // LOG REQUEST TO FIRESTORE (DIAGNOSTIC)
+  // ============================================================
+  let logDocRef: any = null; // Defined here for wider scope
   try {
     const { adminDb } = await import("@/lib/firebase-admin");
     const { FieldValue } = await import("firebase-admin/firestore");
     const db = adminDb();
     if (db) {
-      // Fire and forget
-      db.collection("shops").doc(shopId).collection("request_logs").add({
+      // Assign the promise result (DocumentReference) to logDocRef
+      logDocRef = await db.collection("shops").doc(shopId).collection("request_logs").add({
         instance,
         phone,
         participant: key?.participant || null, // Log participant
         text: text || "[media]",
+        status: "received",
         timestamp: FieldValue.serverTimestamp()
-      }).catch(err => console.error("Log write failed", err));
+      });
     }
   } catch (e) {
     console.error("Log init failed", e);
@@ -800,8 +805,14 @@ Visita nuestra tienda:
     recentContacts.set(phone, now);
 
     console.log(`[${instance}] Auto-reply sent to ${phone} (intent: ${intent})`);
+
+    // Log Success
+    if (logDocRef) logDocRef.update({ status: "reply_sent" }).catch(() => { });
+
   } catch (error) {
     console.error(`[${instance}] Failed to send auto-reply:`, error);
+    // Log Error
+    if (logDocRef) logDocRef.update({ status: "error", error: String(error) }).catch(() => { });
   }
 }
 
