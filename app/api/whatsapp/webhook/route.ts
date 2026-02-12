@@ -451,12 +451,20 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
 
     // Notify Owner
     try {
-      const { getWhatsAppConfigWithDefaults } = await import("@/lib/services/whatsapp-config.service");
-      const { shop } = await getWhatsAppConfigWithDefaults(shopId);
+      const { getAllNotificationPhones } = await import("@/lib/handlers/whatsapp-order.handler");
+      const notificationPhones = await getAllNotificationPhones(shopId);
 
-      if (shop?.ownerNotificationPhone) {
+      // Find owner or use first available admin
+      const owner = notificationPhones.find(p => p.role === "owner") || notificationPhones[0];
+
+      console.log(`[${instance}] LID Detect. Found ${notificationPhones.length} phones. Target: ${owner?.phone}`);
+
+      if (owner?.phone) {
         const ownerMsg = `⚠️ *Atención: Mensaje "Privado"*\n\nRecibimos un mensaje de un Dispositivo Vinculado (LID) que oculta su número. El Bot no puede responderle automáticamente.\n\n💬 *Mensaje:* "${text}"\n\n👉 Por favor responde manualmente desde WhatsApp Business.`;
-        await sendTextMessage(instance, shop.ownerNotificationPhone, ownerMsg);
+        await sendTextMessage(instance, owner.phone, ownerMsg);
+        console.log(`[${instance}] Sent LID notification to: ${owner.phone}`);
+      } else {
+        console.warn(`[${instance}] No notification phones found for LID alert.`);
       }
     } catch (e) {
       console.error("LID Notification failed", e);
