@@ -666,15 +666,92 @@ function KanbanColumn({ status, orders, onOrderClick }: {
   );
 }
 
+// History Table Component
+function HistoryTable({ orders, onOrderClick }: { orders: SalesOrder[]; onOrderClick: (order: SalesOrder) => void }) {
+  if (orders.length === 0) {
+    return (
+      <div className="p-12 text-center text-slate-500 border-2 border-dashed border-white/10 rounded-xl">
+        <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
+        <p className="text-lg font-medium">No hay historial de pedidos</p>
+        <p className="text-sm">Los pedidos entregados y cancelados aparecerán aquí.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-xl border border-white/10">
+      <table className="w-full text-left text-sm">
+        <thead className="bg-white/5 text-slate-400 font-medium">
+          <tr>
+            <th className="p-4">Orden</th>
+            <th className="p-4">Fecha</th>
+            <th className="p-4">Cliente</th>
+            <th className="p-4">Estado</th>
+            <th className="p-4">Pago</th>
+            <th className="p-4 text-right">Total</th>
+            <th className="p-4"></th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-white/5">
+          {orders.map((order) => {
+            const statusConfig = ORDER_STATUS_CONFIG[order.status];
+            return (
+              <tr
+                key={order.id}
+                className="hover:bg-white/5 transition-colors cursor-pointer"
+                onClick={() => onOrderClick(order)}
+              >
+                <td className="p-4 font-mono text-slate-300">{order.orderNumber}</td>
+                <td className="p-4 text-slate-300">
+                  {new Date(order.createdAt).toLocaleDateString("es-MX", {
+                    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                  })}
+                </td>
+                <td className="p-4 text-white font-medium">{order.customerName}</td>
+                <td className="p-4">
+                  <div className={cn(
+                    "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border",
+                    statusConfig.color === "green" && "bg-green-500/10 text-green-400 border-green-500/20",
+                    statusConfig.color === "red" && "bg-red-500/10 text-red-400 border-red-500/20"
+                  )}>
+                    {statusConfig.icon} {statusConfig.label}
+                  </div>
+                </td>
+                <td className="p-4">
+                  <span className={cn(
+                    "px-2 py-1 rounded-full text-xs font-medium",
+                    order.paymentStatus === "paid" && "text-green-400",
+                    order.paymentStatus === "pending" && "text-amber-400",
+                    order.paymentStatus === "refunded" && "text-red-400"
+                  )}>
+                    {order.paymentStatus === "paid" ? "Pagado" : order.paymentStatus === "pending" ? "Pendiente" : "Reembolsado"}
+                  </span>
+                </td>
+                <td className="p-4 text-right font-bold text-white">${order.total.toFixed(2)}</td>
+                <td className="p-4 text-right">
+                  <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100">
+                    Ver
+                  </Button>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function OrdersContent({ shopId }: { shopId: string }) {
   const { orders, getOrdersByStatus, getPendingOrders } = useSalesOrders();
   const [selectedOrder, setSelectedOrder] = useState<SalesOrder | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [viewMode, setViewMode] = useState<"active" | "history">("active");
 
   // Stats
   const pendingCount = getPendingOrders().length;
   const todayTotal = orders
-    .filter((o) => o.createdAt.startsWith(new Date().toISOString().split("T")[0]))
+    .filter((o) => o.createdAt.startsWith(new Date().toISOString().split("T")[0]) && o.status !== 'cancelled')
     .reduce((sum, o) => sum + o.total, 0);
 
   // Play notification sound for new pending orders
@@ -687,12 +764,15 @@ function OrdersContent({ shopId }: { shopId: string }) {
 
   const activeStatuses: OrderStatus[] = ["pending", "confirmed", "preparing", "dispatched"];
 
+  // Filter for history view
+  const historyOrders = orders.filter(o => o.status === "delivered" || o.status === "cancelled");
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-white/10 py-6">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <Link href="/admin">
                 <Button variant="ghost" size="sm">
@@ -710,7 +790,30 @@ function OrdersContent({ shopId }: { shopId: string }) {
               </div>
             </div>
 
+            {/* View Toggle & Actions */}
             <div className="flex items-center gap-4">
+              {/* View Toggle */}
+              <div className="flex p-1 rounded-lg bg-white/5 border border-white/10">
+                <button
+                  onClick={() => setViewMode("active")}
+                  className={cn(
+                    "px-4 py-1.5 rounded-md text-sm font-medium transition-all",
+                    viewMode === "active" ? "bg-amber-500 text-white shadow-lg" : "text-slate-400 hover:text-white"
+                  )}
+                >
+                  Activos
+                </button>
+                <button
+                  onClick={() => setViewMode("history")}
+                  className={cn(
+                    "px-4 py-1.5 rounded-md text-sm font-medium transition-all",
+                    viewMode === "history" ? "bg-slate-700 text-white shadow-lg" : "text-slate-400 hover:text-white"
+                  )}
+                >
+                  Historial
+                </button>
+              </div>
+
               {/* Notification Toggle */}
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
@@ -724,7 +827,7 @@ function OrdersContent({ shopId }: { shopId: string }) {
               </button>
 
               {/* Stats */}
-              <div className="flex items-center gap-3">
+              <div className="hidden md:flex items-center gap-3">
                 {pendingCount > 0 && (
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/20 text-amber-400 animate-pulse">
                     <Bell className="w-4 h-4" />
@@ -741,49 +844,64 @@ function OrdersContent({ shopId }: { shopId: string }) {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {/* Kanban Board */}
-        <div className="flex gap-6 overflow-x-auto pb-4">
-          {activeStatuses.map((status) => (
-            <KanbanColumn
-              key={status}
-              status={status}
-              orders={getOrdersByStatus(status)}
-              onOrderClick={setSelectedOrder}
-            />
-          ))}
-        </div>
+        {viewMode === "active" ? (
+          <>
+            {/* Kanban Board */}
+            <div className="flex gap-6 overflow-x-auto pb-4">
+              {activeStatuses.map((status) => (
+                <KanbanColumn
+                  key={status}
+                  status={status}
+                  orders={getOrdersByStatus(status)}
+                  onOrderClick={setSelectedOrder}
+                />
+              ))}
+            </div>
 
-        {/* Completed Orders Summary */}
-        <div className="mt-8 glass-panel rounded-2xl p-6 border border-white/10">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <CheckCircle className="w-5 h-5 text-green-400" />
-            Completados Hoy
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-4 rounded-xl bg-green-500/10">
-              <p className="text-2xl font-bold text-green-400">
-                {getOrdersByStatus("delivered").length}
-              </p>
-              <p className="text-xs text-slate-400">Entregados</p>
+            {/* Completed Orders Summary */}
+            <div className="mt-8 glass-panel rounded-2xl p-6 border border-white/10">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-400" />
+                Resumen de Hoy
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="p-4 rounded-xl bg-green-500/10">
+                  <p className="text-2xl font-bold text-green-400">
+                    {getOrdersByStatus("delivered").length}
+                  </p>
+                  <p className="text-xs text-slate-400">Entregados</p>
+                </div>
+                <div className="p-4 rounded-xl bg-red-500/10">
+                  <p className="text-2xl font-bold text-red-400">
+                    {getOrdersByStatus("cancelled").length}
+                  </p>
+                  <p className="text-xs text-slate-400">Cancelados</p>
+                </div>
+                <div className="p-4 rounded-xl bg-blue-500/10">
+                  <p className="text-2xl font-bold text-blue-400">{orders.length}</p>
+                  <p className="text-xs text-slate-400">Total pedidos</p>
+                </div>
+                <div className="p-4 rounded-xl bg-gold/10">
+                  <p className="text-2xl font-bold text-gold">
+                    {orders.filter((o) => o.isWholesale).length}
+                  </p>
+                  <p className="text-xs text-slate-400">Mayoristas</p>
+                </div>
+              </div>
             </div>
-            <div className="p-4 rounded-xl bg-red-500/10">
-              <p className="text-2xl font-bold text-red-400">
-                {getOrdersByStatus("cancelled").length}
-              </p>
-              <p className="text-xs text-slate-400">Cancelados</p>
+          </>
+        ) : (
+          /* History View */
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-white">Historial de Pedidos</h2>
+              <div className="text-sm text-slate-400">
+                Mostrando últimos {historyOrders.length} pedidos finalizados
+              </div>
             </div>
-            <div className="p-4 rounded-xl bg-blue-500/10">
-              <p className="text-2xl font-bold text-blue-400">{orders.length}</p>
-              <p className="text-xs text-slate-400">Total pedidos</p>
-            </div>
-            <div className="p-4 rounded-xl bg-gold/10">
-              <p className="text-2xl font-bold text-gold">
-                {orders.filter((o) => o.isWholesale).length}
-              </p>
-              <p className="text-xs text-slate-400">Mayoristas</p>
-            </div>
+            <HistoryTable orders={historyOrders} onOrderClick={setSelectedOrder} />
           </div>
-        </div>
+        )}
       </main>
 
       {/* Order Detail Modal */}
