@@ -114,7 +114,17 @@ function generateMenuMessage(
   return `¡Hola${greeting}! 👋 ${welcomeMsg}${optionsText}`;
 }
 
-// Helper removed (moved inside handleNewMessage for access to key)
+// Helper to extract phone OR handle LID (Linked Device ID)
+// If it's a LID, we MUST use the participant (real phone JID) if available
+const getPhoneFromJid = (key: any) => {
+  const jid = key.remoteJid;
+  if (jid.includes("@lid") && key.participant) {
+    // Return participant JID (which is the phone number JID)
+    return key.participant.split("@")[0];
+  }
+  // Fallback: if no participant, return JID (will fail if LID, but nothing else to do)
+  return jid.includes("@lid") ? jid : jid.split("@")[0];
+};
 
 // Check if message is from a group
 function isGroupMessage(jid: string): boolean {
@@ -233,7 +243,7 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
 
   const { formatPhoneForWhatsApp } = await import("@/lib/utils");
   // Check strict format
-  const rawPhone = getPhoneFromJid(key.remoteJid);
+  const rawPhone = getPhoneFromJid(key);
 
   // Only format if it's NOT a JID (doesn't contain @)
   const phone = rawPhone.includes("@") ? rawPhone : formatPhoneForWhatsApp(rawPhone);
