@@ -6,6 +6,8 @@ export type Intent =
     | "ADDRESS_INQUIRY"
     | "HUMAN_HANDOVER"
     | "CATALOG_INQUIRY"
+    | "BOOKING_STATUS"
+    | "PAYMENT_POLICY"
     | "UNKNOWN";
 
 interface IntentRule {
@@ -51,7 +53,8 @@ const RULES: IntentRule[] = [
         intent: "HUMAN_HANDOVER",
         keywords: [
             "hablar con alguien", "gente real", "humano", "persona",
-            "no quiero robot", "me tiene harto", "asistencia", "soporte"
+            "no quiero robot", "me tiene harto", "asistencia", "soporte",
+            "jarto", "cansao", "harto", "mierda", "coño", "maldita", "verdugo", "manin"
         ],
         minMatch: 1
     },
@@ -60,6 +63,22 @@ const RULES: IntentRule[] = [
         keywords: [
             "catalogo", "que venden", "productos", "menu", "lista",
             "que tienen", "cuales son los articulo"
+        ],
+        minMatch: 1
+    },
+    {
+        intent: "BOOKING_STATUS",
+        keywords: [
+            "mi cita", "como va lo mio", "confirmaron", "status",
+            "tengo cita", "cita pendiente", "como va la cita"
+        ],
+        minMatch: 1
+    },
+    {
+        intent: "PAYMENT_POLICY",
+        keywords: [
+            "se paga antes", "cuanto adelanto", "fiao", "pago adelantado",
+            "el 50", "mitad antes", "abonar", "cuanto hay que pagar", "anticipo"
         ],
         minMatch: 1
     }

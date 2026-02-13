@@ -604,19 +604,38 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
 
       switch (detectedIntent) {
         case "GREETING":
-          responseText = `¡Klk! 👋 Bienvenido a *${shopInfo?.name || "nuestra tienda"}*. \n¿En qué te puedo ayudar hoy? \n\nUsa *Menú* para ver opciones.`;
+          // GUARD: Don't greet if message is long or looks like an order/forwarded message
+          if (text.length > 50 || text.includes("Pedido:") || text.includes("Total:") || text.includes("Productos:")) {
+            console.log("💰 [NLP] Skipping Greeting for potential Order/Long message");
+            return;
+          }
+
+          const bType = shopInfo?.businessType || (shopInfo as any)?.category || "retail";
+          let welcomeAction = "¿En qué te puedo ayudar hoy?";
+
+          if (["restaurant", "food", "bar"].includes(bType)) {
+            welcomeAction = "¿Te gustaría ver nuestro menú? 🍔";
+          } else if (["service", "beauty", "barbershop", "spa", "salon"].includes(bType)) {
+            welcomeAction = "¿Quieres agendar una cita? ✂️";
+          } else if (["rental", "car_rental", "real_estate"].includes(bType)) {
+            welcomeAction = "¿Buscas rentar un vehículo o propiedad? 🚗";
+          } else {
+            welcomeAction = "¿En qué podemos ayudarte? 🛍️";
+          }
+
+          responseText = `¡Hola! 👋 Bienvenido a *${shopInfo?.name || "nuestra tienda"}*. \n${welcomeAction} \n\nUsa *Menú* para ver opciones.`;
           break;
 
         case "PRICE_INQUIRY":
-          responseText = `Para ver los precios, por favor chequea nuestro catálogo aquí: \n${shopInfo?.website || "https://mitienda.com"}/shop/${shopInfo?.slug}`;
+          responseText = `Para ver los precios, por favor chequea nuestro catálogo aquí: \n${shopInfo?.website || `https://linko-app-pied.vercel.app/shop/${shopInfo?.slug}`}`;
           break;
 
         case "ADDRESS_INQUIRY":
           if (shopInfo?.contact?.address) {
-            responseText = `📍 Estamos ubicados en:\n*${shopInfo.contact.address}*\n${shopInfo.contact.city || ""}\n\n¡Cáele cuando quieras!`;
+            responseText = `📍 Estamos ubicados en:\n*${shopInfo.contact.address}*\n${shopInfo.contact.city || ""}\n\n¡Visítanos cuando gustes!`;
             // Optional: Send Location Request to Evolution API if supported
           } else {
-            responseText = "Operamos principalmente online 🌐. ¡Hacemos envíos a todo el país!";
+            responseText = "Operamos principalmente online 🌐. ¡Hacemos envíos!";
           }
           break;
 
@@ -626,7 +645,7 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
           await sendTextMessage(
             instance,
             phone,
-            "¡Nítido! 🇩🇴 He notificado al dueño de tu pago. \nSi tienes una foto del comprobante, mándala por aquí para confirmar más rápido."
+            "¡Excelente! 🇩🇴 He notificado al dueño de tu pago. \nSi tienes una foto del comprobante, mándala por aquí para confirmar más rápido."
           );
 
           // Forward to Owner
@@ -641,7 +660,7 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
           return; // Stop further processing to avoid double reply
 
         case "HUMAN_HANDOVER":
-          responseText = "Tranquilo, ya le avisé a un humano real 👤. \nAlguien te responderá en breve. (Si es urgente, llámanos)";
+          responseText = "Entendido, ya le avisé a un humano real 👤. \nAlguien del equipo te responderá en breve.";
           const ownerPhoneHandover = shopInfo?.ownerNotificationPhone;
           if (ownerPhoneHandover) {
             await sendTextMessage(
@@ -654,7 +673,60 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
 
         case "CATALOG_INQUIRY":
           // Allow fall-through to standard catalog flow or send link
-          responseText = `Claro, aquí tienes nuestro catálogo: \n${shopInfo?.website || "https://mitienda.com"}/shop/${shopInfo?.slug}`;
+          responseText = `Claro, aquí tienes nuestro catálogo: \n${shopInfo?.website || `https://linko-app-pied.vercel.app/shop/${shopInfo?.slug}`}`;
+          break;
+
+        case "PAYMENT_POLICY":
+          const pType = shopInfo?.businessType || (shopInfo as any)?.category || "retail";
+
+          if (["service", "beauty", "barbershop", "spa", "salon", "rental", "car_rental"].includes(pType)) {
+            responseText = `ℹ️ *Política de Reservas:*\n\nPara agendar tu cita o reservar, requerimos el **50% de anticipo / depósito**.\n\nEl resto se paga el día del servicio/entrega. 💳`;
+          } else if (["restaurant", "food"].includes(pType)) {
+            responseText = `ℹ️ *Política de Pagos:*\n\nAceptamos efectivo o transferencia al momento de confirmar tu pedido o contra entrega. 🍔`;
+          } else {
+            responseText = `ℹ️ *Métodos de Pago:*\n\naceptamos pagos contra entrega 🛵 o transferencia bancaria al confirmar tu pedido.`;
+          }
+          break;
+
+        case "BOOKING_STATUS":
+          if (!db) {
+            console.error("Database connection not available for BOOKING_STATUS");
+            responseText = "Sistema no disponible en este momento.";
+            break;
+          }
+          try {
+            // Find bookings for this phone number
+            // Shop ID matches current shop
+            // Status is NOT cancelled
+            const bookingsSnap = await db.collection("shops").doc(shopId).collection("bookings")
+              .where("customerPhone", "==", phone)
+              .where("date", ">=", new Date().toISOString().split("T")[0]) // Future bookings
+              .limit(3)
+              .get();
+
+            const activeBookings = bookingsSnap.docs
+              .map(doc => doc.data())
+              .filter(b => b.status !== "cancelled");
+
+            const isRental = ["rental", "car_rental", "real_estate"].includes(shopInfo?.businessType || (shopInfo as any)?.category || "");
+            const term = isRental ? "Reserva" : "Cita";
+            const termPlural = isRental ? "Reservas" : "Citas";
+
+            if (activeBookings.length > 0) {
+              const bookingList = activeBookings.map(b => {
+                const dateObj = new Date(b.date + "T12:00:00"); // Avoid timezone shift
+                const dateStr = dateObj.toLocaleDateString("es-MX", { weekday: 'long', day: 'numeric', month: 'long' });
+                return `📅 *${dateStr}* a las *${b.time}*\n   Estado: ${b.status === 'confirmed' ? '✅ Confirmada' : '⏳ Pendiente'}`;
+              }).join("\n\n");
+
+              responseText = `🔎 Encontré estas ${termPlural.toLowerCase()} para ti:\n\n${bookingList}`;
+            } else {
+              responseText = `No encontré ${termPlural.toLowerCase()} próximas agendadas con este número. 🤔\n\nSi crees que es un error, por favor escribe 'Hablar con humano'.`;
+            }
+          } catch (error) {
+            console.error("Error fetching bookings:", error);
+            responseText = "Hubo un error consultando tus citas/reservas. Por favor intenta más tarde.";
+          }
           break;
       }
 
