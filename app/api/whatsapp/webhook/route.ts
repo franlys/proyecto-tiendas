@@ -225,11 +225,11 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
   }
 
   // ============================================================
-  // PRE-PROCESS: Resolve Shop ID from Instance Name
+  // PRE-PROCESS: Resolve Shop SLUG from Instance Name
   // ============================================================
-  // The instance name contains the SQL/Slug (e.g. shop_surprise_gifts_v2 -> surprise-gifts)
-  // BUT the Database uses UUIDs (e.g. shop-173...).
-  // We MUST resolve the real UUID to ensure we write to the correct document.
+  // The instance name contains the slug (e.g. shop_surprise_gifts_v2 -> surprise-gifts)
+  // IMPORTANT: All subcollections (products, orders, services) use the SLUG as the path.
+  // We use the slug directly, NOT the UUID.
 
   let shopSlug = instance.replace("shop_", "");
   if (shopSlug.endsWith("_v2")) {
@@ -237,20 +237,20 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
   }
   shopSlug = shopSlug.replace(/_/g, "-");
 
-  // Default to slug, but try to resolve real ID
-  let shopId = shopSlug;
+  // Use slug for all Firestore subcollections (products, orders, etc.)
+  const shopId = shopSlug;
 
+  // Verify shop exists (for logging purposes)
   try {
-    const shopInfo = await getShopBasicInfo(shopSlug); // Looks up by ID first, then Slug
+    const shopInfo = await getShopBasicInfo(shopSlug);
 
     if (shopInfo) {
-      shopId = shopInfo.id;
-      console.log(`[${instance}] ✅ Resolved Shop ID: ${shopId} (from slug: ${shopSlug})`);
+      console.log(`[${instance}] ✅ Shop found: ${shopInfo.name} (slug: ${shopSlug})`);
     } else {
-      console.warn(`[${instance}] ⚠️ Shop not found for slug: ${shopSlug}. Using slug as ID.`);
+      console.warn(`[${instance}] ⚠️ Shop not found for slug: ${shopSlug}. Proceeding with slug as path.`);
     }
   } catch (error) {
-    console.error(`[${instance}] ❌ Error resolving shop ID:`, error);
+    console.error(`[${instance}] ❌ Error verifying shop:`, error);
   }
 
   const { formatPhoneForWhatsApp } = await import("@/lib/utils");
@@ -851,6 +851,17 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
             });
 
             console.log(`[${instance}] ✅ Order ${orderId} activated (draft -> pending)`);
+
+            // DEDUCT STOCK immediately when order is activated
+            if (orderData.items && Array.isArray(orderData.items)) {
+              try {
+                await deductStock(shopId, orderData.items);
+                console.log(`[${instance}] ✅ Stock deducted for ${orderData.items.length} items`);
+              } catch (stockError) {
+                console.error(`[${instance}] ⚠️ Failed to deduct stock:`, stockError);
+                // Don't block order - just log the error
+              }
+            }
 
             // Create Notification (Server-side)
             await db.collection("shops").doc(shopId).collection("notifications").add({

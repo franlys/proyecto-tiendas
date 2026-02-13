@@ -74,9 +74,36 @@ export function NotificationBell() {
     const [isOpen, setIsOpen] = useState(false);
     const [permissionAsked, setPermissionAsked] = useState(false);
 
-    // If notifications context is not available, don't render
+    // If notifications context is not available, show bell with "select shop" message
     if (!notifications) {
-        return null;
+        return (
+            <div className="relative">
+                <button
+                    onClick={() => setIsOpen(!isOpen)}
+                    className="relative p-2 rounded-lg hover:bg-white/10 transition-colors"
+                >
+                    <Bell className="w-5 h-5 text-slate-500" />
+                </button>
+                {isOpen && (
+                    <>
+                        <div
+                            className="fixed inset-0 z-40"
+                            onClick={() => setIsOpen(false)}
+                        />
+                        <div className="absolute right-0 top-full mt-2 w-72 bg-slate-900 border border-white/10 rounded-xl shadow-2xl z-50 p-6 text-center">
+                            <Bell className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                            <p className="text-slate-400 text-sm">Selecciona una tienda para ver notificaciones</p>
+                            <button
+                                onClick={() => setIsOpen(false)}
+                                className="mt-3 text-xs text-slate-500 hover:text-white"
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+                    </>
+                )}
+            </div>
+        );
     }
 
     const {
