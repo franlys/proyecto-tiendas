@@ -229,17 +229,12 @@ export function SalesOrdersProvider({ children, shopId }: SalesOrdersProviderPro
   const updateOrderStatus = useCallback(async (id: string, status: OrderStatus) => {
     console.log(`[Orders] Updating order ${id} to status: ${status} for shop: ${shopId}`);
     try {
-      const updates: any = {
-        status,
-        updatedAt: serverTimestamp(),
-      };
-
-      if (status === "confirmed") updates.confirmedAt = serverTimestamp();
-      if (status === "dispatched") updates.dispatchedAt = serverTimestamp();
-      if (status === "delivered") updates.deliveredAt = serverTimestamp();
-
-      await updateDoc(doc(db, "shops", shopId, "orders", id), updates);
-      console.log(`[Orders] ✅ Order ${id} updated to ${status}`);
+      // Use Server Action to trigger side effects (Inventory deduction/restoration)
+      const result = await updateOrderStatusAction(shopId, id, status);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      console.log(`[Orders] ✅ Order ${id} updated to ${status} (with inventory sync)`);
     } catch (error: any) {
       console.error("[Orders] ❌ Error updating order status:", error);
       // Show error to user

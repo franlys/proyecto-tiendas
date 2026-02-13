@@ -217,7 +217,6 @@ export async function POST(request: NextRequest) {
 async function handleNewMessage(instance: string, data: WebhookPayload["data"]) {
   const { key, message, pushName } = data;
   const { getShopBasicInfo } = await import("@/lib/services/whatsapp-config.service");
-  const { deductStock } = await import("@/lib/services/inventory.service");
 
   if (!key || !message) {
     console.log(`[${instance}] Ignored: Missing key or message data`);
@@ -587,7 +586,8 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
     const { detectIntent } = await import("@/lib/nlp/dominican-slang");
     const detectedIntent = detectIntent(text);
 
-    if (detectedIntent !== "UNKNOWN") {
+    // Process ALL intents including UNKNOWN (to ask clarifying questions)
+    if (true) { // Always process NLP to give intelligent responses
       console.log(`🇩🇴 [NLP] Detected Intent: ${detectedIntent} for message: "${text}"`);
 
       let responseText = "";
@@ -733,6 +733,112 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
             responseText = "Hubo un error consultando tus citas/reservas. Por favor intenta más tarde.";
           }
           break;
+
+        case "PAYMENT_INFO":
+          // Customer asking how to pay / bank accounts
+          console.log("💳 [NLP] Payment Info Request Detected");
+          if (shopInfo?.bankAccounts && shopInfo.bankAccounts.length > 0) {
+            responseText = `💳 *¿CÓMO PAGAR?*\n\nPuedes hacer tu pago por transferencia bancaria:${formatBankAccounts(shopInfo)}`;
+          } else {
+            responseText = `💳 *Métodos de Pago:*\n\nAceptamos:\n• Efectivo al entregar 💵\n• Transferencia bancaria 🏦\n\nPara datos de transferencia, por favor escribe "Hablar con humano" y te atenderemos. 🙋`;
+          }
+          break;
+
+        case "ORDER_STATUS":
+          // Customer asking about their order status
+          console.log("📦 [NLP] Order Status Request Detected");
+          if (!db) {
+            responseText = "Sistema no disponible en este momento.";
+            break;
+          }
+          try {
+            // Find recent orders for this phone number
+            const ordersSnap = await db.collection("shops").doc(shopId).collection("orders")
+              .where("customerPhone", "==", phone)
+              .orderBy("createdAt", "desc")
+              .limit(3)
+              .get();
+
+            if (!ordersSnap.empty) {
+              const ordersList = ordersSnap.docs.map(doc => {
+                const o = doc.data();
+                const statusEmoji: Record<string, string> = {
+                  draft: "📝",
+                  pending: "⏳",
+                  confirmed: "✅",
+                  preparing: "👨‍🍳",
+                  dispatched: "🚚",
+                  delivered: "📬",
+                  cancelled: "❌"
+                };
+                const statusText: Record<string, string> = {
+                  draft: "Borrador",
+                  pending: "Pendiente",
+                  confirmed: "Confirmado",
+                  preparing: "Preparando",
+                  dispatched: "En camino",
+                  delivered: "Entregado",
+                  cancelled: "Cancelado"
+                };
+                return `${statusEmoji[o.status] || "📦"} *#${o.orderNumber}* - ${statusText[o.status] || o.status}\n   Total: $${o.total?.toLocaleString() || "0"}`;
+              }).join("\n\n");
+
+              responseText = `📦 *TUS PEDIDOS RECIENTES:*\n\n${ordersList}\n\n¿Necesitas más información sobre alguno? Escríbeme el número del pedido.`;
+            } else {
+              responseText = `No encontré pedidos asociados a este número. 🤔\n\n¿Hiciste tu pedido con otro número? Escribe "Hablar con humano" para ayudarte.`;
+            }
+          } catch (error) {
+            console.error("Error fetching orders:", error);
+            responseText = "Hubo un error consultando tus pedidos. Por favor intenta más tarde.";
+          }
+          break;
+
+        case "ORDER_MODIFICATION":
+          // Customer wants to modify or cancel their order
+          console.log("✏️ [NLP] Order Modification Request Detected");
+          responseText = `✏️ *MODIFICAR / CANCELAR PEDIDO*\n\nEntiendo que deseas hacer cambios en tu pedido.\n\nPara ayudarte mejor, por favor indica:\n• El número de tu pedido\n• Qué cambio necesitas\n\nUn miembro del equipo te atenderá en breve. 🙋`;
+
+          // Notify owner about modification request
+          const ownerPhoneModify = shopInfo?.ownerNotificationPhone;
+          if (ownerPhoneModify) {
+            await sendTextMessage(
+              instance,
+              ownerPhoneModify,
+              `✏️ *SOLICITUD DE MODIFICACIÓN*\n\nCliente: ${pushName || phone} (${phone})\nMensaje: "${text}"\n\n⚠️ Revisar y responder manualmente.`
+            );
+          }
+          break;
+
+        case "UNKNOWN":
+          // Bot doesn't understand - ask clarifying question instead of welcome spam
+          console.log("❓ [NLP] Unknown Intent - Asking clarifying question");
+
+          // GUARD: Skip for very short messages (might just be noise)
+          if (text.length < 3) {
+            break; // Let it fall through to other handlers
+          }
+
+          // GUARD: Skip for potential order messages
+          if (text.includes("Pedido:") || text.includes("Total:") || text.includes("🆔") || text.length > 200) {
+            console.log("❓ [NLP] Skipping UNKNOWN handler for potential order/long message");
+            break;
+          }
+
+          const businessType = shopInfo?.businessType || (shopInfo as any)?.category || "retail";
+          let suggestions = "";
+
+          if (["service", "beauty", "barbershop", "spa", "salon"].includes(businessType)) {
+            suggestions = "• Ver *servicios* disponibles\n• *Agendar* una cita\n• Consultar *precios*\n• Ver el estado de mi *cita*";
+          } else if (["restaurant", "food", "bar"].includes(businessType)) {
+            suggestions = "• Ver el *menú*\n• Hacer un *pedido*\n• Consultar *horarios*\n• Ver el estado de mi *orden*";
+          } else if (["rental", "car_rental", "real_estate"].includes(businessType)) {
+            suggestions = "• Ver *opciones* disponibles\n• Hacer una *reserva*\n• Consultar *precios*\n• Ver el estado de mi *reserva*";
+          } else {
+            suggestions = "• Ver *productos* disponibles\n• Consultar *precios*\n• Ver el estado de mi *pedido*\n• Saber *cómo pagar*";
+          }
+
+          responseText = `🤔 Hmm, no estoy seguro de entender tu mensaje.\n\n¿En qué te puedo ayudar? Por ejemplo:\n${suggestions}\n\nO escribe *"Hablar con humano"* para atención personalizada. 🙋`;
+          break;
       }
 
       if (responseText) {
@@ -782,18 +888,17 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
           const orderData = orderSnap.data();
 
           if (orderData?.status === "pending") {
-            // 3. Update Order Status
-            await orderRef.update({
-              status: "confirmed",
-              confirmedAt: new Date().toISOString()
-            });
+            // Use server action to update status AND deduct inventory atomically
+            const { updateOrderStatusAction } = await import("@/lib/actions/order-actions");
+            const result = await updateOrderStatusAction(shopId, orderSnap.id, "confirmed");
 
-            // 4. Deduct Inventory (New)
-            if (orderData.items && Array.isArray(orderData.items)) {
-              await deductStock(shopId, orderData.items);
+            if (!result.success) {
+              console.error(`[${instance}] ❌ Failed to confirm order: ${result.error}`);
+              await sendTextMessage(instance, phone, `❌ Error al confirmar el pedido: ${result.error}`);
+              return;
             }
 
-            console.log(`[${instance}] ✅ Order ${orderId} confirmed via WhatsApp command`);
+            console.log(`[${instance}] ✅ Order ${orderId} confirmed via WhatsApp command (with stock deduction)`);
 
             // 5. Notify Customer (with Bank Info if avail)
             const shopInfo = await getShopBasicInfo(shopId);
@@ -852,16 +957,9 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
 
             console.log(`[${instance}] ✅ Order ${orderId} activated (draft -> pending)`);
 
-            // DEDUCT STOCK immediately when order is activated
-            if (orderData.items && Array.isArray(orderData.items)) {
-              try {
-                await deductStock(shopId, orderData.items);
-                console.log(`[${instance}] ✅ Stock deducted for ${orderData.items.length} items`);
-              } catch (stockError) {
-                console.error(`[${instance}] ⚠️ Failed to deduct stock:`, stockError);
-                // Don't block order - just log the error
-              }
-            }
+            // NOTE: Stock is deducted when order is CONFIRMED, not on activation
+            // This is handled by updateOrderStatusAction to prevent double deduction
+            console.log(`[${instance}] ℹ️ Stock will be deducted when order is confirmed`);
 
             // Create Notification (Server-side)
             await db.collection("shops").doc(shopId).collection("notifications").add({
