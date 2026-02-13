@@ -605,9 +605,10 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
       switch (detectedIntent) {
         case "GREETING":
           // GUARD: Don't greet if message is long or looks like an order/forwarded message
-          if (text.length > 50 || text.includes("Pedido:") || text.includes("Total:") || text.includes("Productos:")) {
-            console.log("💰 [NLP] Skipping Greeting for potential Order/Long message");
-            return;
+          // Use break (not return) so order processing can still run after NLP
+          if (text.length > 50 || text.includes("Pedido:") || text.includes("Total:") || text.includes("Productos:") || text.includes("🆔")) {
+            console.log("💰 [NLP] Skipping Greeting for potential Order/Long message - will continue to order processing");
+            break; // Don't return! Let the order processing code run below
           }
 
           const bType = shopInfo?.businessType || (shopInfo as any)?.category || "retail";
@@ -627,7 +628,7 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
           break;
 
         case "PRICE_INQUIRY":
-          responseText = `Para ver los precios, por favor chequea nuestro catálogo aquí: \n${shopInfo?.website || `https://linko-app-pied.vercel.app/shop/${shopInfo?.slug}`}`;
+          responseText = `Para ver los precios, por favor chequea nuestro catálogo aquí: \n${shopInfo?.website || `https://linko-app-pied.vercel.app/${shopInfo?.slug}`}`;
           break;
 
         case "ADDRESS_INQUIRY":
@@ -672,8 +673,12 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
           break;
 
         case "CATALOG_INQUIRY":
-          // Allow fall-through to standard catalog flow or send link
-          responseText = `Claro, aquí tienes nuestro catálogo: \n${shopInfo?.website || `https://linko-app-pied.vercel.app/shop/${shopInfo?.slug}`}`;
+          // GUARD: Don't send catalog if it's part of an order message
+          if (text.includes("Pedido:") || text.includes("Total:") || text.includes("🆔") || text.length > 100) {
+            console.log("💰 [NLP] Skipping Catalog for potential Order message");
+            break;
+          }
+          responseText = `Claro, aquí tienes nuestro catálogo: \n${shopInfo?.website || `https://linko-app-pied.vercel.app/${shopInfo?.slug}`}`;
           break;
 
         case "PAYMENT_POLICY":
@@ -1007,6 +1012,12 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
         console.error(`[${instance}] Failed to send offline message:`, err);
       }
     }
+    return;
+  }
+
+  // GUARD: Don't send auto-reply for order messages
+  if (text.includes("Pedido:") || text.includes("Total:") || text.includes("Productos:") || text.includes("🆔")) {
+    console.log(`[${instance}] Skipping auto-reply - detected order message pattern`);
     return;
   }
 

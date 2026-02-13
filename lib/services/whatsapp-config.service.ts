@@ -97,7 +97,7 @@ export async function getShopBasicInfo(shopId: string): Promise<ShopBasicInfo | 
             businessType: data.businessType || data.category || "retail",
             ownerNotificationPhone: data.ownerNotificationPhone,
             bankAccounts: data.bankAccounts || [], // Fetch bank accounts
-            website: data.customDomain || `https://linko-app-pied.vercel.app/shop/${data.slug}`,
+            website: data.customDomain || `https://linko-app-pied.vercel.app/${data.slug}`,
             contact: {
                 phone: data.contact?.phone,
                 address: data.contact?.address,
