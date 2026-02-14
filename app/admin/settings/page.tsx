@@ -30,6 +30,7 @@ import {
   DEMO_VIDEOS,
   DEMO_IMAGES,
   MediaUploader,
+  useShops,
   useAuth,
   type BackgroundType,
 } from "@/components/shared";
@@ -61,6 +62,8 @@ const BACKGROUND_OPTIONS: { id: BackgroundEffect; name: string; description: str
 
 export default function AdminSettingsPage() {
   const { user, isSuperAdmin, isLoading: authLoading } = useAuth();
+  const { getShop, updateShop, isLoading: shopsLoading } = useShops(); // Use shops hook
+
   const [config, setConfig] = useState<ShopConfig>({
     shopName: "Mi Tienda",
     primaryColor: "#F43F5E",
@@ -71,24 +74,27 @@ export default function AdminSettingsPage() {
     overlayOpacity: 40,
   });
   const [isSaved, setIsSaved] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isSaving, setIsSaving] = useState(false); // Add saving state
   const [showUrlInput, setShowUrlInput] = useState(false);
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
 
-  // Load from localStorage
+  // Load from Firestore
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setConfig((prev) => ({ ...prev, ...parsed }));
+    if (user?.shopId && !shopsLoading) {
+      const shop = getShop(user.shopId);
+      if (shop) {
+        setConfig({
+          shopName: shop.name || "Mi Tienda",
+          primaryColor: shop.theme?.primaryColor || "#F43F5E",
+          accentColor: shop.theme?.accentColor || "#D4AF37",
+          backgroundEffect: shop.background?.effect || "clean",
+          backgroundType: shop.background?.type || "preset",
+          backgroundUrl: shop.background?.type === "video" ? shop.background.video : shop.background?.image || "",
+          overlayOpacity: shop.background?.overlayOpacity || 40,
+        });
       }
-    } catch (error) {
-      console.error("Error loading config:", error);
-    } finally {
-      setIsLoaded(true);
     }
-  }, []);
+  }, [user?.shopId, shopsLoading, getShop]);
 
   // Phase 21: Security Guard - Only Super Admin can access visual settings
   if (authLoading) {
@@ -108,14 +114,41 @@ export default function AdminSettingsPage() {
     );
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!user?.shopId) return;
+
+    setIsSaving(true);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
-      console.log("Config saved:", config);
+      // Structure data for Firestore
+      const updateData: any = {
+        name: config.shopName,
+        theme: {
+          primaryColor: config.primaryColor,
+          accentColor: config.accentColor,
+        },
+        background: {
+          type: config.backgroundType,
+          effect: config.backgroundEffect,
+          overlayOpacity: config.overlayOpacity,
+        }
+      };
+
+      // Add URL based on type
+      if (config.backgroundType === "image") {
+        updateData.background.image = config.backgroundUrl;
+      } else if (config.backgroundType === "video") {
+        updateData.background.video = config.backgroundUrl;
+      }
+
+      await updateShop(user.shopId, updateData);
+
+      console.log("Config saved to Firestore:", updateData);
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2000);
     } catch (error) {
       console.error("Error saving config:", error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -147,10 +180,10 @@ export default function AdminSettingsPage() {
     updateConfig({ backgroundUrl: url, backgroundType: "image" });
   };
 
-  if (!isLoaded) {
+  if (shopsLoading && !config.shopName) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-slate-400">Cargando...</div>
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
   }
@@ -175,7 +208,7 @@ export default function AdminSettingsPage() {
               </div>
             </div>
 
-            <Button onClick={handleSave} disabled={isSaved}>
+            <Button onClick={handleSave} disabled={isSaved || isSaving}>
               {isSaved ? (
                 <>
                   <Check className="w-4 h-4" />
@@ -183,8 +216,8 @@ export default function AdminSettingsPage() {
                 </>
               ) : (
                 <>
-                  <Save className="w-4 h-4" />
-                  Guardar Cambios
+                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {isSaving ? "Guardando..." : "Guardar Cambios"}
                 </>
               )}
             </Button>

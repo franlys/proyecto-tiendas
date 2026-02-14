@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { sendTextMessage, sendImage, sendDocument, getInstanceName, isEvolutionConfigured } from "@/lib/evolution";
+import { formatPhoneForWhatsApp } from "@/lib/utils";
 
 interface SendRequest {
     shopId: string;
@@ -50,36 +51,39 @@ export async function POST(request: NextRequest) {
         // Replace {shopUrl} placeholder in message
         const finalMessage = message.replace(/{shopUrl}/g, shopUrl);
 
+        // Format phone number with country code
+        const formattedPhone = formatPhoneForWhatsApp(phone);
+
         let result;
 
         switch (mediaType) {
             case "image":
                 if (mediaUrl) {
-                    result = await sendImage(instanceName, phone, mediaUrl, finalMessage);
+                    result = await sendImage(instanceName, formattedPhone, mediaUrl, finalMessage);
                 } else {
-                    result = await sendTextMessage(instanceName, phone, finalMessage);
+                    result = await sendTextMessage(instanceName, formattedPhone, finalMessage);
                 }
                 break;
 
             case "document":
                 if (mediaUrl && mediaName) {
-                    result = await sendDocument(instanceName, phone, mediaUrl, mediaName, finalMessage);
+                    result = await sendDocument(instanceName, formattedPhone, mediaUrl, mediaName, finalMessage);
                 } else {
-                    result = await sendTextMessage(instanceName, phone, finalMessage);
+                    result = await sendTextMessage(instanceName, formattedPhone, finalMessage);
                 }
                 break;
 
             case "video":
                 // For now, treat video same as image (Evolution API handles both with sendMedia)
                 if (mediaUrl) {
-                    result = await sendImage(instanceName, phone, mediaUrl, finalMessage);
+                    result = await sendImage(instanceName, formattedPhone, mediaUrl, finalMessage);
                 } else {
-                    result = await sendTextMessage(instanceName, phone, finalMessage);
+                    result = await sendTextMessage(instanceName, formattedPhone, finalMessage);
                 }
                 break;
 
             default:
-                result = await sendTextMessage(instanceName, phone, finalMessage);
+                result = await sendTextMessage(instanceName, formattedPhone, finalMessage);
         }
 
         return NextResponse.json({

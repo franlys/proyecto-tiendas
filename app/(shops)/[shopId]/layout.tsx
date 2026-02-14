@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { ThemeProvider, CartProvider, OrdersProvider } from "@/components/shared";
 import { FloatingCart, ShopLayoutClient } from "@/components/shop";
+import { BackgroundAudio } from "@/components/shop/background-audio";
 import { MOCK_SHOPS, DEFAULT_THEME, type ShopConfig } from "@/lib/constants";
 
 interface ShopLayoutProps {
@@ -41,6 +42,7 @@ async function getShopData(shopId: string): Promise<ShopConfig | null> {
         slogan: shopData.slogan,
         social: shopData.social,
         background: shopData.background,
+        backgroundAudio: shopData.backgroundAudio,
       } as ShopConfig;
     }
 
@@ -65,6 +67,7 @@ async function getShopData(shopId: string): Promise<ShopConfig | null> {
         slogan: shopData.slogan,
         social: shopData.social,
         background: shopData.background,
+        backgroundAudio: shopData.backgroundAudio,
       } as ShopConfig;
     }
   } catch (error) {
@@ -237,6 +240,15 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
 
               {/* Floating Cart */}
               <FloatingCart />
+
+              {/* Background Audio (if configured) */}
+              {shop.backgroundAudio?.enabled && shop.backgroundAudio?.url && (
+                <BackgroundAudio
+                  audioUrl={shop.backgroundAudio.url}
+                  volume={shop.backgroundAudio.volume}
+                  loop={shop.backgroundAudio.loop}
+                />
+              )}
             </div>
           </ShopLayoutClient>
         </CartProvider>

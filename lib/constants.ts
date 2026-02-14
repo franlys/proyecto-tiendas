@@ -230,6 +230,14 @@ export interface ShopConfig {
   ownerUsername?: string;
   ownerPassword?: string;
   features?: FeatureId[];
+  // Background audio/music
+  backgroundAudio?: {
+    enabled: boolean;
+    url: string;        // URL to audio file (Firebase Storage, etc.)
+    volume?: number;    // 0-1, default 0.3
+    autoplay?: boolean; // Default true (muted until user interaction)
+    loop?: boolean;     // Default true
+  };
 }
 
 // ============================================

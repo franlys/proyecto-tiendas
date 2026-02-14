@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { sendTextMessage, getInstanceName, isEvolutionConfigured } from "@/lib/evolution";
+import { formatPhoneForWhatsApp } from "@/lib/utils";
 
 /**
  * POST /api/reports/daily/send
@@ -110,7 +111,8 @@ export async function POST(request: NextRequest) {
 
         // Send via WhatsApp bot
         const instanceName = getInstanceName(shopId);
-        await sendTextMessage(instanceName, ownerPhone, message);
+        const formattedPhone = formatPhoneForWhatsApp(ownerPhone);
+        await sendTextMessage(instanceName, formattedPhone, message);
 
         return NextResponse.json({
             success: true,

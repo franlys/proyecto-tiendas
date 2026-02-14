@@ -41,7 +41,7 @@ export function ShopLayoutClient({ children, shop }: ShopLayoutClientProps & { s
     primaryColor: shop.theme?.primaryColor,
     accentColor: shop.theme?.accentColor,
     backgroundType: shop.background?.type || "preset",
-    backgroundUrl: shop.background?.type === "video" ? shop.background.video : shop.background?.image,
+    backgroundUrl: shop.background?.type === "video" ? shop.background.video : (shop.background?.image || shop.banner),
     // Support new background structure
     sectionBackgrounds: {
       hero: shop.background?.hero,
