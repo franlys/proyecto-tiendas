@@ -162,20 +162,53 @@ const DEMO_CAMPAIGNS: Campaign[] = [
   },
 ];
 
-// Simulated audience counts per segment
-const DEMO_AUDIENCE_COUNTS: Record<AudienceSegment, number> = {
-  all: 234,
-  wholesale: 28,
-  inactive: 67,
-  birthday: 12,
-  new: 15,
-  vip: 23,
+// Default audience counts (shown before real data loads)
+const DEFAULT_AUDIENCE_COUNTS: Record<AudienceSegment, number> = {
+  all: 0,
+  wholesale: 0,
+  inactive: 0,
+  birthday: 0,
+  new: 0,
+  vip: 0,
 };
 
 export function MarketingProvider({ children, shopId }: MarketingProviderProps) {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [currentJob, setCurrentJob] = useState<SendingJob | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [audienceCounts, setAudienceCounts] = useState<Record<AudienceSegment, number>>(DEFAULT_AUDIENCE_COUNTS);
+
+  // Fetch real audience counts from API
+  useEffect(() => {
+    async function fetchAudienceCounts() {
+      if (!shopId || shopId === "default") return;
+
+      try {
+        const segments: AudienceSegment[] = ["all", "wholesale", "inactive", "birthday", "new", "vip"];
+        const counts: Record<AudienceSegment, number> = { ...DEFAULT_AUDIENCE_COUNTS };
+
+        await Promise.all(
+          segments.map(async (segment) => {
+            try {
+              const res = await fetch(`/api/marketing/audience?shopId=${shopId}&segment=${segment}&countOnly=true`);
+              if (res.ok) {
+                const data = await res.json();
+                counts[segment] = data.count || 0;
+              }
+            } catch {
+              // Silently fail for individual segments
+            }
+          })
+        );
+
+        setAudienceCounts(counts);
+      } catch (error) {
+        console.error("Error fetching audience counts:", error);
+      }
+    }
+
+    fetchAudienceCounts();
+  }, [shopId]);
 
   // Load campaigns from localStorage
   useEffect(() => {
@@ -185,12 +218,12 @@ export function MarketingProvider({ children, shopId }: MarketingProviderProps) 
       if (stored) {
         setCampaigns(JSON.parse(stored));
       } else {
-        setCampaigns(DEMO_CAMPAIGNS);
-        localStorage.setItem(storageKey, JSON.stringify(DEMO_CAMPAIGNS));
+        // Start with empty campaigns instead of demo data
+        setCampaigns([]);
       }
     } catch (error) {
       console.error("Error loading campaigns:", error);
-      setCampaigns(DEMO_CAMPAIGNS);
+      setCampaigns([]);
     } finally {
       setIsLoading(false);
     }
@@ -236,7 +269,7 @@ export function MarketingProvider({ children, shopId }: MarketingProviderProps) 
     setCampaigns((prev) => prev.filter((c) => c.id !== id));
   }, []);
 
-  // Start sending campaign (simulated - in production would call Evolution API)
+  // Start sending campaign - uses real Evolution API
   const startCampaign = useCallback(async (id: string, phones: string[]) => {
     const campaign = campaigns.find((c) => c.id === id);
     if (!campaign) return;
@@ -249,24 +282,54 @@ export function MarketingProvider({ children, shopId }: MarketingProviderProps) 
     });
 
     // Create job
-    setCurrentJob({
+    const job: SendingJob = {
       campaignId: id,
       isRunning: true,
       currentIndex: 0,
       phones,
       errors: [],
-    });
+    };
+    setCurrentJob(job);
 
-    // Simulate sending with safe delays
+    // Send messages with safe delays (ANTI-BAN)
     for (let i = 0; i < phones.length; i++) {
-      // Check if paused
-      if (!currentJob?.isRunning) break;
+      // Check if job was paused
+      const currentState = await new Promise<boolean>((resolve) => {
+        setCurrentJob((prev) => {
+          resolve(prev?.isRunning ?? false);
+          return prev;
+        });
+      });
 
-      // Simulate send (in production: call Evolution API)
-      console.log(`[Campaign ${id}] Sending to ${phones[i]} (${i + 1}/${phones.length})`);
+      if (!currentState) {
+        console.log(`[Campaign ${id}] Paused at ${i + 1}/${phones.length}`);
+        break;
+      }
 
-      // Random success/failure (95% success rate for demo)
-      const success = Math.random() > 0.05;
+      // Send message via API
+      let success = false;
+      try {
+        const response = await fetch("/api/marketing/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            shopId,
+            phone: phones[i],
+            message: campaign.message,
+            mediaType: campaign.mediaType,
+            mediaUrl: campaign.mediaUrl,
+            mediaName: campaign.mediaName,
+          }),
+        });
+
+        success = response.ok;
+        if (!success) {
+          const error = await response.json();
+          console.error(`[Campaign ${id}] Failed to send to ${phones[i]}:`, error);
+        }
+      } catch (error) {
+        console.error(`[Campaign ${id}] Error sending to ${phones[i]}:`, error);
+      }
 
       // Update progress
       setCampaigns((prev) =>
@@ -294,7 +357,7 @@ export function MarketingProvider({ children, shopId }: MarketingProviderProps) 
           : null
       );
 
-      // CRITICAL: Safe delay between messages (10-20 seconds random)
+      // CRITICAL: Safe delay between messages (10-20 seconds random) - ANTI-BAN
       if (i < phones.length - 1) {
         const delay = Math.floor(Math.random() * (20000 - 10000) + 10000);
         await new Promise((resolve) => setTimeout(resolve, delay));
@@ -308,7 +371,7 @@ export function MarketingProvider({ children, shopId }: MarketingProviderProps) 
     });
 
     setCurrentJob(null);
-  }, [campaigns, currentJob, updateCampaign]);
+  }, [campaigns, shopId, updateCampaign]);
 
   const pauseCampaign = useCallback((id: string) => {
     if (currentJob?.campaignId === id) {
@@ -325,9 +388,8 @@ export function MarketingProvider({ children, shopId }: MarketingProviderProps) 
   }, [currentJob, updateCampaign]);
 
   const getAudienceCount = useCallback((segment: AudienceSegment): number => {
-    // In production, this would query the actual database
-    return DEMO_AUDIENCE_COUNTS[segment];
-  }, []);
+    return audienceCounts[segment] || 0;
+  }, [audienceCounts]);
 
   return (
     <MarketingContext.Provider

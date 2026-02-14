@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, Send, CheckCircle, Clock, DollarSign } from "lucide-react";
+import { FileText, Send, CheckCircle, Clock, DollarSign, AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui";
 import type { SalesOrder } from "@/components/shared/sales-orders-context";
 import { cn, formatPhoneForWhatsApp } from "@/lib/utils";
 
 interface DailyReportCardProps {
+  shopId: string;
   shopName: string;
   orders: SalesOrder[];
   totalSales: number;
@@ -16,6 +17,7 @@ interface DailyReportCardProps {
 }
 
 export function DailyReportCard({
+  shopId,
   shopName,
   orders,
   totalSales,
@@ -24,6 +26,8 @@ export function DailyReportCard({
   ownerPhone = "",
 }: DailyReportCardProps) {
   const [isSent, setIsSent] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Format today's date
   const today = new Date();
@@ -33,7 +37,7 @@ export function DailyReportCard({
     year: "numeric",
   });
 
-  // Build WhatsApp message
+  // Build WhatsApp message (for copy feature)
   const buildReportMessage = () => {
     let message = `📊 *Reporte ${shopName}* - ${formattedDate}\n\n`;
     message += `✅ Ventas: $${totalSales.toLocaleString()}\n`;
@@ -53,16 +57,69 @@ export function DailyReportCard({
     return message;
   };
 
-  const handleSendReport = () => {
-    const message = buildReportMessage();
-    const cleanPhone = formatPhoneForWhatsApp(ownerPhone || "");
+  // Calculate sold products summary
+  const getSoldProductsSummary = () => {
+    const productMap: Record<string, { name: string; quantity: number; total: number }> = {};
 
-    // Open WhatsApp with the report message
-    const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
-    window.open(url, "_blank");
+    orders.forEach((order) => {
+      order.items.forEach((item) => {
+        const key = item.productId || item.productName;
+        if (!productMap[key]) {
+          productMap[key] = {
+            name: item.productName,
+            quantity: 0,
+            total: 0,
+          };
+        }
+        productMap[key].quantity += item.quantity;
+        productMap[key].total += item.total;
+      });
+    });
 
-    setIsSent(true);
-    setTimeout(() => setIsSent(false), 3000);
+    return Object.values(productMap).sort((a, b) => b.total - a.total);
+  };
+
+  const handleSendReport = async () => {
+    if (!ownerPhone) {
+      setError("No hay teléfono del dueño configurado");
+      return;
+    }
+
+    setIsSending(true);
+    setError(null);
+
+    try {
+      const soldProducts = getSoldProductsSummary();
+
+      const response = await fetch("/api/reports/daily/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          shopId,
+          ownerPhone,
+          reportData: {
+            totalSales,
+            totalOrders,
+            topService,
+            soldProducts,
+          },
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Error al enviar reporte");
+      }
+
+      setIsSent(true);
+      setTimeout(() => setIsSent(false), 3000);
+    } catch (err: any) {
+      console.error("Error sending report:", err);
+      setError(err.message || "Error al enviar el reporte");
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleCopyReport = () => {
@@ -137,14 +194,27 @@ export function DailyReportCard({
         </div>
       )}
 
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" />
+          <p className="text-sm text-red-400">{error}</p>
+        </div>
+      )}
+
       {/* Actions */}
       <div className="flex gap-3">
         <Button
           onClick={handleSendReport}
           className="flex-1"
-          disabled={isSent}
+          disabled={isSent || isSending || !ownerPhone}
         >
-          {isSent ? (
+          {isSending ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Enviando...
+            </>
+          ) : isSent ? (
             <>
               <CheckCircle className="w-4 h-4" />
               ¡Enviado!
@@ -162,7 +232,10 @@ export function DailyReportCard({
       </div>
 
       <p className="text-xs text-slate-500 text-center mt-3">
-        El reporte se enviará por WhatsApp
+        {ownerPhone
+          ? "El reporte se enviará al dueño via WhatsApp Bot"
+          : "Configura el teléfono del dueño en Mi Negocio"
+        }
       </p>
     </div>
   );

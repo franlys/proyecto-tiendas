@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Megaphone,
@@ -22,6 +23,7 @@ import {
   Upload,
   Smartphone,
   Shield,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import {
@@ -33,6 +35,7 @@ import {
   type AudienceSegment,
   type MediaType,
 } from "@/components/shared/marketing-context";
+import { useAuth, ShopsProvider, useShops } from "@/components/shared";
 import { cn } from "@/lib/utils";
 
 // Phone Preview Component
@@ -108,12 +111,14 @@ function PhonePreview({ message, mediaType, mediaUrl }: {
 }
 
 // Campaign Wizard Modal
-function CampaignWizard({ onClose, editCampaign }: {
+function CampaignWizard({ onClose, editCampaign, shopId }: {
   onClose: () => void;
   editCampaign?: Campaign;
+  shopId: string;
 }) {
   const { createCampaign, updateCampaign, getAudienceCount, startCampaign } = useMarketing();
   const [step, setStep] = useState(1);
+  const [isStarting, setIsStarting] = useState(false);
   const [formData, setFormData] = useState({
     name: editCampaign?.name || "",
     message: editCampaign?.message || "",
@@ -142,24 +147,45 @@ function CampaignWizard({ onClose, editCampaign }: {
     onClose();
   };
 
-  const handleStartCampaign = () => {
-    // In production, would fetch real phone numbers based on segment
-    const demoPhones = Array.from({ length: audienceCount }, (_, i) => `555-000-${String(i).padStart(4, "0")}`);
+  const handleStartCampaign = async () => {
+    setIsStarting(true);
 
-    let campaignId = editCampaign?.id;
-    if (!campaignId) {
-      const campaign = createCampaign({
-        ...formData,
-        audienceCount,
-        status: "sending",
-      });
-      campaignId = campaign.id;
-    } else {
-      updateCampaign(campaignId, { ...formData, audienceCount });
+    try {
+      // Fetch real phone numbers from API
+      const response = await fetch(`/api/marketing/audience?shopId=${shopId}&segment=${formData.segment}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Error fetching audience");
+      }
+
+      const phones: string[] = data.phones || [];
+
+      if (phones.length === 0) {
+        alert("No hay destinatarios en este segmento. Agrega clientes primero.");
+        setIsStarting(false);
+        return;
+      }
+
+      let campaignId = editCampaign?.id;
+      if (!campaignId) {
+        const campaign = createCampaign({
+          ...formData,
+          audienceCount: phones.length,
+          status: "sending",
+        });
+        campaignId = campaign.id;
+      } else {
+        updateCampaign(campaignId, { ...formData, audienceCount: phones.length });
+      }
+
+      startCampaign(campaignId, phones);
+      onClose();
+    } catch (error: any) {
+      console.error("Error starting campaign:", error);
+      alert(error.message || "Error al iniciar campaña");
+      setIsStarting(false);
     }
-
-    startCampaign(campaignId, demoPhones);
-    onClose();
   };
 
   return (
@@ -426,15 +452,25 @@ function CampaignWizard({ onClose, editCampaign }: {
               </>
             ) : (
               <>
-                <Button variant="outline" onClick={handleSaveDraft}>
+                <Button variant="outline" onClick={handleSaveDraft} disabled={isStarting}>
                   Guardar Borrador
                 </Button>
                 <Button
                   onClick={handleStartCampaign}
+                  disabled={isStarting || audienceCount === 0}
                   className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400"
                 >
-                  <Send className="w-4 h-4 mr-2" />
-                  Iniciar Envío
+                  {isStarting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Cargando audiencia...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Iniciar Envío
+                    </>
+                  )}
                 </Button>
               </>
             )}
@@ -566,7 +602,7 @@ function CampaignCard({ campaign, onEdit }: { campaign: Campaign; onEdit: () => 
   );
 }
 
-function MarketingContent() {
+function MarketingContent({ shopId }: { shopId: string }) {
   const { campaigns, currentJob } = useMarketing();
   const [showWizard, setShowWizard] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | undefined>();
@@ -704,16 +740,65 @@ function MarketingContent() {
         <CampaignWizard
           onClose={handleCloseWizard}
           editCampaign={editingCampaign}
+          shopId={shopId}
         />
       )}
     </div>
   );
 }
 
+function MarketingWithAuth() {
+  const router = useRouter();
+  const { user, isLoading: authLoading } = useAuth();
+  const { getShop, isLoading: shopsLoading } = useShops();
+
+  // Get shopId from user
+  const shopId = user?.shopId || "";
+  const shop = shopId ? getShop(shopId) : null;
+
+  // Loading state
+  if (authLoading || shopsLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 text-slate-400">
+          <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
+          <p>Cargando marketing...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Not authenticated
+  if (!user || !shopId) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="glass-panel rounded-2xl p-8 text-center max-w-md">
+          <AlertTriangle className="w-12 h-12 text-amber-400 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-white mb-2">Acceso Requerido</h2>
+          <p className="text-slate-400 mb-6">
+            Necesitas iniciar sesión para acceder al módulo de marketing.
+          </p>
+          <Button onClick={() => router.push("/login")}>
+            Iniciar Sesión
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const effectiveShopId = shop?.slug || shopId;
+
+  return (
+    <MarketingProvider shopId={effectiveShopId}>
+      <MarketingContent shopId={effectiveShopId} />
+    </MarketingProvider>
+  );
+}
+
 export default function MarketingPage() {
   return (
-    <MarketingProvider shopId="default">
-      <MarketingContent />
-    </MarketingProvider>
+    <ShopsProvider>
+      <MarketingWithAuth />
+    </ShopsProvider>
   );
 }

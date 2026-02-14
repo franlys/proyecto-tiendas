@@ -569,6 +569,7 @@ function DashboardContent({ isSuperAdmin, shop }: { isSuperAdmin: boolean; shop?
             {/* Daily Report */}
             <div>
               <DailyReportCard
+                shopId={shop?.slug || ""}
                 shopName={shop?.name || "Mi Tienda"}
                 orders={todayOrders}
                 totalSales={todayStats.totalSales}
