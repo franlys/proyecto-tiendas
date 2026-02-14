@@ -311,6 +311,76 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
   console.log(`[${instance}] New message from ${pushName || phone}: ${text}`);
 
   // ============================================================
+  // PASO 0.5: DETECCIÓN DE COMPROBANTES DE PAGO (Imágenes y Texto)
+  // ============================================================
+  // Keywords that indicate payment was made
+  const paymentProofKeywords = [
+    // Spanish
+    "ya pague", "ya pagué", "pague", "pagué", "pagado", "pago hecho",
+    "ya transferi", "ya transferí", "transferi", "transferí", "transferido",
+    "ya deposite", "ya deposité", "deposite", "deposité", "depositado",
+    "listo el pago", "pago listo", "listo", "hecho", "realizado",
+    "aqui el comprobante", "aquí el comprobante", "comprobante", "capture", "captura",
+    "ya te solte", "ya te solté", "te solte", "te solté",
+    "te acabo de transferir", "te acabo de pagar", "acabo de pagar",
+    "foto del pago", "imagen del pago", "ahí va", "ahi va", "ahi ta", "ahí ta",
+    "recibo", "voucher", "constancia", "soporte",
+    // Confirmation phrases
+    "confirmo pago", "confirmo transferencia", "pago confirmado",
+    "transferencia realizada", "deposito realizado", "depósito realizado"
+  ];
+
+  const textLower = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const isPaymentProofText = paymentProofKeywords.some(kw => textLower.includes(kw));
+  const isImageMessage = messageType === "imageMessage" || messageType === "documentMessage";
+
+  // If it's an image OR text indicating payment proof, forward to owner
+  if (isImageMessage || isPaymentProofText) {
+    console.log(`[${instance}] 💸 Payment proof detected! Type: ${messageType}, HasKeywords: ${isPaymentProofText}`);
+
+    try {
+      const shopInfo = await getShopBasicInfo(shopId);
+      const ownerPhone = shopInfo?.ownerNotificationPhone;
+
+      if (ownerPhone) {
+        // Build notification message
+        let notifyMsg = "";
+
+        if (isImageMessage) {
+          notifyMsg = `📸💸 *COMPROBANTE DE PAGO RECIBIDO*\n\n` +
+            `👤 Cliente: ${pushName || "Sin nombre"}\n` +
+            `📱 Teléfono: ${phone}\n` +
+            `${text ? `💬 Mensaje: "${text}"\n` : ""}` +
+            `\n⚠️ *Revisa el chat para ver la imagen del comprobante.*\n` +
+            `\n⏰ ${new Date().toLocaleString("es-DO", { timeZone: "America/Santo_Domingo" })}`;
+        } else {
+          notifyMsg = `💸 *POSIBLE PAGO REPORTADO*\n\n` +
+            `👤 Cliente: ${pushName || "Sin nombre"}\n` +
+            `📱 Teléfono: ${phone}\n` +
+            `💬 Mensaje: "${text}"\n` +
+            `\n⏰ ${new Date().toLocaleString("es-DO", { timeZone: "America/Santo_Domingo" })}`;
+        }
+
+        // Send to owner
+        await sendTextMessage(instance, ownerPhone, notifyMsg);
+        console.log(`[${instance}] ✅ Payment proof forwarded to owner: ${ownerPhone}`);
+
+        // Reply to customer
+        const customerReply = isImageMessage
+          ? `✅ *¡Comprobante recibido!*\n\nGracias ${pushName || ""}. Hemos notificado al equipo sobre tu pago.\n\nTe confirmaremos en breve. 🙏`
+          : `✅ *¡Gracias por confirmar tu pago!*\n\nHemos notificado al equipo. Te confirmaremos en breve. 🙏\n\n📸 Si tienes una foto del comprobante, envíala para agilizar la verificación.`;
+
+        await sendTextMessage(instance, phone, customerReply);
+        return; // Stop processing - payment proof handled
+      } else {
+        console.log(`[${instance}] ⚠️ No owner phone configured for shop ${shopId}`);
+      }
+    } catch (error) {
+      console.error(`[${instance}] Error handling payment proof:`, error);
+    }
+  }
+
+  // ============================================================
   // PASO 1: Verificar si es respuesta a asignación de pedido
   // ============================================================
   try {
