@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { ShopConfigProvider, useShopConfig, UIProvider, useUI } from "@/components/shared";
+import { ShopConfigProvider, useShopConfig, UIProvider, useUI, type BackgroundType } from "@/components/shared";
 import { BackgroundEffects } from "./background-effects";
 
 interface ShopLayoutClientProps {
@@ -40,8 +40,11 @@ export function ShopLayoutClient({ children, shop }: ShopLayoutClientProps & { s
     // Map Firestore theme/background data to VisualConfig
     primaryColor: shop.theme?.primaryColor,
     accentColor: shop.theme?.accentColor,
-    backgroundType: shop.background?.type || "preset",
+    backgroundType: (shop.background?.type || "preset") as BackgroundType,
     backgroundUrl: shop.background?.type === "video" ? shop.background.video : (shop.background?.image || shop.banner),
+    // Background effect and overlay
+    backgroundEffect: shop.background?.effect || "clean",
+    overlayOpacity: shop.background?.overlayOpacity ?? 40,
     // Support new background structure
     sectionBackgrounds: {
       hero: shop.background?.hero,

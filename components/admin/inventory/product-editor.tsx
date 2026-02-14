@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Product, ProductVariant, ProductCategory, PRODUCT_CATEGORY_LABELS } from "@/lib/constants";
+import { Product, ProductVariant, ProductCategory, PRODUCT_CATEGORY_LABELS, ProductExtra } from "@/lib/constants";
+import type { ProductExtra as ProductExtraType } from "@/lib/types/product-extra.types";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, Trash2, Tag, Palette, Check } from "lucide-react";
 import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
@@ -42,11 +43,15 @@ const EMPTY_PRODUCT: ExtendedProduct = {
     category: "otros",
     image: "https://via.placeholder.com/400",
     variants: [],
+    extras: [],
+    extrasRequired: false,
+    maxExtras: undefined,
 };
 
 export function ProductEditor({ product, isOpen, onClose, onSave, shopId }: ProductEditorProps) {
     const [formData, setFormData] = useState<ExtendedProduct>(EMPTY_PRODUCT);
     const [hasVariants, setHasVariants] = useState(false);
+    const [hasExtras, setHasExtras] = useState(false);
     const [customCategories, setCustomCategories] = useState<CustomCategory[]>([]);
     const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState("");
@@ -92,6 +97,7 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId }: Prod
             if (product) {
                 setFormData(product as ExtendedProduct);
                 setHasVariants(!!(product.variants && product.variants.length > 0));
+                setHasExtras(!!(product.extras && product.extras.length > 0));
                 // Check if product has a custom category
                 const isCustom = !Object.keys(PRODUCT_CATEGORY_LABELS).includes(product.category);
                 if (isCustom) {
@@ -100,6 +106,7 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId }: Prod
             } else {
                 setFormData({ ...EMPTY_PRODUCT, id: `new-${Date.now()}` });
                 setHasVariants(false);
+                setHasExtras(false);
                 setShowNewCategoryInput(false);
                 setNewCategoryName("");
                 setNewCategoryBgColor(DEFAULT_CATEGORY_COLORS.backgroundColor);
@@ -200,12 +207,42 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId }: Prod
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // Clean up variants if disabled
+        // Clean up variants and extras if disabled
         const cleanData = {
             ...formData,
             variants: hasVariants ? formData.variants : [],
+            extras: hasExtras ? formData.extras : [],
+            extrasRequired: hasExtras ? formData.extrasRequired : false,
+            maxExtras: hasExtras ? formData.maxExtras : undefined,
         };
         onSave(cleanData as Product);
+    };
+
+    // Extra management functions
+    const addExtra = () => {
+        const newExtra: ProductExtraType = {
+            id: `extra-${Date.now()}`,
+            name: "",
+            price: 0,
+            available: true,
+            maxQuantity: 1,
+        };
+        setFormData({
+            ...formData,
+            extras: [...(formData.extras || []), newExtra],
+        });
+    };
+
+    const updateExtra = (index: number, field: keyof ProductExtraType, value: any) => {
+        const newExtras = [...(formData.extras || [])];
+        newExtras[index] = { ...newExtras[index], [field]: value };
+        setFormData({ ...formData, extras: newExtras });
+    };
+
+    const removeExtra = (index: number) => {
+        const newExtras = [...(formData.extras || [])];
+        newExtras.splice(index, 1);
+        setFormData({ ...formData, extras: newExtras });
     };
 
     const addVariant = () => {
@@ -587,6 +624,113 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId }: Prod
                                         </button>
                                     </div>
                                 )}
+
+                                <div className="h-px bg-zinc-800 my-6" />
+
+                                {/* Extras Section */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-lg font-semibold text-white">Extras / Toppings</h3>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="checkbox"
+                                                id="hasExtras"
+                                                checked={hasExtras}
+                                                onChange={(e) => setHasExtras(e.target.checked)}
+                                                className="w-4 h-4 rounded bg-zinc-800 border-zinc-600 text-indigo-500 focus:ring-indigo-500"
+                                            />
+                                            <label htmlFor="hasExtras" className="text-sm text-zinc-300 cursor-pointer select-none">
+                                                Este producto tiene extras (Toppings, Adiciones)
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    {hasExtras && (
+                                        <div className="space-y-4">
+                                            <p className="text-sm text-zinc-500">
+                                                Agrega extras opcionales que el cliente puede añadir a su pedido (ej: Oreo, Nutella, Queso extra).
+                                            </p>
+
+                                            {/* Extras config */}
+                                            <div className="flex gap-4 items-center bg-zinc-800/30 p-3 rounded-lg">
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="extrasRequired"
+                                                        checked={formData.extrasRequired || false}
+                                                        onChange={(e) => setFormData({ ...formData, extrasRequired: e.target.checked })}
+                                                        className="w-4 h-4 rounded bg-zinc-800 border-zinc-600 text-indigo-500 focus:ring-indigo-500"
+                                                    />
+                                                    <label htmlFor="extrasRequired" className="text-sm text-zinc-400 cursor-pointer">
+                                                        Obligatorio elegir al menos 1
+                                                    </label>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <label className="text-sm text-zinc-400">Máx extras:</label>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        value={formData.maxExtras || ""}
+                                                        onChange={(e) => setFormData({ ...formData, maxExtras: e.target.value ? Number(e.target.value) : undefined })}
+                                                        className="w-16 bg-zinc-900 border-zinc-700 rounded px-2 py-1 text-white text-sm"
+                                                        placeholder="∞"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Extras list */}
+                                            {formData.extras?.map((extra, index) => (
+                                                <div key={extra.id} className="flex gap-2 items-end bg-zinc-800/30 p-3 rounded-lg border border-zinc-800">
+                                                    <div className="flex-1">
+                                                        <label className="block text-xs text-zinc-500 mb-1">Nombre del Extra</label>
+                                                        <input
+                                                            type="text"
+                                                            value={extra.name}
+                                                            onChange={(e) => updateExtra(index, "name", e.target.value)}
+                                                            className="w-full bg-zinc-900 border-zinc-700 rounded px-3 py-1.5 text-white text-sm"
+                                                            placeholder="Ej. Oreo, Nutella, Queso extra"
+                                                        />
+                                                    </div>
+                                                    <div className="w-24">
+                                                        <label className="block text-xs text-emerald-400 mb-1">Precio +</label>
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            value={extra.price}
+                                                            onChange={(e) => updateExtra(index, "price", Number(e.target.value))}
+                                                            className="w-full bg-zinc-900 border-zinc-700 rounded px-3 py-1.5 text-white text-sm"
+                                                        />
+                                                    </div>
+                                                    <div className="w-20">
+                                                        <label className="block text-xs text-zinc-500 mb-1">Máx Cant.</label>
+                                                        <input
+                                                            type="number"
+                                                            min="1"
+                                                            value={extra.maxQuantity || 1}
+                                                            onChange={(e) => updateExtra(index, "maxQuantity", Number(e.target.value))}
+                                                            className="w-full bg-zinc-900 border-zinc-700 rounded px-3 py-1.5 text-white text-sm text-center"
+                                                        />
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeExtra(index)}
+                                                        className="p-2 mb-0.5 text-red-400 hover:bg-red-500/20 rounded"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            ))}
+
+                                            <button
+                                                type="button"
+                                                onClick={addExtra}
+                                                className="flex items-center gap-2 text-sm text-emerald-400 hover:text-emerald-300 font-medium px-2 py-1"
+                                            >
+                                                <Plus size={16} /> Añadir Extra
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
 
                                 {/* Footer */}
                                 <div className="pt-6 flex justify-end gap-3 sticky bottom-0 bg-zinc-900 pb-2">

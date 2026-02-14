@@ -12,7 +12,7 @@ import type { BackgroundEffect } from "@/components/shop/background-effects";
 import type { BusinessType } from "@/lib/constants";
 
 export type ColorTheme = "preset" | "custom";
-export type BackgroundType = "preset" | "image" | "video";
+export type BackgroundType = "solid" | "image" | "video" | "preset";
 
 export interface ShopVisualConfig {
   colorTheme: ColorTheme;

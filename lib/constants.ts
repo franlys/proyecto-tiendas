@@ -167,13 +167,17 @@ export interface ShopSocialMedia {
   website?: string;
 }
 
-export type BackgroundType = "solid" | "image" | "video";
+export type BackgroundType = "solid" | "image" | "video" | "preset";
 
 export interface ShopBackground {
   type: BackgroundType;
   color?: string;
   image?: string;
   video?: string;
+  // Background effect (for preset type)
+  effect?: "clean" | "galaxy" | "aurora" | "particles" | "waves" | "grid" | "bokeh" | "gradient-flow";
+  // Overlay opacity (0-100)
+  overlayOpacity?: number;
   // Section-specific backgrounds
   hero?: string;
   services?: string;

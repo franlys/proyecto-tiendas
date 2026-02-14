@@ -155,7 +155,7 @@ function ShopDetailContent() {
     const [appearanceSaveSuccess, setAppearanceSaveSuccess] = useState(false);
 
     // Background Configuration States
-    const [backgroundType, setBackgroundType] = useState<"solid" | "image" | "video">("solid");
+    const [backgroundType, setBackgroundType] = useState<"solid" | "image" | "video" | "preset">("solid");
     const [backgroundColor, setBackgroundColor] = useState("#0F172A");
     const [backgroundImage, setBackgroundImage] = useState("");
     const [backgroundVideo, setBackgroundVideo] = useState("");

@@ -242,7 +242,12 @@ export function InventoryProvider({ children, shopId }: InventoryProviderProps) 
   );
 
   const getLowStockProducts = useCallback(() => {
-    return products.filter((p) => p.stock <= p.lowStockThreshold);
+    return products.filter((p) => {
+      // Ensure numeric comparison (Firestore may store as strings)
+      const stock = Number(p.stock) || 0;
+      const threshold = Number(p.lowStockThreshold) || 5; // Default 5 if not set
+      return stock <= threshold;
+    });
   }, [products]);
 
   const saveProduct = useCallback((product: Product): Product => {

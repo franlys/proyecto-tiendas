@@ -19,7 +19,7 @@ export type BackgroundEffect =
 
 interface BackgroundEffectsProps {
   effect?: BackgroundEffect;
-  backgroundType?: "preset" | "image" | "video";
+  backgroundType?: "solid" | "preset" | "image" | "video";
   backgroundUrl?: string; // Fallback/Global
   contextualBackgrounds?: {
     home?: string;

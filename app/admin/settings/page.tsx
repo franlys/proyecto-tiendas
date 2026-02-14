@@ -83,13 +83,16 @@ export default function AdminSettingsPage() {
     if (user?.shopId && !shopsLoading) {
       const shop = getShop(user.shopId);
       if (shop) {
+        const bgUrl = shop.background?.type === "video"
+          ? (shop.background.video || "")
+          : (shop.background?.image || "");
         setConfig({
           shopName: shop.name || "Mi Tienda",
           primaryColor: shop.theme?.primaryColor || "#F43F5E",
           accentColor: shop.theme?.accentColor || "#D4AF37",
           backgroundEffect: shop.background?.effect || "clean",
-          backgroundType: shop.background?.type || "preset",
-          backgroundUrl: shop.background?.type === "video" ? shop.background.video : shop.background?.image || "",
+          backgroundType: (shop.background?.type || "preset") as BackgroundType,
+          backgroundUrl: bgUrl,
           overlayOpacity: shop.background?.overlayOpacity || 40,
         });
       }
