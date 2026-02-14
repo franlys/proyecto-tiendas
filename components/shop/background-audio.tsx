@@ -72,10 +72,13 @@ export function BackgroundAudio({
         const handleFirstInteraction = () => {
             if (!hasInteracted) {
                 setHasInteracted(true);
-                // Check if user had audio enabled before
+                // Check local storage. Default to ON (unmuted) if not set.
                 const savedPref = localStorage.getItem("shop-audio-muted");
-                if (savedPref === "false" && audioRef.current) {
+                const shouldPlay = savedPref !== "true"; // Play if "false" or null (default)
+
+                if (shouldPlay && audioRef.current) {
                     audioRef.current.muted = false;
+                    audioRef.current.play().catch(e => console.log("Audio play failed even after interaction:", e));
                     setIsMuted(false);
                     setShowPulse(false);
                 }
@@ -83,20 +86,17 @@ export function BackgroundAudio({
         };
 
         // Listen for any user interaction
-        document.addEventListener("click", handleFirstInteraction, { once: true });
-        document.addEventListener("touchstart", handleFirstInteraction, { once: true });
-        document.addEventListener("keydown", handleFirstInteraction, { once: true });
+        const events = ["click", "touchstart", "keydown", "scroll"];
+        events.forEach(event => document.addEventListener(event, handleFirstInteraction, { once: true }));
 
         return () => {
-            document.removeEventListener("click", handleFirstInteraction);
-            document.removeEventListener("touchstart", handleFirstInteraction);
-            document.removeEventListener("keydown", handleFirstInteraction);
+            events.forEach(event => document.removeEventListener(event, handleFirstInteraction));
         };
     }, [hasInteracted]);
 
     // Toggle audio
     const toggleMute = useCallback(() => {
-        if (!audioRef.current || !isLoaded) return;
+        if (!audioRef.current) return;
 
         const newMuted = !isMuted;
         audioRef.current.muted = newMuted;
@@ -108,9 +108,9 @@ export function BackgroundAudio({
 
         // If unmuting, ensure audio is playing
         if (!newMuted) {
-            audioRef.current.play().catch(() => {});
+            audioRef.current.play().catch(() => { });
         }
-    }, [isMuted, isLoaded]);
+    }, [isMuted]);
 
     if (!isLoaded) return null;
 
