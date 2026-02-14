@@ -679,268 +679,269 @@ export default function AdminSettingsPage() {
                 Audio de Fondo
               </h2>
 
-              Agrega música ambiental a tu tienda. El usuario puede silenciarlo con un botón flotante.
-            </p>
+              <p className="text-sm text-slate-400 mb-4">
+                Agrega música ambiental a tu tienda. El usuario puede silenciarlo con un botón flotante.
+              </p>
 
-            {/* Enable Toggle */}
-            <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 mb-4 cursor-pointer hover:bg-white/10 transition-colors"
-              onClick={() => updateConfig({ audioEnabled: !config.audioEnabled })}
-            >
-              <div className="flex items-center gap-3">
-                <div className={cn("p-2 rounded-full", config.audioEnabled ? "bg-primary/20 text-primary" : "bg-white/10 text-slate-400")}>
-                  <Volume2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-white font-medium">Habilitar Audio de Fondo</p>
-                  <p className="text-xs text-slate-500">Reproducir música automáticamente</p>
-                </div>
-              </div>
-              <div
-                className={cn(
-                  "relative w-12 h-6 rounded-full transition-colors",
-                  config.audioEnabled ? "bg-primary" : "bg-white/20"
-                )}
+              {/* Enable Toggle */}
+              <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 mb-4 cursor-pointer hover:bg-white/10 transition-colors"
+                onClick={() => updateConfig({ audioEnabled: !config.audioEnabled })}
               >
+                <div className="flex items-center gap-3">
+                  <div className={cn("p-2 rounded-full", config.audioEnabled ? "bg-primary/20 text-primary" : "bg-white/10 text-slate-400")}>
+                    <Volume2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-white font-medium">Habilitar Audio de Fondo</p>
+                    <p className="text-xs text-slate-500">Reproducir música automáticamente</p>
+                  </div>
+                </div>
                 <div
                   className={cn(
-                    "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
-                    config.audioEnabled ? "translate-x-7" : "translate-x-1"
+                    "relative w-12 h-6 rounded-full transition-colors",
+                    config.audioEnabled ? "bg-primary" : "bg-white/20"
                   )}
-                />
-              </div>
-            </div>
-
-            {config.audioEnabled && (
-              <div className="space-y-4">
-                {/* Audio URL */}
-                <div>
-                  <label className="block text-sm text-slate-400 mb-2">
-                    URL del Audio (MP3, WAV, OGG)
-                  </label>
-                  <div className="relative">
-                    <Music className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                      type="url"
-                      value={config.audioUrl}
-                      onChange={(e) => updateConfig({ audioUrl: e.target.value })}
-                      placeholder="https://ejemplo.com/musica.mp3"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors text-sm"
-                    />
-                  </div>
-                  <p className="text-xs text-slate-500 mt-2">
-                    Usa enlaces directos a archivos de audio (no YouTube). Recomendamos archivos MP3 ligeros.
-                  </p>
-                </div>
-
-                {/* Volume Slider */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm text-slate-400 flex items-center gap-2">
-                      <Volume2 className="w-4 h-4" />
-                      Volumen
-                    </label>
-                    <span className="text-white font-mono text-sm">{config.audioVolume}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="5"
-                    max="100"
-                    step="5"
-                    value={config.audioVolume}
-                    onChange={(e) => updateConfig({ audioVolume: parseInt(e.target.value) })}
-                    className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-lg"
-                  />
-                  <div className="flex justify-between text-xs text-slate-500 mt-1">
-                    <span>Bajo</span>
-                    <span>Alto</span>
-                  </div>
-                </div>
-
-                {/* Loop Toggle */}
-                <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                  <span className="text-sm text-slate-300">Repetir en bucle</span>
-                  <button
-                    onClick={() => updateConfig({ audioLoop: !config.audioLoop })}
+                >
+                  <div
                     className={cn(
-                      "relative w-10 h-5 rounded-full transition-colors",
-                      config.audioLoop ? "bg-primary" : "bg-white/20"
+                      "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
+                      config.audioEnabled ? "translate-x-7" : "translate-x-1"
                     )}
-                  >
-                    <div
-                      className={cn(
-                        "absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform",
-                        config.audioLoop ? "translate-x-5" : "translate-x-0.5"
-                      )}
-                    />
-                  </button>
+                  />
                 </div>
               </div>
-            )}
-          </div>
-        </div>
 
-        {/* Live Preview */}
-        <div className="lg:sticky lg:top-8 h-fit">
-          <div className="glass-panel rounded-2xl p-6">
-            <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
-              <Eye className="w-4 h-4 text-gold" />
-              Vista Previa
-            </h2>
+              {config.audioEnabled && (
+                <div className="space-y-4">
+                  {/* Audio URL */}
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-2">
+                      URL del Audio (MP3, WAV, OGG)
+                    </label>
+                    <div className="relative">
+                      <Music className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type="url"
+                        value={config.audioUrl}
+                        onChange={(e) => updateConfig({ audioUrl: e.target.value })}
+                        placeholder="https://ejemplo.com/musica.mp3"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors text-sm"
+                      />
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2">
+                      Usa enlaces directos a archivos de audio (no YouTube). Recomendamos archivos MP3 ligeros.
+                    </p>
+                  </div>
 
-            {/* Phone Frame Preview */}
-            <div className="relative mx-auto w-[200px]">
-              <div className="relative bg-slate-800 rounded-[2rem] p-2 shadow-2xl">
-                <div className="relative bg-background rounded-[1.5rem] overflow-hidden aspect-[9/16]">
-                  {/* Background Preview */}
-                  {config.backgroundType === "preset" && (
-                    <BackgroundPreview
-                      effect={config.backgroundEffect}
-                      className="absolute inset-0 h-full"
+                  {/* Volume Slider */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-sm text-slate-400 flex items-center gap-2">
+                        <Volume2 className="w-4 h-4" />
+                        Volumen
+                      </label>
+                      <span className="text-white font-mono text-sm">{config.audioVolume}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="5"
+                      max="100"
+                      step="5"
+                      value={config.audioVolume}
+                      onChange={(e) => updateConfig({ audioVolume: parseInt(e.target.value) })}
+                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-lg"
                     />
-                  )}
-
-                  {config.backgroundType === "image" && config.backgroundUrl && (
-                    <div className="absolute inset-0">
-                      <div
-                        className="absolute inset-0 bg-cover bg-center"
-                        style={{ backgroundImage: `url(${config.backgroundUrl})` }}
-                      />
-                      <div
-                        className="absolute inset-0 bg-black"
-                        style={{ opacity: config.overlayOpacity / 100 }}
-                      />
+                    <div className="flex justify-between text-xs text-slate-500 mt-1">
+                      <span>Bajo</span>
+                      <span>Alto</span>
                     </div>
-                  )}
+                  </div>
 
-                  {config.backgroundType === "video" && config.backgroundUrl && (
-                    <div className="absolute inset-0">
-                      <video
-                        ref={videoPreviewRef}
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        className="absolute inset-0 w-full h-full object-cover"
-                      >
-                        <source src={config.backgroundUrl} type="video/mp4" />
-                      </video>
+                  {/* Loop Toggle */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                    <span className="text-sm text-slate-300">Repetir en bucle</span>
+                    <button
+                      onClick={() => updateConfig({ audioLoop: !config.audioLoop })}
+                      className={cn(
+                        "relative w-10 h-5 rounded-full transition-colors",
+                        config.audioLoop ? "bg-primary" : "bg-white/20"
+                      )}
+                    >
                       <div
-                        className="absolute inset-0 bg-black"
-                        style={{ opacity: config.overlayOpacity / 100 }}
+                        className={cn(
+                          "absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform",
+                          config.audioLoop ? "translate-x-5" : "translate-x-0.5"
+                        )}
                       />
-                    </div>
-                  )}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
 
-                  {/* Content Preview */}
-                  <div className="relative z-10 p-4 h-full flex flex-col">
-                    <div className="glass-panel rounded-lg px-3 py-2 mb-4">
-                      <div className="flex items-center gap-2">
+          {/* Live Preview */}
+          <div className="lg:sticky lg:top-8 h-fit">
+            <div className="glass-panel rounded-2xl p-6">
+              <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
+                <Eye className="w-4 h-4 text-gold" />
+                Vista Previa
+              </h2>
+
+              {/* Phone Frame Preview */}
+              <div className="relative mx-auto w-[200px]">
+                <div className="relative bg-slate-800 rounded-[2rem] p-2 shadow-2xl">
+                  <div className="relative bg-background rounded-[1.5rem] overflow-hidden aspect-[9/16]">
+                    {/* Background Preview */}
+                    {config.backgroundType === "preset" && (
+                      <BackgroundPreview
+                        effect={config.backgroundEffect}
+                        className="absolute inset-0 h-full"
+                      />
+                    )}
+
+                    {config.backgroundType === "image" && config.backgroundUrl && (
+                      <div className="absolute inset-0">
                         <div
-                          className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                          style={{ backgroundColor: config.primaryColor }}
+                          className="absolute inset-0 bg-cover bg-center"
+                          style={{ backgroundImage: `url(${config.backgroundUrl})` }}
+                        />
+                        <div
+                          className="absolute inset-0 bg-black"
+                          style={{ opacity: config.overlayOpacity / 100 }}
+                        />
+                      </div>
+                    )}
+
+                    {config.backgroundType === "video" && config.backgroundUrl && (
+                      <div className="absolute inset-0">
+                        <video
+                          ref={videoPreviewRef}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          className="absolute inset-0 w-full h-full object-cover"
                         >
-                          {config.shopName.charAt(0)}
+                          <source src={config.backgroundUrl} type="video/mp4" />
+                        </video>
+                        <div
+                          className="absolute inset-0 bg-black"
+                          style={{ opacity: config.overlayOpacity / 100 }}
+                        />
+                      </div>
+                    )}
+
+                    {/* Content Preview */}
+                    <div className="relative z-10 p-4 h-full flex flex-col">
+                      <div className="glass-panel rounded-lg px-3 py-2 mb-4">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                            style={{ backgroundColor: config.primaryColor }}
+                          >
+                            {config.shopName.charAt(0)}
+                          </div>
+                          <span className="text-white text-xs font-medium truncate">
+                            {config.shopName}
+                          </span>
                         </div>
-                        <span className="text-white text-xs font-medium truncate">
-                          {config.shopName}
-                        </span>
+                      </div>
+
+                      <div className="flex-1 flex flex-col justify-center items-center text-center">
+                        <div
+                          className="w-8 h-8 rounded-full mb-2"
+                          style={{
+                            backgroundColor: config.primaryColor,
+                            opacity: 0.2,
+                          }}
+                        />
+                        <div className="h-3 w-20 rounded bg-white/20 mb-2" />
+                        <div className="h-2 w-16 rounded bg-white/10" />
+                      </div>
+
+                      <div
+                        className="rounded-lg py-2 px-4 text-center text-xs text-white font-medium mb-4"
+                        style={{ backgroundColor: config.primaryColor }}
+                      >
+                        Reservar
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        {[1, 2, 3, 4].map((i) => (
+                          <div
+                            key={i}
+                            className="aspect-square rounded-lg bg-white/5 border border-white/10 relative overflow-hidden"
+                          >
+                            <div
+                              className="absolute bottom-0 left-0 right-0 h-1"
+                              style={{ backgroundColor: config.accentColor }}
+                            />
+                          </div>
+                        ))}
                       </div>
                     </div>
-
-                    <div className="flex-1 flex flex-col justify-center items-center text-center">
-                      <div
-                        className="w-8 h-8 rounded-full mb-2"
-                        style={{
-                          backgroundColor: config.primaryColor,
-                          opacity: 0.2,
-                        }}
-                      />
-                      <div className="h-3 w-20 rounded bg-white/20 mb-2" />
-                      <div className="h-2 w-16 rounded bg-white/10" />
-                    </div>
-
-                    <div
-                      className="rounded-lg py-2 px-4 text-center text-xs text-white font-medium mb-4"
-                      style={{ backgroundColor: config.primaryColor }}
-                    >
-                      Reservar
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      {[1, 2, 3, 4].map((i) => (
-                        <div
-                          key={i}
-                          className="aspect-square rounded-lg bg-white/5 border border-white/10 relative overflow-hidden"
-                        >
-                          <div
-                            className="absolute bottom-0 left-0 right-0 h-1"
-                            style={{ backgroundColor: config.accentColor }}
-                          />
-                        </div>
-                      ))}
-                    </div>
                   </div>
+                  <div className="absolute top-4 left-1/2 -translate-x-1/2 w-16 h-4 bg-slate-800 rounded-full" />
                 </div>
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-16 h-4 bg-slate-800 rounded-full" />
               </div>
+
+              {/* Color Summary */}
+              <div className="mt-6 flex items-center justify-center gap-4">
+                <div className="text-center">
+                  <div
+                    className="w-8 h-8 rounded-full mx-auto mb-1 shadow-lg"
+                    style={{ backgroundColor: config.primaryColor }}
+                  />
+                  <span className="text-xs text-slate-500">Principal</span>
+                </div>
+                <div className="text-center">
+                  <div
+                    className="w-8 h-8 rounded-full mx-auto mb-1 shadow-lg"
+                    style={{ backgroundColor: config.accentColor }}
+                  />
+                  <span className="text-xs text-slate-500">Acento</span>
+                </div>
+              </div>
+
+              {/* Background Type Badge */}
+              <div className="mt-4 text-center">
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/10 text-xs text-slate-300">
+                  {config.backgroundType === "preset" && <Layers className="w-3 h-3" />}
+                  {config.backgroundType === "image" && <ImageIcon className="w-3 h-3" />}
+                  {config.backgroundType === "video" && <Video className="w-3 h-3" />}
+                  {config.backgroundType === "preset" && `Efecto: ${BACKGROUND_OPTIONS.find(o => o.id === config.backgroundEffect)?.name}`}
+                  {config.backgroundType === "image" && "Imagen personalizada"}
+                  {config.backgroundType === "video" && "Video de fondo"}
+                </span>
+              </div>
+
+              <p className="text-center text-slate-500 text-xs mt-4">
+                Vista previa en tiempo real
+              </p>
             </div>
 
-            {/* Color Summary */}
-            <div className="mt-6 flex items-center justify-center gap-4">
-              <div className="text-center">
-                <div
-                  className="w-8 h-8 rounded-full mx-auto mb-1 shadow-lg"
-                  style={{ backgroundColor: config.primaryColor }}
-                />
-                <span className="text-xs text-slate-500">Principal</span>
+            {/* Quick Actions */}
+            <div className="mt-4 glass-panel rounded-2xl p-4">
+              <p className="text-slate-400 text-sm mb-3">Acciones rápidas</p>
+              <div className="space-y-2">
+                <a
+                  href={`/${user?.shopId || "demo"}`}
+                  target="_blank"
+                  className="block w-full px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm text-center transition-colors"
+                >
+                  Ver Mi Tienda →
+                </a>
+                <a
+                  href="/admin/promos"
+                  className="block w-full px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm text-center transition-colors"
+                >
+                  Crear Promo →
+                </a>
               </div>
-              <div className="text-center">
-                <div
-                  className="w-8 h-8 rounded-full mx-auto mb-1 shadow-lg"
-                  style={{ backgroundColor: config.accentColor }}
-                />
-                <span className="text-xs text-slate-500">Acento</span>
-              </div>
-            </div>
-
-            {/* Background Type Badge */}
-            <div className="mt-4 text-center">
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/10 text-xs text-slate-300">
-                {config.backgroundType === "preset" && <Layers className="w-3 h-3" />}
-                {config.backgroundType === "image" && <ImageIcon className="w-3 h-3" />}
-                {config.backgroundType === "video" && <Video className="w-3 h-3" />}
-                {config.backgroundType === "preset" && `Efecto: ${BACKGROUND_OPTIONS.find(o => o.id === config.backgroundEffect)?.name}`}
-                {config.backgroundType === "image" && "Imagen personalizada"}
-                {config.backgroundType === "video" && "Video de fondo"}
-              </span>
-            </div>
-
-            <p className="text-center text-slate-500 text-xs mt-4">
-              Vista previa en tiempo real
-            </p>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="mt-4 glass-panel rounded-2xl p-4">
-            <p className="text-slate-400 text-sm mb-3">Acciones rápidas</p>
-            <div className="space-y-2">
-              <a
-                href={`/${user?.shopId || "demo"}`}
-                target="_blank"
-                className="block w-full px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm text-center transition-colors"
-              >
-                Ver Mi Tienda →
-              </a>
-              <a
-                href="/admin/promos"
-                className="block w-full px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm text-center transition-colors"
-              >
-                Crear Promo →
-              </a>
             </div>
           </div>
         </div>
-    </div>
       </main >
     </div >
   );
