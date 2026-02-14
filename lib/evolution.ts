@@ -327,6 +327,10 @@ export function isEvolutionConfigured(): boolean {
   return Boolean(EVOLUTION_API_URL && EVOLUTION_API_KEY);
 }
 
+export function getEvolutionBaseUrl(): string {
+  return EVOLUTION_API_URL;
+}
+
 export function getInstanceName(shopSlug: string): string {
   // VERSION 2: Forcing a new instance to clear "Waiting for message" encryption issues
   // Old: shop_surprise_gifts

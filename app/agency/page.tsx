@@ -38,6 +38,7 @@ import {
   Ban,
   Building2,
   Bot,
+  Activity,
 } from "lucide-react";
 import {
   AuthProvider,
@@ -820,6 +821,13 @@ function AgencyContent() {
                 <Button variant="ghost" size="sm" className="px-2 sm:px-3 whitespace-nowrap">
                   <Building2 className="w-4 h-4" />
                   <span className="hidden sm:inline ml-2">Mi Agencia</span>
+                </Button>
+              </Link>
+
+              <Link href="/agency/system-health">
+                <Button variant="ghost" size="sm" className="px-2 sm:px-3 whitespace-nowrap text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10">
+                  <Activity className="w-4 h-4" />
+                  <span className="hidden sm:inline ml-2">Sistema</span>
                 </Button>
               </Link>
 
