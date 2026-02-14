@@ -108,7 +108,9 @@ export default function AdminSettingsPage() {
           // Audio settings
           audioEnabled: shop.backgroundAudio?.enabled || false,
           audioUrl: shop.backgroundAudio?.url || "",
-          audioVolume: shop.backgroundAudio?.volume ?? 30,
+          audioVolume: (shop.backgroundAudio?.volume && shop.backgroundAudio.volume < 1)
+            ? shop.backgroundAudio.volume * 100
+            : (shop.backgroundAudio?.volume ?? 30),
           audioLoop: shop.backgroundAudio?.loop ?? true,
         });
       }
@@ -136,7 +138,8 @@ export default function AdminSettingsPage() {
   }
   */
 
-  const handleSave = async () => {
+  const handleSave = async (e?: React.MouseEvent) => {
+    e?.preventDefault();
     if (!user?.shopId) return;
 
     setIsSaving(true);
@@ -154,10 +157,11 @@ export default function AdminSettingsPage() {
           overlayOpacity: config.overlayOpacity,
         },
         // Audio settings
+        // Audio settings
         backgroundAudio: {
           enabled: config.audioEnabled,
           url: config.audioUrl,
-          volume: config.audioVolume / 100, // Convert to 0-1 range
+          volume: config.audioVolume, // Save as 0-100 to match read logic
           loop: config.audioLoop,
         },
       };
