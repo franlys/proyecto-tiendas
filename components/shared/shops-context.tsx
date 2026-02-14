@@ -210,6 +210,8 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
           slogan: data.slogan,
           background: data.background,
           social: data.social,
+          // Bank accounts (for payment info)
+          bankAccounts: data.bankAccounts || [],
         } as ManagedShop);
       });
 

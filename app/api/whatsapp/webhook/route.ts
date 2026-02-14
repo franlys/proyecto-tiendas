@@ -583,11 +583,19 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
     // ---------------------------------------------------------
     // 4. NLP & DOMINICAN SLANG DETECTION
     // ---------------------------------------------------------
-    const { detectIntent } = await import("@/lib/nlp/dominican-slang");
-    const detectedIntent = detectIntent(text);
 
-    // Process ALL intents including UNKNOWN (to ask clarifying questions)
-    if (true) { // Always process NLP to give intelligent responses
+    // GUARD: Skip NLP for order messages - let order processing handle them first
+    const isOrderMessage = text.includes("🆔 Pedido:") || text.includes("Pedido:") ||
+                           text.match(/^confirmar\s+/i) || text.includes("Total:") ||
+                           text.includes("Productos:") || text.length > 300;
+
+    if (isOrderMessage) {
+      console.log(`[NLP] Skipping NLP - detected order message pattern`);
+      // Don't return - fall through to order processing below
+    } else {
+      const { detectIntent } = await import("@/lib/nlp/dominican-slang");
+      const detectedIntent = detectIntent(text);
+
       console.log(`🇩🇴 [NLP] Detected Intent: ${detectedIntent} for message: "${text}"`);
 
       let responseText = "";
@@ -845,7 +853,7 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
         await sendTextMessage(instance, phone, responseText);
         return;
       }
-    }
+    } // End of NLP else block
 
     // ---------------------------------------------------------
     // 5. EXISTING AI / FLOW LOGIC
