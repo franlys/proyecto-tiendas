@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Plus, Minus, ShoppingBag, Tag, ChevronDown, Check } from "lucide-react";
+import { Plus, Minus, ShoppingBag, Tag, ChevronDown, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/components/shared";
 import type { Product, ProductVariant } from "@/lib/constants";
+import type { SelectedExtra } from "@/lib/types/product-extra.types";
+import { ExtrasSelector } from "@/components/shop/extras-selector";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ProductCardProps {
@@ -13,12 +15,14 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const { addProduct, removeItem, getProductQuantity, updateProductQuantity, getVariantQuantity, updateVariantQuantity, removeVariant } = useCart(); // Assuming expanded UseCart
+  const { addProduct, removeItem, getProductQuantity, updateProductQuantity, getVariantQuantity, updateVariantQuantity, removeVariant } = useCart();
 
-  // State for variant selection
-  const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
+  // State for modal selection
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const hasVariants = product.variants && product.variants.length > 0;
+  const hasExtras = product.extras && product.extras.length > 0;
+  const hasOptions = hasVariants || hasExtras; // Show "Options" button if variants OR extras
 
   // Base price (lowest)
   const basePrice = hasVariants
@@ -88,13 +92,13 @@ export function ProductCard({ product }: ProductCardProps) {
           {/* Actions */}
           {!isOutOfStock && (
             <div className="absolute bottom-3 right-3 z-10">
-              {hasVariants ? (
-                /* Variant Selector Button */
+              {hasOptions ? (
+                /* Options Button (Variants and/or Extras) */
                 <button
-                  onClick={() => setIsVariantModalOpen(true)}
+                  onClick={() => setIsModalOpen(true)}
                   className="px-4 py-2 rounded-full bg-white/90 hover:bg-white text-black text-xs font-bold uppercase tracking-wide shadow-lg transition-all active:scale-95"
                 >
-                  Opciones
+                  {hasExtras ? "Personalizar" : "Opciones"}
                 </button>
               ) : (
                 /* Simple Add Toggle */
@@ -155,13 +159,12 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
       </div>
 
-      {/* Variants Modal */}
+      {/* Product Options Modal (Variants and/or Extras) */}
       <AnimatePresence>
-        {isVariantModalOpen && hasVariants && (
-          <VariantsModal
+        {isModalOpen && hasOptions && (
+          <ProductOptionsModal
             product={product}
-            onClose={() => setIsVariantModalOpen(false)}
-          // We pass cart methods here if needed, or use hook inside modal
+            onClose={() => setIsModalOpen(false)}
           />
         )}
       </AnimatePresence>
@@ -169,8 +172,36 @@ export function ProductCard({ product }: ProductCardProps) {
   );
 }
 
-function VariantsModal({ product, onClose }: { product: Product, onClose: () => void }) {
+function ProductOptionsModal({ product, onClose }: { product: Product, onClose: () => void }) {
   const { addProduct, getVariantQuantity, removeVariant, updateVariantQuantity } = useCart();
+
+  const hasVariants = product.variants && product.variants.length > 0;
+  const hasExtras = product.extras && product.extras.length > 0;
+
+  // State for selection
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
+    hasVariants ? null : null // Will be set when user selects
+  );
+  const [selectedExtras, setSelectedExtras] = useState<SelectedExtra[]>([]);
+  const [quantity, setQuantity] = useState(1);
+
+  // Calculate total price
+  const basePrice = selectedVariant?.price || product.promoPrice || product.price;
+  const extrasTotal = selectedExtras.reduce((sum, e) => sum + (e.price * e.quantity), 0);
+  const totalPrice = (basePrice + extrasTotal) * quantity;
+
+  // Handle add to cart
+  const handleAddToCart = () => {
+    if (hasVariants && !selectedVariant) return; // Must select variant
+
+    if (product.extrasRequired && selectedExtras.length === 0) return; // Must select extras
+
+    addProduct(product, quantity, selectedVariant || undefined, selectedExtras.length > 0 ? selectedExtras : undefined);
+    onClose();
+  };
+
+  // Check if can add
+  const canAdd = (!hasVariants || selectedVariant) && (!product.extrasRequired || selectedExtras.length > 0);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4">
@@ -185,69 +216,130 @@ function VariantsModal({ product, onClose }: { product: Product, onClose: () => 
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
-        className="relative w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl p-4 sm:p-6"
+        className="relative w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl"
       >
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h3 className="text-lg font-bold text-white">{product.name}</h3>
-            <p className="text-sm text-zinc-400">Selecciona una opción</p>
+        {/* Header with Image */}
+        <div className="relative h-32 bg-zinc-800">
+          {product.image && (
+            <Image
+              src={product.image}
+              alt={product.name}
+              fill
+              className="object-cover opacity-50"
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent" />
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 p-2 rounded-full bg-black/50 text-white hover:bg-black/70"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <div className="absolute bottom-3 left-4">
+            <h3 className="text-xl font-bold text-white">{product.name}</h3>
+            <p className="text-sm text-zinc-400">{product.description}</p>
           </div>
-          <button onClick={onClose} className="p-1 rounded-full bg-zinc-800 text-zinc-400"><span className="sr-only">Cerrar</span><ChevronDown /></button>
         </div>
 
-        <div className="space-y-3 max-h-[60vh] overflow-y-auto">
-          {product.variants!.map(variant => {
-            const qty = getVariantQuantity(product.id, variant.id);
-            const stock = variant.stock || 0;
+        <div className="p-4 space-y-4 max-h-[50vh] overflow-y-auto">
+          {/* Variants Section */}
+          {hasVariants && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-white">
+                Tamaño / Tipo <span className="text-red-400">*</span>
+              </h4>
+              <div className="grid grid-cols-2 gap-2">
+                {product.variants!.map(variant => {
+                  const isSelected = selectedVariant?.id === variant.id;
+                  const stock = variant.stock || 0;
+                  const isOutOfStock = stock === 0;
 
-            return (
-              <div key={variant.id} className="flex flex-col xs:flex-row xs:items-center justify-between p-2 sm:p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/50 gap-2 xs:gap-0">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-white">{variant.name}</span>
-                    {stock < 5 && stock > 0 && <span className="text-[10px] text-amber-500 bg-amber-500/10 px-1.5 rounded">¡Pocos!</span>}
-                  </div>
-                  {variant.description && (
-                    <p className="text-xs text-zinc-400 mt-0.5 mb-1">{variant.description}</p>
-                  )}
-                  <p className="text-sm font-semibold text-emerald-400">${variant.price.toLocaleString()}</p>
-                </div>
-
-                <div className="flex-shrink-0 self-end xs:self-auto">
-                  {qty > 0 ? (
-                    <div className="flex items-center gap-1 sm:gap-2 bg-zinc-900 rounded-lg p-0.5 sm:p-1 border border-zinc-700">
-                      <button
-                        onClick={() => qty > 1 ? updateVariantQuantity(product.id, variant.id, qty - 1) : removeVariant(product.id, variant.id)}
-                        className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded bg-zinc-800 text-zinc-400 hover:text-white text-sm"
-                      >-</button>
-                      <span className="w-5 sm:w-6 text-center text-white text-xs sm:text-sm font-medium">{qty}</span>
-                      <button
-                        onClick={() => stock > qty && addProduct(product, 1, variant)}
-                        className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded bg-indigo-600/80 text-white hover:bg-indigo-600 text-sm"
-                      >+</button>
-                    </div>
-                  ) : (
+                  return (
                     <button
-                      onClick={() => stock > 0 && addProduct(product, 1, variant)}
-                      disabled={stock === 0}
+                      key={variant.id}
+                      onClick={() => !isOutOfStock && setSelectedVariant(variant)}
+                      disabled={isOutOfStock}
                       className={cn(
-                        "px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors",
-                        stock === 0 ? "bg-zinc-800 text-zinc-600 cursor-not-allowed" : "bg-white text-black hover:bg-zinc-200"
+                        "p-3 rounded-xl border text-left transition-all",
+                        isSelected
+                          ? "border-primary bg-primary/10"
+                          : isOutOfStock
+                            ? "border-zinc-700 bg-zinc-800/50 opacity-50 cursor-not-allowed"
+                            : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
                       )}
                     >
-                      {stock === 0 ? "Agotado" : "Agregar"}
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-white text-sm">{variant.name}</span>
+                        {isSelected && <Check className="w-4 h-4 text-primary" />}
+                      </div>
+                      {variant.description && (
+                        <p className="text-xs text-zinc-400 mt-0.5">{variant.description}</p>
+                      )}
+                      <p className="text-sm font-semibold text-emerald-400 mt-1">
+                        ${variant.price.toLocaleString()}
+                      </p>
+                      {isOutOfStock && <span className="text-xs text-red-400">Agotado</span>}
                     </button>
-                  )}
-                </div>
+                  );
+                })}
               </div>
-            )
-          })}
+            </div>
+          )}
+
+          {/* Extras Section */}
+          {hasExtras && (
+            <ExtrasSelector
+              extras={product.extras!}
+              selectedExtras={selectedExtras}
+              onExtrasChange={setSelectedExtras}
+              maxExtras={product.maxExtras}
+              required={product.extrasRequired}
+            />
+          )}
+
+          {/* Quantity Selector */}
+          <div className="flex items-center justify-between pt-2 border-t border-zinc-800">
+            <span className="text-sm text-zinc-400">Cantidad:</span>
+            <div className="flex items-center gap-3 bg-zinc-800 rounded-lg p-1">
+              <button
+                onClick={() => quantity > 1 && setQuantity(q => q - 1)}
+                className="w-8 h-8 flex items-center justify-center rounded bg-zinc-700 text-white hover:bg-zinc-600"
+              >
+                <Minus className="w-4 h-4" />
+              </button>
+              <span className="w-8 text-center text-white font-bold">{quantity}</span>
+              <button
+                onClick={() => setQuantity(q => q + 1)}
+                className="w-8 h-8 flex items-center justify-center rounded bg-zinc-700 text-white hover:bg-zinc-600"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-6">
-          <button onClick={onClose} className="w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl font-medium transition-colors">
-            Listo
+        {/* Footer with Total and Add Button */}
+        <div className="p-4 border-t border-zinc-800 bg-zinc-900/50">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-zinc-400">Total:</span>
+            <span className="text-2xl font-bold text-white">${totalPrice.toLocaleString()}</span>
+          </div>
+          <button
+            onClick={handleAddToCart}
+            disabled={!canAdd}
+            className={cn(
+              "w-full py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2",
+              canAdd
+                ? "bg-primary hover:bg-primary/90 text-white"
+                : "bg-zinc-800 text-zinc-500 cursor-not-allowed"
+            )}
+          >
+            <ShoppingBag className="w-5 h-5" />
+            Agregar al Carrito
           </button>
+          {!canAdd && hasVariants && !selectedVariant && (
+            <p className="text-xs text-amber-400 text-center mt-2">Selecciona un tamaño/tipo</p>
+          )}
         </div>
       </motion.div>
     </div>

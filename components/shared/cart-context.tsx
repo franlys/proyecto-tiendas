@@ -9,6 +9,7 @@ import {
   useEffect
 } from "react";
 import type { Service, Product, ProductVariant } from "@/lib/constants";
+import type { SelectedExtra } from "@/lib/types/product-extra.types";
 
 // Cart item types
 export type CartItemType = "service" | "product";
@@ -30,6 +31,10 @@ export interface ProductCartItem {
   promoPrice?: number;
   image: string;
   quantity: number;
+
+  // Extras/Addons support
+  selectedExtras?: SelectedExtra[];
+  extrasTotal?: number; // Pre-calculated total of extras
 }
 
 export type CartItem = ServiceCartItem | ProductCartItem;
@@ -39,11 +44,11 @@ interface CartContextValue {
   services: ServiceCartItem[];
   products: ProductCartItem[];
   addService: (service: Service) => void;
-  addProduct: (product: Product, quantity?: number, variant?: ProductVariant) => void;
-  removeItem: (id: string, variantId?: string) => void;
+  addProduct: (product: Product, quantity?: number, variant?: ProductVariant, extras?: SelectedExtra[]) => void;
+  removeItem: (id: string, variantId?: string, extrasKey?: string) => void;
   updateProductQuantity: (productId: string, quantity: number, variantId?: string) => void;
 
-  // New: Variant specifics
+  // Variant specifics
   updateVariantQuantity: (productId: string, variantId: string, quantity: number) => void;
   removeVariant: (productId: string, variantId: string) => void;
   getVariantQuantity: (productId: string, variantId: string) => number;
@@ -115,19 +120,37 @@ export function CartProvider({ children, shopId }: CartProviderProps & { shopId?
     });
   }, []);
 
-  // Add product to cart (with quantity)
-  const addProduct = useCallback((product: Product, quantity: number = 1, variant?: ProductVariant) => {
+  // Helper to generate a unique key for cart item (product + variant + extras combo)
+  const getExtrasKey = (extras?: SelectedExtra[]) => {
+    if (!extras || extras.length === 0) return "";
+    return extras
+      .map(e => `${e.extraId}:${e.quantity}`)
+      .sort()
+      .join("|");
+  };
+
+  // Calculate extras total
+  const calculateExtrasTotal = (extras?: SelectedExtra[]) => {
+    if (!extras || extras.length === 0) return 0;
+    return extras.reduce((sum, e) => sum + (e.price * e.quantity), 0);
+  };
+
+  // Add product to cart (with quantity, variant, and extras)
+  const addProduct = useCallback((product: Product, quantity: number = 1, variant?: ProductVariant, extras?: SelectedExtra[]) => {
     setItems((prev) => {
-      // Find existing item matching ProductID AND VariantID
+      const extrasKey = getExtrasKey(extras);
+
+      // Find existing item matching ProductID, VariantID, AND same extras combination
       const existingIndex = prev.findIndex(
         (item) =>
           item.itemType === "product" &&
           item.id === product.id &&
-          item.variantId === variant?.id
+          item.variantId === variant?.id &&
+          getExtrasKey((item as ProductCartItem).selectedExtras) === extrasKey
       );
 
       if (existingIndex >= 0) {
-        // Update quantity
+        // Update quantity of existing item with same extras
         const updated = [...prev];
         const existing = updated[existingIndex] as ProductCartItem;
         updated[existingIndex] = {
@@ -139,7 +162,8 @@ export function CartProvider({ children, shopId }: CartProviderProps & { shopId?
 
       // Determine price to use
       const unitPrice = variant ? variant.price : product.price;
-      const unitPromo = variant ? undefined : product.promoPrice; // Variants usually don't have separate promo price in our model yet, or they override
+      const unitPromo = variant ? undefined : product.promoPrice;
+      const extrasTotal = calculateExtrasTotal(extras);
 
       // Add new product
       const productItem: ProductCartItem = {
@@ -152,6 +176,8 @@ export function CartProvider({ children, shopId }: CartProviderProps & { shopId?
         promoPrice: unitPromo,
         image: product.image,
         quantity,
+        selectedExtras: extras,
+        extrasTotal,
       };
       return [...prev, productItem];
     });
@@ -232,8 +258,10 @@ export function CartProvider({ children, shopId }: CartProviderProps & { shopId?
 
   const totalPrice = items.reduce((sum, item) => {
     if (item.itemType === "product") {
-      const price = item.promoPrice || item.price;
-      return sum + price * item.quantity;
+      const basePrice = item.promoPrice || item.price;
+      const extrasPrice = item.extrasTotal || 0;
+      // (basePrice + extras) * quantity
+      return sum + (basePrice + extrasPrice) * item.quantity;
     }
     return sum + item.price * item.quantity;
   }, 0);

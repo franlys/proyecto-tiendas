@@ -13,7 +13,9 @@ export interface ShopTheme {
 // Importar y re-exportar desde el nuevo sistema de tipos
 import type { BusinessType } from "@/lib/types/business.types";
 import { BUSINESS_TYPE_CONFIG as FULL_BUSINESS_CONFIG } from "@/lib/types/business.types";
+import type { ProductExtra } from "@/lib/types/product-extra.types";
 export type { BusinessType };
+export type { ProductExtra };
 
 // Las 6 categorías principales de UI (legacy)
 export type MainBusinessCategory = "beauty" | "retail" | "repair" | "restaurant" | "rentcar" | "technology";
@@ -643,8 +645,14 @@ export interface Product {
   category: ProductCategory;
   image: string;
   featured?: boolean;
-  // New: Variants support
+  // Variants support (sizes, types)
   variants?: ProductVariant[];
+  // Extras/Addons support (toppings, additions)
+  extras?: ProductExtra[];
+  // If true, customer must select at least one extra
+  extrasRequired?: boolean;
+  // Maximum number of extras allowed
+  maxExtras?: number;
 }
 
 // Product Category Labels

@@ -63,13 +63,28 @@ export function FloatingCart() {
             unitPrice: s.price,
             total: s.price
           })),
-          ...products.map((p) => ({
-            productId: p.id,
-            productName: p.name + (p.variantName ? ` (${p.variantName})` : ""),
-            quantity: p.quantity,
-            unitPrice: p.promoPrice || p.price,
-            total: (p.promoPrice || p.price) * p.quantity
-          })),
+          ...products.map((p) => {
+            const basePrice = p.promoPrice || p.price;
+            const extrasTotal = p.extrasTotal || 0;
+            const itemTotal = (basePrice + extrasTotal) * p.quantity;
+
+            // Build product name with variant and extras
+            let productName = p.name;
+            if (p.variantName) productName += ` (${p.variantName})`;
+            if (p.selectedExtras && p.selectedExtras.length > 0) {
+              const extrasStr = p.selectedExtras.map(e => e.quantity > 1 ? `${e.name} x${e.quantity}` : e.name).join(", ");
+              productName += ` + ${extrasStr}`;
+            }
+
+            return {
+              productId: p.id,
+              productName,
+              quantity: p.quantity,
+              unitPrice: basePrice + extrasTotal, // Include extras in unit price
+              total: itemTotal,
+              extras: p.selectedExtras || [] // Store extras detail
+            };
+          }),
         ],
         subtotal: totalPrice,
         tax: 0,
@@ -146,14 +161,23 @@ export function FloatingCart() {
       if (hasProducts) {
         message += `🛍️ *Productos:*\n`;
         products.forEach((product) => {
-          const price = product.promoPrice || product.price;
-          const subtotal = price * product.quantity;
+          const basePrice = product.promoPrice || product.price;
+          const extrasTotal = product.extrasTotal || 0;
+          const subtotal = (basePrice + extrasTotal) * product.quantity;
           const variantLabel = product.variantName ? ` [${product.variantName}]` : "";
 
           if (product.quantity > 1) {
             message += `- ${product.name}${variantLabel} (x${product.quantity}): $${subtotal.toLocaleString()}\n`;
           } else {
             message += `- ${product.name}${variantLabel}: $${subtotal.toLocaleString()}\n`;
+          }
+
+          // Add extras detail
+          if (product.selectedExtras && product.selectedExtras.length > 0) {
+            product.selectedExtras.forEach((extra) => {
+              const extraLabel = extra.quantity > 1 ? `${extra.name} x${extra.quantity}` : extra.name;
+              message += `  ↳ + ${extraLabel} ($${(extra.price * extra.quantity).toLocaleString()})\n`;
+            });
           }
         });
         message += `\n`;
@@ -329,16 +353,24 @@ export function FloatingCart() {
             <div className={hasServices ? "mt-3" : ""}>
               <p className="text-xs text-slate-500 mb-1">🛍️ Productos</p>
               <div className="flex flex-wrap gap-2">
-                {products.map((product) => (
-                  <span
-                    key={product.variantId ? `${product.id}-${product.variantId}` : product.id}
-                    className="px-3 py-1 rounded-full bg-gold/20 text-sm text-slate-300"
-                  >
-                    {product.name}
-                    {product.variantName && <span className="text-gold opacity-80"> ({product.variantName})</span>}
-                    {product.quantity > 1 && ` (x${product.quantity})`}
-                  </span>
-                ))}
+                {products.map((product, idx) => {
+                  const extrasKey = product.selectedExtras?.map(e => e.extraId).join("-") || "";
+                  const uniqueKey = `${product.id}-${product.variantId || ""}-${extrasKey}-${idx}`;
+
+                  return (
+                    <span
+                      key={uniqueKey}
+                      className="px-3 py-1 rounded-full bg-gold/20 text-sm text-slate-300"
+                    >
+                      {product.name}
+                      {product.variantName && <span className="text-gold opacity-80"> ({product.variantName})</span>}
+                      {product.selectedExtras && product.selectedExtras.length > 0 && (
+                        <span className="text-primary opacity-80"> +{product.selectedExtras.length} extras</span>
+                      )}
+                      {product.quantity > 1 && ` (x${product.quantity})`}
+                    </span>
+                  );
+                })}
               </div>
             </div>
           )}
