@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/components/shared";
+import { useAuth, AuthProvider } from "@/components/shared";
 import { useRouter } from "next/navigation";
 import {
     RefreshCw,
@@ -79,7 +79,7 @@ const CHECK_ICONS: Record<string, any> = {
     "Cron Jobs": Clock,
 };
 
-export default function SystemHealthPage() {
+function SystemHealthContent() {
     const { user, isSuperAdmin, isLoading: authLoading } = useAuth();
     const router = useRouter();
 
@@ -382,5 +382,13 @@ export default function SystemHealthPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function SystemHealthPage() {
+    return (
+        <AuthProvider>
+            <SystemHealthContent />
+        </AuthProvider>
     );
 }

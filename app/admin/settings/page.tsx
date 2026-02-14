@@ -19,6 +19,8 @@ import {
   Link2,
   Play,
   Loader2,
+  Volume2,
+  Music,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import {
@@ -45,6 +47,11 @@ interface ShopConfig {
   backgroundType: BackgroundType;
   backgroundUrl: string;
   overlayOpacity: number;
+  // Audio settings
+  audioEnabled: boolean;
+  audioUrl: string;
+  audioVolume: number;
+  audioLoop: boolean;
 }
 
 const STORAGE_KEY = "shop-visual-config";
@@ -72,6 +79,10 @@ export default function AdminSettingsPage() {
     backgroundType: "preset",
     backgroundUrl: "",
     overlayOpacity: 40,
+    audioEnabled: false,
+    audioUrl: "",
+    audioVolume: 30,
+    audioLoop: true,
   });
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false); // Add saving state
@@ -94,6 +105,11 @@ export default function AdminSettingsPage() {
           backgroundType: (shop.background?.type || "preset") as BackgroundType,
           backgroundUrl: bgUrl,
           overlayOpacity: shop.background?.overlayOpacity || 40,
+          // Audio settings
+          audioEnabled: shop.backgroundAudio?.enabled || false,
+          audioUrl: shop.backgroundAudio?.url || "",
+          audioVolume: shop.backgroundAudio?.volume ?? 30,
+          audioLoop: shop.backgroundAudio?.loop ?? true,
         });
       }
     }
@@ -133,7 +149,14 @@ export default function AdminSettingsPage() {
           type: config.backgroundType,
           effect: config.backgroundEffect,
           overlayOpacity: config.overlayOpacity,
-        }
+        },
+        // Audio settings
+        backgroundAudio: {
+          enabled: config.audioEnabled,
+          url: config.audioUrl,
+          volume: config.audioVolume / 100, // Convert to 0-1 range
+          loop: config.audioLoop,
+        },
       };
 
       // Add URL based on type
@@ -641,6 +664,110 @@ export default function AdminSettingsPage() {
                   <div className="flex justify-between text-xs text-slate-500 mt-1">
                     <span>Sin overlay</span>
                     <span>Muy oscuro</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Background Audio Settings */}
+            <div className="glass-panel rounded-2xl p-6">
+              <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
+                <Music className="w-4 h-4 text-gold" />
+                Audio de Fondo
+              </h2>
+
+              <p className="text-sm text-slate-400 mb-4">
+                Agrega música ambiental a tu tienda. El usuario puede silenciarlo con un botón flotante.
+              </p>
+
+              {/* Enable Toggle */}
+              <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 mb-4">
+                <div className="flex items-center gap-3">
+                  <Volume2 className="w-5 h-5 text-slate-400" />
+                  <div>
+                    <p className="text-white font-medium">Habilitar Audio</p>
+                    <p className="text-xs text-slate-500">Música ambiental para visitantes</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => updateConfig({ audioEnabled: !config.audioEnabled })}
+                  className={cn(
+                    "relative w-12 h-6 rounded-full transition-colors",
+                    config.audioEnabled ? "bg-primary" : "bg-white/20"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
+                      config.audioEnabled ? "translate-x-7" : "translate-x-1"
+                    )}
+                  />
+                </button>
+              </div>
+
+              {config.audioEnabled && (
+                <div className="space-y-4">
+                  {/* Audio URL */}
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-2">
+                      URL del Audio (MP3, WAV, OGG)
+                    </label>
+                    <div className="relative">
+                      <Music className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type="url"
+                        value={config.audioUrl}
+                        onChange={(e) => updateConfig({ audioUrl: e.target.value })}
+                        placeholder="https://ejemplo.com/musica.mp3"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors text-sm"
+                      />
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2">
+                      Usa enlaces directos a archivos de audio (no YouTube). Recomendamos archivos MP3 ligeros.
+                    </p>
+                  </div>
+
+                  {/* Volume Slider */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-sm text-slate-400 flex items-center gap-2">
+                        <Volume2 className="w-4 h-4" />
+                        Volumen
+                      </label>
+                      <span className="text-white font-mono text-sm">{config.audioVolume}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="5"
+                      max="100"
+                      step="5"
+                      value={config.audioVolume}
+                      onChange={(e) => updateConfig({ audioVolume: parseInt(e.target.value) })}
+                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-lg"
+                    />
+                    <div className="flex justify-between text-xs text-slate-500 mt-1">
+                      <span>Bajo</span>
+                      <span>Alto</span>
+                    </div>
+                  </div>
+
+                  {/* Loop Toggle */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                    <span className="text-sm text-slate-300">Repetir en bucle</span>
+                    <button
+                      onClick={() => updateConfig({ audioLoop: !config.audioLoop })}
+                      className={cn(
+                        "relative w-10 h-5 rounded-full transition-colors",
+                        config.audioLoop ? "bg-primary" : "bg-white/20"
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform",
+                          config.audioLoop ? "translate-x-5" : "translate-x-0.5"
+                        )}
+                      />
+                    </button>
                   </div>
                 </div>
               )}

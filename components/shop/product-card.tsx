@@ -29,7 +29,9 @@ export function ProductCard({ product }: ProductCardProps) {
     ? Math.min(...product.variants!.map(v => v.price))
     : (product.promoPrice || product.price);
 
-  const isOutOfStock = product.stock === 0; // Global stock check
+  // Stock check - convert to number to handle string values from Firestore
+  const stockNumber = Number(product.stock) || 0;
+  const isOutOfStock = stockNumber === 0;
   const hasPromo = !!product.promoPrice;
 
 
@@ -38,7 +40,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const simpleInCart = simpleQuantity > 0;
 
   const handleSimpleAdd = () => {
-    if (!isOutOfStock && simpleQuantity < product.stock) {
+    if (!isOutOfStock && simpleQuantity < stockNumber) {
       addProduct(product, 1);
     }
   };
