@@ -636,22 +636,23 @@ function DashboardContent({ isSuperAdmin, shop }: { isSuperAdmin: boolean; shop?
             <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
           </Link>
 
-          {/* Phase 21: Settings only for Super Admin */}
-          {isSuperAdmin ? (
-            <Link
-              href="/admin/settings"
-              className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
-            >
-              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
-                <Settings className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex-1">
-                <p className="text-white font-medium">Configuración</p>
-                <p className="text-xs text-slate-400">Tema y visuales</p>
-              </div>
-              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
-            </Link>
-          ) : (
+          {/* Settings available for everyone */}
+          <Link
+            href="/admin/settings"
+            className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
+              <Settings className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="text-white font-medium">Configuración</p>
+              <p className="text-xs text-slate-400">Tema y visuales</p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+          </Link>
+
+          {/* Billing only for Shop Owner */}
+          {!isSuperAdmin && (
             <Link
               href="/admin/billing"
               className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
@@ -814,15 +815,13 @@ function AdminDashboardWithSubscription() {
                     <span className="hidden sm:inline ml-1">Promos</span>
                   </Button>
                 </Link>
-                {/* Phase 21: Settings only visible to Super Admin */}
-                {isSuperAdmin && (
-                  <Link href="/admin/settings">
-                    <Button variant="ghost" size="sm" className="px-2 sm:px-3">
-                      <Settings className="w-4 h-4" />
-                      <span className="hidden sm:inline ml-1">Config</span>
-                    </Button>
-                  </Link>
-                )}
+                {/* Phase 21: Settings visible to everyone now */}
+                <Link href="/admin/settings">
+                  <Button variant="ghost" size="sm" className="px-2 sm:px-3">
+                    <Settings className="w-4 h-4" />
+                    <span className="hidden sm:inline ml-1">Config</span>
+                  </Button>
+                </Link>
                 {/* Shop Profile for Shop Owners */}
                 {!isSuperAdmin && (
                   <Link href="/admin/profile">

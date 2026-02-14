@@ -185,6 +185,13 @@ export interface ShopBackground {
   contact?: string;
 }
 
+export interface BackgroundAudio {
+  enabled: boolean;
+  url: string;
+  volume: number; // 0-1
+  loop: boolean;
+}
+
 export interface ShopSchedule {
   monday?: { open: string; close: string; closed?: boolean };
   tuesday?: { open: string; close: string; closed?: boolean };
@@ -235,13 +242,7 @@ export interface ShopConfig {
   ownerPassword?: string;
   features?: FeatureId[];
   // Background audio/music
-  backgroundAudio?: {
-    enabled: boolean;
-    url: string;        // URL to audio file (Firebase Storage, etc.)
-    volume?: number;    // 0-1, default 0.3
-    autoplay?: boolean; // Default true (muted until user interaction)
-    loop?: boolean;     // Default true
-  };
+  backgroundAudio?: BackgroundAudio;
 }
 
 // ============================================

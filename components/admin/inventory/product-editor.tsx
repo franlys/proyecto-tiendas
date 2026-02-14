@@ -632,16 +632,24 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId }: Prod
                                     <div className="flex items-center justify-between">
                                         <h3 className="text-lg font-semibold text-white">Extras / Toppings</h3>
                                         <div className="flex items-center gap-2">
-                                            <input
-                                                type="checkbox"
-                                                id="hasExtras"
-                                                checked={hasExtras}
-                                                onChange={(e) => setHasExtras(e.target.checked)}
-                                                className="w-4 h-4 rounded bg-zinc-800 border-zinc-600 text-indigo-500 focus:ring-indigo-500"
-                                            />
-                                            <label htmlFor="hasExtras" className="text-sm text-zinc-300 cursor-pointer select-none">
-                                                Este producto tiene extras (Toppings, Adiciones)
-                                            </label>
+                                            <div className="flex items-center gap-2">
+                                                {/* Toggle switch style for better visibility */}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setHasExtras(!hasExtras)}
+                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-zinc-900 ${hasExtras ? 'bg-indigo-600' : 'bg-zinc-700'}`}
+                                                >
+                                                    <span
+                                                        className={`${hasExtras ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                                                    />
+                                                </button>
+                                                <span
+                                                    onClick={() => setHasExtras(!hasExtras)}
+                                                    className="text-sm text-zinc-300 cursor-pointer select-none hover:text-white transition-colors"
+                                                >
+                                                    Activar Extras (Toppings, Opciones)
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
 

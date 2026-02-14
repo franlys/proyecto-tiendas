@@ -38,6 +38,8 @@ import {
     Video,
     Layers,
     MonitorPlay,
+    Music,
+    Volume2,
 } from "lucide-react";
 import {
     AuthProvider,
@@ -163,6 +165,12 @@ function ShopDetailContent() {
     const [servicesBackground, setServicesBackground] = useState("");
     const [productsBackground, setProductsBackground] = useState("");
     const [contactBackground, setContactBackground] = useState("");
+
+    // Audio Configuration States
+    const [audioEnabled, setAudioEnabled] = useState(false);
+    const [audioUrl, setAudioUrl] = useState("");
+    const [audioVolume, setAudioVolume] = useState(30);
+    const [audioLoop, setAudioLoop] = useState(true);
 
     // Security State
     const [newPassword, setNewPassword] = useState("");
@@ -532,6 +540,11 @@ function ShopDetailContent() {
                 setServicesBackground(foundShop.background?.services || "");
                 setProductsBackground(foundShop.background?.products || "");
                 setContactBackground(foundShop.background?.contact || "");
+                // Load audio configuration
+                setAudioEnabled(foundShop.backgroundAudio?.enabled || false);
+                setAudioUrl(foundShop.backgroundAudio?.url || "");
+                setAudioVolume((foundShop.backgroundAudio?.volume ?? 0.3) * 100);
+                setAudioLoop(foundShop.backgroundAudio?.loop ?? true);
                 setLoading(false);
             } else {
                 console.log("🔧 [SHOP-CONFIG] Shop not found, redirecting to agency", { slug: params.slug });
@@ -1339,6 +1352,115 @@ function ShopDetailContent() {
                                     </div>
                                 </div>
 
+                                {/* Audio de Fondo */}
+                                <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-6">
+                                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                        <Music className="w-5 h-5 text-emerald-400" />
+                                        Audio de Fondo
+                                        <span className="text-xs font-normal text-slate-400 ml-2">(Opcional)</span>
+                                    </h3>
+                                    <p className="text-sm text-slate-400 mb-4">
+                                        Agrega música ambiental a tu tienda. El audio se reproducirá automáticamente cuando el visitante interactúe con la página.
+                                    </p>
+
+                                    {/* Toggle Activar */}
+                                    <div
+                                        className="flex items-center justify-between p-3 rounded-xl bg-black/20 hover:bg-black/30 transition-colors cursor-pointer"
+                                        onClick={() => setAudioEnabled(!audioEnabled)}
+                                    >
+                                        <div>
+                                            <p className="font-medium text-white">Activar Audio</p>
+                                            <p className="text-xs text-slate-400">El audio se reproducirá al interactuar con la página</p>
+                                        </div>
+                                        <div
+                                            className={`w-12 h-6 rounded-full relative transition-colors ${audioEnabled ? "bg-emerald-500" : "bg-slate-600"}`}
+                                        >
+                                            <div
+                                                className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${audioEnabled ? "translate-x-7" : "translate-x-1"}`}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {audioEnabled && (
+                                        <div className="space-y-4 pt-2">
+                                            {/* URL del Audio */}
+                                            <div className="space-y-2">
+                                                <label className="block text-sm font-medium text-slate-300">
+                                                    URL del Audio (MP3)
+                                                </label>
+                                                <div className="flex gap-2">
+                                                    <div className="px-3 py-3 bg-emerald-500/20 border border-emerald-500/20 rounded-xl text-emerald-400">
+                                                        <Music className="w-5 h-5" />
+                                                    </div>
+                                                    <input
+                                                        type="text"
+                                                        value={audioUrl}
+                                                        onChange={(e) => setAudioUrl(e.target.value)}
+                                                        placeholder="https://ejemplo.com/musica.mp3"
+                                                        className="flex-1 px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white text-sm"
+                                                    />
+                                                </div>
+                                                <p className="text-xs text-slate-500">
+                                                    Formatos soportados: MP3, WAV, OGG. Usa una URL directa al archivo de audio.
+                                                </p>
+                                            </div>
+
+                                            {/* Subir Audio */}
+                                            <FirebaseImageUpload
+                                                value={audioUrl}
+                                                onChange={setAudioUrl}
+                                                folder={`shops/${shop?.slug || "temp"}/audio`}
+                                                shopId={shop?.slug || "temp"}
+                                                label="O sube un archivo de audio"
+                                                accept="audio"
+                                                maxSizeMB={15}
+                                            />
+
+                                            {/* Volumen */}
+                                            <div className="space-y-3">
+                                                <label className="block text-sm font-medium text-slate-300 flex items-center gap-2">
+                                                    <Volume2 className="w-4 h-4" />
+                                                    Volumen: {audioVolume}%
+                                                </label>
+                                                <input
+                                                    type="range"
+                                                    min="0"
+                                                    max="100"
+                                                    value={audioVolume}
+                                                    onChange={(e) => setAudioVolume(parseInt(e.target.value))}
+                                                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                                                />
+                                            </div>
+
+                                            {/* Loop */}
+                                            <div
+                                                className="flex items-center justify-between p-3 rounded-xl bg-black/20 hover:bg-black/30 transition-colors cursor-pointer"
+                                                onClick={() => setAudioLoop(!audioLoop)}
+                                            >
+                                                <div>
+                                                    <p className="font-medium text-white">Repetir en bucle</p>
+                                                    <p className="text-xs text-slate-400">El audio se reiniciará automáticamente</p>
+                                                </div>
+                                                <div
+                                                    className={`w-12 h-6 rounded-full relative transition-colors ${audioLoop ? "bg-emerald-500" : "bg-slate-600"}`}
+                                                >
+                                                    <div
+                                                        className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${audioLoop ? "translate-x-7" : "translate-x-1"}`}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Tip */}
+                                            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                                                <p className="text-xs text-emerald-300">
+                                                    <strong>Tip:</strong> Usa música suave y ambiental para no distraer a tus visitantes.
+                                                    Archivos MP3 de hasta 15MB son recomendados.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
                                 {/* Botón Guardar */}
                                 <div className="flex justify-end gap-3">
                                     {appearanceSaveSuccess && (
@@ -1370,6 +1492,12 @@ function ShopDetailContent() {
                                                     products: productsBackground,
                                                     contact: contactBackground,
                                                 },
+                                                backgroundAudio: {
+                                                    enabled: audioEnabled,
+                                                    url: audioUrl,
+                                                    volume: audioVolume / 100,
+                                                    loop: audioLoop,
+                                                },
                                                 contact: {
                                                     ...shop.contact,
                                                     email,
@@ -1400,6 +1528,12 @@ function ShopDetailContent() {
                                                     services: servicesBackground,
                                                     products: productsBackground,
                                                     contact: contactBackground,
+                                                },
+                                                backgroundAudio: {
+                                                    enabled: audioEnabled,
+                                                    url: audioUrl,
+                                                    volume: audioVolume / 100,
+                                                    loop: audioLoop,
                                                 },
                                                 contact: { ...prev.contact, email, address, city },
                                                 social: { instagram, facebook, tiktok, website },

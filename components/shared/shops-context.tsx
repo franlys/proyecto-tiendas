@@ -26,6 +26,7 @@ import {
   type ShopSocialMedia,
   type ShopSchedule,
   type ShopBackground,
+  type BackgroundAudio,
   DEFAULT_THEME,
   DEFAULT_FEATURES, // Ensure this is exported from constants
   type FeatureId,
@@ -35,7 +36,7 @@ import {
 
 // RE-EXPORT for consumers that import from here
 export { DEFAULT_FEATURES };
-export type { FeatureId, SubscriptionStatus, ShopCategory, ShopBackground };
+export type { FeatureId, SubscriptionStatus, ShopCategory, ShopBackground, BackgroundAudio };
 
 // ============================================
 // TYPES

@@ -244,8 +244,16 @@ export function InventoryProvider({ children, shopId }: InventoryProviderProps) 
   const getLowStockProducts = useCallback(() => {
     return products.filter((p) => {
       // Ensure numeric comparison (Firestore may store as strings)
-      const stock = Number(p.stock) || 0;
       const threshold = Number(p.lowStockThreshold) || 5; // Default 5 if not set
+
+      // If product has variants, check total stock across all variants
+      if (p.variants && p.variants.length > 0) {
+        const totalVariantStock = p.variants.reduce((acc, v) => acc + (Number(v.stock) || 0), 0);
+        return totalVariantStock <= threshold;
+      }
+
+      // Otherwise check main stock
+      const stock = Number(p.stock) || 0;
       return stock <= threshold;
     });
   }, [products]);

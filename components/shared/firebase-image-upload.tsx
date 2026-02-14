@@ -20,7 +20,7 @@ interface FirebaseImageUploadProps {
   label?: string;
   aspectRatio?: "square" | "banner" | "auto" | "video";
   maxSizeMB?: number;
-  accept?: "image" | "video" | "both";
+  accept?: "image" | "video" | "both" | "audio";
 }
 
 export function FirebaseImageUpload({
@@ -52,6 +52,10 @@ export function FirebaseImageUpload({
 
   const isVideo = (url: string) => {
     return url.includes(".mp4") || url.includes(".webm") || url.includes(".mov");
+  };
+
+  const isAudio = (url: string) => {
+    return url.includes(".mp3") || url.includes(".wav") || url.includes(".ogg") || url.includes(".m4a");
   };
 
   // Check if upload is stuck (no progress for 10 seconds)
@@ -103,6 +107,7 @@ export function FirebaseImageUpload({
     // Validate file type
     const isImage = file.type.startsWith("image/");
     const isVideoFile = file.type.startsWith("video/");
+    const isAudioFile = file.type.startsWith("audio/");
 
     if (accept === "image" && !isImage) {
       setError("Solo se permiten imágenes");
@@ -110,6 +115,10 @@ export function FirebaseImageUpload({
     }
     if (accept === "video" && !isVideoFile) {
       setError("Solo se permiten videos");
+      return;
+    }
+    if (accept === "audio" && !isAudioFile) {
+      setError("Solo se permiten archivos de audio");
       return;
     }
     if (accept === "both" && !isImage && !isVideoFile) {
@@ -223,6 +232,19 @@ export function FirebaseImageUpload({
       );
     }
 
+    if (isAudio(value)) {
+      return (
+        <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-800 p-4">
+          <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mb-3">
+            <svg className="w-8 h-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+            </svg>
+          </div>
+          <audio src={value} controls className="w-full max-w-xs" />
+        </div>
+      );
+    }
+
     return (
       <Image
         src={value}
@@ -243,7 +265,7 @@ export function FirebaseImageUpload({
       <input
         ref={inputRef}
         type="file"
-        accept={accept === "video" ? "video/*" : accept === "both" ? "image/*,video/*" : "image/*"}
+        accept={accept === "video" ? "video/*" : accept === "audio" ? "audio/*" : accept === "both" ? "image/*,video/*" : "image/*"}
         onChange={handleInputChange}
         className="hidden"
       />

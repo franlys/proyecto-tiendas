@@ -30,8 +30,13 @@ export function ProductCard({ product }: ProductCardProps) {
     : (product.promoPrice || product.price);
 
   // Stock check - convert to number to handle string values from Firestore
+  // For products with variants, check if ANY variant has stock > 0
   const stockNumber = Number(product.stock) || 0;
-  const isOutOfStock = stockNumber === 0;
+  const hasAnyVariantStock = hasVariants
+    ? product.variants!.some(v => (Number(v.stock) || 0) > 0)
+    : false;
+  // Product is only out of stock if: no main stock AND (no variants OR no variant has stock)
+  const isOutOfStock = stockNumber === 0 && (!hasVariants || !hasAnyVariantStock);
   const hasPromo = !!product.promoPrice;
 
 
