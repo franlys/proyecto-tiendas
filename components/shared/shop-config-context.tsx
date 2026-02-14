@@ -93,11 +93,13 @@ const ShopConfigContext = createContext<ShopConfigContextValue | undefined>(
 interface ShopConfigProviderProps {
   children: ReactNode;
   initialConfig?: Partial<ShopVisualConfig>;
+  enablePersistence?: boolean;
 }
 
 export function ShopConfigProvider({
   children,
   initialConfig,
+  enablePersistence = true,
 }: ShopConfigProviderProps) {
   const [config, setConfig] = useState<ShopVisualConfig>({
     ...defaultConfig,
@@ -105,8 +107,25 @@ export function ShopConfigProvider({
   });
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load config from localStorage on mount
+  // Sync with initialConfig changes (Navigating between shops)
   useEffect(() => {
+    if (initialConfig) {
+      setConfig((prev) => ({
+        ...prev,
+        ...initialConfig,
+        // Preserve local overrides only if persistence is enabled?? 
+        // No, if initialConfig comes from DB (navigation), it should win.
+      }));
+    }
+  }, [initialConfig]);
+
+  // Load config from localStorage on mount (Only if persistence enabled)
+  useEffect(() => {
+    if (!enablePersistence) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
@@ -118,20 +137,21 @@ export function ShopConfigProvider({
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [enablePersistence]);
 
   const updateConfig = useCallback((updates: Partial<ShopVisualConfig>) => {
     setConfig((prev) => ({ ...prev, ...updates }));
   }, []);
 
   const saveConfig = useCallback(() => {
+    if (!enablePersistence) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
       console.log("Config saved:", config);
     } catch (error) {
       console.error("Error saving config:", error);
     }
-  }, [config]);
+  }, [config, enablePersistence]);
 
   const getPrimaryColor = useCallback(() => {
     return config.primaryColor;
@@ -143,7 +163,7 @@ export function ShopConfigProvider({
 
   // Auto-save when config changes
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && enablePersistence) {
       const timeoutId = setTimeout(() => {
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
@@ -154,7 +174,7 @@ export function ShopConfigProvider({
 
       return () => clearTimeout(timeoutId);
     }
-  }, [config, isLoading]);
+  }, [config, isLoading, enablePersistence]);
 
   return (
     <ShopConfigContext.Provider

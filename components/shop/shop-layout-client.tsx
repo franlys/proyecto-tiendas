@@ -55,7 +55,7 @@ export function ShopLayoutClient({ children, shop }: ShopLayoutClientProps & { s
   } : undefined;
 
   return (
-    <ShopConfigProvider initialConfig={initialConfig}>
+    <ShopConfigProvider initialConfig={initialConfig} enablePersistence={false}>
       <UIProvider>
         <ShopLayoutInner>{children}</ShopLayoutInner>
       </UIProvider>
