@@ -210,6 +210,7 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
           banner: data.banner,
           slogan: data.slogan,
           background: data.background,
+          backgroundAudio: data.backgroundAudio,
           social: data.social,
           // Bank accounts (for payment info)
           bankAccounts: data.bankAccounts || [],
