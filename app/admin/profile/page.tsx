@@ -29,7 +29,7 @@ import {
     ShopsProvider,
     useShops,
 } from "@/components/shared";
-import { Button } from "@/components/ui";
+import { Button, PhoneInput, type PhoneInputValue } from "@/components/ui";
 
 import { BankAccountsManager } from "@/components/admin/bank-accounts-manager";
 import { ShopBankAccount } from "@/lib/constants";
@@ -426,46 +426,27 @@ function ProfileContent() {
                                 </h3>
 
                                 <div className="grid md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-300 mb-2">
-                                            <Phone className="w-4 h-4 inline mr-2" />
-                                            Teléfono
-                                        </label>
-                                        <input
-                                            type="tel"
-                                            value={profile.phone}
-                                            onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
-                                            placeholder="+1 234 567 8900"
-                                            className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white placeholder-slate-500"
-                                        />
-                                    </div>
+                                    <PhoneInput
+                                        value={profile.phone}
+                                        onChange={(value: PhoneInputValue) => setProfile(prev => ({ ...prev, phone: value.fullPhone }))}
+                                        label="Teléfono"
+                                        variant="dark"
+                                    />
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-300 mb-2">
-                                            <MessageCircle className="w-4 h-4 inline mr-2" />
-                                            WhatsApp
-                                        </label>
-                                        <input
-                                            type="tel"
-                                            value={profile.whatsapp}
-                                            onChange={(e) => setProfile(prev => ({ ...prev, whatsapp: e.target.value }))}
-                                            placeholder="+1 234 567 8900"
-                                            className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white placeholder-slate-500"
-                                        />
-                                    </div>
+                                    <PhoneInput
+                                        value={profile.whatsapp}
+                                        onChange={(value: PhoneInputValue) => setProfile(prev => ({ ...prev, whatsapp: value.fullPhone }))}
+                                        label="WhatsApp"
+                                        variant="dark"
+                                    />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                                        <Bot className="w-4 h-4 inline mr-2 text-gold" />
-                                        Teléfono de Notificaciones (Privado)
-                                    </label>
-                                    <input
-                                        type="tel"
+                                    <PhoneInput
                                         value={profile.ownerNotificationPhone}
-                                        onChange={(e) => setProfile(prev => ({ ...prev, ownerNotificationPhone: e.target.value }))}
-                                        placeholder="+1 234 567 8900"
-                                        className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white placeholder-slate-500"
+                                        onChange={(value: PhoneInputValue) => setProfile(prev => ({ ...prev, ownerNotificationPhone: value.fullPhone }))}
+                                        label="Teléfono de Notificaciones (Privado)"
+                                        variant="dark"
                                     />
                                     <p className="text-xs text-slate-500 mt-1">
                                         Este número recibirá alertas de nuevos pedidos y stock bajo. No será visible para los clientes.

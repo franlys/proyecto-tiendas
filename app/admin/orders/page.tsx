@@ -49,6 +49,7 @@ function OrderDetailModal({
   const [autoNotify, setAutoNotify] = useState(true); // Auto-notify enabled by default
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [sendingQuickMessage, setSendingQuickMessage] = useState<string | null>(null);
 
   if (!order) return null;
 
@@ -206,6 +207,49 @@ function OrderDetailModal({
     }
 
     return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+  };
+
+  // Send quick message via Evolution API
+  const sendQuickMessage = async (type: "ready_pickup" | "on_way_location") => {
+    if (!order.customerPhone) {
+      alert("El cliente no tiene teléfono registrado");
+      return;
+    }
+
+    setSendingQuickMessage(type);
+    try {
+      const response = await fetch("/api/orders/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          shopId,
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          customerPhone: order.customerPhone,
+          customerName: order.customerName,
+          status: type,
+          total: order.total,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert("✅ Mensaje enviado correctamente");
+      } else if (data.whatsappUrl) {
+        // Fallback: open WhatsApp link
+        if (confirm("No se pudo enviar via bot. ¿Abrir WhatsApp manualmente?")) {
+          window.open(data.whatsappUrl, "_blank");
+        }
+      } else {
+        alert("Error al enviar mensaje: " + (data.error || "Error desconocido"));
+      }
+    } catch (error) {
+      console.error("Error sending quick message:", error);
+      alert("Error al enviar mensaje. Intenta de nuevo.");
+    } finally {
+      setSendingQuickMessage(null);
+    }
   };
 
   return (
@@ -512,22 +556,30 @@ function OrderDetailModal({
             )}
 
             <div className="grid grid-cols-2 gap-2">
-              <a
-                href={getWhatsAppUrl("ready_pickup")}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium text-green-400 border border-green-500/30 hover:bg-green-500/10 transition-colors"
+              <button
+                onClick={() => sendQuickMessage("ready_pickup")}
+                disabled={sendingQuickMessage === "ready_pickup" || !order.customerPhone}
+                className="flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium text-green-400 border border-green-500/30 hover:bg-green-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <CheckCircle className="w-3 h-3 mr-1" /> Listo (Recoger)
-              </a>
-              <a
-                href={getWhatsAppUrl("on_way_location")}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium text-blue-400 border border-blue-500/30 hover:bg-blue-500/10 transition-colors"
+                {sendingQuickMessage === "ready_pickup" ? (
+                  <Clock className="w-3 h-3 mr-1 animate-spin" />
+                ) : (
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                )}
+                Listo (Recoger)
+              </button>
+              <button
+                onClick={() => sendQuickMessage("on_way_location")}
+                disabled={sendingQuickMessage === "on_way_location" || !order.customerPhone}
+                className="flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium text-blue-400 border border-blue-500/30 hover:bg-blue-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Truck className="w-3 h-3 mr-1" /> Enviar (Pedir Ubicación)
-              </a>
+                {sendingQuickMessage === "on_way_location" ? (
+                  <Clock className="w-3 h-3 mr-1 animate-spin" />
+                ) : (
+                  <Truck className="w-3 h-3 mr-1" />
+                )}
+                Pedir Ubicación
+              </button>
             </div>
 
             <div className="grid grid-cols-3 gap-3">

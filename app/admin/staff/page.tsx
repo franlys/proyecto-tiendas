@@ -22,7 +22,7 @@ import {
   TrendingUp,
   Award,
 } from "lucide-react";
-import { Button } from "@/components/ui";
+import { Button, PhoneInput, type PhoneInputValue } from "@/components/ui";
 import {
   StaffProvider,
   useStaff,
@@ -132,18 +132,12 @@ function StaffModal({
                 placeholder="juan@tienda.com"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Teléfono
-              </label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/50"
-                placeholder="555-123-4567"
-              />
-            </div>
+            <PhoneInput
+              value={formData.phone}
+              onChange={(value: PhoneInputValue) => setFormData({ ...formData, phone: value.fullPhone })}
+              label="Teléfono"
+              variant="dark"
+            />
           </div>
 
           {/* Role */}

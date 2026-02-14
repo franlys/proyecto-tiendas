@@ -42,6 +42,12 @@ const STATUS_MESSAGES: Record<string, (name: string, orderNum: string, total: nu
 
     payment_confirmed: (name, orderNum, total) =>
         `Hola ${name} 👋\n\n✅ *PAGO CONFIRMADO*\n\nHemos recibido tu pago de *$${total.toLocaleString()}* para el pedido *#${orderNum}*.\n\n¡Muchas gracias! 🙏`,
+
+    ready_pickup: (name, orderNum, total) =>
+        `Hola ${name} 👋\n\nTu pedido *#${orderNum}* está *LISTO* ✅.\n\nPuedes pasar a recogerlo cuando gustes.\n\n💰 Total a pagar: $${total.toLocaleString()}`,
+
+    on_way_location: (name, orderNum, total) =>
+        `Hola ${name} 👋\n\nTu pedido *#${orderNum}* va en camino 🛵.\n\nPor favor, compártenos tu ubicación actual para facilitar la entrega 📍.\n\n💰 Total: $${total.toLocaleString()}`,
 };
 
 export async function POST(request: NextRequest) {

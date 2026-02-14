@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { Button } from "@/components/ui";
+import { Button, PhoneInput, type PhoneInputValue } from "@/components/ui";
 import {
   Car,
   ChevronLeft,
@@ -558,16 +558,15 @@ export default function PublicRentPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-white">Teléfono / WhatsApp *</label>
-                    <input
-                      type="tel"
-                      required
-                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm"
-                      placeholder="+1 809 555 0000"
+                    <PhoneInput
                       value={reservationForm.customerPhone}
-                      onChange={(e) =>
-                        setReservationForm((prev) => ({ ...prev, customerPhone: e.target.value }))
+                      onChange={(value: PhoneInputValue) =>
+                        setReservationForm((prev) => ({ ...prev, customerPhone: value.fullPhone }))
                       }
+                      label="Teléfono / WhatsApp"
+                      required
+                      variant="dark"
+                      size="sm"
                     />
                   </div>
 

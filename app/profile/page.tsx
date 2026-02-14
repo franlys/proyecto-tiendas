@@ -15,7 +15,7 @@ import {
   Heart,
   Store,
 } from "lucide-react";
-import { Button } from "@/components/ui";
+import { Button, PhoneInput, type PhoneInputValue } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { useClients, ClientsProvider, SalesOrdersProvider } from "@/components/shared";
 
@@ -235,28 +235,23 @@ function ProfilePage() {
 
             {/* Phone Input Card */}
             <div className="glass-panel rounded-2xl p-8 border border-white/10">
-              <label className="block text-sm font-medium text-slate-300 mb-3">
-                Número de Teléfono
-              </label>
-              <div className="flex gap-3">
-                <div className="relative flex-1">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    type="tel"
+              <div className="flex gap-3 items-end">
+                <div className="flex-1">
+                  <PhoneInput
                     value={phone}
-                    onChange={(e) => {
-                      setPhone(e.target.value);
+                    onChange={(value: PhoneInputValue) => {
+                      setPhone(value.fullPhone);
                       setNotFound(false);
                     }}
-                    onKeyPress={handleKeyPress}
-                    placeholder="555-123-4567"
-                    className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/5 border border-white/10 text-white text-lg placeholder-slate-500 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all"
+                    label="Número de Teléfono"
+                    variant="glass"
+                    size="lg"
                   />
                 </div>
                 <Button
                   onClick={handleSearch}
                   disabled={phone.length < 10 || isSearching}
-                  className="px-6 bg-gradient-to-r from-primary to-orange-400 hover:from-rose-400 hover:to-orange-300"
+                  className="px-6 h-12 bg-gradient-to-r from-primary to-orange-400 hover:from-rose-400 hover:to-orange-300"
                 >
                   {isSearching ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

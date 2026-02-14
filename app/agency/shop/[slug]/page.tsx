@@ -53,7 +53,7 @@ import {
     StaffRole,
     STAFF_ROLES,
 } from "@/components/shared";
-import { Button } from "@/components/ui";
+import { Button, PhoneInput, type PhoneInputValue } from "@/components/ui";
 import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
 import { WhatsAppAutomationPanel } from "@/components/shared/whatsapp-automation";
 import { BackgroundGallery, mapToBackgroundCategory } from "@/components/shared/background-gallery";
@@ -1890,17 +1890,12 @@ function ShopDetailContent() {
                                             />
                                         </div>
 
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-300 mb-2">
-                                                Teléfono (opcional)
-                                            </label>
-                                            <input
-                                                type="tel"
-                                                value={newStaffPhone}
-                                                onChange={(e) => setNewStaffPhone(e.target.value)}
-                                                placeholder="555-123-4567"
-                                                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white placeholder-slate-500"
-                                            />
+                                        <PhoneInput
+                                            value={newStaffPhone}
+                                            onChange={(value: PhoneInputValue) => setNewStaffPhone(value.fullPhone)}
+                                            label="Teléfono (opcional)"
+                                            variant="dark"
+                                        />
                                         </div>
 
                                         <div>

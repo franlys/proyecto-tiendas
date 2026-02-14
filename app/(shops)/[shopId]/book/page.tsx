@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Button } from "@/components/ui";
+import { Button, PhoneInput, type PhoneInputValue } from "@/components/ui";
 import { useShop } from "@/components/shared";
 import {
   Calendar,
@@ -562,25 +562,19 @@ export default function BookingPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-slate-400 mb-2">
-                    WhatsApp *
-                  </label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                    <input
-                      type="tel"
-                      required
-                      value={bookingData.customerPhone}
-                      onChange={(e) =>
-                        setBookingData((prev) => ({
-                          ...prev,
-                          customerPhone: e.target.value,
-                        }))
-                      }
-                      className="w-full pl-10 pr-4 py-3 bg-surface rounded-xl border border-white/10 text-white placeholder-slate-500 focus:border-primary focus:outline-none"
-                      placeholder="+52 55 1234 5678"
-                    />
-                  </div>
+                  <PhoneInput
+                    value={bookingData.customerPhone}
+                    onChange={(value: PhoneInputValue) =>
+                      setBookingData((prev) => ({
+                        ...prev,
+                        customerPhone: value.fullPhone,
+                      }))
+                    }
+                    label="WhatsApp"
+                    required
+                    variant="dark"
+                    placeholder="55 1234 5678"
+                  />
                 </div>
 
                 <div>
