@@ -622,6 +622,23 @@ function DashboardContent({ isSuperAdmin, shop }: { isSuperAdmin: boolean; shop?
             <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
           </Link>
 
+          {/* Calendario de Citas - solo para negocios de servicios */}
+          {(shop?.businessType === "beauty" || shop?.businessType === "services") && (
+            <Link
+              href="/admin/bookings"
+              className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-purple-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-white font-medium">Calendario de Citas</p>
+                <p className="text-xs text-slate-400">Gestionar agenda</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+            </Link>
+          )}
+
           <Link
             href="/admin/promos"
             className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
@@ -785,12 +802,24 @@ function AdminDashboardWithSubscription() {
                     <span className="hidden sm:inline ml-1">Pedidos</span>
                   </Button>
                 </Link>
-                <Link href="/admin/inventory">
-                  <Button variant="ghost" size="sm" className="px-2 sm:px-3">
-                    <Package className="w-4 h-4" />
-                    <span className="hidden sm:inline ml-1">Inventario</span>
-                  </Button>
-                </Link>
+                {/* Citas - visible para negocios de servicios */}
+                {(shop?.businessType === "beauty" || shop?.businessType === "services") && (
+                  <Link href="/admin/bookings">
+                    <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-purple-400 hover:text-purple-300">
+                      <Calendar className="w-4 h-4" />
+                      <span className="hidden sm:inline ml-1">Citas</span>
+                    </Button>
+                  </Link>
+                )}
+                {/* Inventario - oculto para negocios puramente de servicios */}
+                {shop?.businessType !== "beauty" && (
+                  <Link href="/admin/inventory">
+                    <Button variant="ghost" size="sm" className="px-2 sm:px-3">
+                      <Package className="w-4 h-4" />
+                      <span className="hidden sm:inline ml-1">Inventario</span>
+                    </Button>
+                  </Link>
+                )}
                 <Link href="/admin/clients">
                   <Button variant="ghost" size="sm" className="px-2 sm:px-3">
                     <Users className="w-4 h-4" />
