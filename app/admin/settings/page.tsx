@@ -21,6 +21,11 @@ import {
   Loader2,
   Volume2,
   Music,
+  Instagram,
+  Facebook,
+  Globe,
+  Type,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import {
@@ -36,7 +41,7 @@ import {
   useAuth,
   type BackgroundType,
 } from "@/components/shared";
-import { AccessDenied } from "@/components/admin/access-denied";
+import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
 import { cn } from "@/lib/utils";
 
 interface ShopConfig {
@@ -52,9 +57,17 @@ interface ShopConfig {
   audioUrl: string;
   audioVolume: number;
   audioLoop: boolean;
+  // Brand info
+  logo: string;
+  banner: string;
+  slogan: string;
+  description: string;
+  // Social
+  instagram: string;
+  facebook: string;
+  tiktok: string;
+  website: string;
 }
-
-const STORAGE_KEY = "shop-visual-config";
 
 const BACKGROUND_OPTIONS: { id: BackgroundEffect; name: string; description: string }[] = [
   { id: "clean", name: "Limpio", description: "Fondo minimalista y profesional" },
@@ -68,8 +81,8 @@ const BACKGROUND_OPTIONS: { id: BackgroundEffect; name: string; description: str
 ];
 
 export default function AdminSettingsPage() {
-  const { user, isSuperAdmin, isLoading: authLoading } = useAuth();
-  const { getShop, updateShop, isLoading: shopsLoading } = useShops(); // Use shops hook
+  const { user, isLoading: authLoading } = useAuth();
+  const { getShop, updateShop, isLoading: shopsLoading } = useShops();
 
   const [config, setConfig] = useState<ShopConfig>({
     shopName: "Mi Tienda",
@@ -83,10 +96,18 @@ export default function AdminSettingsPage() {
     audioUrl: "",
     audioVolume: 30,
     audioLoop: true,
+    logo: "",
+    banner: "",
+    slogan: "",
+    description: "",
+    instagram: "",
+    facebook: "",
+    tiktok: "",
+    website: "",
   });
   const [isSaved, setIsSaved] = useState(false);
-  const [isSaving, setIsSaving] = useState(false); // Add saving state
-  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<"brand" | "design" | "social">("brand");
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
 
   // Load from Firestore
@@ -105,19 +126,25 @@ export default function AdminSettingsPage() {
           backgroundType: (shop.background?.type || "preset") as BackgroundType,
           backgroundUrl: bgUrl,
           overlayOpacity: shop.background?.overlayOpacity || 40,
-          // Audio settings
           audioEnabled: shop.backgroundAudio?.enabled || false,
           audioUrl: shop.backgroundAudio?.url || "",
           audioVolume: (shop.backgroundAudio?.volume && shop.backgroundAudio.volume < 1)
             ? shop.backgroundAudio.volume * 100
             : (shop.backgroundAudio?.volume ?? 30),
           audioLoop: shop.backgroundAudio?.loop ?? true,
+          logo: shop.logo || "",
+          banner: shop.banner || "",
+          slogan: shop.slogan || "",
+          description: shop.description || "",
+          instagram: shop.social?.instagram || "",
+          facebook: shop.social?.facebook || "",
+          tiktok: shop.social?.tiktok || "",
+          website: shop.social?.website || "",
         });
       }
     }
   }, [user?.shopId, shopsLoading, getShop]);
 
-  // Phase 21: Security Guard - Only Super Admin can access visual settings
   if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -126,27 +153,18 @@ export default function AdminSettingsPage() {
     );
   }
 
-  /*
-  // Restriction removed to allow Shop Owners to manage their own settings
-  if (!isSuperAdmin) {
-    return (
-      <AccessDenied
-        title="Solo para Administradores"
-        message="La configuración visual de tu tienda es gestionada por tu asesor de marca. Contacta con nosotros para solicitar cambios de diseño."
-      />
-    );
-  }
-  */
-
   const handleSave = async (e?: React.MouseEvent) => {
     e?.preventDefault();
     if (!user?.shopId) return;
 
     setIsSaving(true);
     try {
-      // Structure data for Firestore
-      const updateData: any = {
+      const updateData: Record<string, unknown> = {
         name: config.shopName,
+        logo: config.logo,
+        banner: config.banner,
+        slogan: config.slogan,
+        description: config.description,
         theme: {
           primaryColor: config.primaryColor,
           accentColor: config.accentColor,
@@ -156,21 +174,25 @@ export default function AdminSettingsPage() {
           effect: config.backgroundEffect,
           overlayOpacity: config.overlayOpacity,
         },
-        // Audio settings
-        // Audio settings
         backgroundAudio: {
           enabled: config.audioEnabled,
           url: config.audioUrl,
-          volume: config.audioVolume, // Save as 0-100 to match read logic
+          volume: config.audioVolume,
           loop: config.audioLoop,
+        },
+        social: {
+          instagram: config.instagram,
+          facebook: config.facebook,
+          tiktok: config.tiktok,
+          website: config.website,
         },
       };
 
       // Add URL based on type
       if (config.backgroundType === "image") {
-        updateData.background.image = config.backgroundUrl;
+        (updateData.background as Record<string, unknown>).image = config.backgroundUrl;
       } else if (config.backgroundType === "video") {
-        updateData.background.video = config.backgroundUrl;
+        (updateData.background as Record<string, unknown>).video = config.backgroundUrl;
       }
 
       await updateShop(user.shopId, updateData);
@@ -202,7 +224,6 @@ export default function AdminSettingsPage() {
       backgroundType: type,
       backgroundUrl: type === "preset" ? "" : config.backgroundUrl,
     });
-    setShowUrlInput(false);
   };
 
   const handleSelectDemoVideo = (url: string) => {
@@ -233,10 +254,10 @@ export default function AdminSettingsPage() {
               </div>
               <div>
                 <h1 className="font-display text-2xl font-bold text-white">
-                  Diseño Visual
+                  Configuración de Tienda
                 </h1>
                 <p className="text-slate-400 text-sm">
-                  Colores, fondo y efectos visuales de tu tienda
+                  Personaliza tu marca, diseño y redes sociales
                 </p>
               </div>
             </div>
@@ -258,530 +279,695 @@ export default function AdminSettingsPage() {
         </div>
       </header>
 
+      {/* Tabs */}
+      <div className="border-b border-white/10">
+        <div className="container mx-auto px-4">
+          <div className="flex gap-1">
+            {[
+              { id: "brand", label: "Marca", icon: Store },
+              { id: "design", label: "Diseño Visual", icon: Palette },
+              { id: "social", label: "Redes Sociales", icon: Globe },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-3 border-b-2 transition-colors",
+                  activeTab === tab.id
+                    ? "border-primary text-primary"
+                    : "border-transparent text-slate-400 hover:text-white"
+                )}
+              >
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <main className="container mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Settings Panel */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Shop Name */}
-            <div className="glass-panel rounded-2xl p-6">
-              <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
-                <Store className="w-4 h-4 text-gold" />
-                Información de la Tienda
-              </h2>
-              <div>
-                <label className="block text-sm text-slate-400 mb-2">
-                  Nombre de la Tienda
-                </label>
-                <input
-                  type="text"
-                  value={config.shopName}
-                  onChange={(e) => updateConfig({ shopName: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors"
-                  placeholder="Mi Tienda"
-                />
-              </div>
-            </div>
-
-            {/* Color Theme */}
-            <div className="glass-panel rounded-2xl p-6">
-              <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
-                <Palette className="w-4 h-4 text-gold" />
-                Colores del Tema
-              </h2>
-
-              {/* Color Pickers */}
-              <div className="grid sm:grid-cols-2 gap-6 mb-6">
-                {/* Primary Color */}
-                <div>
-                  <label className="block text-sm text-slate-400 mb-2">
-                    Color Principal
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <input
-                        type="color"
-                        value={config.primaryColor}
-                        onChange={(e) => updateConfig({ primaryColor: e.target.value })}
-                        className="w-14 h-14 rounded-xl cursor-pointer border-2 border-white/20 hover:border-white/40 transition-colors"
-                        style={{ backgroundColor: config.primaryColor }}
-                      />
-                      <Pipette className="absolute bottom-1 right-1 w-3 h-3 text-white/60 pointer-events-none" />
-                    </div>
-                    <input
-                      type="text"
-                      value={config.primaryColor}
-                      onChange={(e) => {
-                        if (/^#[0-9A-Fa-f]{0,6}$/.test(e.target.value) || e.target.value === "") {
-                          updateConfig({ primaryColor: e.target.value || "#" });
-                        }
-                      }}
-                      className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-mono text-sm focus:outline-none focus:border-primary/50 transition-colors uppercase"
-                      placeholder="#F43F5E"
-                    />
-                  </div>
-                </div>
-
-                {/* Accent Color */}
-                <div>
-                  <label className="block text-sm text-slate-400 mb-2">
-                    Color de Acento
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <input
-                        type="color"
-                        value={config.accentColor}
-                        onChange={(e) => updateConfig({ accentColor: e.target.value })}
-                        className="w-14 h-14 rounded-xl cursor-pointer border-2 border-white/20 hover:border-white/40 transition-colors"
-                        style={{ backgroundColor: config.accentColor }}
-                      />
-                      <Pipette className="absolute bottom-1 right-1 w-3 h-3 text-white/60 pointer-events-none" />
-                    </div>
-                    <input
-                      type="text"
-                      value={config.accentColor}
-                      onChange={(e) => {
-                        if (/^#[0-9A-Fa-f]{0,6}$/.test(e.target.value) || e.target.value === "") {
-                          updateConfig({ accentColor: e.target.value || "#" });
-                        }
-                      }}
-                      className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-mono text-sm focus:outline-none focus:border-primary/50 transition-colors uppercase"
-                      placeholder="#D4AF37"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Preset Themes */}
-              <div>
-                <label className="block text-sm text-slate-400 mb-3">
-                  Temas Predefinidos
-                </label>
-                <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
-                  {COLOR_PRESETS.map((preset) => {
-                    const isSelected =
-                      config.primaryColor === preset.primary &&
-                      config.accentColor === preset.accent;
-
-                    return (
-                      <button
-                        key={preset.id}
-                        onClick={() => applyPreset(preset)}
-                        className={cn(
-                          "relative p-3 rounded-xl border-2 transition-all group",
-                          isSelected
-                            ? "border-white bg-white/10"
-                            : "border-white/10 hover:border-white/30 bg-white/5"
-                        )}
-                        title={preset.label}
-                      >
-                        <div className="flex items-center justify-center gap-1">
-                          <div
-                            className="w-6 h-6 rounded-full shadow-lg"
-                            style={{ backgroundColor: preset.primary }}
-                          />
-                          <div
-                            className="w-4 h-4 rounded-full shadow-lg -ml-2"
-                            style={{ backgroundColor: preset.accent }}
-                          />
-                        </div>
-                        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                          <span className="text-xs text-slate-400">{preset.label}</span>
-                        </div>
-                        {isSelected && (
-                          <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white flex items-center justify-center">
-                            <Check className="w-2.5 h-2.5 text-background" />
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Background Settings - NEW */}
-            <div className="glass-panel rounded-2xl p-6">
-              <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-gold" />
-                Fondo de la Tienda
-              </h2>
-
-              {/* Background Type Tabs */}
-              <div className="flex gap-2 mb-6">
-                <button
-                  onClick={() => handleBackgroundTypeChange("preset")}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-lg transition-all",
-                    config.backgroundType === "preset"
-                      ? "bg-primary text-white"
-                      : "bg-white/5 text-slate-400 hover:bg-white/10"
-                  )}
-                >
-                  <Layers className="w-4 h-4" />
-                  Efectos
-                </button>
-                <button
-                  onClick={() => handleBackgroundTypeChange("image")}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-lg transition-all",
-                    config.backgroundType === "image"
-                      ? "bg-primary text-white"
-                      : "bg-white/5 text-slate-400 hover:bg-white/10"
-                  )}
-                >
-                  <ImageIcon className="w-4 h-4" />
-                  Imagen
-                </button>
-                <button
-                  onClick={() => handleBackgroundTypeChange("video")}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-lg transition-all",
-                    config.backgroundType === "video"
-                      ? "bg-primary text-white"
-                      : "bg-white/5 text-slate-400 hover:bg-white/10"
-                  )}
-                >
-                  <Video className="w-4 h-4" />
-                  Video
-                </button>
-              </div>
-
-              {/* Preset Effects */}
-              {config.backgroundType === "preset" && (
-                <div className="grid gap-4">
-                  {BACKGROUND_OPTIONS.map((option) => {
-                    const isSelected = config.backgroundEffect === option.id;
-
-                    return (
-                      <button
-                        key={option.id}
-                        onClick={() => updateConfig({ backgroundEffect: option.id })}
-                        className={cn(
-                          "relative flex items-start gap-4 p-4 rounded-xl border-2 transition-all text-left",
-                          isSelected
-                            ? "border-white bg-white/10"
-                            : "border-white/10 hover:border-white/30 bg-white/5"
-                        )}
-                      >
-                        <div className="w-24 flex-shrink-0">
-                          <BackgroundPreview effect={option.id} className="h-16" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-white font-medium">{option.name}</p>
-                          <p className="text-sm text-slate-400">{option.description}</p>
-                        </div>
-                        {isSelected && (
-                          <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center flex-shrink-0">
-                            <Check className="w-3 h-3 text-background" />
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Image Background */}
-              {config.backgroundType === "image" && (
-                <div className="space-y-4">
-                  {/* Demo Images */}
-                  <div>
-                    <label className="block text-sm text-slate-400 mb-3">
-                      Imágenes de ejemplo
-                    </label>
-                    <div className="grid grid-cols-4 gap-3">
-                      {DEMO_IMAGES.map((img) => {
-                        const isSelected = config.backgroundUrl === img.url;
-                        return (
-                          <button
-                            key={img.id}
-                            onClick={() => handleSelectDemoImage(img.url)}
-                            className={cn(
-                              "relative aspect-video rounded-lg overflow-hidden transition-all",
-                              isSelected
-                                ? "ring-2 ring-primary scale-95"
-                                : "hover:scale-95 opacity-80 hover:opacity-100"
-                            )}
-                          >
-                            <Image
-                              src={img.thumbnail}
-                              alt={img.label}
-                              fill
-                              className="object-cover"
-                            />
-                            {isSelected && (
-                              <div className="absolute inset-0 bg-primary/30 flex items-center justify-center">
-                                <Check className="w-6 h-6 text-white" />
-                              </div>
-                            )}
-                            <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1">
-                              <span className="text-xs text-white">{img.label}</span>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Upload Custom Image */}
-                  <div>
-                    <label className="block text-sm text-slate-400 mb-2">
-                      <Upload className="w-4 h-4 inline mr-1" />
-                      Sube tu propia imagen
-                    </label>
-                    <MediaUploader
-                      type="image"
-                      preset="background"
-                      currentUrl={config.backgroundUrl}
-                      onUploadComplete={(url) => updateConfig({ backgroundUrl: url })}
-                    />
-                  </div>
-
-                  {/* Or Custom URL */}
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-white/10"></div>
-                    </div>
-                    <div className="relative flex justify-center">
-                      <span className="px-3 bg-surface text-xs text-slate-500">o pega una URL</span>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <div className="flex-1 relative">
-                      <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input
-                        type="url"
-                        value={config.backgroundUrl}
-                        onChange={(e) => updateConfig({ backgroundUrl: e.target.value })}
-                        placeholder="https://..."
-                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors text-sm"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Video Background */}
-              {config.backgroundType === "video" && (
-                <div className="space-y-4">
-                  {/* Demo Videos */}
-                  <div>
-                    <label className="block text-sm text-slate-400 mb-3">
-                      Videos de ejemplo
-                    </label>
-                    <div className="grid grid-cols-3 gap-3">
-                      {DEMO_VIDEOS.map((vid) => {
-                        const isSelected = config.backgroundUrl === vid.url;
-                        return (
-                          <button
-                            key={vid.id}
-                            onClick={() => handleSelectDemoVideo(vid.url)}
-                            className={cn(
-                              "relative aspect-video rounded-lg overflow-hidden transition-all group",
-                              isSelected
-                                ? "ring-2 ring-primary scale-95"
-                                : "hover:scale-95 opacity-80 hover:opacity-100"
-                            )}
-                          >
-                            <Image
-                              src={vid.thumbnail}
-                              alt={vid.label}
-                              fill
-                              className="object-cover"
-                            />
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Play className="w-8 h-8 text-white" />
-                            </div>
-                            {isSelected && (
-                              <div className="absolute inset-0 bg-primary/30 flex items-center justify-center">
-                                <Check className="w-6 h-6 text-white" />
-                              </div>
-                            )}
-                            <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1">
-                              <span className="text-xs text-white">{vid.label}</span>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Upload Custom Video */}
-                  <div>
-                    <label className="block text-sm text-slate-400 mb-2">
-                      <Upload className="w-4 h-4 inline mr-1" />
-                      Sube tu propio video
-                    </label>
-                    <MediaUploader
-                      type="video"
-                      preset="background"
-                      currentUrl={config.backgroundUrl}
-                      onUploadComplete={(url) => updateConfig({ backgroundUrl: url })}
-                    />
-                  </div>
-
-                  {/* Or Custom URL */}
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-white/10"></div>
-                    </div>
-                    <div className="relative flex justify-center">
-                      <span className="px-3 bg-surface text-xs text-slate-500">o pega una URL</span>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <div className="flex-1 relative">
-                      <Video className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input
-                        type="url"
-                        value={config.backgroundUrl}
-                        onChange={(e) => updateConfig({ backgroundUrl: e.target.value })}
-                        placeholder="https://...video.mp4"
-                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors text-sm"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Overlay Opacity Slider */}
-              {(config.backgroundType === "image" || config.backgroundType === "video") && config.backgroundUrl && (
-                <div className="mt-6 pt-6 border-t border-white/10">
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="text-sm text-slate-400 flex items-center gap-2">
-                      <Sun className="w-4 h-4" />
-                      Oscurecer Fondo (Legibilidad)
-                    </label>
-                    <span className="text-white font-mono text-sm">
-                      {config.overlayOpacity}%
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="90"
-                    step="5"
-                    value={config.overlayOpacity}
-                    onChange={(e) => updateConfig({ overlayOpacity: parseInt(e.target.value) })}
-                    className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-lg"
-                  />
-                  <div className="flex justify-between text-xs text-slate-500 mt-1">
-                    <span>Sin overlay</span>
-                    <span>Muy oscuro</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Background Audio Settings */}
-            <div className="glass-panel rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-colors">
-              <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
-                <Music className="w-4 h-4 text-gold" />
-                Audio de Fondo
-              </h2>
-
-              <p className="text-sm text-slate-400 mb-4">
-                Agrega música ambiental a tu tienda. El usuario puede silenciarlo con un botón flotante.
-              </p>
-
-              {/* Enable Toggle */}
-              <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 mb-4 cursor-pointer hover:bg-white/10 transition-colors"
-                onClick={() => updateConfig({ audioEnabled: !config.audioEnabled })}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={cn("p-2 rounded-full", config.audioEnabled ? "bg-primary/20 text-primary" : "bg-white/10 text-slate-400")}>
-                    <Volume2 className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-white font-medium">Habilitar Audio de Fondo</p>
-                    <p className="text-xs text-slate-500">Reproducir música automáticamente</p>
-                  </div>
-                </div>
-                <div
-                  className={cn(
-                    "relative w-12 h-6 rounded-full transition-colors",
-                    config.audioEnabled ? "bg-primary" : "bg-white/20"
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
-                      config.audioEnabled ? "translate-x-7" : "translate-x-1"
-                    )}
-                  />
-                </div>
-              </div>
-
-              {config.audioEnabled && (
-                <div className="space-y-4">
-                  {/* Audio URL */}
-                  <div>
-                    <label className="block text-sm text-slate-400 mb-2">
-                      URL del Audio (MP3, WAV, OGG)
-                    </label>
-                    <div className="relative">
-                      <Music className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input
-                        type="url"
-                        value={config.audioUrl}
-                        onChange={(e) => updateConfig({ audioUrl: e.target.value })}
-                        placeholder="https://ejemplo.com/musica.mp3"
-                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors text-sm"
-                      />
-                    </div>
-                    <p className="text-xs text-slate-500 mt-2">
-                      Usa enlaces directos a archivos de audio (no YouTube). Recomendamos archivos MP3 ligeros.
-                    </p>
-                  </div>
-
-                  {/* Volume Slider */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="text-sm text-slate-400 flex items-center gap-2">
-                        <Volume2 className="w-4 h-4" />
-                        Volumen
+            {/* BRAND TAB */}
+            {activeTab === "brand" && (
+              <>
+                {/* Shop Name */}
+                <div className="glass-panel rounded-2xl p-6">
+                  <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
+                    <Store className="w-4 h-4 text-gold" />
+                    Información de la Tienda
+                  </h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm text-slate-400 mb-2">
+                        Nombre de la Tienda
                       </label>
-                      <span className="text-white font-mono text-sm">{config.audioVolume}%</span>
+                      <input
+                        type="text"
+                        value={config.shopName}
+                        onChange={(e) => updateConfig({ shopName: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors"
+                        placeholder="Mi Tienda"
+                      />
                     </div>
-                    <input
-                      type="range"
-                      min="5"
-                      max="100"
-                      step="5"
-                      value={config.audioVolume}
-                      onChange={(e) => updateConfig({ audioVolume: parseInt(e.target.value) })}
-                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-lg"
+                    <div>
+                      <label className="block text-sm text-slate-400 mb-2">
+                        Slogan / Frase Corta
+                      </label>
+                      <input
+                        type="text"
+                        value={config.slogan}
+                        onChange={(e) => updateConfig({ slogan: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors"
+                        placeholder="Tu belleza, nuestra pasión"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-slate-400 mb-2">
+                        Descripción
+                      </label>
+                      <textarea
+                        value={config.description}
+                        onChange={(e) => updateConfig({ description: e.target.value })}
+                        rows={3}
+                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors resize-none"
+                        placeholder="Describe tu negocio en unas pocas líneas..."
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Logo & Banner */}
+                <div className="glass-panel rounded-2xl p-6">
+                  <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-gold" />
+                    Imágenes de la Tienda
+                  </h2>
+                  <div className="grid sm:grid-cols-2 gap-6">
+                    <FirebaseImageUpload
+                      value={config.logo}
+                      onChange={(url) => updateConfig({ logo: url })}
+                      folder="shops/logos"
+                      shopId={user?.shopId || "temp"}
+                      label="Logo de la Tienda"
+                      aspectRatio="square"
+                      maxSizeMB={2}
                     />
-                    <div className="flex justify-between text-xs text-slate-500 mt-1">
-                      <span>Bajo</span>
-                      <span>Alto</span>
+                    <FirebaseImageUpload
+                      value={config.banner}
+                      onChange={(url) => updateConfig({ banner: url })}
+                      folder="shops/banners"
+                      shopId={user?.shopId || "temp"}
+                      label="Imagen de Portada / Banner"
+                      aspectRatio="banner"
+                      maxSizeMB={10}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* DESIGN TAB */}
+            {activeTab === "design" && (
+              <>
+                {/* Color Theme */}
+                <div className="glass-panel rounded-2xl p-6">
+                  <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-gold" />
+                    Colores del Tema
+                  </h2>
+
+                  {/* Color Pickers */}
+                  <div className="grid sm:grid-cols-2 gap-6 mb-6">
+                    {/* Primary Color */}
+                    <div>
+                      <label className="block text-sm text-slate-400 mb-2">
+                        Color Principal
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <input
+                            type="color"
+                            value={config.primaryColor}
+                            onChange={(e) => updateConfig({ primaryColor: e.target.value })}
+                            className="w-14 h-14 rounded-xl cursor-pointer border-2 border-white/20 hover:border-white/40 transition-colors"
+                            style={{ backgroundColor: config.primaryColor }}
+                          />
+                          <Pipette className="absolute bottom-1 right-1 w-3 h-3 text-white/60 pointer-events-none" />
+                        </div>
+                        <input
+                          type="text"
+                          value={config.primaryColor}
+                          onChange={(e) => {
+                            if (/^#[0-9A-Fa-f]{0,6}$/.test(e.target.value) || e.target.value === "") {
+                              updateConfig({ primaryColor: e.target.value || "#" });
+                            }
+                          }}
+                          className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-mono text-sm focus:outline-none focus:border-primary/50 transition-colors uppercase"
+                          placeholder="#F43F5E"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Accent Color */}
+                    <div>
+                      <label className="block text-sm text-slate-400 mb-2">
+                        Color de Acento
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <input
+                            type="color"
+                            value={config.accentColor}
+                            onChange={(e) => updateConfig({ accentColor: e.target.value })}
+                            className="w-14 h-14 rounded-xl cursor-pointer border-2 border-white/20 hover:border-white/40 transition-colors"
+                            style={{ backgroundColor: config.accentColor }}
+                          />
+                          <Pipette className="absolute bottom-1 right-1 w-3 h-3 text-white/60 pointer-events-none" />
+                        </div>
+                        <input
+                          type="text"
+                          value={config.accentColor}
+                          onChange={(e) => {
+                            if (/^#[0-9A-Fa-f]{0,6}$/.test(e.target.value) || e.target.value === "") {
+                              updateConfig({ accentColor: e.target.value || "#" });
+                            }
+                          }}
+                          className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-mono text-sm focus:outline-none focus:border-primary/50 transition-colors uppercase"
+                          placeholder="#D4AF37"
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Loop Toggle */}
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                    <span className="text-sm text-slate-300">Repetir en bucle</span>
+                  {/* Preset Themes */}
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-3">
+                      Temas Predefinidos
+                    </label>
+                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+                      {COLOR_PRESETS.map((preset) => {
+                        const isSelected =
+                          config.primaryColor === preset.primary &&
+                          config.accentColor === preset.accent;
+
+                        return (
+                          <button
+                            key={preset.id}
+                            onClick={() => applyPreset(preset)}
+                            className={cn(
+                              "relative p-3 rounded-xl border-2 transition-all group",
+                              isSelected
+                                ? "border-white bg-white/10"
+                                : "border-white/10 hover:border-white/30 bg-white/5"
+                            )}
+                            title={preset.label}
+                          >
+                            <div className="flex items-center justify-center gap-1">
+                              <div
+                                className="w-6 h-6 rounded-full shadow-lg"
+                                style={{ backgroundColor: preset.primary }}
+                              />
+                              <div
+                                className="w-4 h-4 rounded-full shadow-lg -ml-2"
+                                style={{ backgroundColor: preset.accent }}
+                              />
+                            </div>
+                            <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                              <span className="text-xs text-slate-400">{preset.label}</span>
+                            </div>
+                            {isSelected && (
+                              <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white flex items-center justify-center">
+                                <Check className="w-2.5 h-2.5 text-background" />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Background Settings */}
+                <div className="glass-panel rounded-2xl p-6">
+                  <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-gold" />
+                    Fondo de la Tienda
+                  </h2>
+
+                  {/* Background Type Tabs */}
+                  <div className="flex gap-2 mb-6">
                     <button
-                      onClick={() => updateConfig({ audioLoop: !config.audioLoop })}
+                      onClick={() => handleBackgroundTypeChange("preset")}
                       className={cn(
-                        "relative w-10 h-5 rounded-full transition-colors",
-                        config.audioLoop ? "bg-primary" : "bg-white/20"
+                        "flex items-center gap-2 px-4 py-2 rounded-lg transition-all",
+                        config.backgroundType === "preset"
+                          ? "bg-primary text-white"
+                          : "bg-white/5 text-slate-400 hover:bg-white/10"
+                      )}
+                    >
+                      <Layers className="w-4 h-4" />
+                      Efectos
+                    </button>
+                    <button
+                      onClick={() => handleBackgroundTypeChange("image")}
+                      className={cn(
+                        "flex items-center gap-2 px-4 py-2 rounded-lg transition-all",
+                        config.backgroundType === "image"
+                          ? "bg-primary text-white"
+                          : "bg-white/5 text-slate-400 hover:bg-white/10"
+                      )}
+                    >
+                      <ImageIcon className="w-4 h-4" />
+                      Imagen
+                    </button>
+                    <button
+                      onClick={() => handleBackgroundTypeChange("video")}
+                      className={cn(
+                        "flex items-center gap-2 px-4 py-2 rounded-lg transition-all",
+                        config.backgroundType === "video"
+                          ? "bg-primary text-white"
+                          : "bg-white/5 text-slate-400 hover:bg-white/10"
+                      )}
+                    >
+                      <Video className="w-4 h-4" />
+                      Video
+                    </button>
+                  </div>
+
+                  {/* Preset Effects */}
+                  {config.backgroundType === "preset" && (
+                    <div className="grid gap-4">
+                      {BACKGROUND_OPTIONS.map((option) => {
+                        const isSelected = config.backgroundEffect === option.id;
+
+                        return (
+                          <button
+                            key={option.id}
+                            onClick={() => updateConfig({ backgroundEffect: option.id })}
+                            className={cn(
+                              "relative flex items-start gap-4 p-4 rounded-xl border-2 transition-all text-left",
+                              isSelected
+                                ? "border-white bg-white/10"
+                                : "border-white/10 hover:border-white/30 bg-white/5"
+                            )}
+                          >
+                            <div className="w-24 flex-shrink-0">
+                              <BackgroundPreview effect={option.id} className="h-16" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-white font-medium">{option.name}</p>
+                              <p className="text-sm text-slate-400">{option.description}</p>
+                            </div>
+                            {isSelected && (
+                              <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center flex-shrink-0">
+                                <Check className="w-3 h-3 text-background" />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Image Background */}
+                  {config.backgroundType === "image" && (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm text-slate-400 mb-3">
+                          Imágenes de ejemplo
+                        </label>
+                        <div className="grid grid-cols-4 gap-3">
+                          {DEMO_IMAGES.map((img) => {
+                            const isSelected = config.backgroundUrl === img.url;
+                            return (
+                              <button
+                                key={img.id}
+                                onClick={() => handleSelectDemoImage(img.url)}
+                                className={cn(
+                                  "relative aspect-video rounded-lg overflow-hidden transition-all",
+                                  isSelected
+                                    ? "ring-2 ring-primary scale-95"
+                                    : "hover:scale-95 opacity-80 hover:opacity-100"
+                                )}
+                              >
+                                <Image
+                                  src={img.thumbnail}
+                                  alt={img.label}
+                                  fill
+                                  className="object-cover"
+                                />
+                                {isSelected && (
+                                  <div className="absolute inset-0 bg-primary/30 flex items-center justify-center">
+                                    <Check className="w-6 h-6 text-white" />
+                                  </div>
+                                )}
+                                <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1">
+                                  <span className="text-xs text-white">{img.label}</span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm text-slate-400 mb-2">
+                          <Upload className="w-4 h-4 inline mr-1" />
+                          Sube tu propia imagen
+                        </label>
+                        <MediaUploader
+                          type="image"
+                          preset="background"
+                          currentUrl={config.backgroundUrl}
+                          onUploadComplete={(url) => updateConfig({ backgroundUrl: url })}
+                        />
+                      </div>
+
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full border-t border-white/10"></div>
+                        </div>
+                        <div className="relative flex justify-center">
+                          <span className="px-3 bg-surface text-xs text-slate-500">o pega una URL</span>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <div className="flex-1 relative">
+                          <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                          <input
+                            type="url"
+                            value={config.backgroundUrl}
+                            onChange={(e) => updateConfig({ backgroundUrl: e.target.value })}
+                            placeholder="https://..."
+                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Video Background */}
+                  {config.backgroundType === "video" && (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm text-slate-400 mb-3">
+                          Videos de ejemplo
+                        </label>
+                        <div className="grid grid-cols-3 gap-3">
+                          {DEMO_VIDEOS.map((vid) => {
+                            const isSelected = config.backgroundUrl === vid.url;
+                            return (
+                              <button
+                                key={vid.id}
+                                onClick={() => handleSelectDemoVideo(vid.url)}
+                                className={cn(
+                                  "relative aspect-video rounded-lg overflow-hidden transition-all group",
+                                  isSelected
+                                    ? "ring-2 ring-primary scale-95"
+                                    : "hover:scale-95 opacity-80 hover:opacity-100"
+                                )}
+                              >
+                                <Image
+                                  src={vid.thumbnail}
+                                  alt={vid.label}
+                                  fill
+                                  className="object-cover"
+                                />
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Play className="w-8 h-8 text-white" />
+                                </div>
+                                {isSelected && (
+                                  <div className="absolute inset-0 bg-primary/30 flex items-center justify-center">
+                                    <Check className="w-6 h-6 text-white" />
+                                  </div>
+                                )}
+                                <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1">
+                                  <span className="text-xs text-white">{vid.label}</span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm text-slate-400 mb-2">
+                          <Upload className="w-4 h-4 inline mr-1" />
+                          Sube tu propio video
+                        </label>
+                        <MediaUploader
+                          type="video"
+                          preset="background"
+                          currentUrl={config.backgroundUrl}
+                          onUploadComplete={(url) => updateConfig({ backgroundUrl: url })}
+                        />
+                      </div>
+
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full border-t border-white/10"></div>
+                        </div>
+                        <div className="relative flex justify-center">
+                          <span className="px-3 bg-surface text-xs text-slate-500">o pega una URL</span>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <div className="flex-1 relative">
+                          <Video className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                          <input
+                            type="url"
+                            value={config.backgroundUrl}
+                            onChange={(e) => updateConfig({ backgroundUrl: e.target.value })}
+                            placeholder="https://...video.mp4"
+                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Overlay Opacity Slider */}
+                  {(config.backgroundType === "image" || config.backgroundType === "video") && config.backgroundUrl && (
+                    <div className="mt-6 pt-6 border-t border-white/10">
+                      <div className="flex items-center justify-between mb-3">
+                        <label className="text-sm text-slate-400 flex items-center gap-2">
+                          <Sun className="w-4 h-4" />
+                          Oscurecer Fondo (Legibilidad)
+                        </label>
+                        <span className="text-white font-mono text-sm">
+                          {config.overlayOpacity}%
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="90"
+                        step="5"
+                        value={config.overlayOpacity}
+                        onChange={(e) => updateConfig({ overlayOpacity: parseInt(e.target.value) })}
+                        className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-lg"
+                      />
+                      <div className="flex justify-between text-xs text-slate-500 mt-1">
+                        <span>Sin overlay</span>
+                        <span>Muy oscuro</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Background Audio Settings */}
+                <div className="glass-panel rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-colors">
+                  <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
+                    <Music className="w-4 h-4 text-gold" />
+                    Audio de Fondo
+                  </h2>
+
+                  <p className="text-sm text-slate-400 mb-4">
+                    Agrega música ambiental a tu tienda. El usuario puede silenciarlo con un botón flotante.
+                  </p>
+
+                  <div
+                    className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 mb-4 cursor-pointer hover:bg-white/10 transition-colors"
+                    onClick={() => updateConfig({ audioEnabled: !config.audioEnabled })}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={cn("p-2 rounded-full", config.audioEnabled ? "bg-primary/20 text-primary" : "bg-white/10 text-slate-400")}>
+                        <Volume2 className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-white font-medium">Habilitar Audio de Fondo</p>
+                        <p className="text-xs text-slate-500">Reproducir música automáticamente</p>
+                      </div>
+                    </div>
+                    <div
+                      className={cn(
+                        "relative w-12 h-6 rounded-full transition-colors",
+                        config.audioEnabled ? "bg-primary" : "bg-white/20"
                       )}
                     >
                       <div
                         className={cn(
-                          "absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform",
-                          config.audioLoop ? "translate-x-5" : "translate-x-0.5"
+                          "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
+                          config.audioEnabled ? "translate-x-7" : "translate-x-1"
                         )}
                       />
-                    </button>
+                    </div>
+                  </div>
+
+                  {config.audioEnabled && (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm text-slate-400 mb-2">
+                          URL del Audio (MP3, WAV, OGG)
+                        </label>
+                        <div className="relative">
+                          <Music className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                          <input
+                            type="url"
+                            value={config.audioUrl}
+                            onChange={(e) => updateConfig({ audioUrl: e.target.value })}
+                            placeholder="https://ejemplo.com/musica.mp3"
+                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors text-sm"
+                          />
+                        </div>
+                        <p className="text-xs text-slate-500 mt-2">
+                          Usa enlaces directos a archivos de audio (no YouTube). Recomendamos archivos MP3 ligeros.
+                        </p>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-sm text-slate-400 flex items-center gap-2">
+                            <Volume2 className="w-4 h-4" />
+                            Volumen
+                          </label>
+                          <span className="text-white font-mono text-sm">{config.audioVolume}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="5"
+                          max="100"
+                          step="5"
+                          value={config.audioVolume}
+                          onChange={(e) => updateConfig({ audioVolume: parseInt(e.target.value) })}
+                          className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-lg"
+                        />
+                        <div className="flex justify-between text-xs text-slate-500 mt-1">
+                          <span>Bajo</span>
+                          <span>Alto</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                        <span className="text-sm text-slate-300">Repetir en bucle</span>
+                        <button
+                          onClick={() => updateConfig({ audioLoop: !config.audioLoop })}
+                          className={cn(
+                            "relative w-10 h-5 rounded-full transition-colors",
+                            config.audioLoop ? "bg-primary" : "bg-white/20"
+                          )}
+                        >
+                          <div
+                            className={cn(
+                              "absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform",
+                              config.audioLoop ? "translate-x-5" : "translate-x-0.5"
+                            )}
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* SOCIAL TAB */}
+            {activeTab === "social" && (
+              <div className="glass-panel rounded-2xl p-6">
+                <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-gold" />
+                  Redes Sociales
+                </h2>
+                <p className="text-sm text-slate-400 mb-6">
+                  Conecta tus redes sociales para que tus clientes puedan seguirte.
+                </p>
+
+                <div className="space-y-4">
+                  {/* Instagram */}
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-2">
+                      Instagram
+                    </label>
+                    <div className="relative">
+                      <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-pink-400" />
+                      <input
+                        type="text"
+                        value={config.instagram}
+                        onChange={(e) => updateConfig({ instagram: e.target.value })}
+                        placeholder="@tutienda"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Facebook */}
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-2">
+                      Facebook
+                    </label>
+                    <div className="relative">
+                      <Facebook className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400" />
+                      <input
+                        type="text"
+                        value={config.facebook}
+                        onChange={(e) => updateConfig({ facebook: e.target.value })}
+                        placeholder="facebook.com/tutienda"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* TikTok */}
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-2">
+                      TikTok
+                    </label>
+                    <div className="relative">
+                      <Music className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type="text"
+                        value={config.tiktok}
+                        onChange={(e) => updateConfig({ tiktok: e.target.value })}
+                        placeholder="@tutienda"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Website */}
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-2">
+                      Sitio Web
+                    </label>
+                    <div className="relative">
+                      <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-green-400" />
+                      <input
+                        type="url"
+                        value={config.website}
+                        onChange={(e) => updateConfig({ website: e.target.value })}
+                        placeholder="https://tutienda.com"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors"
+                      />
+                    </div>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Live Preview */}
@@ -840,12 +1026,20 @@ export default function AdminSettingsPage() {
                     <div className="relative z-10 p-4 h-full flex flex-col">
                       <div className="glass-panel rounded-lg px-3 py-2 mb-4">
                         <div className="flex items-center gap-2">
-                          <div
-                            className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                            style={{ backgroundColor: config.primaryColor }}
-                          >
-                            {config.shopName.charAt(0)}
-                          </div>
+                          {config.logo ? (
+                            <img
+                              src={config.logo}
+                              alt="Logo"
+                              className="w-6 h-6 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div
+                              className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                              style={{ backgroundColor: config.primaryColor }}
+                            >
+                              {config.shopName.charAt(0)}
+                            </div>
+                          )}
                           <span className="text-white text-xs font-medium truncate">
                             {config.shopName}
                           </span>
@@ -861,7 +1055,9 @@ export default function AdminSettingsPage() {
                           }}
                         />
                         <div className="h-3 w-20 rounded bg-white/20 mb-2" />
-                        <div className="h-2 w-16 rounded bg-white/10" />
+                        {config.slogan && (
+                          <div className="h-2 w-24 rounded bg-white/10" />
+                        )}
                       </div>
 
                       <div
@@ -934,19 +1130,19 @@ export default function AdminSettingsPage() {
                   target="_blank"
                   className="block w-full px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm text-center transition-colors"
                 >
-                  Ver Mi Tienda →
+                  Ver Mi Tienda
                 </a>
                 <a
-                  href="/admin/promos"
+                  href="/admin/bookings/settings"
                   className="block w-full px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm text-center transition-colors"
                 >
-                  Crear Promo →
+                  Configurar Calendario
                 </a>
               </div>
             </div>
           </div>
         </div>
-      </main >
-    </div >
+      </main>
+    </div>
   );
 }
