@@ -319,3 +319,138 @@ export async function isSlotAvailableAdmin(
   const slot = daySlots.slots[time];
   return slot?.available ?? false;
 }
+
+// ==================== CANCEL BOOKING (ADMIN SDK) ====================
+
+/**
+ * Cancel a single booking and free up the slot
+ */
+export async function cancelBookingAdmin(
+  shopId: string,
+  bookingId: string,
+  reason?: string
+): Promise<{ success: boolean; booking?: Booking; error?: string }> {
+  const db = adminDb();
+  if (!db) return { success: false, error: "Database not initialized" };
+
+  try {
+    const bookingRef = db.collection(getBookingsCollection(shopId)).doc(bookingId);
+    const bookingSnap = await bookingRef.get();
+
+    if (!bookingSnap.exists) {
+      return { success: false, error: "Booking not found" };
+    }
+
+    const booking = { id: bookingSnap.id, ...bookingSnap.data() } as Booking;
+
+    // Update booking status
+    await bookingRef.update({
+      status: "cancelled",
+      cancelledAt: new Date().toISOString(),
+      cancellationReason: reason || "Cancelled by business",
+      updatedAt: new Date().toISOString(),
+    });
+
+    // Free up the slot
+    await freeSlotAdmin(shopId, booking.date, booking.time);
+
+    return { success: true, booking };
+  } catch (error) {
+    console.error("Error cancelling booking:", error);
+    return { success: false, error: String(error) };
+  }
+}
+
+/**
+ * Free a slot (mark as available)
+ */
+async function freeSlotAdmin(
+  shopId: string,
+  date: string,
+  time: string
+): Promise<void> {
+  const db = adminDb();
+  if (!db) return;
+
+  const daySlots = await getDaySlotsAdmin(shopId, date);
+
+  if (daySlots && daySlots.slots[time]) {
+    daySlots.slots[time] = {
+      time,
+      available: true,
+      bookingId: null,
+    };
+
+    await db.doc(`${getSlotsCollection(shopId)}/${date}`).set({
+      ...daySlots,
+      updatedAt: new Date().toISOString(),
+    });
+  }
+}
+
+/**
+ * Cancel ALL bookings for a specific date (owner sick day, emergency closure)
+ * Returns list of cancelled bookings for notification purposes
+ */
+export async function cancelAllBookingsForDateAdmin(
+  shopId: string,
+  date: string,
+  reason: string
+): Promise<{ success: boolean; cancelledBookings: Booking[]; error?: string }> {
+  const db = adminDb();
+  if (!db) return { success: false, cancelledBookings: [], error: "Database not initialized" };
+
+  try {
+    // Get all active bookings for the date
+    const bookingsSnap = await db.collection(getBookingsCollection(shopId))
+      .where("date", "==", date)
+      .where("status", "in", ["pending", "confirmed"])
+      .get();
+
+    const cancelledBookings: Booking[] = [];
+
+    for (const doc of bookingsSnap.docs) {
+      const booking = { id: doc.id, ...doc.data() } as Booking;
+
+      // Cancel each booking
+      await doc.ref.update({
+        status: "cancelled",
+        cancelledAt: new Date().toISOString(),
+        cancellationReason: reason,
+        updatedAt: new Date().toISOString(),
+      });
+
+      // Free the slot
+      await freeSlotAdmin(shopId, booking.date, booking.time);
+
+      cancelledBookings.push(booking);
+    }
+
+    console.log(`[Booking] Cancelled ${cancelledBookings.length} bookings for ${date}`);
+
+    return { success: true, cancelledBookings };
+  } catch (error) {
+    console.error("Error cancelling all bookings:", error);
+    return { success: false, cancelledBookings: [], error: String(error) };
+  }
+}
+
+/**
+ * Get booking by ID
+ */
+export async function getBookingByIdAdmin(
+  shopId: string,
+  bookingId: string
+): Promise<Booking | null> {
+  const db = adminDb();
+  if (!db) return null;
+
+  try {
+    const docSnap = await db.collection(getBookingsCollection(shopId)).doc(bookingId).get();
+    if (!docSnap.exists) return null;
+    return { id: docSnap.id, ...docSnap.data() } as Booking;
+  } catch (error) {
+    console.error("Error getting booking:", error);
+    return null;
+  }
+}

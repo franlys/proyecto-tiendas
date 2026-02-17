@@ -5,6 +5,8 @@ import {
   getBookingConfigAdmin,
 } from "@/lib/services/booking-admin.service";
 import type { CreateBookingInput } from "@/lib/types/booking.types";
+import { sendTextMessage, getInstanceName } from "@/lib/evolution";
+import { getShopBasicInfo } from "@/lib/services/whatsapp-config.service";
 
 /**
  * GET /api/bookings?shopId=xxx&date=2026-02-15
@@ -73,6 +75,11 @@ export async function POST(request: NextRequest) {
 
     const booking = await createBookingAdmin(shopId, bookingData as CreateBookingInput);
 
+    // Send WhatsApp notification to owner (non-blocking)
+    notifyOwnerOfNewBooking(shopId, bookingData as CreateBookingInput).catch(err => {
+      console.error("Error notifying owner of booking:", err);
+    });
+
     return NextResponse.json({ booking }, { status: 201 });
   } catch (error) {
     console.error("Error creating booking:", error);
@@ -80,5 +87,44 @@ export async function POST(request: NextRequest) {
       { error: "Failed to create booking" },
       { status: 500 }
     );
+  }
+}
+
+/**
+ * Send WhatsApp notification to shop owner about new booking
+ */
+async function notifyOwnerOfNewBooking(shopId: string, booking: CreateBookingInput) {
+  try {
+    const shopInfo = await getShopBasicInfo(shopId);
+    if (!shopInfo?.ownerNotificationPhone) {
+      console.log(`[Booking Notify] No owner phone for shop ${shopId}`);
+      return;
+    }
+
+    // Get Evolution instance name for this shop
+    const instance = getInstanceName(shopInfo.slug || shopId);
+
+    // Format date in Spanish
+    const dateObj = new Date(booking.date + "T12:00:00");
+    const dateStr = dateObj.toLocaleDateString("es-MX", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    });
+
+    const message = `📅 *NUEVA RESERVACIÓN*\n\n` +
+      `👤 *Cliente:* ${booking.customerName}\n` +
+      `📱 *Teléfono:* ${booking.customerPhone}\n` +
+      `✂️ *Servicio:* ${booking.serviceName}\n` +
+      `📆 *Fecha:* ${dateStr}\n` +
+      `🕐 *Hora:* ${booking.time}\n` +
+      `⏱️ *Duración:* ${booking.serviceDuration} min\n` +
+      `💰 *Precio:* $${booking.servicePrice.toLocaleString()}\n\n` +
+      `_Responde "Citas" para ver todas las citas del día._`;
+
+    await sendTextMessage(instance, shopInfo.ownerNotificationPhone, message);
+    console.log(`[Booking Notify] ✅ Sent booking notification to ${shopInfo.ownerNotificationPhone}`);
+  } catch (error) {
+    console.error("[Booking Notify] Error:", error);
   }
 }
