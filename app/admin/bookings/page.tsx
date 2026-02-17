@@ -20,6 +20,7 @@ import {
   Ban,
   UserX,
   MessageCircle,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useAuth, useShops } from "@/components/shared";
@@ -486,9 +487,10 @@ function BookingsPageContent() {
             </div>
           </div>
 
-          <Link href="/admin/settings">
+          <Link href="/admin/bookings/settings">
             <Button variant="outline" size="sm">
-              Configurar Horarios
+              <Settings className="w-4 h-4 mr-2" />
+              Configurar Calendario
             </Button>
           </Link>
         </div>
