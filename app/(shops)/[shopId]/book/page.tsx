@@ -25,6 +25,8 @@ import { MOCK_SERVICES, type Service } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { BeautyConsultationForm } from "@/components/beauty";
 import type { BeautyConsultation } from "@/lib/types/beauty-consultation.types";
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot, query } from "firebase/firestore";
 
 type BookingStep = "service" | "date" | "time" | "info" | "confirm";
 
@@ -65,9 +67,43 @@ export default function BookingPage() {
   const [showConsultationForm, setShowConsultationForm] = useState(false);
   const [consultationComplete, setConsultationComplete] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
+  const [services, setServices] = useState<Service[]>([]);
+  const [servicesLoading, setServicesLoading] = useState(true);
 
-  // Get services for this shop
-  const services = useMemo(() => MOCK_SERVICES[shopId] || [], [shopId]);
+  // Load services from Firestore (with fallback to mocks for demo shops)
+  useEffect(() => {
+    if (!shopId || !shop) return;
+
+    // Check if demo shop - use mocks
+    const isDemo = shop.id?.startsWith("demo-") || shop.id?.startsWith("legacy-");
+    if (isDemo) {
+      setServices(MOCK_SERVICES[shopId] || []);
+      setServicesLoading(false);
+      return;
+    }
+
+    // Load from Firestore using shop slug (consistent with inventory system)
+    const shopPath = shop.slug || shopId;
+    const servicesRef = collection(db, "shops", shopPath, "services");
+    const q = query(servicesRef);
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const servicesData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Service));
+      setServices(servicesData);
+      setServicesLoading(false);
+      console.log("✅ [Booking] Loaded services from Firestore:", servicesData.length);
+    }, (error) => {
+      console.error("❌ [Booking] Error loading services:", error);
+      // Fallback to mocks if Firestore fails
+      setServices(MOCK_SERVICES[shopId] || []);
+      setServicesLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [shopId, shop]);
 
   // Check if this is a beauty service that should show consultation form
   const isBeautyService = useMemo(() => {
@@ -113,49 +149,67 @@ export default function BookingPage() {
     return days;
   }, [currentMonth]);
 
-  // Fetch available slots when date changes
+  // Real-time slot updates from Firestore
   useEffect(() => {
-    if (bookingData.date) {
-      setSlotsLoading(true);
-      fetch(`/api/bookings/slots?shopId=${shopId}&date=${bookingData.date}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.slots) {
-            setSlots(data.slots);
-          } else {
-            // Generate default slots if API fails
-            const defaultSlots: AvailableSlot[] = [];
-            for (let h = 9; h < 18; h++) {
-              for (let m = 0; m < 60; m += 30) {
-                const time = `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
-                defaultSlots.push({
-                  time,
-                  endTime: `${h.toString().padStart(2, "0")}:${(m + 30).toString().padStart(2, "0")}`,
-                  available: true,
-                });
-              }
-            }
-            setSlots(defaultSlots);
-          }
-        })
-        .catch(() => {
-          // Generate default slots on error
-          const defaultSlots: AvailableSlot[] = [];
-          for (let h = 9; h < 18; h++) {
-            for (let m = 0; m < 60; m += 30) {
-              const time = `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
-              defaultSlots.push({
-                time,
-                endTime: `${h.toString().padStart(2, "0")}:${(m + 30).toString().padStart(2, "0")}`,
-                available: true,
-              });
-            }
-          }
-          setSlots(defaultSlots);
-        })
-        .finally(() => setSlotsLoading(false));
-    }
-  }, [bookingData.date, shopId]);
+    if (!bookingData.date || !shop) return;
+
+    setSlotsLoading(true);
+    const shopPath = shop.slug || shopId;
+
+    // Subscribe to real-time updates on the booking slots document
+    const slotDocRef = collection(db, "shops", shopPath, "bookingSlots");
+
+    // Also fetch initial data from API to generate time slots
+    const fetchSlots = async () => {
+      try {
+        const response = await fetch(`/api/bookings/slots?shopId=${shopPath}&date=${bookingData.date}`);
+        const data = await response.json();
+
+        if (data.slots) {
+          setSlots(data.slots);
+        } else {
+          // Generate default slots (9am - 6pm, 30-min intervals)
+          generateDefaultSlots();
+        }
+      } catch {
+        generateDefaultSlots();
+      } finally {
+        setSlotsLoading(false);
+      }
+    };
+
+    const generateDefaultSlots = () => {
+      const defaultSlots: AvailableSlot[] = [];
+      for (let h = 9; h < 18; h++) {
+        for (let m = 0; m < 60; m += 30) {
+          const time = `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+          const endH = m === 30 ? h + 1 : h;
+          const endM = m === 30 ? 0 : 30;
+          defaultSlots.push({
+            time,
+            endTime: `${endH.toString().padStart(2, "0")}:${endM.toString().padStart(2, "0")}`,
+            available: true,
+          });
+        }
+      }
+      setSlots(defaultSlots);
+    };
+
+    // Initial fetch
+    fetchSlots();
+
+    // Real-time listener for bookings on this date to update slot availability
+    const bookingsRef = collection(db, "shops", shopPath, "bookings");
+    const unsubscribe = onSnapshot(bookingsRef, () => {
+      // Re-fetch slots when any booking changes (creates real-time effect)
+      console.log("📅 [Booking] Bookings updated, refreshing slots...");
+      fetchSlots();
+    }, (error) => {
+      console.error("❌ [Booking] Error listening to bookings:", error);
+    });
+
+    return () => unsubscribe();
+  }, [bookingData.date, shopId, shop]);
 
   const handleServiceSelect = (service: Service) => {
     setBookingData((prev) => ({ ...prev, service }));
@@ -463,45 +517,51 @@ export default function BookingPage() {
                 </p>
               </div>
 
-              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-                {services.map((service) => (
-                  <button
-                    key={service.id}
-                    onClick={() => handleServiceSelect(service)}
-                    className="w-full p-4 rounded-xl bg-surface/50 hover:bg-surface border border-white/10 hover:border-primary/50 transition-all text-left group"
-                  >
-                    <div className="flex gap-4">
-                      {service.image && (
-                        <img
-                          src={service.image}
-                          alt={service.name}
-                          className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-                        />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-white group-hover:text-primary transition-colors">
-                          {service.name}
-                        </h3>
-                        <p className="text-sm text-slate-400 line-clamp-1">
-                          {service.description}
-                        </p>
-                        <div className="flex items-center gap-4 mt-2 text-sm">
-                          <span className="text-primary font-bold">
-                            ${service.price.toLocaleString()}
-                          </span>
-                          <span className="text-slate-500 flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {service.duration} min
-                          </span>
+              {servicesLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                  {services.map((service) => (
+                    <button
+                      key={service.id}
+                      onClick={() => handleServiceSelect(service)}
+                      className="w-full p-4 rounded-xl bg-surface/50 hover:bg-surface border border-white/10 hover:border-primary/50 transition-all text-left group"
+                    >
+                      <div className="flex gap-4">
+                        {service.image && (
+                          <img
+                            src={service.image}
+                            alt={service.name}
+                            className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-white group-hover:text-primary transition-colors">
+                            {service.name}
+                          </h3>
+                          <p className="text-sm text-slate-400 line-clamp-1">
+                            {service.description}
+                          </p>
+                          <div className="flex items-center gap-4 mt-2 text-sm">
+                            <span className="text-primary font-bold">
+                              ${service.price.toLocaleString()}
+                            </span>
+                            <span className="text-slate-500 flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {service.duration} min
+                            </span>
+                          </div>
                         </div>
+                        <ArrowRight className="w-5 h-5 text-slate-500 group-hover:text-primary transition-colors self-center" />
                       </div>
-                      <ArrowRight className="w-5 h-5 text-slate-500 group-hover:text-primary transition-colors self-center" />
-                    </div>
-                  </button>
-                ))}
-              </div>
+                    </button>
+                  ))}
+                </div>
+              )}
 
-              {services.length === 0 && (
+              {!servicesLoading && services.length === 0 && (
                 <div className="text-center py-12">
                   <p className="text-slate-400">
                     No hay servicios disponibles para reserva en este momento.

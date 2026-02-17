@@ -23,6 +23,7 @@ import {
 } from "@/lib/constants";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 type TabType = "servicios" | "productos";
 
@@ -192,6 +193,20 @@ export default function ShopHomePage() {
                 <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-400">
                   {shop.contact.address && <span className="inline-flex items-center gap-2"><MapPin className="w-4 h-4" />{shop.contact.address}</span>}
                   {shop.contact.phone && <span className="inline-flex items-center gap-2"><Phone className="w-4 h-4" />{shop.contact.phone}</span>}
+                </div>
+              </ScrollReveal>
+            )}
+
+            {/* Book Appointment Button - Only for Service Businesses */}
+            {isServiceBusiness && hasServices && (
+              <ScrollReveal delay={0.5}>
+                <div className="mt-8">
+                  <Link href={`/${shop?.slug || shop?.id}/book`}>
+                    <button className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-400 text-white font-semibold rounded-full shadow-lg shadow-primary/25 transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/30">
+                      <Calendar className="w-5 h-5" />
+                      Reservar Cita
+                    </button>
+                  </Link>
                 </div>
               </ScrollReveal>
             )}
