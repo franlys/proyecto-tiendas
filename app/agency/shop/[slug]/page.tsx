@@ -57,6 +57,7 @@ import { Button, PhoneInput, type PhoneInputValue } from "@/components/ui";
 import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
 import { WhatsAppAutomationPanel } from "@/components/shared/whatsapp-automation";
 import { BackgroundGallery, mapToBackgroundCategory } from "@/components/shared/background-gallery";
+import { cn } from "@/lib/utils";
 
 // Mapeo de categorías para mostrar labels correctos
 const CATEGORY_OPTIONS: { value: ShopCategory; label: string }[] = [
@@ -112,12 +113,16 @@ function FeatureToggle({
                 <p className="text-xs text-slate-400">{description}</p>
             </div>
             <div
-                className={`w-12 h-6 rounded-full relative transition-colors ${enabled ? "bg-cyan-500" : "bg-slate-600"
-                    }`}
+                className={cn(
+                    "w-12 h-6 rounded-full relative transition-colors",
+                    enabled ? "bg-cyan-500" : "bg-slate-600"
+                )}
             >
                 <div
-                    className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${enabled ? "translate-x-7" : "translate-x-1"
-                        }`}
+                    className={cn(
+                        "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
+                        enabled ? "translate-x-7" : "translate-x-1"
+                    )}
                 />
             </div>
         </div>
@@ -578,7 +583,7 @@ function ShopDetailContent() {
                                 {shop.name}
                             </h1>
                             <div className="flex items-center gap-2 text-sm text-slate-400">
-                                <span>/{shop.slug}</span>
+                                <span>{`/${shop.slug}`}</span>
                                 <span className="w-1 h-1 rounded-full bg-slate-600" />
                                 <span className="uppercase text-xs tracking-wider">{shop.category || "beauty"}</span>
                             </div>
@@ -593,10 +598,12 @@ function ShopDetailContent() {
                     <div className="lg:col-span-1 space-y-2">
                         <button
                             onClick={() => setActiveTab("overview")}
-                            className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "overview"
-                                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                                : "text-slate-400 hover:bg-white/5 hover:text-white"
-                                }`}
+                            className={cn(
+                                "w-full text-left px-4 py-3 rounded-xl transition-all",
+                                activeTab === "overview"
+                                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                            )}
                         >
                             <div className="flex items-center gap-3">
                                 <Shield className="w-4 h-4" />
@@ -605,10 +612,12 @@ function ShopDetailContent() {
                         </button>
                         <button
                             onClick={() => setActiveTab("config")}
-                            className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "config"
-                                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                                : "text-slate-400 hover:bg-white/5 hover:text-white"
-                                }`}
+                            className={cn(
+                                "w-full text-left px-4 py-3 rounded-xl transition-all",
+                                activeTab === "config"
+                                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                            )}
                         >
                             <div className="flex items-center gap-3">
                                 <Store className="w-4 h-4" />
@@ -617,10 +626,12 @@ function ShopDetailContent() {
                         </button>
                         <button
                             onClick={() => setActiveTab("appearance")}
-                            className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "appearance"
-                                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                                : "text-slate-400 hover:bg-white/5 hover:text-white"
-                                }`}
+                            className={cn(
+                                "w-full text-left px-4 py-3 rounded-xl transition-all",
+                                activeTab === "appearance"
+                                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                            )}
                         >
                             <div className="flex items-center gap-3">
                                 <Palette className="w-4 h-4" />
@@ -629,10 +640,12 @@ function ShopDetailContent() {
                         </button>
                         <button
                             onClick={() => setActiveTab("features")}
-                            className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "features"
-                                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                                : "text-slate-400 hover:bg-white/5 hover:text-white"
-                                }`}
+                            className={cn(
+                                "w-full text-left px-4 py-3 rounded-xl transition-all",
+                                activeTab === "features"
+                                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                            )}
                         >
                             <div className="flex items-center gap-3">
                                 <Puzzle className="w-4 h-4" />
@@ -641,10 +654,12 @@ function ShopDetailContent() {
                         </button>
                         <button
                             onClick={() => setActiveTab("staff")}
-                            className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "staff"
-                                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                                : "text-slate-400 hover:bg-white/5 hover:text-white"
-                                }`}
+                            className={cn(
+                                "w-full text-left px-4 py-3 rounded-xl transition-all",
+                                activeTab === "staff"
+                                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                            )}
                         >
                             <div className="flex items-center gap-3">
                                 <Users className="w-4 h-4" />
@@ -653,10 +668,12 @@ function ShopDetailContent() {
                         </button>
                         <button
                             onClick={() => setActiveTab("whatsapp")}
-                            className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "whatsapp"
-                                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                                : "text-slate-400 hover:bg-white/5 hover:text-white"
-                                }`}
+                            className={cn(
+                                "w-full text-left px-4 py-3 rounded-xl transition-all",
+                                activeTab === "whatsapp"
+                                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                            )}
                         >
                             <div className="flex items-center gap-3">
                                 <MessageCircle className="w-4 h-4" />
@@ -665,10 +682,12 @@ function ShopDetailContent() {
                         </button>
                         <button
                             onClick={() => setActiveTab("security")}
-                            className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === "security"
-                                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                                : "text-slate-400 hover:bg-white/5 hover:text-white"
-                                }`}
+                            className={cn(
+                                "w-full text-left px-4 py-3 rounded-xl transition-all",
+                                activeTab === "security"
+                                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                            )}
                         >
                             <div className="flex items-center gap-3">
                                 <Key className="w-4 h-4" />
@@ -1147,10 +1166,12 @@ function ShopDetailContent() {
                                             <button
                                                 type="button"
                                                 onClick={() => setBackgroundType("solid")}
-                                                className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${backgroundType === "solid"
-                                                    ? "border-cyan-500 bg-cyan-500/10"
-                                                    : "border-white/10 bg-black/20 hover:border-white/20"
-                                                    }`}
+                                                className={cn(
+                                                    "p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2",
+                                                    backgroundType === "solid"
+                                                        ? "border-cyan-500 bg-cyan-500/10"
+                                                        : "border-white/10 bg-black/20 hover:border-white/20"
+                                                )}
                                             >
                                                 <Palette className="w-6 h-6 text-cyan-400" />
                                                 <span className="text-sm text-white">Color Sólido</span>
@@ -1158,10 +1179,12 @@ function ShopDetailContent() {
                                             <button
                                                 type="button"
                                                 onClick={() => setBackgroundType("image")}
-                                                className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${backgroundType === "image"
-                                                    ? "border-pink-500 bg-pink-500/10"
-                                                    : "border-white/10 bg-black/20 hover:border-white/20"
-                                                    }`}
+                                                className={cn(
+                                                    "p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2",
+                                                    backgroundType === "image"
+                                                        ? "border-pink-500 bg-pink-500/10"
+                                                        : "border-white/10 bg-black/20 hover:border-white/20"
+                                                )}
                                             >
                                                 <Image className="w-6 h-6 text-pink-400" />
                                                 <span className="text-sm text-white">Imagen</span>
@@ -1169,10 +1192,12 @@ function ShopDetailContent() {
                                             <button
                                                 type="button"
                                                 onClick={() => setBackgroundType("video")}
-                                                className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${backgroundType === "video"
-                                                    ? "border-purple-500 bg-purple-500/10"
-                                                    : "border-white/10 bg-black/20 hover:border-white/20"
-                                                    }`}
+                                                className={cn(
+                                                    "p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2",
+                                                    backgroundType === "video"
+                                                        ? "border-purple-500 bg-purple-500/10"
+                                                        : "border-white/10 bg-black/20 hover:border-white/20"
+                                                )}
                                             >
                                                 <Video className="w-6 h-6 text-purple-400" />
                                                 <span className="text-sm text-white">Video</span>
@@ -1373,10 +1398,16 @@ function ShopDetailContent() {
                                             <p className="text-xs text-slate-400">El audio se reproducirá al interactuar con la página</p>
                                         </div>
                                         <div
-                                            className={`w-12 h-6 rounded-full relative transition-colors ${audioEnabled ? "bg-emerald-500" : "bg-slate-600"}`}
+                                            className={cn(
+                                                "w-12 h-6 rounded-full relative transition-colors",
+                                                audioEnabled ? "bg-emerald-500" : "bg-slate-600"
+                                            )}
                                         >
                                             <div
-                                                className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${audioEnabled ? "translate-x-7" : "translate-x-1"}`}
+                                                className={cn(
+                                                    "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
+                                                    audioEnabled ? "translate-x-7" : "translate-x-1"
+                                                )}
                                             />
                                         </div>
                                     </div>
@@ -1442,10 +1473,16 @@ function ShopDetailContent() {
                                                     <p className="text-xs text-slate-400">El audio se reiniciará automáticamente</p>
                                                 </div>
                                                 <div
-                                                    className={`w-12 h-6 rounded-full relative transition-colors ${audioLoop ? "bg-emerald-500" : "bg-slate-600"}`}
+                                                    className={cn(
+                                                        "w-12 h-6 rounded-full relative transition-colors",
+                                                        audioLoop ? "bg-emerald-500" : "bg-slate-600"
+                                                    )}
                                                 >
                                                     <div
-                                                        className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${audioLoop ? "translate-x-7" : "translate-x-1"}`}
+                                                        className={cn(
+                                                            "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
+                                                            audioLoop ? "translate-x-7" : "translate-x-1"
+                                                        )}
                                                     />
                                                 </div>
                                             </div>
@@ -1760,28 +1797,33 @@ function ShopDetailContent() {
                                         staffMembers.map((staff) => (
                                             <div
                                                 key={staff.id}
-                                                className={`p-4 rounded-xl bg-white/5 border transition-all ${staff.isActive
-                                                    ? "border-white/10 hover:border-white/20"
-                                                    : "border-red-500/20 bg-red-500/5 opacity-60"
-                                                    }`}
+                                                className={cn(
+                                                    "p-4 rounded-xl bg-white/5 border transition-all",
+                                                    staff.isActive
+                                                        ? "border-white/10 hover:border-white/20"
+                                                        : "border-red-500/20 bg-red-500/5 opacity-60"
+                                                )}
                                             >
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-4">
-                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${staff.role === "owner" ? "bg-yellow-500" :
+                                                        <div className={cn(
+                                                            "w-10 h-10 rounded-full flex items-center justify-center text-white font-bold",
+                                                            staff.role === "owner" ? "bg-yellow-500" :
                                                             staff.role === "manager" ? "bg-purple-500" :
-                                                                staff.role === "sales" ? "bg-blue-500" :
-                                                                    "bg-orange-500"
-                                                            }`}>
+                                                            staff.role === "sales" ? "bg-blue-500" : "bg-orange-500"
+                                                        )}>
                                                             {staff.name.charAt(0).toUpperCase()}
                                                         </div>
                                                         <div>
                                                             <div className="flex items-center gap-2">
                                                                 <p className="font-medium text-white">{staff.name}</p>
-                                                                <span className={`text-xs px-2 py-0.5 rounded-full ${staff.role === "owner" ? "bg-yellow-500/20 text-yellow-400" :
+                                                                <span className={cn(
+                                                                    "text-xs px-2 py-0.5 rounded-full",
+                                                                    staff.role === "owner" ? "bg-yellow-500/20 text-yellow-400" :
                                                                     staff.role === "manager" ? "bg-purple-500/20 text-purple-400" :
-                                                                        staff.role === "sales" ? "bg-blue-500/20 text-blue-400" :
-                                                                            "bg-orange-500/20 text-orange-400"
-                                                                    }`}>
+                                                                    staff.role === "sales" ? "bg-blue-500/20 text-blue-400" :
+                                                                    "bg-orange-500/20 text-orange-400"
+                                                                )}>
                                                                     {STAFF_ROLES[staff.role].label}
                                                                 </span>
                                                                 {!staff.isActive && (
@@ -1836,7 +1878,7 @@ function ShopDetailContent() {
                                 <div className="p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
                                     <h4 className="font-medium text-cyan-400 text-sm mb-2">¿Cómo acceden los empleados?</h4>
                                     <p className="text-xs text-cyan-300/80">
-                                        Los empleados pueden iniciar sesión en <code className="bg-black/20 px-1 rounded">/staff/login</code> usando
+                                        Los empleados pueden iniciar sesión en <code className="bg-black/20 px-1 rounded">{"/" + "staff" + "/" + "login"}</code> usando
                                         su email y contraseña. El acceso está limitado según su rol asignado.
                                     </p>
                                 </div>
@@ -1896,7 +1938,6 @@ function ShopDetailContent() {
                                             label="Teléfono (opcional)"
                                             variant="dark"
                                         />
-                                        </div>
 
                                         <div>
                                             <label className="block text-sm font-medium text-slate-300 mb-2">

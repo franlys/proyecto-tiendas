@@ -214,6 +214,33 @@ export async function getUpcomingBookings(
   return bookings;
 }
 
+// Get all bookings for a date range (for calendar view)
+export async function getBookingsForDateRange(
+  shopId: string,
+  startDate: string,
+  endDate: string
+): Promise<Booking[]> {
+  const ref = collection(db, getBookingsCollection(shopId));
+  const q = query(
+    ref,
+    where("date", ">=", startDate),
+    where("date", "<=", endDate),
+    orderBy("date", "asc")
+  );
+
+  const snapshot = await getDocs(q);
+  const bookings: Booking[] = [];
+
+  snapshot.forEach((doc) => {
+    bookings.push({
+      id: doc.id,
+      ...doc.data(),
+    } as Booking);
+  });
+
+  return bookings;
+}
+
 // ==================== CONFIRMACIÓN ====================
 
 export async function confirmBooking(

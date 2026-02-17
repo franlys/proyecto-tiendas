@@ -30,7 +30,7 @@ import {
   confirmBooking,
   cancelBooking,
   updateBooking,
-  getUpcomingBookings,
+  getBookingsForDateRange,
 } from "@/lib/services/booking.service";
 import type { Booking, BookingStatus, BookingConfig } from "@/lib/types/booking.types";
 
@@ -327,11 +327,15 @@ function BookingsPageContent() {
       const firstDay = new Date(year, month, 1);
       const lastDay = new Date(year, month + 1, 0);
 
-      // Get all bookings for the month using upcoming bookings
-      const upcoming = await getUpcomingBookings(shopId, 60); // Get 60 days of bookings
+      // Format dates as YYYY-MM-DD
+      const startDate = firstDay.toISOString().split("T")[0];
+      const endDate = lastDay.toISOString().split("T")[0];
+
+      // Get all bookings for the month
+      const monthBookings = await getBookingsForDateRange(shopId, startDate, endDate);
 
       const counts: Record<string, number> = {};
-      upcoming.forEach((b) => {
+      monthBookings.forEach((b) => {
         if (b.status !== "cancelled") {
           counts[b.date] = (counts[b.date] || 0) + 1;
         }

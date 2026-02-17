@@ -64,7 +64,26 @@
       "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nfix: deep clean undefined values before saving to Firestore\n\n- Add cleanForFirestore helper to recursively remove undefined values\n- Fix variants with undefined nested properties causing Firestore errors\n- Add console logs to help debug save issues\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" add lib/utils.ts lib/services/booking.service.ts lib/services/rental.service.ts)",
       "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nfix: prevent undefined values from being sent to Firestore\n\n- Add cleanForFirestore utility function in lib/utils.ts\n- Fix booking.service.ts: only include optional fields if they have values\n- Fix rental.service.ts: use deleteField\\(\\) to remove currentRentalId\n- Fix rental.service.ts: omit rentalId field when releasing days\n\nFirestore doesn''t accept undefined values, which was causing silent failures.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(node -c:*)",
+      "Bash(NEXT_TURBOPACK=false npm run build:*)",
+      "Bash(git stash:*)",
+      "Bash(npx eslint:*)",
+      "Bash(git diff:*)",
+      "Bash(wc:*)",
+      "Bash(git show:*)",
+      "Bash(NEXT_PRIVATE_LOCAL_WEBPACK=1 npm run build:*)",
+      "Bash(npx acorn:*)",
+      "Bash(file:*)",
+      "Bash(cat:*)",
+      "Bash(od:*)",
+      "Bash(hexdump:*)",
+      "Bash(head:*)",
+      "Bash(npm info:*)",
+      "Bash(node -e:*)",
+      "Bash(npx next build:*)",
+      "Bash(python3:*)",
+      "Bash(pkill:*)"
     ]
   }
 }

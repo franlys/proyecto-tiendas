@@ -118,8 +118,10 @@ function OrderDetailModal({
 
       if (data.success) {
         console.log("✅ Notification sent via Evolution API");
-      } else if (data.whatsappUrl) {
-        // Fallback: open WhatsApp link
+      } else if (data.needsSetup) {
+        console.warn("⚠️ Bot no configurado - mensaje no enviado");
+      } else if (data.whatsappUrl && confirm("⚠️ Error al enviar via bot. ¿Abrir WhatsApp manualmente?")) {
+        // Fallback: open WhatsApp link only if user confirms
         window.open(data.whatsappUrl, "_blank");
       }
     } catch (error) {
@@ -235,10 +237,13 @@ function OrderDetailModal({
       const data = await response.json();
 
       if (data.success) {
-        alert("✅ Mensaje enviado correctamente");
+        alert("✅ Mensaje enviado correctamente via bot");
+      } else if (data.needsSetup) {
+        // Bot not configured - show clear error
+        alert("⚠️ Bot de WhatsApp no configurado.\n\nPara enviar mensajes automáticamente, configura:\n• EVOLUTION_API_URL\n• EVOLUTION_API_KEY\n\nen las variables de entorno de Vercel.");
       } else if (data.whatsappUrl) {
-        // Fallback: open WhatsApp link
-        if (confirm("No se pudo enviar via bot. ¿Abrir WhatsApp manualmente?")) {
+        // Fallback: offer to open WhatsApp link
+        if (confirm("⚠️ Error al enviar via bot.\n\n¿Abrir WhatsApp manualmente para enviar el mensaje?")) {
           window.open(data.whatsappUrl, "_blank");
         }
       } else {

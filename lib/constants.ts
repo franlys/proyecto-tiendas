@@ -1000,3 +1000,4 @@ export const MOCK_PRODUCTS: Record<string, Product[]> = {
     },
   ],
 };
+

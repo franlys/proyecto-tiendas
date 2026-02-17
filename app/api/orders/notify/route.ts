@@ -65,11 +65,13 @@ export async function POST(request: NextRequest) {
 
         // Check if Evolution API is configured
         if (!isEvolutionConfigured()) {
+            console.warn("[Notify] Evolution API not configured - returning error");
             return NextResponse.json(
                 {
                     success: false,
-                    method: "fallback",
-                    message: "Evolution API not configured. Use WhatsApp link instead.",
+                    needsSetup: true,
+                    error: "Bot de WhatsApp no configurado. Configura EVOLUTION_API_URL y EVOLUTION_API_KEY en las variables de entorno.",
+                    // Include fallback URL only for manual option
                     whatsappUrl: generateWhatsAppUrl(customerPhone, customerName, orderNumber, status, total)
                 },
                 { status: 200 }

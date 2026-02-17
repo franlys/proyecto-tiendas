@@ -16,11 +16,15 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  Palette,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { MOCK_SERVICES, type Service } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { BeautyConsultationForm } from "@/components/beauty";
+import type { BeautyConsultation } from "@/lib/types/beauty-consultation.types";
 
 type BookingStep = "service" | "date" | "time" | "info" | "confirm";
 
@@ -58,9 +62,35 @@ export default function BookingPage() {
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [showConsultationForm, setShowConsultationForm] = useState(false);
+  const [consultationComplete, setConsultationComplete] = useState(false);
+  const [bookingId, setBookingId] = useState<string | null>(null);
 
   // Get services for this shop
   const services = useMemo(() => MOCK_SERVICES[shopId] || [], [shopId]);
+
+  // Check if this is a beauty service that should show consultation form
+  const isBeautyService = useMemo(() => {
+    if (!bookingData.service) return false;
+    const beautyKeywords = [
+      "maquillaje", "makeup", "novia", "xv", "quinceañera", "graduación",
+      "peinado", "belleza", "beauty", "facial", "spa", "manicure", "pedicure"
+    ];
+    const serviceName = bookingData.service.name.toLowerCase();
+    const serviceDesc = bookingData.service.description?.toLowerCase() || "";
+    return beautyKeywords.some(keyword =>
+      serviceName.includes(keyword) || serviceDesc.includes(keyword)
+    );
+  }, [bookingData.service]);
+
+  // Check if shop type is beauty-related
+  const isBeautyShop = useMemo(() => {
+    if (!shop) return false;
+    const beautyTypes = ["salon", "spa", "beauty", "makeup", "nails", "barbershop"];
+    return beautyTypes.some(type =>
+      shop.businessType?.toLowerCase().includes(type)
+    );
+  }, [shop]);
 
   // Generate calendar dates
   const calendarDays = useMemo(() => {
@@ -171,6 +201,8 @@ export default function BookingPage() {
       });
 
       if (response.ok) {
+        const data = await response.json();
+        setBookingId(data.bookingId || data.id || null);
         setBookingComplete(true);
       } else {
         alert("Error al crear la reserva. Por favor intenta de nuevo.");
@@ -180,6 +212,29 @@ export default function BookingPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleConsultationComplete = async (consultation: Partial<BeautyConsultation>) => {
+    try {
+      await fetch("/api/beauty-consultations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...consultation,
+          shopId,
+        }),
+      });
+      setConsultationComplete(true);
+      setShowConsultationForm(false);
+    } catch (error) {
+      console.error("Error saving consultation:", error);
+      alert("Error al guardar la consulta. Pero no te preocupes, tu cita ya está confirmada.");
+      setShowConsultationForm(false);
+    }
+  };
+
+  const handleSkipConsultation = () => {
+    setShowConsultationForm(false);
   };
 
   const goBack = () => {
@@ -205,8 +260,33 @@ export default function BookingPage() {
     });
   };
 
+  // Show consultation form full screen
+  if (showConsultationForm && bookingId) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-900">
+        <button
+          onClick={handleSkipConsultation}
+          className="absolute top-4 right-4 z-50 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+        <BeautyConsultationForm
+          shopId={shopId}
+          bookingId={bookingId}
+          customerName={bookingData.customerName}
+          customerPhone={bookingData.customerPhone}
+          serviceName={bookingData.service?.name || ""}
+          onComplete={handleConsultationComplete}
+          onSkip={handleSkipConsultation}
+        />
+      </div>
+    );
+  }
+
   // Booking Complete View
   if (bookingComplete) {
+    const showConsultationOption = (isBeautyService || isBeautyShop) && !consultationComplete && bookingId;
+
     return (
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-lg mx-auto">
@@ -247,6 +327,44 @@ export default function BookingPage() {
                 </span>
               </div>
             </div>
+
+            {/* Beauty Consultation Prompt */}
+            {showConsultationOption && (
+              <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-pink-500/10 to-purple-500/10 border border-pink-500/20">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center">
+                    <Palette className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-white font-medium">Pre-consulta de belleza</p>
+                    <p className="text-xs text-slate-400">Ayúdanos a preparar tu look perfecto</p>
+                  </div>
+                </div>
+                <p className="text-sm text-slate-300 mb-4 text-left">
+                  Cuéntanos sobre tu evento, estilo preferido y comparte fotos de inspiración para que la maquillista llegue preparada.
+                </p>
+                <Button
+                  onClick={() => setShowConsultationForm(true)}
+                  className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Completar pre-consulta (3 min)
+                </Button>
+              </div>
+            )}
+
+            {/* Consultation Complete Message */}
+            {consultationComplete && (
+              <div className="mb-6 p-4 rounded-xl bg-green-500/10 border border-green-500/20">
+                <div className="flex items-center gap-2 text-green-400">
+                  <Check className="w-5 h-5" />
+                  <span className="font-medium">Pre-consulta completada</span>
+                </div>
+                <p className="text-sm text-slate-400 mt-1">
+                  La maquillista revisará tu información antes de la cita
+                </p>
+              </div>
+            )}
 
             <div className="space-y-3">
               <Link href={`/${shopId}`}>
