@@ -29,6 +29,7 @@ import {
   AlertTriangle,
   Truck,
   Sparkles,
+  Heart,
 } from "lucide-react";
 import { useAuth, ShopsProvider, useShops, AgencyProvider, SalesOrdersProvider, useSalesOrders, ORDER_STATUS_CONFIG, type OrderStatus, type SalesOrder } from "@/components/shared";
 import { DashboardKPIs, SalesChart, SubscriptionLock, SupportWidget, AgencyContactCard } from "@/components/admin";
@@ -953,6 +954,14 @@ function AdminDashboardWithSubscription() {
                   <Button variant="ghost" size="sm" className="px-2 sm:px-3">
                     <Users className="w-4 h-4" />
                     <span className="hidden sm:inline ml-1">CRM</span>
+                  </Button>
+                </Link>
+
+                {/* Lealtad - Siempre visible */}
+                <Link href="/admin/loyalty">
+                  <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-rose-400 hover:text-rose-300">
+                    <Heart className="w-4 h-4" />
+                    <span className="hidden sm:inline ml-1">Lealtad</span>
                   </Button>
                 </Link>
 

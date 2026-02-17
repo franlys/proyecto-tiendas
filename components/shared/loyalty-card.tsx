@@ -1,59 +1,261 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Heart, Sparkles, Gift } from "lucide-react";
+import { Heart, Sparkles, Gift, Loader2, Phone, CheckCircle, History, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useShop } from "./theme-context";
+import {
+  getLoyaltyConfig,
+  getCustomerLoyalty,
+  redeemReward,
+} from "@/lib/services/loyalty.service";
+import type { LoyaltyConfig, CustomerLoyalty } from "@/lib/types/loyalty.types";
 
 interface LoyaltyCardProps {
-  totalStamps?: number;
-  initialStamps?: number;
-  reward?: string;
+  customerPhone?: string;
+  demoMode?: boolean;
 }
 
 export function LoyaltyCard({
-  totalStamps = 10,
-  initialStamps = 3,
-  reward = "Servicio Gratis",
+  customerPhone,
+  demoMode = false,
 }: LoyaltyCardProps) {
   const shop = useShop();
-  const [stamps, setStamps] = useState(initialStamps);
+  const [phone, setPhone] = useState(customerPhone || "");
+  const [showPhoneInput, setShowPhoneInput] = useState(!customerPhone);
+  const [loading, setLoading] = useState(false);
+  const [config, setConfig] = useState<LoyaltyConfig | null>(null);
+  const [loyalty, setLoyalty] = useState<CustomerLoyalty | null>(null);
+  const [error, setError] = useState("");
+  const [showHistory, setShowHistory] = useState(false);
+  const [redeeming, setRedeeming] = useState(false);
+  const [redeemSuccess, setRedeemSuccess] = useState(false);
+
+  // Demo mode state
+  const [demoStamps, setDemoStamps] = useState(3);
   const [lastAdded, setLastAdded] = useState<number | null>(null);
-  const [cardNumber, setCardNumber] = useState(1234);
 
-  // Generate random card number only on client to avoid hydration mismatch
+  const totalStamps = config?.stampsRequired || 10;
+  const currentStamps = demoMode ? demoStamps : (loyalty?.currentStamps || 0);
+  const reward = config?.reward || "Servicio Gratis";
+  const isComplete = currentStamps >= totalStamps;
+  const canRedeem = !demoMode && isComplete && loyalty;
+
   useEffect(() => {
-    setCardNumber(Math.floor(1000 + Math.random() * 9000));
-  }, []);
+    if (shop?.slug) {
+      loadConfig();
+    }
+  }, [shop?.slug]);
 
-  const handleAddStamp = () => {
-    if (stamps < totalStamps) {
-      const newStampIndex = stamps;
-      setStamps((prev) => prev + 1);
+  useEffect(() => {
+    if (customerPhone && shop?.slug) {
+      loadCustomerData(customerPhone);
+    }
+  }, [customerPhone, shop?.slug]);
+
+  const loadConfig = async () => {
+    if (!shop?.slug) return;
+    const cfg = await getLoyaltyConfig(shop.slug);
+    setConfig(cfg);
+  };
+
+  const loadCustomerData = async (phoneNumber: string) => {
+    if (!shop?.slug || !phoneNumber) return;
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const data = await getCustomerLoyalty(shop.slug, phoneNumber);
+      setLoyalty(data);
+      setShowPhoneInput(false);
+    } catch {
+      setError("Error al cargar datos");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePhoneSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (phone.length < 10) {
+      setError("Ingresa un número válido");
+      return;
+    }
+    await loadCustomerData(phone);
+  };
+
+  const handleRedeem = async () => {
+    if (!shop?.slug || !loyalty?.phone) return;
+
+    setRedeeming(true);
+    try {
+      const result = await redeemReward(shop.slug, loyalty.phone);
+      if (result.success) {
+        setRedeemSuccess(true);
+        await loadCustomerData(loyalty.phone);
+        setTimeout(() => setRedeemSuccess(false), 3000);
+      } else {
+        setError(result.message);
+      }
+    } catch {
+      setError("Error al canjear recompensa");
+    } finally {
+      setRedeeming(false);
+    }
+  };
+
+  const handleDemoClick = () => {
+    if (!demoMode) return;
+    if (demoStamps < totalStamps) {
+      const newStampIndex = demoStamps;
+      setDemoStamps((prev) => prev + 1);
       setLastAdded(newStampIndex);
-
-      // Reset animation trigger after animation completes
       setTimeout(() => setLastAdded(null), 600);
     }
   };
 
-  const isComplete = stamps >= totalStamps;
+  // Phone input view
+  if (showPhoneInput && !demoMode) {
+    return (
+      <div className="w-full max-w-md mx-auto">
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
+              <Heart className="w-8 h-8 text-primary" />
+            </div>
+            <h3 className="text-white font-display text-xl font-bold">
+              Tarjeta de Fidelidad
+            </h3>
+            <p className="text-slate-400 text-sm mt-2">
+              Ingresa tu número para ver tus sellos
+            </p>
+          </div>
+
+          <form onSubmit={handlePhoneSubmit} className="space-y-4">
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => {
+                  setPhone(e.target.value.replace(/\D/g, ""));
+                  setError("");
+                }}
+                placeholder="809 123 4567"
+                className="w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+
+            {error && (
+              <p className="text-red-400 text-sm text-center">{error}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || phone.length < 10}
+              className="w-full py-3 bg-primary hover:bg-primary/90 disabled:bg-slate-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  <Sparkles className="w-5 h-5" />
+                  Ver mis sellos
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div
-      onClick={handleAddStamp}
-      className={cn(
-        "relative w-full max-w-md mx-auto cursor-pointer",
-        "animate-in slide-in-from-bottom-4 duration-500"
+    <div className="relative w-full max-w-md mx-auto">
+      {/* History Modal */}
+      {showHistory && loyalty && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-slate-800 rounded-2xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                <History className="w-5 h-5" />
+                Historial
+              </h3>
+              <button
+                onClick={() => setShowHistory(false)}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-white" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-slate-400 text-sm mb-2">Sellos Ganados</h4>
+                {loyalty.stampHistory.length === 0 ? (
+                  <p className="text-slate-500 text-sm">Sin sellos aún</p>
+                ) : (
+                  <div className="space-y-2">
+                    {loyalty.stampHistory.slice(-10).reverse().map((stamp) => (
+                      <div
+                        key={stamp.id}
+                        className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg"
+                      >
+                        <div>
+                          <p className="text-white text-sm">
+                            Pedido #{stamp.orderNumber}
+                          </p>
+                          <p className="text-slate-400 text-xs">
+                            {new Date(stamp.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <span className="text-primary font-bold">
+                          +{stamp.stampsEarned}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h4 className="text-slate-400 text-sm mb-2">Recompensas Canjeadas</h4>
+                {loyalty.redemptionHistory.length === 0 ? (
+                  <p className="text-slate-500 text-sm">Sin canjes aún</p>
+                ) : (
+                  <div className="space-y-2">
+                    {loyalty.redemptionHistory.slice(-10).reverse().map((redemption) => (
+                      <div
+                        key={redemption.id}
+                        className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg"
+                      >
+                        <div>
+                          <p className="text-white text-sm">{redemption.reward}</p>
+                          <p className="text-slate-400 text-xs">
+                            {new Date(redemption.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Gift className="w-5 h-5 text-gold" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
-    >
-      {/* Card */}
+
+      {/* Main Card */}
       <div
+        onClick={demoMode ? handleDemoClick : undefined}
         className={cn(
           "relative overflow-hidden rounded-2xl p-6",
           "bg-gradient-to-br from-primary via-rose-600 to-orange-500",
           "shadow-2xl shadow-primary/30",
-          "transition-transform duration-300 hover:scale-[1.02]",
+          "transition-transform duration-300",
+          demoMode && "cursor-pointer hover:scale-[1.02]",
           isComplete && "from-gold via-gold-light to-amber-400"
         )}
       >
@@ -62,8 +264,15 @@ export function LoyaltyCard({
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,white_1px,transparent_1px)] bg-[length:20px_20px]" />
         </div>
 
-        {/* Shine Effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
+        {/* Redeem Success Overlay */}
+        {redeemSuccess && (
+          <div className="absolute inset-0 bg-green-500/90 flex items-center justify-center z-10 rounded-2xl animate-in fade-in duration-300">
+            <div className="text-center text-white">
+              <CheckCircle className="w-16 h-16 mx-auto mb-2" />
+              <p className="font-bold text-lg">Recompensa Canjeada</p>
+            </div>
+          </div>
+        )}
 
         {/* Header */}
         <div className="relative flex items-center justify-between mb-6">
@@ -73,19 +282,32 @@ export function LoyaltyCard({
             </h3>
             <p className="text-white/80 text-sm">Tarjeta de Fidelidad</p>
           </div>
-          <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-            {isComplete ? (
-              <Gift className="w-6 h-6 text-white" />
-            ) : (
-              <Heart className="w-6 h-6 text-white" />
+          <div className="flex items-center gap-2">
+            {loyalty && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowHistory(true);
+                }}
+                className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors"
+              >
+                <History className="w-5 h-5 text-white" />
+              </button>
             )}
+            <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              {isComplete ? (
+                <Gift className="w-6 h-6 text-white" />
+              ) : (
+                <Heart className="w-6 h-6 text-white" />
+              )}
+            </div>
           </div>
         </div>
 
         {/* Stamps Grid */}
         <div className="relative grid grid-cols-5 gap-3 mb-6">
           {Array.from({ length: totalStamps }).map((_, index) => {
-            const isFilled = index < stamps;
+            const isFilled = index < currentStamps;
             const isAnimating = index === lastAdded;
 
             return (
@@ -103,7 +325,7 @@ export function LoyaltyCard({
                   <div
                     className={cn(
                       "text-primary",
-                      isAnimating && "animate-stamp"
+                      isAnimating && "animate-bounce"
                     )}
                   >
                     <Sparkles className="w-5 h-5" />
@@ -118,37 +340,65 @@ export function LoyaltyCard({
         <div className="relative flex items-center justify-between">
           <div>
             <p className="text-white/80 text-sm">
-              {isComplete ? "¡Felicidades!" : "Progreso"}
+              {isComplete ? "Recompensa disponible" : "Progreso"}
             </p>
             <p className="text-white font-bold text-lg">
-              {isComplete ? reward : `${stamps} / ${totalStamps} sellos`}
+              {isComplete ? reward : `${currentStamps} / ${totalStamps} sellos`}
             </p>
           </div>
 
-          {!isComplete && (
+          {demoMode && !isComplete && (
             <div className="text-right">
               <p className="text-white/60 text-xs">Toca para probar</p>
               <p className="text-white/80 text-sm">+1 sello demo</p>
             </div>
           )}
 
-          {isComplete && (
-            <button className="px-4 py-2 bg-white text-primary font-bold rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+          {canRedeem && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRedeem();
+              }}
+              disabled={redeeming}
+              className="px-4 py-2 bg-white text-primary font-bold rounded-lg shadow-lg hover:shadow-xl transition-all hover:scale-105 disabled:opacity-50 flex items-center gap-2"
+            >
+              {redeeming ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Gift className="w-4 h-4" />
+              )}
               Canjear
             </button>
           )}
         </div>
 
-        {/* Card Number (decorative) */}
-        <div className="absolute bottom-4 right-6 text-white/30 text-xs font-mono">
-          **** **** **** {cardNumber}
-        </div>
+        {/* Stats */}
+        {loyalty && (
+          <div className="mt-4 pt-4 border-t border-white/20 flex items-center justify-between text-white/60 text-xs">
+            <span>Total ganados: {loyalty.totalStampsEarned}</span>
+            <span>Canjeados: {loyalty.totalRewardsRedeemed}</span>
+          </div>
+        )}
+
+        {/* Card Number */}
+        {loyalty && (
+          <div className="absolute bottom-4 right-6 text-white/30 text-xs font-mono">
+            **** {loyalty.phone.slice(-4)}
+          </div>
+        )}
       </div>
 
-      {/* Instruction */}
-      {!isComplete && (
+      {/* Instructions */}
+      {demoMode && !isComplete && (
         <p className="text-center text-slate-500 text-sm mt-3">
           Toca la tarjeta para simular un sello
+        </p>
+      )}
+
+      {!demoMode && loyalty && (
+        <p className="text-center text-slate-500 text-sm mt-3">
+          Ganas sellos con cada compra
         </p>
       )}
     </div>

@@ -4,6 +4,7 @@ import { adminDb } from "@/lib/firebase-admin";
 import { OrderStatus, SalesOrder } from "@/lib/types/order.types";
 import { deductStock, restoreStock } from "@/lib/services/inventory.service";
 import { sendInvoiceWhatsApp } from "@/lib/services/invoice.service";
+import { addStampsAdmin } from "@/lib/services/loyalty-admin.service";
 
 /**
  * Updates order status and triggers side effects (Inventory).
@@ -38,6 +39,25 @@ export async function updateOrderStatusAction(shopId: string, orderId: string, s
         // Confirmed -> Deduct
         if (status === "confirmed" && oldStatus !== "confirmed") {
             await deductStock(shopId, orderData.items);
+
+            // 3. Add Loyalty Stamps (if customer has phone)
+            if (orderData.customerPhone) {
+                try {
+                    const stampResult = await addStampsAdmin(
+                        shopId,
+                        orderData.customerPhone,
+                        orderId,
+                        orderData.orderNumber || orderId.slice(-6),
+                        orderData.total || 0
+                    );
+                    if (stampResult.success) {
+                        console.log(`[Loyalty] Added ${stampResult.stampsAdded} stamp(s) for ${orderData.customerPhone}. Total: ${stampResult.newTotal}`);
+                    }
+                } catch (loyaltyError) {
+                    // Don't fail the order if loyalty fails
+                    console.error("[Loyalty] Error adding stamps:", loyaltyError);
+                }
+            }
         }
 
         // Cancelled -> Restore (if it was previously confirmed/deducted)
