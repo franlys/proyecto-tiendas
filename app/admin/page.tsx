@@ -30,6 +30,8 @@ import {
   Truck,
   Sparkles,
   Heart,
+  Clock,
+  Palette,
 } from "lucide-react";
 import { useAuth, ShopsProvider, useShops, AgencyProvider, SalesOrdersProvider, useSalesOrders, ORDER_STATUS_CONFIG, type OrderStatus, type SalesOrder } from "@/components/shared";
 import { DashboardKPIs, SalesChart, SubscriptionLock, SupportWidget, AgencyContactCard } from "@/components/admin";
@@ -753,11 +755,11 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
             className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
           >
             <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
-              <Settings className="w-5 h-5 text-white" />
+              <Palette className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1">
-              <p className="text-white font-medium">Configuración</p>
-              <p className="text-xs text-slate-400">Tema y visuales</p>
+              <p className="text-white font-medium">Diseño Visual</p>
+              <p className="text-xs text-slate-400">Colores, fondo, efectos</p>
             </div>
             <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
           </Link>
@@ -783,14 +785,14 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
           {!isSuperAdmin && (
             <Link
               href="/admin/profile"
-              className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
+              className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-purple-500/10 to-cyan-500/10 hover:from-purple-500/20 hover:to-cyan-500/20 border border-purple-500/20 hover:border-purple-500/30 transition-all group"
             >
               <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                <Store className="w-5 h-5 text-purple-400" />
+                <Clock className="w-5 h-5 text-purple-400" />
               </div>
               <div className="flex-1">
-                <p className="text-white font-medium">Mi Negocio</p>
-                <p className="text-xs text-slate-400">Logo, horarios, redes</p>
+                <p className="text-white font-medium">Horarios y Contacto</p>
+                <p className="text-xs text-slate-400">Configura horarios, teléfono, redes sociales</p>
               </div>
               <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
             </Link>
@@ -989,20 +991,20 @@ function AdminDashboardWithSubscription() {
                   </Button>
                 </Link>
 
-                {/* Config - Siempre visible */}
+                {/* Diseño Visual - Siempre visible */}
                 <Link href="/admin/settings">
                   <Button variant="ghost" size="sm" className="px-2 sm:px-3">
-                    <Settings className="w-4 h-4" />
-                    <span className="hidden sm:inline ml-1">Config</span>
+                    <Palette className="w-4 h-4" />
+                    <span className="hidden sm:inline ml-1">Diseño</span>
                   </Button>
                 </Link>
 
-                {/* Mi Negocio - Solo para Shop Owner */}
+                {/* Horarios y Contacto - Solo para Shop Owner */}
                 {!isSuperAdmin && (
                   <Link href="/admin/profile">
-                    <Button variant="ghost" size="sm" className="px-2 sm:px-3">
-                      <Store className="w-4 h-4" />
-                      <span className="hidden sm:inline ml-1">Mi Negocio</span>
+                    <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-purple-400 hover:text-purple-300">
+                      <Clock className="w-4 h-4" />
+                      <span className="hidden sm:inline ml-1">Horarios</span>
                     </Button>
                   </Link>
                 )}

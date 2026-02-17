@@ -233,10 +233,10 @@ export default function AdminSettingsPage() {
               </div>
               <div>
                 <h1 className="font-display text-2xl font-bold text-white">
-                  Configuración Visual
+                  Diseño Visual
                 </h1>
                 <p className="text-slate-400 text-sm">
-                  Personaliza la apariencia de tu tienda
+                  Colores, fondo y efectos visuales de tu tienda
                 </p>
               </div>
             </div>
