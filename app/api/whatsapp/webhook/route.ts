@@ -74,8 +74,12 @@ function isBusinessHours(config: WhatsAppAutoReplyConfig): boolean {
   const now = new Date();
   const currentTime = now.getHours() * 60 + now.getMinutes();
 
-  const [startHour, startMin] = config.businessHoursStart.split(":").map(Number);
-  const [endHour, endMin] = config.businessHoursEnd.split(":").map(Number);
+  // Robust check: Ensure values exist before split
+  const startStr = config.businessHoursStart || "09:00";
+  const endStr = config.businessHoursEnd || "18:00";
+
+  const [startHour, startMin] = startStr.split(":").map(Number);
+  const [endHour, endMin] = endStr.split(":").map(Number);
 
   const startTime = startHour * 60 + startMin;
   const endTime = endHour * 60 + endMin;
