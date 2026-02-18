@@ -6,7 +6,9 @@ import type {
   Booking,
   CreateBookingInput,
   DaySlots,
-  TimeSlot
+  TimeSlot,
+  BookingService,
+  CreateServiceInput
 } from "@/lib/types/booking.types";
 import { calculateEndTime } from "@/lib/types/booking.types";
 
@@ -14,6 +16,7 @@ import { calculateEndTime } from "@/lib/types/booking.types";
 const getConfigDoc = (shopId: string) => `shops/${shopId}/bookingConfig/config`;
 const getBookingsCollection = (shopId: string) => `shops/${shopId}/bookings`;
 const getSlotsCollection = (shopId: string) => `shops/${shopId}/bookingSlots`;
+const getServicesCollection = (shopId: string) => `shops/${shopId}/bookingServices`;
 
 // ==================== CONFIG (ADMIN SDK) ====================
 
@@ -158,6 +161,9 @@ function getDefaultConfig(): BookingConfig {
     closeTime: "18:00",
     slotDurationMinutes: 30,
     bufferMinutes: 0,
+    breakEnabled: false,
+    breakStartTime: "12:00",
+    breakEndTime: "14:00",
     closedDays: [0],
     closedDates: [],
     confirmKeywords: ["SI", "SÍ", "CONFIRMO", "OK", "LISTO", "1"],
@@ -275,11 +281,18 @@ async function getDaySlotsAdmin(
   return null;
 }
 
-function generateTimeSlots(
-  openTime: string,
-  closeTime: string,
-  slotDurationMinutes: number
-): string[] {
+interface GenerateSlotsOptions {
+  openTime: string;
+  closeTime: string;
+  slotDurationMinutes: number;
+  breakEnabled?: boolean;
+  breakStartTime?: string;
+  breakEndTime?: string;
+}
+
+function generateTimeSlots(options: GenerateSlotsOptions): string[] {
+  const { openTime, closeTime, slotDurationMinutes, breakEnabled, breakStartTime, breakEndTime } = options;
+
   const slots: string[] = [];
   const [openHour, openMin] = openTime.split(":").map(Number);
   const [closeHour, closeMin] = closeTime.split(":").map(Number);
@@ -287,10 +300,31 @@ function generateTimeSlots(
   let currentMinutes = openHour * 60 + openMin;
   const closeMinutes = closeHour * 60 + closeMin;
 
+  // Calculate break time in minutes if enabled
+  let breakStartMinutes = 0;
+  let breakEndMinutes = 0;
+  if (breakEnabled && breakStartTime && breakEndTime) {
+    const [breakStartH, breakStartM] = breakStartTime.split(":").map(Number);
+    const [breakEndH, breakEndM] = breakEndTime.split(":").map(Number);
+    breakStartMinutes = breakStartH * 60 + breakStartM;
+    breakEndMinutes = breakEndH * 60 + breakEndM;
+  }
+
   while (currentMinutes < closeMinutes) {
     const hours = Math.floor(currentMinutes / 60);
     const mins = currentMinutes % 60;
-    slots.push(`${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`);
+    const timeStr = `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`;
+
+    // Skip slots that fall within the break time
+    const slotEndMinutes = currentMinutes + slotDurationMinutes;
+    const isInBreak = breakEnabled &&
+      breakStartMinutes > 0 &&
+      (currentMinutes < breakEndMinutes && slotEndMinutes > breakStartMinutes);
+
+    if (!isInBreak) {
+      slots.push(timeStr);
+    }
+
     currentMinutes += slotDurationMinutes;
   }
 
@@ -307,11 +341,14 @@ async function generateDaySlotsAdmin(
   }
 
   const config = await getBookingConfigAdmin(shopId);
-  const timeSlots = generateTimeSlots(
-    config.openTime,
-    config.closeTime,
-    config.slotDurationMinutes
-  );
+  const timeSlots = generateTimeSlots({
+    openTime: config.openTime,
+    closeTime: config.closeTime,
+    slotDurationMinutes: config.slotDurationMinutes,
+    breakEnabled: config.breakEnabled,
+    breakStartTime: config.breakStartTime,
+    breakEndTime: config.breakEndTime,
+  });
 
   const slots: Record<string, TimeSlot> = {};
   for (const time of timeSlots) {
@@ -393,6 +430,95 @@ export async function getAvailableSlotsAdmin(
   }
 
   return available;
+}
+
+/**
+ * Get available slots that can accommodate a specific service duration
+ * This calculates which start times have enough consecutive availability
+ * to fit a service of the given duration (in minutes)
+ */
+export async function getAvailableSlotsForDurationAdmin(
+  shopId: string,
+  date: string,
+  serviceDurationMinutes: number
+): Promise<{ time: string; endTime: string; available: boolean }[]> {
+  const db = adminDb();
+  if (!db) {
+    console.error("Admin DB not initialized");
+    return [];
+  }
+
+  const config = await getBookingConfigAdmin(shopId);
+  const slotDuration = config.slotDurationMinutes;
+
+  // Calculate how many consecutive slots are needed
+  const slotsNeeded = Math.ceil(serviceDurationMinutes / slotDuration);
+
+  // If service duration is equal to or less than slot duration, use standard logic
+  if (slotsNeeded <= 1) {
+    return getAvailableSlotsAdmin(shopId, date);
+  }
+
+  let daySlots = await getDaySlotsAdmin(shopId, date);
+
+  if (!daySlots) {
+    daySlots = await generateDaySlotsAdmin(shopId, date);
+  }
+
+  // Get all slot times sorted
+  const allTimes = Object.keys(daySlots.slots).sort();
+  const available: { time: string; endTime: string; available: boolean }[] = [];
+
+  // For each potential start time, check if enough consecutive slots are available
+  for (let i = 0; i < allTimes.length; i++) {
+    const startTime = allTimes[i];
+
+    // Check if we have enough slots from this position
+    if (i + slotsNeeded > allTimes.length) {
+      // Not enough slots remaining in the day
+      continue;
+    }
+
+    // Check if all required consecutive slots are available
+    let allSlotsAvailable = true;
+    for (let j = 0; j < slotsNeeded; j++) {
+      const slotTime = allTimes[i + j];
+      if (!daySlots.slots[slotTime]?.available) {
+        allSlotsAvailable = false;
+        break;
+      }
+
+      // Verify slots are consecutive (no gaps from break time)
+      if (j > 0) {
+        const prevTime = allTimes[i + j - 1];
+        const prevMinutes = timeToMinutes(prevTime);
+        const currentMinutes = timeToMinutes(slotTime);
+        // Slots should be exactly slotDuration apart
+        if (currentMinutes - prevMinutes !== slotDuration) {
+          allSlotsAvailable = false;
+          break;
+        }
+      }
+    }
+
+    if (allSlotsAvailable) {
+      available.push({
+        time: startTime,
+        endTime: calculateEndTime(startTime, serviceDurationMinutes),
+        available: true,
+      });
+    }
+  }
+
+  return available;
+}
+
+/**
+ * Helper to convert time string to minutes
+ */
+function timeToMinutes(time: string): number {
+  const [hours, mins] = time.split(":").map(Number);
+  return hours * 60 + mins;
 }
 
 export async function isSlotAvailableAdmin(
@@ -545,5 +671,210 @@ export async function getBookingByIdAdmin(
   } catch (error) {
     console.error("Error getting booking:", error);
     return null;
+  }
+}
+
+// ==================== SERVICES CRUD (ADMIN SDK) ====================
+
+/**
+ * Get all services for a shop
+ */
+export async function getServicesAdmin(shopId: string): Promise<BookingService[]> {
+  const db = adminDb();
+  if (!db) return [];
+
+  try {
+    const snapshot = await db
+      .collection(getServicesCollection(shopId))
+      .orderBy("order", "asc")
+      .get();
+
+    const services: BookingService[] = [];
+    snapshot.forEach((doc) => {
+      services.push({
+        id: doc.id,
+        ...doc.data(),
+      } as BookingService);
+    });
+
+    return services;
+  } catch (error) {
+    console.error("Error getting services:", error);
+    return [];
+  }
+}
+
+/**
+ * Get active services only
+ */
+export async function getActiveServicesAdmin(shopId: string): Promise<BookingService[]> {
+  const db = adminDb();
+  if (!db) return [];
+
+  try {
+    const snapshot = await db
+      .collection(getServicesCollection(shopId))
+      .where("isActive", "==", true)
+      .orderBy("order", "asc")
+      .get();
+
+    const services: BookingService[] = [];
+    snapshot.forEach((doc) => {
+      services.push({
+        id: doc.id,
+        ...doc.data(),
+      } as BookingService);
+    });
+
+    return services;
+  } catch (error) {
+    console.error("Error getting active services:", error);
+    return [];
+  }
+}
+
+/**
+ * Get a single service by ID
+ */
+export async function getServiceByIdAdmin(
+  shopId: string,
+  serviceId: string
+): Promise<BookingService | null> {
+  const db = adminDb();
+  if (!db) return null;
+
+  try {
+    const docSnap = await db
+      .collection(getServicesCollection(shopId))
+      .doc(serviceId)
+      .get();
+
+    if (!docSnap.exists) return null;
+
+    return {
+      id: docSnap.id,
+      ...docSnap.data(),
+    } as BookingService;
+  } catch (error) {
+    console.error("Error getting service:", error);
+    return null;
+  }
+}
+
+/**
+ * Create a new service
+ */
+export async function createServiceAdmin(
+  shopId: string,
+  input: CreateServiceInput
+): Promise<BookingService> {
+  const db = adminDb();
+  if (!db) {
+    throw new Error("Admin DB not initialized");
+  }
+
+  const now = new Date().toISOString();
+
+  // Get current max order
+  const existing = await getServicesAdmin(shopId);
+  const maxOrder = existing.length > 0
+    ? Math.max(...existing.map(s => s.order || 0))
+    : 0;
+
+  const serviceData = {
+    shopId,
+    name: input.name,
+    description: input.description || "",
+    duration: input.duration,
+    price: input.price,
+    category: input.category || "",
+    isActive: input.isActive !== false,
+    order: input.order ?? maxOrder + 1,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  const docRef = await db.collection(getServicesCollection(shopId)).add(serviceData);
+
+  return {
+    id: docRef.id,
+    ...serviceData,
+  };
+}
+
+/**
+ * Update a service
+ */
+export async function updateServiceAdmin(
+  shopId: string,
+  serviceId: string,
+  updates: Partial<CreateServiceInput>
+): Promise<BookingService | null> {
+  const db = adminDb();
+  if (!db) {
+    throw new Error("Admin DB not initialized");
+  }
+
+  const docRef = db.collection(getServicesCollection(shopId)).doc(serviceId);
+  const docSnap = await docRef.get();
+
+  if (!docSnap.exists) {
+    return null;
+  }
+
+  await docRef.update({
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  });
+
+  const updated = await docRef.get();
+  return {
+    id: updated.id,
+    ...updated.data(),
+  } as BookingService;
+}
+
+/**
+ * Delete a service
+ */
+export async function deleteServiceAdmin(
+  shopId: string,
+  serviceId: string
+): Promise<boolean> {
+  const db = adminDb();
+  if (!db) return false;
+
+  try {
+    await db.collection(getServicesCollection(shopId)).doc(serviceId).delete();
+    return true;
+  } catch (error) {
+    console.error("Error deleting service:", error);
+    return false;
+  }
+}
+
+/**
+ * Reorder services
+ */
+export async function reorderServicesAdmin(
+  shopId: string,
+  serviceIds: string[]
+): Promise<boolean> {
+  const db = adminDb();
+  if (!db) return false;
+
+  try {
+    const batch = db.batch();
+
+    serviceIds.forEach((id, index) => {
+      const docRef = db.collection(getServicesCollection(shopId)).doc(id);
+      batch.update(docRef, { order: index, updatedAt: new Date().toISOString() });
+    });
+
+    await batch.commit();
+    return true;
+  } catch (error) {
+    console.error("Error reordering services:", error);
+    return false;
   }
 }

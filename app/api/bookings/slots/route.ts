@@ -1,19 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   getAvailableSlotsAdmin,
+  getAvailableSlotsForDurationAdmin,
   getBookingConfigAdmin,
   isSlotAvailableAdmin,
 } from "@/lib/services/booking-admin.service";
 
 /**
- * GET /api/bookings/slots?shopId=xxx&date=2026-02-15
+ * GET /api/bookings/slots?shopId=xxx&date=2026-02-15&duration=90
  * Obtener slots disponibles para una fecha (usando Admin SDK)
+ * Optional duration parameter for dynamic slot calculation based on service duration
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const shopId = searchParams.get("shopId");
   const date = searchParams.get("date");
   const time = searchParams.get("time");
+  const durationParam = searchParams.get("duration");
 
   if (!shopId || !date) {
     return NextResponse.json(
@@ -85,7 +88,11 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const slots = await getAvailableSlotsAdmin(shopId, date);
+    // Use duration-aware slot calculation if duration is provided
+    const serviceDuration = durationParam ? parseInt(durationParam, 10) : null;
+    const slots = serviceDuration && serviceDuration > 0
+      ? await getAvailableSlotsForDurationAdmin(shopId, date, serviceDuration)
+      : await getAvailableSlotsAdmin(shopId, date);
 
     // Filtrar slots que ya pasaron si es hoy
     const isToday = dateObj.toDateString() === new Date().toDateString();

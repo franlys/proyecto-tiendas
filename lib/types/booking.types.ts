@@ -95,6 +95,11 @@ export interface BookingConfig {
   slotDurationMinutes: number;     // Default: 30
   bufferMinutes: number;           // Buffer entre citas (default: 0)
 
+  // Horario de descanso (almuerzo, etc.)
+  breakEnabled: boolean;           // Si hay break habilitado
+  breakStartTime: string;          // "12:00"
+  breakEndTime: string;            // "14:00"
+
   // Días cerrados (0 = Domingo, 6 = Sábado)
   closedDays: number[];
 
@@ -139,15 +144,49 @@ export interface BookingConversation {
   lastMessageAt: Timestamp;
 }
 
+// Servicio con duración individual
+export interface BookingService {
+  id: string;
+  shopId: string;
+  name: string;              // "Manicura Simple"
+  description?: string;      // "Incluye limado y esmaltado"
+  duration: number;          // Duración en minutos (20)
+  price: number;             // Precio (150)
+  category?: string;         // Categoría opcional ("Uñas")
+  isActive: boolean;         // Si está disponible
+  order: number;             // Orden de visualización
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Input para crear/actualizar servicio
+export interface CreateServiceInput {
+  name: string;
+  description?: string;
+  duration: number;
+  price: number;
+  category?: string;
+  isActive?: boolean;
+  order?: number;
+}
+
 // Input para crear reservación
 export interface CreateBookingInput {
   customerName: string;
   customerPhone: string;
   customerEmail?: string;
+  // Soporte para un servicio (backwards compatible)
   serviceId: string;
   serviceName: string;
   serviceDuration: number;
   servicePrice: number;
+  // Soporte para múltiples servicios (nuevo)
+  services?: {
+    id: string;
+    name: string;
+    duration: number;
+    price: number;
+  }[];
   date: string;
   time: string;
   notes?: string;
@@ -185,6 +224,9 @@ export const DEFAULT_BOOKING_CONFIG: BookingConfig = {
   closeTime: "18:00",
   slotDurationMinutes: 30,
   bufferMinutes: 0,
+  breakEnabled: false,
+  breakStartTime: "12:00",
+  breakEndTime: "14:00",
   closedDays: [0],  // Domingo cerrado
   closedDates: [],  // Fechas cerradas específicas
   confirmKeywords: ["SI", "SÍ", "CONFIRMO", "OK", "LISTO", "1"],

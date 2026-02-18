@@ -23,6 +23,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { MOCK_SERVICES, type Service } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import type { BookingService } from "@/lib/types/booking.types";
 import { BeautyConsultationForm } from "@/components/beauty";
 import type { BeautyConsultation } from "@/lib/types/beauty-consultation.types";
 import { db } from "@/lib/firebase";
@@ -36,8 +37,15 @@ interface AvailableSlot {
   available: boolean;
 }
 
+interface SelectedService {
+  id: string;
+  name: string;
+  duration: number;
+  price: number;
+}
+
 interface BookingData {
-  service: Service | null;
+  services: SelectedService[];
   date: string;
   time: string;
   customerName: string;
@@ -52,13 +60,22 @@ export default function BookingPage() {
 
   const [step, setStep] = useState<BookingStep>("service");
   const [bookingData, setBookingData] = useState<BookingData>({
-    service: null,
+    services: [],
     date: "",
     time: "",
     customerName: "",
     customerPhone: "",
     customerEmail: "",
   });
+
+  // Calculate totals from selected services
+  const totalDuration = useMemo(() =>
+    bookingData.services.reduce((sum, s) => sum + s.duration, 0)
+  , [bookingData.services]);
+
+  const totalPrice = useMemo(() =>
+    bookingData.services.reduce((sum, s) => sum + s.price, 0)
+  , [bookingData.services]);
   const [loading, setLoading] = useState(false);
   const [slots, setSlots] = useState<AvailableSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
@@ -105,19 +122,18 @@ export default function BookingPage() {
     return () => unsubscribe();
   }, [shopId, shop]);
 
-  // Check if this is a beauty service that should show consultation form
+  // Check if any selected service is a beauty service that should show consultation form
   const isBeautyService = useMemo(() => {
-    if (!bookingData.service) return false;
+    if (bookingData.services.length === 0) return false;
     const beautyKeywords = [
       "maquillaje", "makeup", "novia", "xv", "quinceañera", "graduación",
       "peinado", "belleza", "beauty", "facial", "spa", "manicure", "pedicure"
     ];
-    const serviceName = bookingData.service.name.toLowerCase();
-    const serviceDesc = bookingData.service.description?.toLowerCase() || "";
-    return beautyKeywords.some(keyword =>
-      serviceName.includes(keyword) || serviceDesc.includes(keyword)
-    );
-  }, [bookingData.service]);
+    return bookingData.services.some(service => {
+      const serviceName = service.name.toLowerCase();
+      return beautyKeywords.some(keyword => serviceName.includes(keyword));
+    });
+  }, [bookingData.services]);
 
   // Check if shop type is beauty-related
   const isBeautyShop = useMemo(() => {
@@ -160,9 +176,14 @@ export default function BookingPage() {
     const slotDocRef = collection(db, "shops", shopPath, "bookingSlots");
 
     // Also fetch initial data from API to generate time slots
+    // Include duration parameter if services are selected
     const fetchSlots = async () => {
       try {
-        const response = await fetch(`/api/bookings/slots?shopId=${shopPath}&date=${bookingData.date}`);
+        let url = `/api/bookings/slots?shopId=${shopPath}&date=${bookingData.date}`;
+        if (totalDuration > 0) {
+          url += `&duration=${totalDuration}`;
+        }
+        const response = await fetch(url);
         const data = await response.json();
 
         if (data.slots) {
@@ -209,11 +230,39 @@ export default function BookingPage() {
     });
 
     return () => unsubscribe();
-  }, [bookingData.date, shopId, shop]);
+  }, [bookingData.date, shopId, shop, totalDuration]);
 
-  const handleServiceSelect = (service: Service) => {
-    setBookingData((prev) => ({ ...prev, service }));
-    setStep("date");
+  // Toggle service selection (add/remove from array)
+  const handleServiceToggle = (service: Service) => {
+    setBookingData((prev) => {
+      const isSelected = prev.services.some(s => s.id === service.id);
+      if (isSelected) {
+        return {
+          ...prev,
+          services: prev.services.filter(s => s.id !== service.id),
+        };
+      } else {
+        return {
+          ...prev,
+          services: [
+            ...prev.services,
+            {
+              id: service.id,
+              name: service.name,
+              duration: service.duration,
+              price: service.price,
+            },
+          ],
+        };
+      }
+    });
+  };
+
+  // Continue to next step after selecting services
+  const handleContinueToDate = () => {
+    if (bookingData.services.length > 0) {
+      setStep("date");
+    }
   };
 
   const handleDateSelect = (date: Date) => {
@@ -233,10 +282,14 @@ export default function BookingPage() {
   };
 
   const handleConfirmBooking = async () => {
-    if (!bookingData.service) return;
+    if (bookingData.services.length === 0) return;
 
     setLoading(true);
     try {
+      // Use first service as primary (for backwards compatibility)
+      // but include all services in the services array
+      const primaryService = bookingData.services[0];
+
       const response = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -245,10 +298,15 @@ export default function BookingPage() {
           customerName: bookingData.customerName,
           customerPhone: bookingData.customerPhone,
           customerEmail: bookingData.customerEmail || undefined,
-          serviceId: bookingData.service.id,
-          serviceName: bookingData.service.name,
-          serviceDuration: bookingData.service.duration,
-          servicePrice: bookingData.service.price,
+          // Primary service fields (backwards compatible)
+          serviceId: primaryService.id,
+          serviceName: bookingData.services.length > 1
+            ? bookingData.services.map(s => s.name).join(" + ")
+            : primaryService.name,
+          serviceDuration: totalDuration,
+          servicePrice: totalPrice,
+          // All services array (new field)
+          services: bookingData.services,
           date: bookingData.date,
           time: bookingData.time,
         }),
@@ -329,7 +387,7 @@ export default function BookingPage() {
           bookingId={bookingId}
           customerName={bookingData.customerName}
           customerPhone={bookingData.customerPhone}
-          serviceName={bookingData.service?.name || ""}
+          serviceName={bookingData.services.map(s => s.name).join(" + ")}
           onComplete={handleConsultationComplete}
           onSkip={handleSkipConsultation}
         />
@@ -358,11 +416,22 @@ export default function BookingPage() {
             </p>
 
             <div className="bg-surface/50 rounded-xl p-6 mb-8 text-left space-y-4">
-              <div className="flex justify-between">
-                <span className="text-slate-400">Servicio</span>
-                <span className="text-white font-medium">
-                  {bookingData.service?.name}
+              <div>
+                <span className="text-slate-400 block mb-2">
+                  {bookingData.services.length > 1 ? "Servicios" : "Servicio"}
                 </span>
+                <div className="space-y-1">
+                  {bookingData.services.map((service) => (
+                    <div key={service.id} className="flex justify-between text-sm">
+                      <span className="text-white">{service.name}</span>
+                      <span className="text-slate-400">{service.duration} min</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Duración total</span>
+                <span className="text-white font-medium">{totalDuration} min</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Fecha</span>
@@ -377,7 +446,7 @@ export default function BookingPage() {
               <div className="border-t border-white/10 pt-4 flex justify-between">
                 <span className="text-slate-400">Total</span>
                 <span className="text-primary font-bold text-lg">
-                  ${bookingData.service?.price.toLocaleString()}
+                  ${totalPrice.toLocaleString()}
                 </span>
               </div>
             </div>
@@ -502,7 +571,7 @@ export default function BookingPage() {
 
         {/* Step Content */}
         <div className="glass-panel rounded-2xl p-6 sm:p-8">
-          {/* Step 1: Select Service */}
+          {/* Step 1: Select Services */}
           {step === "service" && (
             <>
               <div className="text-center mb-8">
@@ -510,10 +579,10 @@ export default function BookingPage() {
                   <Sparkles className="w-8 h-8 text-white" />
                 </div>
                 <h1 className="font-display text-2xl font-bold text-white mb-2">
-                  Selecciona un Servicio
+                  Selecciona tus Servicios
                 </h1>
                 <p className="text-slate-400">
-                  Elige el tratamiento que deseas reservar
+                  Puedes elegir uno o varios tratamientos
                 </p>
               </div>
 
@@ -522,43 +591,89 @@ export default function BookingPage() {
                   <Loader2 className="w-8 h-8 text-primary animate-spin" />
                 </div>
               ) : (
-                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-                  {services.map((service) => (
-                    <button
-                      key={service.id}
-                      onClick={() => handleServiceSelect(service)}
-                      className="w-full p-4 rounded-xl bg-surface/50 hover:bg-surface border border-white/10 hover:border-primary/50 transition-all text-left group"
-                    >
-                      <div className="flex gap-4">
-                        {service.image && (
-                          <img
-                            src={service.image}
-                            alt={service.name}
-                            className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-                          />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-white group-hover:text-primary transition-colors">
-                            {service.name}
-                          </h3>
-                          <p className="text-sm text-slate-400 line-clamp-1">
-                            {service.description}
-                          </p>
-                          <div className="flex items-center gap-4 mt-2 text-sm">
-                            <span className="text-primary font-bold">
-                              ${service.price.toLocaleString()}
-                            </span>
-                            <span className="text-slate-500 flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {service.duration} min
-                            </span>
+                <>
+                  <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2">
+                    {services.map((service) => {
+                      const isSelected = bookingData.services.some(s => s.id === service.id);
+                      return (
+                        <button
+                          key={service.id}
+                          onClick={() => handleServiceToggle(service)}
+                          className={cn(
+                            "w-full p-4 rounded-xl transition-all text-left",
+                            isSelected
+                              ? "bg-primary/20 border-2 border-primary"
+                              : "bg-surface/50 hover:bg-surface border border-white/10 hover:border-primary/50"
+                          )}
+                        >
+                          <div className="flex gap-4">
+                            {/* Checkbox indicator */}
+                            <div className={cn(
+                              "w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-colors",
+                              isSelected
+                                ? "bg-primary border-primary"
+                                : "border-white/30"
+                            )}>
+                              {isSelected && <Check className="w-4 h-4 text-white" />}
+                            </div>
+
+                            {service.image && (
+                              <img
+                                src={service.image}
+                                alt={service.name}
+                                className="w-14 h-14 rounded-lg object-cover flex-shrink-0"
+                              />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <h3 className={cn(
+                                "font-semibold transition-colors",
+                                isSelected ? "text-primary" : "text-white"
+                              )}>
+                                {service.name}
+                              </h3>
+                              <p className="text-sm text-slate-400 line-clamp-1">
+                                {service.description}
+                              </p>
+                              <div className="flex items-center gap-4 mt-2 text-sm">
+                                <span className="text-primary font-bold">
+                                  ${service.price.toLocaleString()}
+                                </span>
+                                <span className="text-slate-500 flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  {service.duration} min
+                                </span>
+                              </div>
+                            </div>
                           </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Selected services summary */}
+                  {bookingData.services.length > 0 && (
+                    <div className="mt-6 p-4 rounded-xl bg-primary/10 border border-primary/20">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-slate-400 text-sm">
+                          {bookingData.services.length} servicio{bookingData.services.length > 1 ? 's' : ''} seleccionado{bookingData.services.length > 1 ? 's' : ''}
+                        </span>
+                        <div className="flex items-center gap-3 text-sm">
+                          <span className="text-slate-400 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {totalDuration} min
+                          </span>
+                          <span className="text-primary font-bold">
+                            ${totalPrice.toLocaleString()}
+                          </span>
                         </div>
-                        <ArrowRight className="w-5 h-5 text-slate-500 group-hover:text-primary transition-colors self-center" />
                       </div>
-                    </button>
-                  ))}
-                </div>
+                      <Button onClick={handleContinueToDate} className="w-full">
+                        Continuar
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
 
               {!servicesLoading && services.length === 0 && (
@@ -579,7 +694,9 @@ export default function BookingPage() {
                   Selecciona una Fecha
                 </h2>
                 <p className="text-slate-400 text-sm">
-                  {bookingData.service?.name} - {bookingData.service?.duration} min
+                  {bookingData.services.length > 1
+                    ? `${bookingData.services.length} servicios - ${totalDuration} min total`
+                    : `${bookingData.services[0]?.name} - ${totalDuration} min`}
                 </p>
               </div>
 
@@ -798,16 +915,23 @@ export default function BookingPage() {
               </div>
 
               <div className="bg-surface/50 rounded-xl p-6 mb-6 space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Servicio</span>
-                  <span className="text-white font-medium">
-                    {bookingData.service?.name}
+                <div>
+                  <span className="text-slate-400 block mb-2">
+                    {bookingData.services.length > 1 ? "Servicios" : "Servicio"}
                   </span>
+                  <div className="space-y-1">
+                    {bookingData.services.map((service) => (
+                      <div key={service.id} className="flex justify-between text-sm">
+                        <span className="text-white">{service.name}</span>
+                        <span className="text-slate-400">{service.duration} min - ${service.price.toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Duracion</span>
+                  <span className="text-slate-400">Duración total</span>
                   <span className="text-white">
-                    {bookingData.service?.duration} minutos
+                    {totalDuration} minutos
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -833,7 +957,7 @@ export default function BookingPage() {
                 <div className="border-t border-white/10 pt-4 flex justify-between">
                   <span className="text-slate-400 font-medium">Total</span>
                   <span className="text-primary font-bold text-xl">
-                    ${bookingData.service?.price.toLocaleString()}
+                    ${totalPrice.toLocaleString()}
                   </span>
                 </div>
               </div>

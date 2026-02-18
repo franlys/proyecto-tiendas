@@ -898,7 +898,7 @@ function ShopDetailContent() {
                                             shopId={shop?.slug || "temp"}
                                             label="Logo de la Tienda"
                                             aspectRatio="square"
-                                            maxSizeMB={2}
+                                            maxSizeMB={10}
                                         />
 
                                         {/* Banner */}
@@ -1809,8 +1809,8 @@ function ShopDetailContent() {
                                                         <div className={cn(
                                                             "w-10 h-10 rounded-full flex items-center justify-center text-white font-bold",
                                                             staff.role === "owner" ? "bg-yellow-500" :
-                                                            staff.role === "manager" ? "bg-purple-500" :
-                                                            staff.role === "sales" ? "bg-blue-500" : "bg-orange-500"
+                                                                staff.role === "manager" ? "bg-purple-500" :
+                                                                    staff.role === "sales" ? "bg-blue-500" : "bg-orange-500"
                                                         )}>
                                                             {staff.name.charAt(0).toUpperCase()}
                                                         </div>
@@ -1820,9 +1820,9 @@ function ShopDetailContent() {
                                                                 <span className={cn(
                                                                     "text-xs px-2 py-0.5 rounded-full",
                                                                     staff.role === "owner" ? "bg-yellow-500/20 text-yellow-400" :
-                                                                    staff.role === "manager" ? "bg-purple-500/20 text-purple-400" :
-                                                                    staff.role === "sales" ? "bg-blue-500/20 text-blue-400" :
-                                                                    "bg-orange-500/20 text-orange-400"
+                                                                        staff.role === "manager" ? "bg-purple-500/20 text-purple-400" :
+                                                                            staff.role === "sales" ? "bg-blue-500/20 text-blue-400" :
+                                                                                "bg-orange-500/20 text-orange-400"
                                                                 )}>
                                                                     {STAFF_ROLES[staff.role].label}
                                                                 </span>

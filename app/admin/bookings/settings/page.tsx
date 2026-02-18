@@ -21,6 +21,7 @@ import {
   Plus,
   X,
   Trash2,
+  Coffee,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useAuth, useShops } from "@/components/shared";
@@ -191,7 +192,19 @@ export default function BookingSettingsPage() {
 
     const openMinutes = openH * 60 + openM;
     const closeMinutes = closeH * 60 + closeM;
-    const totalMinutes = closeMinutes - openMinutes;
+    let totalMinutes = closeMinutes - openMinutes;
+
+    // Subtract break time if enabled
+    if (config.breakEnabled && config.breakStartTime && config.breakEndTime) {
+      const [breakStartH, breakStartM] = config.breakStartTime.split(":").map(Number);
+      const [breakEndH, breakEndM] = config.breakEndTime.split(":").map(Number);
+      const breakStart = breakStartH * 60 + breakStartM;
+      const breakEnd = breakEndH * 60 + breakEndM;
+      const breakDuration = breakEnd - breakStart;
+      if (breakDuration > 0) {
+        totalMinutes -= breakDuration;
+      }
+    }
 
     const slotWithBuffer = config.slotDurationMinutes + config.bufferMinutes;
 
@@ -207,7 +220,19 @@ export default function BookingSettingsPage() {
 
     const openMinutes = openH * 60 + openM;
     const closeMinutes = closeH * 60 + closeM;
-    const totalMinutes = closeMinutes - openMinutes;
+    let totalMinutes = closeMinutes - openMinutes;
+
+    // Subtract break time if enabled
+    if (config.breakEnabled && config.breakStartTime && config.breakEndTime) {
+      const [breakStartH, breakStartM] = config.breakStartTime.split(":").map(Number);
+      const [breakEndH, breakEndM] = config.breakEndTime.split(":").map(Number);
+      const breakStart = breakStartH * 60 + breakStartM;
+      const breakEnd = breakEndH * 60 + breakEndM;
+      const breakDuration = breakEnd - breakStart;
+      if (breakDuration > 0) {
+        totalMinutes -= breakDuration;
+      }
+    }
 
     const hours = Math.floor(totalMinutes / 60);
     const mins = totalMinutes % 60;
@@ -412,6 +437,76 @@ export default function BookingSettingsPage() {
                 <p className="text-xs text-slate-500 mt-2">
                   Los días marcados no estarán disponibles para reservar
                 </p>
+              </div>
+
+              {/* Break Time */}
+              <div className="mt-6 pt-6 border-t border-white/10">
+                <div
+                  className="flex items-center justify-between p-3 rounded-xl bg-white/5 cursor-pointer hover:bg-white/10 transition-colors mb-4"
+                  onClick={() => updateConfig({ breakEnabled: !config.breakEnabled })}
+                >
+                  <div className="flex items-center gap-3">
+                    <Coffee className="w-5 h-5 text-amber-400" />
+                    <div>
+                      <p className="text-white font-medium">Horario de Descanso</p>
+                      <p className="text-xs text-slate-500">
+                        {config.breakEnabled
+                          ? `${config.breakStartTime} - ${config.breakEndTime}`
+                          : "Sin horario de descanso configurado"}
+                      </p>
+                    </div>
+                  </div>
+                  <div
+                    className={cn(
+                      "relative w-12 h-6 rounded-full transition-colors",
+                      config.breakEnabled ? "bg-amber-500" : "bg-white/20"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
+                        config.breakEnabled ? "translate-x-7" : "translate-x-1"
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {config.breakEnabled && (
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm text-slate-400 mb-2">
+                        Inicio del descanso
+                      </label>
+                      <select
+                        value={config.breakStartTime}
+                        onChange={(e) => updateConfig({ breakStartTime: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-primary/50 transition-colors"
+                      >
+                        {TIME_OPTIONS.map((time) => (
+                          <option key={time} value={time} className="bg-slate-800">
+                            {time}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm text-slate-400 mb-2">
+                        Fin del descanso
+                      </label>
+                      <select
+                        value={config.breakEndTime}
+                        onChange={(e) => updateConfig({ breakEndTime: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-primary/50 transition-colors"
+                      >
+                        {TIME_OPTIONS.map((time) => (
+                          <option key={time} value={time} className="bg-slate-800">
+                            {time}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -793,6 +888,19 @@ export default function BookingSettingsPage() {
                   </span>
                 </div>
 
+                {/* Break Time */}
+                {config.breakEnabled && (
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                    <span className="text-slate-400 flex items-center gap-1">
+                      <Coffee className="w-3 h-3 text-amber-400" />
+                      Descanso
+                    </span>
+                    <span className="text-amber-400 font-medium">
+                      {config.breakStartTime} - {config.breakEndTime}
+                    </span>
+                  </div>
+                )}
+
                 {/* Slot Duration */}
                 <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
                   <span className="text-slate-400">Duración cita</span>
@@ -880,6 +988,12 @@ export default function BookingSettingsPage() {
               <div className="mt-6 pt-6 border-t border-white/10">
                 <p className="text-slate-400 text-sm mb-3">Acciones rápidas</p>
                 <div className="space-y-2">
+                  <Link
+                    href="/admin/bookings/services"
+                    className="block w-full px-4 py-2 rounded-lg bg-gold/20 hover:bg-gold/30 text-gold text-sm text-center transition-colors"
+                  >
+                    Configurar Servicios
+                  </Link>
                   <Link
                     href="/admin/bookings"
                     className="block w-full px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm text-center transition-colors"
