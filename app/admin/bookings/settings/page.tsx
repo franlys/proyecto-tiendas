@@ -17,6 +17,10 @@ import {
   Phone,
   ToggleLeft,
   ToggleRight,
+  CalendarX,
+  Plus,
+  X,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useAuth, useShops } from "@/components/shared";
@@ -42,8 +46,20 @@ const TIME_OPTIONS = Array.from({ length: 48 }, (_, i) => {
   return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
 });
 
-// Duration options
-const DURATION_OPTIONS = [15, 20, 30, 45, 60, 90, 120];
+// Duration options (in minutes) - expanded for different business types
+const DURATION_OPTIONS = [
+  { value: 15, label: "15 min" },
+  { value: 20, label: "20 min" },
+  { value: 30, label: "30 min" },
+  { value: 45, label: "45 min" },
+  { value: 60, label: "1 hora" },
+  { value: 90, label: "1.5 horas" },
+  { value: 120, label: "2 horas" },
+  { value: 150, label: "2.5 horas" },
+  { value: 180, label: "3 horas" },
+  { value: 210, label: "3.5 horas" },
+  { value: 240, label: "4 horas" },
+];
 
 // Buffer options
 const BUFFER_OPTIONS = [0, 5, 10, 15, 20, 30];
@@ -59,6 +75,7 @@ export default function BookingSettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [newClosedDate, setNewClosedDate] = useState("");
 
   // Load config from API
   useEffect(() => {
@@ -126,6 +143,85 @@ export default function BookingSettingsPage() {
       return { ...prev, closedDays: newClosedDays };
     });
     setIsSaved(false);
+  };
+
+  // Add closed date (one-time closure)
+  const addClosedDate = () => {
+    if (!newClosedDate) return;
+
+    const closedDates = config.closedDates || [];
+    if (!closedDates.includes(newClosedDate)) {
+      setConfig((prev) => ({
+        ...prev,
+        closedDates: [...(prev.closedDates || []), newClosedDate].sort(),
+      }));
+      setIsSaved(false);
+    }
+    setNewClosedDate("");
+  };
+
+  // Remove closed date
+  const removeClosedDate = (date: string) => {
+    setConfig((prev) => ({
+      ...prev,
+      closedDates: (prev.closedDates || []).filter((d) => d !== date),
+    }));
+    setIsSaved(false);
+  };
+
+  // Format date for display
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr + "T12:00:00");
+    return date.toLocaleDateString("es-MX", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    });
+  };
+
+  // Get today's date in YYYY-MM-DD format
+  const getTodayDate = () => {
+    return new Date().toISOString().split("T")[0];
+  };
+
+  // Calculate max appointments per day based on schedule
+  const calculateMaxAppointments = () => {
+    const [openH, openM] = config.openTime.split(":").map(Number);
+    const [closeH, closeM] = config.closeTime.split(":").map(Number);
+
+    const openMinutes = openH * 60 + openM;
+    const closeMinutes = closeH * 60 + closeM;
+    const totalMinutes = closeMinutes - openMinutes;
+
+    const slotWithBuffer = config.slotDurationMinutes + config.bufferMinutes;
+
+    if (slotWithBuffer <= 0) return 0;
+
+    return Math.floor(totalMinutes / slotWithBuffer);
+  };
+
+  // Calculate working hours
+  const calculateWorkingHours = () => {
+    const [openH, openM] = config.openTime.split(":").map(Number);
+    const [closeH, closeM] = config.closeTime.split(":").map(Number);
+
+    const openMinutes = openH * 60 + openM;
+    const closeMinutes = closeH * 60 + closeM;
+    const totalMinutes = closeMinutes - openMinutes;
+
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+
+    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+  };
+
+  // Format duration for display
+  const formatDuration = (minutes: number) => {
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (mins === 0) return `${hours}h`;
+    return `${hours}h ${mins}m`;
   };
 
   if (!shopId || isLoading) {
@@ -319,6 +415,71 @@ export default function BookingSettingsPage() {
               </div>
             </div>
 
+            {/* Temporary Closures (Specific Dates) */}
+            <div className="glass-panel rounded-2xl p-6">
+              <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
+                <CalendarX className="w-4 h-4 text-gold" />
+                Cierres Temporales
+              </h2>
+              <p className="text-sm text-slate-400 mb-4">
+                Cierra días específicos sin cambiar tu horario regular
+              </p>
+
+              {/* Add new date */}
+              <div className="flex gap-2 mb-4">
+                <input
+                  type="date"
+                  value={newClosedDate}
+                  onChange={(e) => setNewClosedDate(e.target.value)}
+                  min={getTodayDate()}
+                  className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-primary/50 transition-colors"
+                />
+                <Button
+                  onClick={addClosedDate}
+                  disabled={!newClosedDate}
+                  variant="outline"
+                  className="px-4"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+
+              {/* List of closed dates */}
+              {config.closedDates && config.closedDates.length > 0 ? (
+                <div className="space-y-2">
+                  {config.closedDates
+                    .filter((d) => d >= getTodayDate())
+                    .sort()
+                    .map((date) => (
+                      <div
+                        key={date}
+                        className="flex items-center justify-between p-3 rounded-lg bg-red-500/10 border border-red-500/20"
+                      >
+                        <div className="flex items-center gap-2">
+                          <CalendarX className="w-4 h-4 text-red-400" />
+                          <span className="text-white">{formatDate(date)}</span>
+                        </div>
+                        <button
+                          onClick={() => removeClosedDate(date)}
+                          className="p-1.5 rounded-lg hover:bg-red-500/20 text-red-400 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-slate-500">
+                  <CalendarX className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No hay cierres temporales programados</p>
+                </div>
+              )}
+
+              <p className="text-xs text-slate-500 mt-4">
+                Tip: También puedes cerrar días desde WhatsApp con el comando "Cerrar mañana" o "Cerrar 20 de febrero"
+              </p>
+            </div>
+
             {/* Slot Configuration */}
             <div className="glass-panel rounded-2xl p-6">
               <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
@@ -326,11 +487,16 @@ export default function BookingSettingsPage() {
                 Configuración de Citas
               </h2>
 
+              <p className="text-sm text-slate-400 mb-4">
+                Configura el tiempo promedio que tardas en atender a cada cliente.
+                Por ejemplo: uñas (2h), maquillaje (1.5h), corte de pelo (45min), etc.
+              </p>
+
               <div className="grid sm:grid-cols-2 gap-6">
                 {/* Slot Duration */}
                 <div>
                   <label className="block text-sm text-slate-400 mb-2">
-                    Duración de cada slot
+                    Duración promedio de cada cita
                   </label>
                   <select
                     value={config.slotDurationMinutes}
@@ -339,21 +505,21 @@ export default function BookingSettingsPage() {
                     }
                     className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-primary/50 transition-colors"
                   >
-                    {DURATION_OPTIONS.map((duration) => (
-                      <option key={duration} value={duration} className="bg-slate-800">
-                        {duration} minutos
+                    {DURATION_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value} className="bg-slate-800">
+                        {opt.label}
                       </option>
                     ))}
                   </select>
                   <p className="text-xs text-slate-500 mt-1">
-                    Cada cita ocupará este tiempo en el calendario
+                    Tiempo que dura atender a un cliente
                   </p>
                 </div>
 
                 {/* Buffer Time */}
                 <div>
                   <label className="block text-sm text-slate-400 mb-2">
-                    Tiempo entre citas
+                    Tiempo de preparación
                   </label>
                   <select
                     value={config.bufferMinutes}
@@ -369,8 +535,24 @@ export default function BookingSettingsPage() {
                     ))}
                   </select>
                   <p className="text-xs text-slate-500 mt-1">
-                    Tiempo de descanso entre citas
+                    Tiempo para preparar el espacio entre citas
                   </p>
+                </div>
+              </div>
+
+              {/* Calculated Max Appointments */}
+              <div className="mt-6 p-4 rounded-xl bg-gradient-to-r from-primary/10 to-gold/10 border border-primary/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white font-medium">Citas máximas por día</p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Jornada de {calculateWorkingHours()} con citas de {formatDuration(config.slotDurationMinutes)}
+                      {config.bufferMinutes > 0 && ` + ${config.bufferMinutes}min preparación`}
+                    </p>
+                  </div>
+                  <div className="text-3xl font-bold text-primary">
+                    {calculateMaxAppointments()}
+                  </div>
                 </div>
               </div>
             </div>
@@ -615,7 +797,15 @@ export default function BookingSettingsPage() {
                 <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
                   <span className="text-slate-400">Duración cita</span>
                   <span className="text-white font-medium">
-                    {config.slotDurationMinutes} min
+                    {formatDuration(config.slotDurationMinutes)}
+                  </span>
+                </div>
+
+                {/* Max Appointments */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-primary/10 border border-primary/20">
+                  <span className="text-slate-400">Citas por día</span>
+                  <span className="text-primary font-bold text-lg">
+                    {calculateMaxAppointments()}
                   </span>
                 </div>
 
@@ -641,6 +831,31 @@ export default function BookingSettingsPage() {
                     )}
                   </div>
                 </div>
+
+                {/* Temporary Closures */}
+                {config.closedDates && config.closedDates.filter(d => d >= getTodayDate()).length > 0 && (
+                  <div className="p-3 rounded-lg bg-white/5">
+                    <span className="text-slate-400 block mb-2">Cierres temporales</span>
+                    <div className="flex flex-wrap gap-1">
+                      {config.closedDates
+                        .filter(d => d >= getTodayDate())
+                        .slice(0, 3)
+                        .map((date) => (
+                          <span
+                            key={date}
+                            className="px-2 py-0.5 rounded bg-orange-500/20 text-orange-400 text-xs"
+                          >
+                            {formatDate(date)}
+                          </span>
+                        ))}
+                      {config.closedDates.filter(d => d >= getTodayDate()).length > 3 && (
+                        <span className="px-2 py-0.5 rounded bg-white/10 text-slate-400 text-xs">
+                          +{config.closedDates.filter(d => d >= getTodayDate()).length - 3} más
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Reminders */}
                 <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">

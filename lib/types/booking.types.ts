@@ -98,6 +98,10 @@ export interface BookingConfig {
   // Días cerrados (0 = Domingo, 6 = Sábado)
   closedDays: number[];
 
+  // Fechas cerradas específicas (cierres puntuales)
+  // Formato: ["2026-02-20", "2026-03-15"]
+  closedDates?: string[];
+
   // Keywords de respuesta
   confirmKeywords: string[];       // ["SI", "SÍ", "CONFIRMO", "1"]
   rescheduleKeywords: string[];    // ["CAMBIAR", "REAGENDAR", "MOVER", "2"]
@@ -182,6 +186,7 @@ export const DEFAULT_BOOKING_CONFIG: BookingConfig = {
   slotDurationMinutes: 30,
   bufferMinutes: 0,
   closedDays: [0],  // Domingo cerrado
+  closedDates: [],  // Fechas cerradas específicas
   confirmKeywords: ["SI", "SÍ", "CONFIRMO", "OK", "LISTO", "1"],
   rescheduleKeywords: ["CAMBIAR", "REAGENDAR", "MOVER", "OTRA", "2"],
   cancelKeywords: ["CANCELAR", "NO PUEDO", "NO VOY", "3"],

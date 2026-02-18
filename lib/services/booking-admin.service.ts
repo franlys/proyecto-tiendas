@@ -57,6 +57,98 @@ export async function updateBookingConfigAdmin(
   );
 }
 
+// ==================== CLOSED DATES MANAGEMENT ====================
+
+/**
+ * Add a specific date to closed dates (one-time closure)
+ */
+export async function addClosedDateAdmin(
+  shopId: string,
+  date: string
+): Promise<{ success: boolean; alreadyClosed?: boolean }> {
+  const db = adminDb();
+  if (!db) {
+    throw new Error("Admin DB not initialized");
+  }
+
+  const config = await getBookingConfigAdmin(shopId);
+  const closedDates = config.closedDates || [];
+
+  // Check if already closed
+  if (closedDates.includes(date)) {
+    return { success: true, alreadyClosed: true };
+  }
+
+  // Add the date
+  closedDates.push(date);
+
+  await updateBookingConfigAdmin(shopId, { closedDates });
+
+  return { success: true, alreadyClosed: false };
+}
+
+/**
+ * Remove a specific date from closed dates (reopen)
+ */
+export async function removeClosedDateAdmin(
+  shopId: string,
+  date: string
+): Promise<{ success: boolean; wasNotClosed?: boolean }> {
+  const db = adminDb();
+  if (!db) {
+    throw new Error("Admin DB not initialized");
+  }
+
+  const config = await getBookingConfigAdmin(shopId);
+  const closedDates = config.closedDates || [];
+
+  // Check if was closed
+  if (!closedDates.includes(date)) {
+    return { success: true, wasNotClosed: true };
+  }
+
+  // Remove the date
+  const newClosedDates = closedDates.filter(d => d !== date);
+
+  await updateBookingConfigAdmin(shopId, { closedDates: newClosedDates });
+
+  return { success: true, wasNotClosed: false };
+}
+
+/**
+ * Check if a specific date is closed (either by day of week or specific date)
+ */
+export async function isDateClosedAdmin(
+  shopId: string,
+  date: string
+): Promise<{ closed: boolean; reason?: string }> {
+  const config = await getBookingConfigAdmin(shopId);
+
+  // Check specific closed dates
+  if (config.closedDates?.includes(date)) {
+    return { closed: true, reason: "Cierre temporal" };
+  }
+
+  // Check day of week
+  const dateObj = new Date(date + "T12:00:00");
+  const dayOfWeek = dateObj.getDay();
+
+  if (config.closedDays.includes(dayOfWeek)) {
+    const dayNames = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+    return { closed: true, reason: `Cerrado los ${dayNames[dayOfWeek]}` };
+  }
+
+  return { closed: false };
+}
+
+/**
+ * Get all closed dates for a shop
+ */
+export async function getClosedDatesAdmin(shopId: string): Promise<string[]> {
+  const config = await getBookingConfigAdmin(shopId);
+  return config.closedDates || [];
+}
+
 function getDefaultConfig(): BookingConfig {
   return {
     enabled: false,
@@ -67,6 +159,7 @@ function getDefaultConfig(): BookingConfig {
     slotDurationMinutes: 30,
     bufferMinutes: 0,
     closedDays: [0],
+    closedDates: [],
     confirmKeywords: ["SI", "SÍ", "CONFIRMO", "OK", "LISTO", "1"],
     rescheduleKeywords: ["CAMBIAR", "REAGENDAR", "MOVER", "OTRA", "2"],
     cancelKeywords: ["CANCELAR", "NO PUEDO", "NO VOY", "3"],

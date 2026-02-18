@@ -4,7 +4,10 @@ import { sendTextMessage } from "@/lib/evolution";
 import { getAllNotificationPhones } from "@/lib/handlers/whatsapp-order.handler";
 import {
     cancelAllBookingsForDateAdmin,
-    getBookingsForDateAdmin
+    getBookingsForDateAdmin,
+    addClosedDateAdmin,
+    removeClosedDateAdmin,
+    getClosedDatesAdmin
 } from "@/lib/services/booking-admin.service";
 
 interface CommandResult {
@@ -102,6 +105,14 @@ export async function handleOwnerCommand(
             `Acepta un pedido.\n_Ejemplo: Confirmar 1054_\n\n` +
             `📅 *Citas*\n` +
             `Ver las citas/reservaciones de hoy.\n\n` +
+            `🚫 *Cerrar [fecha]*\n` +
+            `Cierra un día específico (sin cambiar horarios).\n` +
+            `_Ejemplos: Cerrar mañana, Cerrar 20 de febrero_\n\n` +
+            `✅ *Abrir [fecha]*\n` +
+            `Reabre un día que habías cerrado.\n` +
+            `_Ejemplos: Abrir mañana, Abrir 20 de febrero_\n\n` +
+            `📋 *Días cerrados*\n` +
+            `Ver lista de días cerrados temporalmente.\n\n` +
             `❌ *Cancelar citas de hoy [motivo]*\n` +
             `Cancela todas las citas del día y notifica a los clientes.\n` +
             `_Ejemplo: Cancelar citas de hoy estoy enferma_\n\n` +
@@ -232,7 +243,169 @@ export async function handleOwnerCommand(
     }
 
     // ------------------------------------------------------------
-    // 7. COMMAND: "Cancelar citas de hoy" or "Cancelar citas del [fecha]"
+    // 7. COMMAND: "Cerrar [fecha]" (Close a specific date)
+    // Patterns:
+    //   - "cerrar mañana"
+    //   - "cerrar 20 de febrero"
+    //   - "cerrar el 15/03"
+    // ------------------------------------------------------------
+    if (command.startsWith("cerrar ") && !command.includes("citas")) {
+        const targetDate = parseDateFromCommand(command.replace("cerrar", "").trim());
+
+        if (!targetDate) {
+            await sendTextMessage(instanceName, phone,
+                `❌ No pude entender la fecha.\n\n` +
+                `Ejemplos válidos:\n` +
+                `• Cerrar mañana\n` +
+                `• Cerrar 20 de febrero\n` +
+                `• Cerrar el 15/03`
+            );
+            return { handled: true };
+        }
+
+        // Format date for display
+        const dateObj = new Date(targetDate + "T12:00:00");
+        const dateStr = dateObj.toLocaleDateString("es-MX", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+        });
+
+        // Check if date is in the past
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (dateObj < today) {
+            await sendTextMessage(instanceName, phone,
+                `❌ No puedes cerrar una fecha pasada.\n\n` +
+                `La fecha ${dateStr} ya pasó.`
+            );
+            return { handled: true };
+        }
+
+        // Add to closed dates
+        const result = await addClosedDateAdmin(shopId, targetDate);
+
+        if (result.alreadyClosed) {
+            await sendTextMessage(instanceName, phone,
+                `ℹ️ El día *${dateStr}* ya estaba marcado como cerrado.`
+            );
+            return { handled: true };
+        }
+
+        // Check if there are existing bookings for that date
+        const existingBookings = await getBookingsForDateAdmin(shopId, targetDate);
+
+        let msg = `✅ *DÍA CERRADO*\n\n` +
+            `El *${dateStr}* ha sido marcado como cerrado.\n` +
+            `No se podrán hacer nuevas reservaciones para ese día.`;
+
+        if (existingBookings.length > 0) {
+            msg += `\n\n⚠️ *Atención:* Ya tienes *${existingBookings.length} cita(s)* para ese día:\n`;
+            existingBookings.forEach(b => {
+                msg += `• ${b.time} - ${b.customerName}\n`;
+            });
+            msg += `\n_Si deseas cancelarlas, usa:_\n"Cancelar citas del ${dateObj.getDate()} de ${dateObj.toLocaleDateString("es-MX", { month: "long" })}"`;
+        }
+
+        await sendTextMessage(instanceName, phone, msg);
+        return { handled: true };
+    }
+
+    // ------------------------------------------------------------
+    // 8. COMMAND: "Abrir [fecha]" (Reopen a specific date)
+    // ------------------------------------------------------------
+    if (command.startsWith("abrir ")) {
+        const targetDate = parseDateFromCommand(command.replace("abrir", "").trim());
+
+        if (!targetDate) {
+            await sendTextMessage(instanceName, phone,
+                `❌ No pude entender la fecha.\n\n` +
+                `Ejemplos válidos:\n` +
+                `• Abrir mañana\n` +
+                `• Abrir 20 de febrero\n` +
+                `• Abrir el 15/03`
+            );
+            return { handled: true };
+        }
+
+        // Format date for display
+        const dateObj = new Date(targetDate + "T12:00:00");
+        const dateStr = dateObj.toLocaleDateString("es-MX", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+        });
+
+        // Remove from closed dates
+        const result = await removeClosedDateAdmin(shopId, targetDate);
+
+        if (result.wasNotClosed) {
+            await sendTextMessage(instanceName, phone,
+                `ℹ️ El día *${dateStr}* no estaba marcado como cerrado.\n\n` +
+                `_Nota: Si es un día que normalmente cierras (ej. domingo), ese cierre es permanente y se configura desde el panel web._`
+            );
+            return { handled: true };
+        }
+
+        await sendTextMessage(instanceName, phone,
+            `✅ *DÍA REABIERTO*\n\n` +
+            `El *${dateStr}* ha sido reabierto.\n` +
+            `Los clientes podrán hacer reservaciones para ese día.`
+        );
+        return { handled: true };
+    }
+
+    // ------------------------------------------------------------
+    // 9. COMMAND: "Días cerrados" (List closed dates)
+    // ------------------------------------------------------------
+    if (command === "días cerrados" || command === "dias cerrados" || command === "cerrados") {
+        const closedDates = await getClosedDatesAdmin(shopId);
+
+        if (closedDates.length === 0) {
+            await sendTextMessage(instanceName, phone,
+                `📋 *DÍAS CERRADOS*\n\n` +
+                `No tienes días cerrados temporalmente.\n\n` +
+                `_Para cerrar un día, usa:_\n"Cerrar mañana" o "Cerrar 20 de febrero"`
+            );
+            return { handled: true };
+        }
+
+        // Filter only future dates and sort
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const futureDates = closedDates
+            .filter(d => new Date(d + "T12:00:00") >= today)
+            .sort();
+
+        if (futureDates.length === 0) {
+            await sendTextMessage(instanceName, phone,
+                `📋 *DÍAS CERRADOS*\n\n` +
+                `No tienes días cerrados próximamente.\n\n` +
+                `_Para cerrar un día, usa:_\n"Cerrar mañana" o "Cerrar 20 de febrero"`
+            );
+            return { handled: true };
+        }
+
+        let msg = `📋 *DÍAS CERRADOS TEMPORALMENTE*\n\n`;
+        futureDates.forEach(d => {
+            const dateObj = new Date(d + "T12:00:00");
+            const dateStr = dateObj.toLocaleDateString("es-MX", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+            });
+            msg += `🚫 ${dateStr}\n`;
+        });
+
+        msg += `\n_Para reabrir un día, usa:_\n"Abrir [fecha]"`;
+
+        await sendTextMessage(instanceName, phone, msg);
+        return { handled: true };
+    }
+
+    // ------------------------------------------------------------
+    // 10. COMMAND: "Cancelar citas de hoy" or "Cancelar citas del [fecha]"
     // Patterns:
     //   - "cancelar citas de hoy"
     //   - "cancelar citas de mañana"
@@ -415,4 +588,91 @@ export async function handleOwnerCommand(
 
     // Not a command we know
     return { handled: false };
+}
+
+/**
+ * Parse a date from natural language command
+ * Examples: "mañana", "20 de febrero", "el 15/03", "hoy"
+ * Returns date in format "YYYY-MM-DD" or null if can't parse
+ */
+function parseDateFromCommand(text: string): string | null {
+    const cleanText = text.toLowerCase().trim();
+
+    // "hoy"
+    if (cleanText === "hoy") {
+        return new Date().toISOString().split("T")[0];
+    }
+
+    // "mañana"
+    if (cleanText === "mañana" || cleanText === "manana") {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return tomorrow.toISOString().split("T")[0];
+    }
+
+    // "pasado mañana"
+    if (cleanText === "pasado mañana" || cleanText === "pasado manana") {
+        const dayAfter = new Date();
+        dayAfter.setDate(dayAfter.getDate() + 2);
+        return dayAfter.toISOString().split("T")[0];
+    }
+
+    // Day of week: "el lunes", "este viernes"
+    const dayOfWeekMatch = cleanText.match(/(?:el|este|próximo|proximo)?\s*(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado|domingo)/i);
+    if (dayOfWeekMatch) {
+        const dayNames: Record<string, number> = {
+            "domingo": 0, "lunes": 1, "martes": 2, "miércoles": 3, "miercoles": 3,
+            "jueves": 4, "viernes": 5, "sábado": 6, "sabado": 6
+        };
+        const targetDay = dayNames[dayOfWeekMatch[1].toLowerCase()];
+        const today = new Date();
+        const currentDay = today.getDay();
+        let daysToAdd = targetDay - currentDay;
+        if (daysToAdd <= 0) daysToAdd += 7; // Next week
+        const targetDate = new Date(today);
+        targetDate.setDate(today.getDate() + daysToAdd);
+        return targetDate.toISOString().split("T")[0];
+    }
+
+    // "20 de febrero" or "el 20 de febrero"
+    const dateMatch = cleanText.match(/(?:el\s+)?(\d{1,2})\s*(?:de\s+)?(\w+)/i);
+    if (dateMatch) {
+        const day = parseInt(dateMatch[1]);
+        const monthStr = dateMatch[2].toLowerCase();
+        const months: Record<string, number> = {
+            "enero": 0, "febrero": 1, "marzo": 2, "abril": 3,
+            "mayo": 4, "junio": 5, "julio": 6, "agosto": 7,
+            "septiembre": 8, "octubre": 9, "noviembre": 10, "diciembre": 11
+        };
+
+        if (months[monthStr] !== undefined) {
+            const year = new Date().getFullYear();
+            let month = months[monthStr];
+
+            // If the month has passed, assume next year
+            const currentMonth = new Date().getMonth();
+            const targetYear = month < currentMonth ? year + 1 : year;
+
+            return `${targetYear}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        }
+    }
+
+    // "15/03" or "15-03" or "15/3"
+    const slashDateMatch = cleanText.match(/(?:el\s+)?(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
+    if (slashDateMatch) {
+        const day = parseInt(slashDateMatch[1]);
+        const month = parseInt(slashDateMatch[2]) - 1;
+        let year = slashDateMatch[3] ? parseInt(slashDateMatch[3]) : new Date().getFullYear();
+
+        // Handle 2-digit year
+        if (year < 100) year += 2000;
+
+        // If the month has passed, assume next year
+        const currentMonth = new Date().getMonth();
+        if (!slashDateMatch[3] && month < currentMonth) year++;
+
+        return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    }
+
+    return null;
 }

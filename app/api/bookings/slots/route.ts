@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Verificar día cerrado
+    // Verificar día cerrado (día de la semana)
     const dateObj = new Date(date + "T12:00:00");
     const dayOfWeek = dateObj.getDay();
 
@@ -49,6 +49,15 @@ export async function GET(request: NextRequest) {
         slots: [],
         closed: true,
         message: "El negocio está cerrado este día",
+      });
+    }
+
+    // Verificar fecha cerrada específica (cierre temporal)
+    if (config.closedDates?.includes(date)) {
+      return NextResponse.json({
+        slots: [],
+        closed: true,
+        message: "El negocio está cerrado este día (cierre temporal)",
       });
     }
 
