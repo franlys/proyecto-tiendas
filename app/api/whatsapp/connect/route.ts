@@ -32,8 +32,8 @@ export async function GET(request: NextRequest) {
     if (forceWebhook) {
       try {
         // Use centralized APP_URL
-        const { APP_URL } = await import("@/lib/constants");
-        const webhookUrl = `${APP_URL}/api/whatsapp/webhook`;
+        const { WEBHOOK_BASE_URL } = await import("@/lib/constants");
+        const webhookUrl = `${WEBHOOK_BASE_URL}/api/whatsapp/webhook`;
 
         const { setWebhook, getWebhook } = await import("@/lib/evolution");
         await setWebhook(instanceName, webhookUrl);
@@ -75,8 +75,8 @@ export async function GET(request: NextRequest) {
           try {
             // HARDCODED URL: Force production URL to avoid undefined/localhost issues
             // Use centralized APP_URL
-            const { APP_URL } = await import("@/lib/constants");
-            const webhookUrl = `${APP_URL}/api/whatsapp/webhook`;
+            const { WEBHOOK_BASE_URL } = await import("@/lib/constants");
+            const webhookUrl = `${WEBHOOK_BASE_URL}/api/whatsapp/webhook`;
 
             const { setWebhook } = await import("@/lib/evolution");
             await setWebhook(instanceName, webhookUrl);
@@ -109,8 +109,8 @@ export async function GET(request: NextRequest) {
       try {
         // HARDCODED URL: Force production URL to avoid undefined/localhost issues
         // Use centralized APP_URL
-        const { APP_URL } = await import("@/lib/constants");
-        const webhookUrl = `${APP_URL}/api/whatsapp/webhook`;
+        const { WEBHOOK_BASE_URL } = await import("@/lib/constants");
+        const webhookUrl = `${WEBHOOK_BASE_URL}/api/whatsapp/webhook`;
 
         const { setWebhook } = await import("@/lib/evolution");
         // We do this asynchronously to not block the response
@@ -130,8 +130,8 @@ export async function GET(request: NextRequest) {
     try {
       // HARDCODED URL: Force production URL to avoid undefined/localhost issues
       // Use centralized APP_URL
-      const { APP_URL } = await import("@/lib/constants");
-      const webhookUrl = `${APP_URL}/api/whatsapp/webhook`;
+      const { WEBHOOK_BASE_URL } = await import("@/lib/constants");
+      const webhookUrl = `${WEBHOOK_BASE_URL}/api/whatsapp/webhook`;
 
       const { setWebhook } = await import("@/lib/evolution");
       await setWebhook(instanceName, webhookUrl);

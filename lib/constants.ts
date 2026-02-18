@@ -12,6 +12,10 @@ export interface ShopTheme {
 // App URL Configuration
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://linko-app-pied.vercel.app");
 
+// CRITICAL: Webhook Base URL must ALWAYS point to production for external services (WhatsApp),
+// even when triggered from a Preview Environment (where APP_URL might be different).
+export const WEBHOOK_BASE_URL = "https://linko-app-pied.vercel.app";
+
 // Business Types for Phase 13+
 // Importar y re-exportar desde el nuevo sistema de tipos
 import type { BusinessType } from "@/lib/types/business.types";

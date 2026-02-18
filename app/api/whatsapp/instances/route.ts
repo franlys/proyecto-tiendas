@@ -73,8 +73,8 @@ export async function POST(request: NextRequest) {
     // Automatically set webhook
     try {
       // Use centralized APP_URL
-      const { APP_URL } = await import("@/lib/constants");
-      const webhookUrl = `${APP_URL}/api/whatsapp/webhook`;
+      const { WEBHOOK_BASE_URL } = await import("@/lib/constants");
+      const webhookUrl = `${WEBHOOK_BASE_URL}/api/whatsapp/webhook`;
 
       const { setWebhook } = await import("@/lib/evolution");
       await setWebhook(instance.instanceName, webhookUrl);

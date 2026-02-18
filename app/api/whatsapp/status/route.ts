@@ -74,8 +74,8 @@ export async function GET(request: NextRequest) {
     if (connectedInstances.length > 0) {
       try {
         // Use centralized APP_URL
-        const { APP_URL } = await import("@/lib/constants");
-        const targetWebhookUrl = `${APP_URL}/api/whatsapp/webhook`;
+        const { WEBHOOK_BASE_URL } = await import("@/lib/constants");
+        const targetWebhookUrl = `${WEBHOOK_BASE_URL}/api/whatsapp/webhook`;
         const { getWebhook, setWebhook } = await import("@/lib/evolution");
 
         // Check first connected instance (most likely the one being used)

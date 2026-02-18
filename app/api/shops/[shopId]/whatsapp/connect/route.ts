@@ -13,8 +13,7 @@ import {
     isEvolutionConfigured,
 } from "@/lib/evolution";
 
-import { APP_URL } from "@/lib/constants";
-const WEBHOOK_BASE_URL = APP_URL;
+import { WEBHOOK_BASE_URL } from "@/lib/constants";
 
 /**
  * GET /api/shops/{shopId}/whatsapp/connect
