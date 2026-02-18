@@ -17,6 +17,7 @@ import {
     Save,
     Loader2,
     CheckCircle,
+    LayoutDashboard,
     Palette,
     MessageCircle,
     Bot,
@@ -134,13 +135,13 @@ function ProfileContent() {
                     slogan: shop.slogan || "", // Load slogan
                     logo: shop.logo || "",     // Load logo
                     phone: shop.contact?.phone || "",
-                    whatsapp: shop.contact?.whatsapp || "", // Load whatsapp if available in contact
+                    whatsapp: "", // contact doesn't have whatsapp
                     email: shop.contact?.email || "",
                     address: shop.contact?.address || "",
                     city: shop.contact?.city || "",
                     ownerNotificationPhone: shop.ownerNotificationPhone || "",
                     bankAccounts: shop.bankAccounts || [],
-                    schedule: shop.schedule || DEFAULT_SCHEDULE, // Load schedule
+                    schedule: (shop.schedule || DEFAULT_SCHEDULE) as any,
                     primaryColor: shop.theme?.primaryColor || "#06B6D4",
                     accentColor: shop.theme?.accentColor || "#D4AF37",
                     // We need to fetch booking config for closedDates, but for now we assume it's part of shop if we extended shop type, 
@@ -150,8 +151,9 @@ function ProfileContent() {
                 }));
 
                 // Fetch Booking Config for closedDates
+                const shopId = user.shopId;
                 import("@/lib/services/booking.service").then(({ getBookingConfig }) => {
-                    getBookingConfig(user.shopId).then(config => {
+                    getBookingConfig(shopId).then(config => {
                         setProfile(prev => ({ ...prev, closedDates: config.closedDates || [] }));
                     });
                 });

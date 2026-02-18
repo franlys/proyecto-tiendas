@@ -13,13 +13,13 @@ const config: Config = {
         background: "#0F172A", // Deep Navy Blue
         surface: "#1E293B",
         primary: {
-          DEFAULT: "#06B6D4", // Electric Cyan
+          DEFAULT: "var(--theme-primary)", // Dynamic Theme Color
           50: "#ECFEFF",
           100: "#CFFAFE",
           200: "#A5F3FC",
           300: "#67E8F9",
           400: "#22D3EE",
-          500: "#06B6D4",
+          500: "var(--theme-primary)", // Also map 500 to main var for consistency
           600: "#0891B2",
           700: "#0E7490",
           800: "#155E75",
@@ -28,7 +28,7 @@ const config: Config = {
         // Clean White / Silver for text
         silver: "#F8FAFC",
         gold: {
-          DEFAULT: "#D4AF37",
+          DEFAULT: "var(--theme-accent)", // Dynamic Accent Color
           light: "#E5C654",
           dark: "#B8960F",
         },
