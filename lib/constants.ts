@@ -9,6 +9,9 @@ export interface ShopTheme {
   backgroundImage?: string;
 }
 
+// App URL Configuration
+export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://linko-app-pied.vercel.app");
+
 // Business Types for Phase 13+
 // Importar y re-exportar desde el nuevo sistema de tipos
 import type { BusinessType } from "@/lib/types/business.types";

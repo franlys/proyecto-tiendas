@@ -14,8 +14,8 @@ import { getWhatsAppConfigWithDefaults } from "@/lib/services/whatsapp-config.se
 import { WhatsAppAutoReplyConfig, ShopBasicInfo } from "@/lib/types/whatsapp-config.types";
 
 // App URL for links in messages
-// HARDCODED URL: Force production URL to avoid undefined/localhost issues
-const APP_URL = "https://linko-app-pied.vercel.app";
+// App URL for links in messages
+import { APP_URL } from "@/lib/constants";
 
 /**
  * Webhook para recibir eventos de Evolution API
@@ -656,8 +656,8 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
 
     // GUARD: Skip NLP for order messages - let order processing handle them first
     const isOrderMessage = text.includes("🆔 Pedido:") || text.includes("Pedido:") ||
-                           text.match(/^confirmar\s+/i) || text.includes("Total:") ||
-                           text.includes("Productos:") || text.length > 300;
+      text.match(/^confirmar\s+/i) || text.includes("Total:") ||
+      text.includes("Productos:") || text.length > 300;
 
     if (isOrderMessage) {
       console.log(`[NLP] Skipping NLP - detected order message pattern`);

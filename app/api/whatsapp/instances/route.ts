@@ -72,9 +72,9 @@ export async function POST(request: NextRequest) {
 
     // Automatically set webhook
     try {
-      // HARDCODED URL: Force production URL to avoid undefined/localhost issues
-      const appUrl = "https://linko-app-pied.vercel.app";
-      const webhookUrl = `${appUrl}/api/whatsapp/webhook`;
+      // Use centralized APP_URL
+      const { APP_URL } = await import("@/lib/constants");
+      const webhookUrl = `${APP_URL}/api/whatsapp/webhook`;
 
       const { setWebhook } = await import("@/lib/evolution");
       await setWebhook(instance.instanceName, webhookUrl);
