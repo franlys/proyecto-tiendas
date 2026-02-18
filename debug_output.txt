@@ -1,0 +1,11 @@
+🚀 Sending Simulated Webhook to: https://linko-app-pied.vercel.app/api/whatsapp/webhook
+❌ Fatal Error: 500
+DETAILS: {
+  "error": "Internal error",
+  "details": "Evolution API Error: 500 - {\"status\":500,\"error\":\"Internal Server Error\",\"response\":{\"message\":\"Connection Closed\"}}",
+  "env_check": {
+    "hasEvolutionUrl": true,
+    "hasEvolutionKey": true,
+    "hasFirebase": true
+  }
+}

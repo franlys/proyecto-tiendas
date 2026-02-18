@@ -1,6 +1,6 @@
 const axios = require("axios");
 
-const URL = "https://linko-app-pied.vercel.app/api/whatsapp/webhook"; // Production URL
+const URL = process.env.APP_URL || "https://linko-app-pied.vercel.app/api/whatsapp/webhook";
 const payload = {
     event: "MESSAGES_UPSERT",
     instance: "shop_surprise_gifts_v2",
@@ -19,24 +19,27 @@ const payload = {
     }
 };
 
+const fs = require('fs');
+
 async function testWebhook() {
-    console.log(`🚀 Sending Simulated Webhook to: ${URL}`);
-    console.log(`📦 Payload Instance: ${payload.instance}`);
+    const logData = [];
+    const log = (msg) => { console.log(msg); logData.push(msg); };
+    const err = (msg) => { console.error(msg); logData.push("ERROR: " + msg); };
+
+    log(`🚀 Sending Simulated Webhook to: ${URL}`);
 
     try {
         const response = await axios.post(URL, payload);
-        console.log(`✅ Status: ${response.status}`);
-        console.log(`📄 Data:`, response.data);
+        log(`✅ Status: ${response.status}`);
+        log(`📄 Data: ${JSON.stringify(response.data, null, 2)}`);
     } catch (error) {
+        log(`❌ Fatal Error: ${error.response ? error.response.status : error.message}`);
         if (error.response) {
-            console.error("❌ Fatal Error:", error.response.status);
-            console.error("DETAILS:", error.response.data?.details || "No Details");
-            console.error("STACK:", error.response.data?.stack || "No Stack");
-            console.error("ENV CHECK:", JSON.stringify(error.response.data?.env_check, null, 2));
-        } else {
-            console.error("❌ Error:", error.message);
+            log(`DETAILS: ${JSON.stringify(error.response.data, null, 2)}`);
         }
     }
+
+    fs.writeFileSync('debug_output.txt', logData.join('\n'));
 }
 
 testWebhook();
