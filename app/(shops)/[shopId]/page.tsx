@@ -156,14 +156,45 @@ export default function ShopHomePage() {
       {/* Hero Section - Background handled by BackgroundEffects component globally */}
       <SectionObserver id="hero" className="relative py-16 lg:py-24 overflow-hidden">
 
+        {/* Banner Image Override */}
+        {shop?.banner && (
+          <>
+            <div className="absolute inset-0 z-0">
+              <img
+                src={shop.banner}
+                alt="Banner"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            {/* Overlay to ensure text readability */}
+            <div className="absolute inset-0 z-0 bg-black/60 backdrop-blur-[2px]" />
+          </>
+        )}
+
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
-            <FadeIn delay={0.1}>
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel text-gold text-sm mb-6">
-                <Sparkles className="w-4 h-4" />
-                Bienvenido a {shop?.name}
-              </span>
-            </FadeIn>
+
+            {/* Shop Logo */}
+            {shop?.logo && (
+              <FadeIn delay={0.05}>
+                <div className="mx-auto mb-8 w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white/20 shadow-2xl overflow-hidden bg-white/5 backdrop-blur-sm">
+                  <img
+                    src={shop.logo}
+                    alt={shop.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </FadeIn>
+            )}
+
+            {!shop?.banner && (
+              <FadeIn delay={0.1}>
+                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel text-gold text-sm mb-6">
+                  <Sparkles className="w-4 h-4" />
+                  Bienvenido a {shop?.name}
+                </span>
+              </FadeIn>
+            )}
 
             <ScrollReveal delay={0.2}>
               <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">

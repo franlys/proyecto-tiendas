@@ -17,11 +17,12 @@ import {
     Save,
     Loader2,
     CheckCircle,
-    LayoutDashboard,
     Palette,
     MessageCircle,
     Bot,
-    CreditCard
+    CreditCard,
+    Calendar,
+    X
 } from "lucide-react";
 import {
     AuthProvider,
@@ -66,6 +67,8 @@ interface ShopProfile {
     // Theme
     primaryColor: string;
     accentColor: string;
+    // Advanced Schedule
+    closedDates: string[];
 }
 
 const DEFAULT_SCHEDULE = {
@@ -116,33 +119,42 @@ function ProfileContent() {
         schedule: DEFAULT_SCHEDULE,
         primaryColor: "#06B6D4",
         accentColor: "#D4AF37",
+        closedDates: [],
     });
 
-    // Load profile from localStorage
+    // Load profile from Shop Data (Source of Truth)
     useEffect(() => {
         if (user?.shopId) {
-            const storageKey = `nexo-shop-profile-${user.shopId}`;
-            const stored = localStorage.getItem(storageKey);
-            if (stored) {
-                try {
-                    const parsed = JSON.parse(stored);
-                    setProfile(prev => ({ ...prev, ...parsed }));
-                } catch {
-                    // Use defaults
-                }
-            }
-
-            // Also load shop data
             const shop = getShop(user.shopId);
             if (shop) {
                 setProfile(prev => ({
                     ...prev,
-                    name: prev.name || shop.name,
-                    description: prev.description || shop.description || "",
-                    phone: prev.phone || shop.contact?.phone || "",
-                    ownerNotificationPhone: prev.ownerNotificationPhone || shop.ownerNotificationPhone || "",
-                    bankAccounts: prev.bankAccounts.length > 0 ? prev.bankAccounts : (shop.bankAccounts || []),
+                    name: shop.name,
+                    description: shop.description || "",
+                    slogan: shop.slogan || "", // Load slogan
+                    logo: shop.logo || "",     // Load logo
+                    phone: shop.contact?.phone || "",
+                    whatsapp: shop.contact?.whatsapp || "", // Load whatsapp if available in contact
+                    email: shop.contact?.email || "",
+                    address: shop.contact?.address || "",
+                    city: shop.contact?.city || "",
+                    ownerNotificationPhone: shop.ownerNotificationPhone || "",
+                    bankAccounts: shop.bankAccounts || [],
+                    schedule: shop.schedule || DEFAULT_SCHEDULE, // Load schedule
+                    primaryColor: shop.theme?.primaryColor || "#06B6D4",
+                    accentColor: shop.theme?.accentColor || "#D4AF37",
+                    // We need to fetch booking config for closedDates, but for now we assume it's part of shop if we extended shop type, 
+                    // OR we fetch it separately. Since we don't have it in shop type yet, we might need to fetch it.
+                    // For now, let's assume we can sync it via a separate effect or just load it if we add it to shop.
+                    // Ideally, we should fetch booking config here too.
                 }));
+
+                // Fetch Booking Config for closedDates
+                import("@/lib/services/booking.service").then(({ getBookingConfig }) => {
+                    getBookingConfig(user.shopId).then(config => {
+                        setProfile(prev => ({ ...prev, closedDates: config.closedDates || [] }));
+                    });
+                });
             }
         }
     }, [user?.shopId, getShop]);
@@ -158,8 +170,7 @@ function ProfileContent() {
         if (!user?.shopId) return;
 
         setSaving(true);
-        const storageKey = `nexo-shop-profile-${user.shopId}`;
-        localStorage.setItem(storageKey, JSON.stringify(profile));
+        // localStorage removed to prevent sync issues
 
         try {
             // Get current shop to preserve other theme settings
@@ -192,6 +203,7 @@ function ProfileContent() {
             // 2. Update Booking Config (for slots generation)
             await updateBookingConfig(user.shopId, {
                 schedule: profile.schedule,
+                closedDates: profile.closedDates,
             });
 
         } catch (error) {
@@ -571,6 +583,65 @@ function ProfileContent() {
                                             )}
                                         </div>
                                     ))}
+                                </div>
+
+                                {/* Special Dates Section */}
+                                <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-4 mt-6">
+                                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                        <Calendar className="w-5 h-5 text-red-400" />
+                                        Días Libres / Feriados
+                                    </h3>
+                                    <p className="text-sm text-slate-400 mb-6">
+                                        Agrega fechas específicas donde tu negocio estará cerrado (ej. feriados, vacaciones).
+                                    </p>
+
+                                    <div className="flex gap-4 items-end">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-300 mb-2">
+                                                Seleccionar Fecha
+                                            </label>
+                                            <input
+                                                type="date"
+                                                id="special-date-picker"
+                                                className="px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white scheme-dark"
+                                            />
+                                        </div>
+                                        <Button
+                                            onClick={() => {
+                                                const input = document.getElementById('special-date-picker') as HTMLInputElement;
+                                                if (input.value && !profile.closedDates.includes(input.value)) {
+                                                    setProfile(prev => ({
+                                                        ...prev,
+                                                        closedDates: [...prev.closedDates, input.value].sort()
+                                                    }));
+                                                    input.value = '';
+                                                }
+                                            }}
+                                            variant="outline"
+                                            className="mb-[2px]"
+                                        >
+                                            Agregar Fecha
+                                        </Button>
+                                    </div>
+
+                                    {profile.closedDates.length > 0 && (
+                                        <div className="flex flex-wrap gap-2 mt-4">
+                                            {profile.closedDates.map(date => (
+                                                <div key={date} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">
+                                                    <span className="text-sm font-mono">{date}</span>
+                                                    <button
+                                                        onClick={() => setProfile(prev => ({
+                                                            ...prev,
+                                                            closedDates: prev.closedDates.filter(d => d !== date)
+                                                        }))}
+                                                        className="hover:text-red-300"
+                                                    >
+                                                        <X className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
