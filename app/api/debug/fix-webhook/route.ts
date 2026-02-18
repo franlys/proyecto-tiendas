@@ -8,8 +8,9 @@ export async function GET(request: Request) {
 
     const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL;
     const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY;
+    const { APP_URL } = await import("@/lib/constants");
     // This is the SINGLE valid webhook URL
-    const WEBHOOK_URL = "https://linko-app-pied.vercel.app/api/whatsapp/webhook";
+    const WEBHOOK_URL = `${APP_URL}/api/whatsapp/webhook`;
 
     if (!EVOLUTION_API_URL || !EVOLUTION_API_KEY) {
         return NextResponse.json({ error: "Missing Env Vars" }, { status: 500 });

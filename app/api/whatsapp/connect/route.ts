@@ -31,8 +31,9 @@ export async function GET(request: NextRequest) {
 
     if (forceWebhook) {
       try {
-        const appUrl = "https://linko-app-pied.vercel.app";
-        const webhookUrl = `${appUrl}/api/whatsapp/webhook`;
+        // Use centralized APP_URL
+        const { APP_URL } = await import("@/lib/constants");
+        const webhookUrl = `${APP_URL}/api/whatsapp/webhook`;
 
         const { setWebhook, getWebhook } = await import("@/lib/evolution");
         await setWebhook(instanceName, webhookUrl);
@@ -73,8 +74,9 @@ export async function GET(request: NextRequest) {
           // Automatically set webhook
           try {
             // HARDCODED URL: Force production URL to avoid undefined/localhost issues
-            const appUrl = "https://linko-app-pied.vercel.app";
-            const webhookUrl = `${appUrl}/api/whatsapp/webhook`;
+            // Use centralized APP_URL
+            const { APP_URL } = await import("@/lib/constants");
+            const webhookUrl = `${APP_URL}/api/whatsapp/webhook`;
 
             const { setWebhook } = await import("@/lib/evolution");
             await setWebhook(instanceName, webhookUrl);
@@ -106,8 +108,9 @@ export async function GET(request: NextRequest) {
       // Ensure webhook is set even if already connected (self-healing)
       try {
         // HARDCODED URL: Force production URL to avoid undefined/localhost issues
-        const appUrl = "https://linko-app-pied.vercel.app";
-        const webhookUrl = `${appUrl}/api/whatsapp/webhook`;
+        // Use centralized APP_URL
+        const { APP_URL } = await import("@/lib/constants");
+        const webhookUrl = `${APP_URL}/api/whatsapp/webhook`;
 
         const { setWebhook } = await import("@/lib/evolution");
         // We do this asynchronously to not block the response
@@ -126,8 +129,9 @@ export async function GET(request: NextRequest) {
     // Ensure webhook is set before fetching QR (even if instance exists)
     try {
       // HARDCODED URL: Force production URL to avoid undefined/localhost issues
-      const appUrl = "https://linko-app-pied.vercel.app";
-      const webhookUrl = `${appUrl}/api/whatsapp/webhook`;
+      // Use centralized APP_URL
+      const { APP_URL } = await import("@/lib/constants");
+      const webhookUrl = `${APP_URL}/api/whatsapp/webhook`;
 
       const { setWebhook } = await import("@/lib/evolution");
       await setWebhook(instanceName, webhookUrl);

@@ -73,9 +73,9 @@ export async function GET(request: NextRequest) {
     // Self-healing: Ensure connected instances have webhook set
     if (connectedInstances.length > 0) {
       try {
-        // HARDCODED URL: Force production URL to avoid undefined/localhost issues
-        const appUrl = "https://linko-app-pied.vercel.app";
-        const targetWebhookUrl = `${appUrl}/api/whatsapp/webhook`;
+        // Use centralized APP_URL
+        const { APP_URL } = await import("@/lib/constants");
+        const targetWebhookUrl = `${APP_URL}/api/whatsapp/webhook`;
         const { getWebhook, setWebhook } = await import("@/lib/evolution");
 
         // Check first connected instance (most likely the one being used)

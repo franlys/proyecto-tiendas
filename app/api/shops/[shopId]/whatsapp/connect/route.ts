@@ -13,7 +13,8 @@ import {
     isEvolutionConfigured,
 } from "@/lib/evolution";
 
-const WEBHOOK_BASE_URL = "https://linko-app-pied.vercel.app";
+import { APP_URL } from "@/lib/constants";
+const WEBHOOK_BASE_URL = APP_URL;
 
 /**
  * GET /api/shops/{shopId}/whatsapp/connect
