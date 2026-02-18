@@ -1016,12 +1016,12 @@ function AdminDashboardWithSubscription() {
                   </Button>
                 </Link>
 
-                {/* Horarios y Contacto - Solo para Shop Owner */}
+                {/* Perfil (Mi Negocio) - Solo para Shop Owner */}
                 {!isSuperAdmin && (
                   <Link href="/admin/profile">
                     <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-purple-400 hover:text-purple-300">
-                      <Clock className="w-4 h-4" />
-                      <span className="hidden sm:inline ml-1">Horarios</span>
+                      <Store className="w-4 h-4" />
+                      <span className="hidden sm:inline ml-1">Perfil</span>
                     </Button>
                   </Link>
                 )}
