@@ -791,8 +791,25 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
                 <Clock className="w-5 h-5 text-purple-400" />
               </div>
               <div className="flex-1">
-                <p className="text-white font-medium">Horarios y Contacto</p>
-                <p className="text-xs text-slate-400">Configura horarios, teléfono, redes sociales</p>
+                <p className="text-white font-medium">Información de Contacto</p>
+                <p className="text-xs text-slate-400">Teléfono, redes sociales, dirección</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+            </Link>
+          )}
+
+          {/* Horarios - Acceso directo a Configuración de Citas */}
+          {!isSuperAdmin && features.hasBookings && (
+            <Link
+              href="/admin/bookings/settings"
+              className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-blue-500/10 to-cyan-500/10 hover:from-blue-500/20 hover:to-cyan-500/20 border border-blue-500/20 hover:border-blue-500/30 transition-all group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-blue-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-white font-medium">Horarios de Atención</p>
+                <p className="text-xs text-slate-400">Configura disponibilidad y citas</p>
               </div>
               <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
             </Link>

@@ -296,7 +296,7 @@ export default function ShopHomePage() {
               </div>
             </ScrollReveal>
             <ScrollReveal delay={0.2}>
-              <LoyaltyCard demoMode />
+              <LoyaltyCard />
             </ScrollReveal>
           </div>
         </SectionObserver>
