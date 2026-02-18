@@ -418,9 +418,44 @@ export async function generateDaySlots(
   date: string
 ): Promise<DaySlots> {
   const config = await getBookingConfig(shopId);
+  const dayOfWeek = new Date(date).getDay(); // 0 = Sunday, 1 = Monday, ...
+
+  // Map day index to config key
+  const dayKeys = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  const dayKey = dayKeys[dayOfWeek];
+
+  let openTime = config.openTime;
+  let closeTime = config.closeTime;
+  let isClosed = config.closedDays.includes(dayOfWeek);
+
+  // Check for advanced schedule (per day)
+  if (config.schedule && (config.schedule as any)[dayKey]) {
+    const daySchedule = (config.schedule as any)[dayKey];
+    openTime = daySchedule.open;
+    closeTime = daySchedule.close;
+    isClosed = daySchedule.closed;
+  }
+
+  // Check for specific closed dates
+  if (config.closedDates?.includes(date)) {
+    isClosed = true;
+  }
+
+  // If closed, return empty slots
+  if (isClosed) {
+    const daySlots: DaySlots = {
+      date,
+      shopId,
+      slots: {},
+      updatedAt: Timestamp.now(),
+    };
+    await setDoc(doc(db, getSlotsCollection(shopId), date), daySlots);
+    return daySlots;
+  }
+
   const timeSlots = generateTimeSlots(
-    config.openTime,
-    config.closeTime,
+    openTime,
+    closeTime,
     config.slotDurationMinutes
   );
 

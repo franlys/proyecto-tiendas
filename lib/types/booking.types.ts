@@ -82,8 +82,25 @@ export interface DaySlots {
 }
 
 // Configuración de reservaciones
+export interface DaySchedule {
+  open: string;
+  close: string;
+  closed: boolean;
+}
+
 export interface BookingConfig {
   enabled: boolean;
+
+  // Schedule (Advanced)
+  schedule?: {
+    monday: DaySchedule;
+    tuesday: DaySchedule;
+    wednesday: DaySchedule;
+    thursday: DaySchedule;
+    friday: DaySchedule;
+    saturday: DaySchedule;
+    sunday: DaySchedule;
+  };
 
   // Recordatorios
   reminderEnabled: boolean;

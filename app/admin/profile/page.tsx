@@ -29,10 +29,11 @@ import {
     ShopsProvider,
     useShops,
 } from "@/components/shared";
+import { updateBookingConfig } from "@/lib/services/booking.service";
 import { Button, PhoneInput, type PhoneInputValue } from "@/components/ui";
 
 import { BankAccountsManager } from "@/components/admin/bank-accounts-manager";
-import { ShopBankAccount } from "@/lib/constants";
+import { ShopBankAccount, DEFAULT_THEME } from "@/lib/constants";
 
 interface ShopProfile {
     logo: string;
@@ -153,26 +154,49 @@ function ProfileContent() {
         }
     }, [authLoading, user, router]);
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!user?.shopId) return;
 
         setSaving(true);
         const storageKey = `nexo-shop-profile-${user.shopId}`;
         localStorage.setItem(storageKey, JSON.stringify(profile));
 
-        // Also update main shop data
-        updateShop(user.shopId, {
-            name: profile.name,
-            description: profile.description,
-            contact: {
-                phone: profile.phone,
-                email: profile.email,
-                address: profile.address,
-                city: profile.city
-            },
-            ownerNotificationPhone: profile.ownerNotificationPhone,
-            bankAccounts: profile.bankAccounts,
-        });
+        try {
+            // Get current shop to preserve other theme settings
+            const currentShop = getShop(user.shopId);
+            const currentTheme = currentShop?.theme || DEFAULT_THEME;
+
+            // 1. Update main shop data (Profile + Theme + Schedule for display)
+            await updateShop(user.shopId, {
+                name: profile.name,
+                description: profile.description,
+                slogan: profile.slogan,
+                contact: {
+                    phone: profile.phone,
+                    email: profile.email,
+                    address: profile.address,
+                    city: profile.city
+                },
+                ownerNotificationPhone: profile.ownerNotificationPhone,
+                bankAccounts: profile.bankAccounts,
+                // Save Theme explicitly merging with existing
+                theme: {
+                    ...currentTheme,
+                    primaryColor: profile.primaryColor,
+                    accentColor: profile.accentColor,
+                },
+                // Save Schedule for profile display
+                schedule: profile.schedule,
+            });
+
+            // 2. Update Booking Config (for slots generation)
+            await updateBookingConfig(user.shopId, {
+                schedule: profile.schedule,
+            });
+
+        } catch (error) {
+            console.error("Error saving profile:", error);
+        }
 
         setTimeout(() => {
             setSaving(false);
