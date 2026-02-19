@@ -20,12 +20,17 @@ export async function sendInvoiceWhatsApp(shopId: string, order: SalesOrder, ins
     // Actually, better to pass instanceName if possible, or lookup.
     // Lookup logic: shopId -> slug -> shop_[slug]_v2
 
+    import { getInstanceName } from "@/lib/evolution";
+
+    // ... existing code ...
+
     let targetInstance = instanceName;
     if (!targetInstance) {
         const { getShopBasicInfo } = await import("@/lib/services/whatsapp-config.service");
         const shop = await getShopBasicInfo(shopId);
         if (shop) {
-            targetInstance = `shop_${shop.slug.replace(/-/g, "_")}_v2`;
+            // VERSION 3 UPDATE: Use centralized helper
+            targetInstance = getInstanceName(shop.slug);
         }
     }
 
