@@ -236,9 +236,8 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
     // We use the slug directly, NOT the UUID.
 
     let shopSlug = instance.replace("shop_", "");
-    if (shopSlug.endsWith("_v2")) {
-      shopSlug = shopSlug.slice(0, -3); // remove _v2
-    }
+    // Remove any trailing version like _v2, _v3, _v10
+    shopSlug = shopSlug.replace(/_v\d+$/, "");
     shopSlug = shopSlug.replace(/_/g, "-");
 
     // Use slug for all Firestore subcollections (products, orders, etc.)
