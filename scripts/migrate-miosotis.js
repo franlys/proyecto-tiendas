@@ -11,8 +11,9 @@ const SHOP_SLUG = "miosotis-nails";
 
 // Instances to cleanup
 const INSTANCES_TO_DELETE = [
-    "shop_miosotis_nails_v2",
-    "shop_miosotis_nails_v3" // Force delete existing v3 to reset session
+    "shop_miosotis_nails",     // v1
+    "shop_miosotis_nails_v2",  // v2 (The one causing 401s)
+    "shop_miosotis_nails_v3"   // v3 (The one with ENOENT error)
 ];
 
 // Target New Instance
