@@ -1,5 +1,5 @@
 import { SalesOrder, SalesOrderItem } from "@/lib/types/order.types";
-import { sendTextMessage } from "@/lib/evolution";
+import { sendTextMessage, getInstanceName } from "@/lib/evolution";
 
 const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("es-DO", {
@@ -20,7 +20,7 @@ export async function sendInvoiceWhatsApp(shopId: string, order: SalesOrder, ins
     // Actually, better to pass instanceName if possible, or lookup.
     // Lookup logic: shopId -> slug -> shop_[slug]_v2
 
-    import { getInstanceName } from "@/lib/evolution";
+
 
     // ... existing code ...
 
