@@ -38,11 +38,11 @@ async function fixWebhook(instanceName) {
         const url = `${API_URL}/webhook/set/${instanceName}`;
         console.log(`   Calling: ${url}`);
 
-        // Disable webhook_by_events to avoid subpath issues (just in case)
-        // AND set the correct URL
+        // CORRECT KEY IS "url", NOT "webhookUrl"
         const payload = {
-            "webhookUrl": PROD_WEBHOOK,
-            "webhookByEvents": false,
+            "url": PROD_WEBHOOK,
+            "webhook_by_events": false,
+            "webhook_base64": true,
             "events": [
                 "MESSAGES_UPSERT",
                 "MESSAGES_UPDATE",
@@ -74,7 +74,7 @@ async function fixWebhook(instanceName) {
 }
 
 async function main() {
-    console.log("🚀 STARTING WEBHOOK FIX (Force Production URL)");
+    console.log("🚀 STARTING WEBHOOK FIX (Force Production URL - CORRECTED)");
     console.log("-----------------------------------------------");
     console.log(`Target URL: ${PROD_WEBHOOK}`);
 
