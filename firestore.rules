@@ -57,6 +57,11 @@ service cloud.firestore {
         allow read, write: if isShopOwner(shopId);
       }
 
+      // BOOKING CONFIG (Fix for Profile Saving)
+      match /bookingConfig/{document=**} {
+        allow read, write: if isShopOwner(shopId);
+      }
+
       // OPERATIONAL DATA (Rentals, Assignments, etc.)
       match /rentals/{rentalId} {
         allow read: if true;

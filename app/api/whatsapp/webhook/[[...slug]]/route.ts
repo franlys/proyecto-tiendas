@@ -576,13 +576,32 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
 
       if (cmdResult.handled) {
         console.log(`[${instance}] Owner command handled for ${phone}`);
-        // If it returned a message (like for errors), we might want to send it here if not sent inside?
-        // The handler sends success messages, but let's double check.
-        // Yes, the handler uses sendTextMessage.
         return;
       }
     } catch (err) {
       console.error(`[${instance}] Error handling owner command:`, err);
+    }
+
+    // ============================================================
+    // PASO 3.4: IGNORE OWNER MESSAGES (Prevent Loop)
+    // ============================================================
+    // If it wasn't a command, check if it's the owner saying "Hola" or similar.
+    // We don't want to welcome them as a new customer.
+    try {
+      const { getAllNotificationPhones } = await import("@/lib/handlers/whatsapp-order.handler");
+      const notificationPhones = await getAllNotificationPhones(shopId);
+
+      const isOwnerOrStaff = notificationPhones.some(p => {
+        const cleanStored = p.phone?.replace(/\D/g, "") || "";
+        return p.phone && phone.includes(cleanStored);
+      });
+
+      if (isOwnerOrStaff) {
+        console.log(`[${instance}] 🛑 Ignored: Message from Owner/Staff (${phone}) - preventing auto-reply loop.`);
+        return;
+      }
+    } catch (err) {
+      console.error(`[${instance}] Error checking owner status:`, err);
     }
 
     // ============================================================
