@@ -34,7 +34,7 @@ interface WhatsAppProfile {
 
 // Hook logic moved here
 // Helper to ensure consistency with backend (lib/evolution.ts)
-const getInstanceNameFromSlug = (slug: string) => `shop_${slug.replace(/-/g, "_")}_v2`;
+const getInstanceNameFromSlug = (slug: string) => `shop_${slug.replace(/-/g, "_")}_v3`;
 
 export function useWhatsAppConnection(shopSlug: string) {
     const [status, setStatus] = useState<ConnectionStatus>("disconnected");
