@@ -332,8 +332,8 @@ export function getEvolutionBaseUrl(): string {
 }
 
 export function getInstanceName(shopSlug: string): string {
-  // VERSION 2: Forcing a new instance to clear "Waiting for message" encryption issues
-  // Old: shop_surprise_gifts
-  // New: shop_surprise_gifts_v2
-  return `shop_${shopSlug.replace(/-/g, "_")}_v2`;
+  // VERSION 3: Forcing a new instance to clear session issues (Feb 2026)
+  // Old: shop_surprise_gifts_v2
+  // New: shop_surprise_gifts_v3
+  return `shop_${shopSlug.replace(/-/g, "_")}_v3`;
 }
