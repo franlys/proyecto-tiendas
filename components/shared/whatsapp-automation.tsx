@@ -34,7 +34,14 @@ interface WhatsAppProfile {
 
 // Hook logic moved here
 // Helper to ensure consistency with backend (lib/evolution.ts)
-const getInstanceNameFromSlug = (slug: string) => `shop_${slug.replace(/-/g, "_")}_v3`;
+const getInstanceNameFromSlug = (slug: string) => {
+    // VERSION 4: Special override for Miosotis Nails (Corrupted Session Fix - Feb 2026)
+    if (slug === "miosotis-nails" || slug === "miosotis_nails") {
+        return `shop_miosotis_nails_v4`;
+    }
+    // VERSION 3: Default for everyone else
+    return `shop_${slug.replace(/-/g, "_")}_v3`;
+};
 
 export function useWhatsAppConnection(shopSlug: string) {
     const [status, setStatus] = useState<ConnectionStatus>("disconnected");
