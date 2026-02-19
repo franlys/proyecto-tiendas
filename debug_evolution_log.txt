@@ -36,18 +36,14 @@ Data Preview: [
   },
   {
     "instance": {
-      "instanceName": "shop_miosotis_nails_v3",
-      "instanceId": "6081222d-a200-4601-be0d-509f775d4733",
-      "owner": "18092328741@s.whatsapp.net",
-      "profileName": "Franlys",
-      "profilePictureUrl": "https://pps.whatsapp.net/v/t61.24694-24/491877292_970036525335876_9169938900742194399_n.jpg?ccb=11-4&oh=01_Q5Aa3wESygZl2zQZiQQmmzryszZ1VXbhnAwGZdQi9mOUp2TTpA&oe=69A468C6&_nc_sid=5e03e0&_nc_cat=104",
-      "profileStatus": "",
-      "status": "open",
+      "instanceName": "shop_miosotis_nails_v4",
+      "instanceId": "76fa6c5c-ed4e-4172-b13e-ff2ecb2b2c7d",
+      "status": "connecting",
       "serverUrl": "evolution-api-production-0fa7.up.railway.app",
-      "apikey": "D12A6945-F9C9-4E65-9FCF-A23350A4F860",
+      "apikey": "608D31AF-E6C2-4CE8-8B72-E096FFA94583",
       "integration": {
         "integration": "WHATSAPP-BAILEYS",
-        "webhook_wa_business": "evolution-api-production-0fa7.up.railway.app/webhook/whatsapp/shop_miosotis_nails_v3"
+        "webhook_wa_business": "evolution-api-production-0fa7.up.railway.app/webhook/whatsapp/shop_miosotis_nails_v4"
       }
     }
   }

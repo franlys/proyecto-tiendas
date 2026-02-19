@@ -332,7 +332,12 @@ export function getEvolutionBaseUrl(): string {
 }
 
 export function getInstanceName(shopSlug: string): string {
-  // VERSION 3: Forcing a new instance to clear session issues (Feb 2026)
+  // VERSION 4: Special override for Miosotis Nails (Corrupted Session Fix - Feb 2026)
+  if (shopSlug === "miosotis-nails" || shopSlug === "miosotis_nails") {
+    return `shop_miosotis_nails_v4`;
+  }
+
+  // VERSION 3: Default for everyone else
   // Old: shop_surprise_gifts_v2
   // New: shop_surprise_gifts_v3
   return `shop_${shopSlug.replace(/-/g, "_")}_v3`;
