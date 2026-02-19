@@ -15,7 +15,7 @@ import { WhatsAppAutoReplyConfig, ShopBasicInfo } from "@/lib/types/whatsapp-con
 
 // App URL for links in messages
 // App URL for links in messages
-import { APP_URL } from "@/lib/constants";
+import { APP_URL, WEBHOOK_BASE_URL } from "@/lib/constants";
 
 /**
  * Webhook para recibir eventos de Evolution API
@@ -1223,7 +1223,7 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
       responseMessage = `¡Hola${pushName ? ` ${pushName}` : ""}! 👋
 
 Aquí puedes ver nuestro catálogo completo:
-🛍️ ${APP_URL}/${shopId}
+🛍️ ${shop?.website || `${WEBHOOK_BASE_URL}/${shopId}`}
 
 ¿Hay algo específico que te interese?`;
 
@@ -1235,7 +1235,7 @@ Aquí puedes ver nuestro catálogo completo:
       responseMessage = `¡Hola${pushName ? ` ${pushName}` : ""}! 👋
 
 Para agendar una cita, visita nuestra página de servicios:
-📅 ${APP_URL}/${shopId}/book
+📅 ${shop?.website ? `${shop.website}/book` : `${WEBHOOK_BASE_URL}/${shopId}/book`}
 
 O dime qué servicio te interesa y te ayudo a reservar.`;
     } else {
@@ -1256,7 +1256,7 @@ O dime qué servicio te interesa y te ayudo a reservar.`;
       responseMessage = `¡Hola${pushName ? ` ${pushName}` : ""}! 👋 ${config.welcomeMessage}${optionsText}
 
 Visita nuestra tienda:
-🛍️ ${APP_URL}/${shopId}`;
+🛍️ ${shop?.website || `${WEBHOOK_BASE_URL}/${shopId}`}`;
     }
 
     // Send auto-reply
@@ -1306,7 +1306,7 @@ Veo que te interesa: *${context.productName}*
 Un momento, nuestro equipo revisará tu consulta y te responderá pronto.
 
 Mientras tanto, puedes ver más detalles aquí:
-🛍️ ${APP_URL}/${shopId}/product/${context.productId}`;
+🛍️ ${WEBHOOK_BASE_URL}/${shopId}/product/${context.productId}`;
 
       await sendTextMessage(instance, phone, productMessage);
 
@@ -1324,7 +1324,7 @@ Veo que te interesa nuestro servicio: *${context.serviceName}*
 📅 Responde *SÍ* para ver horarios disponibles
 
 O visita nuestra página para reservar:
-${APP_URL}/${shopId}/book`;
+${WEBHOOK_BASE_URL}/${shopId}/book`;
 
       await sendTextMessage(instance, phone, serviceMessage);
       break;
@@ -1332,7 +1332,7 @@ ${APP_URL}/${shopId}/book`;
     case "catalog_request":
       // Ya pidió catálogo, dar seguimiento
       const catalogMessage = `Recuerda que puedes ver todos nuestros productos aquí:
-🛍️ ${APP_URL}/${shopId}
+🛍️ ${WEBHOOK_BASE_URL}/${shopId}
 
 ¿Hay algo específico que buscas?`;
 
