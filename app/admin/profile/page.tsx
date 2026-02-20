@@ -50,7 +50,7 @@ interface ShopProfile {
     ownerNotificationPhone?: string;
     // Bank Accounts
     bankAccounts: ShopBankAccount[];
-    // Social media
+    // Social
     instagram: string;
     facebook: string;
     website: string;
@@ -142,10 +142,10 @@ function ProfileContent() {
                     ownerNotificationPhone: shop.ownerNotificationPhone || "",
                     bankAccounts: shop.bankAccounts || [],
                     // Load Social Media
-                    instagram: (shop as any).socialMedia?.instagram || "",
-                    facebook: (shop as any).socialMedia?.facebook || "",
-                    tiktok: (shop as any).socialMedia?.tiktok || "",
-                    website: (shop as any).socialMedia?.website || "",
+                    instagram: (shop as any).social?.instagram || "",
+                    facebook: (shop as any).social?.facebook || "",
+                    tiktok: (shop as any).social?.tiktok || "",
+                    website: (shop as any).social?.website || "",
                     schedule: (shop.schedule || DEFAULT_SCHEDULE) as any,
                     primaryColor: shop.theme?.primaryColor || "#06B6D4",
                     accentColor: shop.theme?.accentColor || "#D4AF37",
@@ -196,7 +196,7 @@ function ProfileContent() {
                 ownerNotificationPhone: profile.ownerNotificationPhone,
                 bankAccounts: profile.bankAccounts,
                 // Save Social Media
-                socialMedia: {
+                social: {
                     instagram: profile.instagram,
                     facebook: profile.facebook,
                     tiktok: profile.tiktok,
