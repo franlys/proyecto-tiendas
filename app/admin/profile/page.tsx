@@ -132,22 +132,23 @@ function ProfileContent() {
                     ...prev,
                     name: shop.name,
                     description: shop.description || "",
-                    slogan: shop.slogan || "", // Load slogan
-                    logo: shop.logo || "",     // Load logo
+                    slogan: shop.slogan || "",
+                    logo: shop.logo || "",
                     phone: shop.contact?.phone || "",
-                    whatsapp: "", // contact doesn't have whatsapp
+                    whatsapp: (shop.contact as any)?.whatsapp || "", // Load WhatsApp
                     email: shop.contact?.email || "",
                     address: shop.contact?.address || "",
                     city: shop.contact?.city || "",
                     ownerNotificationPhone: shop.ownerNotificationPhone || "",
                     bankAccounts: shop.bankAccounts || [],
+                    // Load Social Media
+                    instagram: (shop as any).socialMedia?.instagram || "",
+                    facebook: (shop as any).socialMedia?.facebook || "",
+                    tiktok: (shop as any).socialMedia?.tiktok || "",
+                    website: (shop as any).socialMedia?.website || "",
                     schedule: (shop.schedule || DEFAULT_SCHEDULE) as any,
                     primaryColor: shop.theme?.primaryColor || "#06B6D4",
                     accentColor: shop.theme?.accentColor || "#D4AF37",
-                    // We need to fetch booking config for closedDates, but for now we assume it's part of shop if we extended shop type, 
-                    // OR we fetch it separately. Since we don't have it in shop type yet, we might need to fetch it.
-                    // For now, let's assume we can sync it via a separate effect or just load it if we add it to shop.
-                    // Ideally, we should fetch booking config here too.
                 }));
 
                 // Fetch Booking Config for closedDates
@@ -184,14 +185,23 @@ function ProfileContent() {
                 name: profile.name,
                 description: profile.description,
                 slogan: profile.slogan,
+                logo: profile.logo, // Save logo
                 contact: {
                     phone: profile.phone,
+                    whatsapp: profile.whatsapp, // Save WhatsApp
                     email: profile.email,
                     address: profile.address,
                     city: profile.city
                 },
                 ownerNotificationPhone: profile.ownerNotificationPhone,
                 bankAccounts: profile.bankAccounts,
+                // Save Social Media
+                socialMedia: {
+                    instagram: profile.instagram,
+                    facebook: profile.facebook,
+                    tiktok: profile.tiktok,
+                    website: profile.website,
+                },
                 // Save Theme explicitly merging with existing
                 theme: {
                     ...currentTheme,

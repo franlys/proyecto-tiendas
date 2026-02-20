@@ -66,7 +66,14 @@ export async function handleOwnerCommand(
 
             return {
                 handled: true,
-                message: `✅ ¡Hola Dueño! \n\nTu número ha sido registrado exitosamente para la tienda *${shopData?.name}*.\n\nAhora recibirás notificaciones de pedidos aquí.`
+                message: `✅ *¡Bienvenido, Dueño!*\n\n` +
+                    `Tu número ha sido registrado exitosamente para *${shopData?.name}*.\n\n` +
+                    `Ahora recibirás notificaciones de pedidos aquí.\n\n` +
+                    `📱 *Escribe "Ayuda"* para ver todos los comandos disponibles:\n` +
+                    `• Reportes de ventas\n` +
+                    `• Gestión de citas\n` +
+                    `• Inventario\n` +
+                    `• Y mucho más...`
             };
         } else {
             return { handled: true, message: "❌ Contraseña incorrecta." };
