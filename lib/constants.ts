@@ -236,6 +236,7 @@ export interface ShopConfig {
   background?: ShopBackground; // Background configuration
   contact: {
     phone?: string;
+    whatsapp?: string;
     email?: string;
     address?: string;
     city?: string;
@@ -664,6 +665,9 @@ export interface Product {
   description: string;
   price: number; // Base price (or min price)
   promoPrice?: number;
+  whatsapp?: string;
+  city?: string;
+  monthlyPrice?: number;
   wholesalePrice?: number; // Base wholesale price
   stock: number; // Total stock
   lowStockThreshold: number;

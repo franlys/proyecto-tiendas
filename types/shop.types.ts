@@ -127,9 +127,8 @@ export interface UpdateShopInput {
   email?: string;
   address?: string;
   website?: string;
-  mapLink?: string;
-  wholesaleEnabled?: boolean;
-  theme?: Partial<ShopTheme>;
+  whatsapp?: string;
+  city?: string;
   monthlyPrice?: number;
   // Nuevos campos de personalización
   media?: Partial<ShopMedia>;

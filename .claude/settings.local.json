@@ -83,7 +83,8 @@
       "Bash(node -e:*)",
       "Bash(npx next build:*)",
       "Bash(python3:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(npx next lint:*)"
     ]
   }
 }
