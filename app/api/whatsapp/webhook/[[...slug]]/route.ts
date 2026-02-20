@@ -3,7 +3,7 @@ import { checkOrderAssignmentResponse } from "@/lib/handlers/order-assignment.ha
 import { checkBookingConfirmationResponse } from "@/lib/handlers/booking-confirmation.handler";
 import { checkRentalConfirmationResponse } from "@/lib/handlers/rental-confirmation.handler";
 import { processWhatsAppOrder } from "@/lib/handlers/whatsapp-order.handler";
-import { sendTextMessage } from "@/lib/evolution";
+import { sendTextMessage, sendImage } from "@/lib/evolution";
 import {
   getConversationContext,
   setConversationContext,
@@ -13,9 +13,8 @@ import {
 import { getWhatsAppConfigWithDefaults } from "@/lib/services/whatsapp-config.service";
 import { WhatsAppAutoReplyConfig, ShopBasicInfo } from "@/lib/types/whatsapp-config.types";
 
-// App URL for links in messages
-// App URL for links in messages
-import { APP_URL, WEBHOOK_BASE_URL } from "@/lib/constants";
+// App URL for links in messages - use PRODUCTION_URL for customer-facing links
+import { PRODUCTION_URL, WEBHOOK_BASE_URL } from "@/lib/constants";
 
 /**
  * Webhook para recibir eventos de Evolution API
@@ -313,6 +312,42 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
     }
 
     console.log(`[${instance}] New message from ${pushName || phone}: ${text}`);
+
+    // ============================================================
+    // PASO 0.4: CHECK IF OWNER IS ADDING PRODUCT (Image handling)
+    // ============================================================
+    // If it's an image and from an owner with active product creation session, handle it
+    if (messageType === "imageMessage") {
+      try {
+        const { getAllNotificationPhones } = await import("@/lib/handlers/whatsapp-order.handler");
+        const { handleProductImage, getProductCreationSession } = await import("@/lib/handlers/product-creation.handler");
+
+        const notificationPhones = await getAllNotificationPhones(shopId);
+        const isOwnerOrStaff = notificationPhones.some(p => {
+          const cleanStored = p.phone?.replace(/\D/g, "") || "";
+          return p.phone && phone.includes(cleanStored);
+        });
+
+        if (isOwnerOrStaff) {
+          const productSession = await getProductCreationSession(shopId, phone);
+          if (productSession && productSession.state === "awaiting_photo") {
+            // Extract image URL from Evolution API payload
+            const imageData = (data.message as any)?.imageMessage;
+            const imageUrl = imageData?.url || imageData?.mediaUrl || "";
+
+            if (imageUrl) {
+              console.log(`[${instance}] 📦 Owner sending product image`);
+              const result = await handleProductImage(instance, shopId, phone, imageUrl);
+              if (result.handled) {
+                return; // Image handled for product creation
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error(`[${instance}] Error checking product image:`, err);
+      }
+    }
 
     // ============================================================
     // PASO 0.5: DETECCIÓN DE COMPROBANTES DE PAGO (Imágenes y Texto)
@@ -713,23 +748,71 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
             }
 
             const bType = shopInfo?.businessType || (shopInfo as any)?.category || "retail";
-            let welcomeAction = "¿En qué te puedo ayudar hoy?";
+
+            // Build professional welcome message
+            let welcomeAction = "";
+            let businessEmoji = "🏪";
 
             if (["restaurant", "food", "bar"].includes(bType)) {
-              welcomeAction = "¿Te gustaría ver nuestro menú? 🍔";
+              welcomeAction = "Ver menú y hacer pedidos";
+              businessEmoji = "🍽️";
             } else if (["service", "beauty", "barbershop", "spa", "salon"].includes(bType)) {
-              welcomeAction = "¿Quieres agendar una cita? ✂️";
+              welcomeAction = "Agendar una cita";
+              businessEmoji = "💅";
             } else if (["rental", "car_rental", "real_estate"].includes(bType)) {
-              welcomeAction = "¿Buscas rentar un vehículo o propiedad? 🚗";
+              welcomeAction = "Consultar disponibilidad";
+              businessEmoji = "🚗";
             } else {
-              welcomeAction = "¿En qué podemos ayudarte? 🛍️";
+              welcomeAction = "Ver catálogo de productos";
+              businessEmoji = "🛍️";
             }
 
-            responseText = `¡Hola! 👋 Bienvenido a *${shopInfo?.name || "nuestra tienda"}*. \n${welcomeAction} \n\nUsa *Menú* para ver opciones.`;
+            // Build info lines
+            const infoLines: string[] = [];
+
+            // Business hours if configured
+            if (cfg?.businessHoursEnabled && cfg.businessHoursStart && cfg.businessHoursEnd) {
+              infoLines.push(`🕐 *Horario:* ${cfg.businessHoursStart} - ${cfg.businessHoursEnd}`);
+            }
+
+            // Address if available
+            if (shopInfo?.contact?.address) {
+              infoLines.push(`📍 *Ubicación:* ${shopInfo.contact.address}${shopInfo.contact.city ? `, ${shopInfo.contact.city}` : ""}`);
+            }
+
+            // Website
+            const websiteUrl = shopInfo?.website || `${PRODUCTION_URL}/${shopInfo?.slug}`;
+            infoLines.push(`🌐 *Web:* ${websiteUrl}`);
+
+            const infoSection = infoLines.length > 0 ? `\n\n${infoLines.join("\n")}` : "";
+
+            // Professional welcome caption (used with image or standalone)
+            const welcomeCaption = `${businessEmoji} *${shopInfo?.name || "Bienvenido"}*\n` +
+              `━━━━━━━━━━━━━━━━━━━━━\n\n` +
+              `¡Hola${pushName ? ` ${pushName}` : ""}! 👋\n` +
+              `Gracias por contactarnos.${infoSection}\n\n` +
+              `*¿Qué deseas hacer?*\n` +
+              `✨ ${welcomeAction}\n` +
+              `❓ Hacer una pregunta\n` +
+              `👤 Hablar con alguien\n\n` +
+              `_Escribe *Menú* para ver todas las opciones_`;
+
+            // Send logo image with welcome message if logo exists
+            if (shopInfo?.logoUrl) {
+              try {
+                await sendImage(instance, phone, shopInfo.logoUrl, welcomeCaption);
+                return; // Image sent with caption, don't send text
+              } catch (imgError) {
+                console.error("Error sending welcome image:", imgError);
+                // Fall back to text-only message
+              }
+            }
+
+            responseText = welcomeCaption;
             break;
 
           case "PRICE_INQUIRY":
-            responseText = `Para ver los precios, por favor chequea nuestro catálogo aquí: \n${shopInfo?.website || `https://linko-app-pied.vercel.app/${shopInfo?.slug}`}`;
+            responseText = `Para ver los precios, por favor chequea nuestro catálogo aquí: \n${shopInfo?.website || `${PRODUCTION_URL}/${shopInfo?.slug}`}`;
             break;
 
           case "ADDRESS_INQUIRY":
@@ -779,7 +862,7 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
               console.log("💰 [NLP] Skipping Catalog for potential Order message");
               break;
             }
-            responseText = `Claro, aquí tienes nuestro catálogo: \n${shopInfo?.website || `https://linko-app-pied.vercel.app/${shopInfo?.slug}`}`;
+            responseText = `Claro, aquí tienes nuestro catálogo: \n${shopInfo?.website || `${PRODUCTION_URL}/${shopInfo?.slug}`}`;
             break;
 
           case "PAYMENT_POLICY":

@@ -9,7 +9,7 @@ import {
     ShopBasicInfo,
     getDefaultWhatsAppConfig,
 } from "@/lib/types/whatsapp-config.types";
-import { APP_URL } from "@/lib/constants";
+import { PRODUCTION_URL } from "@/lib/constants";
 
 const CONFIG_DOC = "config";
 const WHATSAPP_COLLECTION = "whatsapp_bot";
@@ -98,7 +98,7 @@ export async function getShopBasicInfo(shopId: string): Promise<ShopBasicInfo | 
             businessType: data.businessType || data.category || "retail",
             ownerNotificationPhone: data.ownerNotificationPhone,
             bankAccounts: data.bankAccounts || [], // Fetch bank accounts
-            website: data.customDomain || `${APP_URL}/${data.slug}`,
+            website: data.customDomain || `${PRODUCTION_URL}/${data.slug}`,
             contact: {
                 phone: data.contact?.phone,
                 address: data.contact?.address,

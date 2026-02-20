@@ -9,6 +9,10 @@ import {
     removeClosedDateAdmin,
     getClosedDatesAdmin
 } from "@/lib/services/booking-admin.service";
+import {
+    handleProductCreation,
+    getProductCreationSession
+} from "@/lib/handlers/product-creation.handler";
 
 interface CommandResult {
     handled: boolean;
@@ -92,34 +96,51 @@ export async function handleOwnerCommand(
     }
 
     // ------------------------------------------------------------
+    // 2.5. CHECK PRODUCT CREATION SESSION
+    // ------------------------------------------------------------
+    // Check if there's an active product creation session
+    const productSession = await getProductCreationSession(shopId, phone);
+    if (productSession || command.includes("agregar producto") || command.includes("nuevo producto") || command.includes("crear producto")) {
+        const productResult = await handleProductCreation(instanceName, shopId, phone, text);
+        if (productResult.handled) {
+            if (productResult.message) {
+                await sendTextMessage(instanceName, phone, productResult.message);
+            }
+            return { handled: true };
+        }
+    }
+
+    // ------------------------------------------------------------
     // 3. COMMAND: "Ayuda" or "Comandos"
     // ------------------------------------------------------------
     if (command === "ayuda" || command === "comandos" || command === "menu" || command === "help") {
         const helpMsg = `🤖 *PANEL DE CONTROL (Dueño)*\n\n` +
-            `Comandos disponibles:\n\n` +
-            `📊 *Resumen*\n` +
-            `Ver total de ventas y pedidos de hoy.\n\n` +
-            `📦 *Pedidos* (o *Pendientes*)\n` +
-            `Lista los últimos 10 pedidos por procesar.\n\n` +
-            `✅ *Confirmar [ID]*\n` +
-            `Acepta un pedido.\n_Ejemplo: Confirmar 1054_\n\n` +
-            `📅 *Citas*\n` +
-            `Ver las citas/reservaciones de hoy.\n\n` +
-            `🚫 *Cerrar [fecha]*\n` +
-            `Cierra un día específico (sin cambiar horarios).\n` +
-            `_Ejemplos: Cerrar mañana, Cerrar 20 de febrero_\n\n` +
-            `✅ *Abrir [fecha]*\n` +
-            `Reabre un día que habías cerrado.\n` +
-            `_Ejemplos: Abrir mañana, Abrir 20 de febrero_\n\n` +
-            `📋 *Días cerrados*\n` +
-            `Ver lista de días cerrados temporalmente.\n\n` +
-            `❌ *Cancelar citas de hoy [motivo]*\n` +
-            `Cancela todas las citas del día y notifica a los clientes.\n` +
-            `_Ejemplo: Cancelar citas de hoy estoy enferma_\n\n` +
-            `ℹ️ *Info*\n` +
-            `Ver estado de conexión.\n\n` +
-            `🆔 *Soy el dueño [Password]*\n` +
-            `Vincula tu número para notificaciones.\n\n` +
+            `*📊 VENTAS Y PEDIDOS*\n` +
+            `• *Resumen* - Ventas de hoy\n` +
+            `• *Semana* - Reporte semanal\n` +
+            `• *Mes* - Reporte mensual\n` +
+            `• *Pedidos* - Pendientes por procesar\n` +
+            `• *Confirmar [ID]* - Aceptar pedido\n\n` +
+            `*📅 CITAS Y AGENDA*\n` +
+            `• *Citas* - Citas de hoy\n` +
+            `• *Próximas* - Citas de la semana\n` +
+            `• *Buscar cita [nombre/tel]* - Encontrar cita\n` +
+            `• *Cerrar [fecha]* - Cerrar un día\n` +
+            `• *Abrir [fecha]* - Reabrir día\n` +
+            `• *Días cerrados* - Ver cierres\n` +
+            `• *Cancelar citas de hoy [motivo]*\n\n` +
+            `*📦 INVENTARIO*\n` +
+            `• *Inventario* - Productos bajo stock\n` +
+            `• *Producto [nombre]* - Buscar producto\n` +
+            `• *Agregar producto* - Crear nuevo producto\n` +
+            `• *Agregar producto [nombre] [precio] [stock]*\n\n` +
+            `*👥 CLIENTES*\n` +
+            `• *Clientes* - Top clientes del mes\n` +
+            `• *Cliente [nombre/tel]* - Buscar cliente\n\n` +
+            `*⚙️ CONFIGURACIÓN*\n` +
+            `• *Horario* - Ver horario del negocio\n` +
+            `• *Info* - Estado del bot\n` +
+            `• *Soy el dueño [pass]* - Vincular número\n\n` +
             `_Los comandos no distinguen mayúsculas._`;
 
         await sendTextMessage(instanceName, phone, helpMsg);
@@ -186,6 +207,113 @@ export async function handleOwnerCommand(
     }
 
     // ------------------------------------------------------------
+    // 4.5. COMMAND: "Semana" (Weekly Report)
+    // ------------------------------------------------------------
+    if (command === "semana" || command === "semanal" || command === "esta semana") {
+        const now = new Date();
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay()); // Domingo
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        const ordersQuery = await db.collection("shops").doc(shopId).collection("orders")
+            .where("createdAt", ">=", startOfWeek.toISOString())
+            .get();
+
+        let totalSales = 0;
+        let count = 0;
+        let pending = 0;
+        let confirmed = 0;
+        let delivered = 0;
+
+        ordersQuery.forEach(doc => {
+            const data = doc.data();
+            if (data.status !== "cancelled" && data.status !== "draft") {
+                totalSales += (data.total || 0);
+                count++;
+            }
+            if (data.status === "pending") pending++;
+            if (data.status === "confirmed") confirmed++;
+            if (data.status === "delivered") delivered++;
+        });
+
+        const avgTicket = count > 0 ? Math.round(totalSales / count) : 0;
+
+        const weekMsg = `📊 *REPORTE SEMANAL*\n` +
+            `(${startOfWeek.toLocaleDateString("es-MX", { day: "numeric", month: "short" })} - Hoy)\n\n` +
+            `💰 *Total Ventas:* $${totalSales.toLocaleString()}\n` +
+            `📦 *Pedidos:* ${count}\n` +
+            `🎫 *Ticket Promedio:* $${avgTicket.toLocaleString()}\n\n` +
+            `📈 *Por Estado:*\n` +
+            `⏳ Pendientes: ${pending}\n` +
+            `✅ Confirmados: ${confirmed}\n` +
+            `📬 Entregados: ${delivered}\n\n` +
+            `_Actualizado: ${new Date().toLocaleTimeString()}_`;
+
+        await sendTextMessage(instanceName, phone, weekMsg);
+        return { handled: true };
+    }
+
+    // ------------------------------------------------------------
+    // 4.6. COMMAND: "Mes" (Monthly Report)
+    // ------------------------------------------------------------
+    if (command === "mes" || command === "mensual" || command === "este mes") {
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+        const ordersQuery = await db.collection("shops").doc(shopId).collection("orders")
+            .where("createdAt", ">=", startOfMonth.toISOString())
+            .get();
+
+        let totalSales = 0;
+        let count = 0;
+        const dailySales: Record<string, number> = {};
+
+        ordersQuery.forEach(doc => {
+            const data = doc.data();
+            if (data.status !== "cancelled" && data.status !== "draft") {
+                totalSales += (data.total || 0);
+                count++;
+
+                // Track daily for best day
+                const dayKey = data.createdAt.split("T")[0];
+                dailySales[dayKey] = (dailySales[dayKey] || 0) + (data.total || 0);
+            }
+        });
+
+        // Find best day
+        let bestDay = "";
+        let bestDaySales = 0;
+        for (const [day, sales] of Object.entries(dailySales)) {
+            if (sales > bestDaySales) {
+                bestDaySales = sales;
+                bestDay = day;
+            }
+        }
+
+        const avgTicket = count > 0 ? Math.round(totalSales / count) : 0;
+        const avgDaily = Object.keys(dailySales).length > 0
+            ? Math.round(totalSales / Object.keys(dailySales).length)
+            : 0;
+
+        const monthName = now.toLocaleDateString("es-MX", { month: "long" });
+        const bestDayFormatted = bestDay
+            ? new Date(bestDay + "T12:00:00").toLocaleDateString("es-MX", { weekday: "short", day: "numeric" })
+            : "N/A";
+
+        const monthMsg = `📊 *REPORTE DE ${monthName.toUpperCase()}*\n\n` +
+            `💰 *Total Ventas:* $${totalSales.toLocaleString()}\n` +
+            `📦 *Pedidos:* ${count}\n` +
+            `🎫 *Ticket Promedio:* $${avgTicket.toLocaleString()}\n` +
+            `📅 *Promedio Diario:* $${avgDaily.toLocaleString()}\n\n` +
+            `🏆 *Mejor Día:* ${bestDayFormatted}\n` +
+            `   $${bestDaySales.toLocaleString()}\n\n` +
+            `_Actualizado: ${new Date().toLocaleTimeString()}_`;
+
+        await sendTextMessage(instanceName, phone, monthMsg);
+        return { handled: true };
+    }
+
+    // ------------------------------------------------------------
     // 5. COMMAND: "Pedidos" (List Pending)
     // ------------------------------------------------------------
     if (command === "pedidos" || command === "pendientes") {
@@ -216,6 +344,291 @@ export async function handleOwnerCommand(
     }
 
     // ------------------------------------------------------------
+    // 5.3. COMMAND: "Confirmar [ID]" (Confirm an Order)
+    // ------------------------------------------------------------
+    if (command.startsWith("confirmar ") || command.startsWith("aceptar ")) {
+        const orderIdOrNumber = command.replace("confirmar ", "").replace("aceptar ", "").trim();
+
+        if (!orderIdOrNumber) {
+            await sendTextMessage(instanceName, phone, "❌ Especifica el número de pedido.\n_Ejemplo: Confirmar 1054_");
+            return { handled: true };
+        }
+
+        // Search by orderNumber or ID
+        let orderDoc = null;
+        let orderId = "";
+
+        // First try by orderNumber
+        const byNumberQuery = await db.collection("shops").doc(shopId).collection("orders")
+            .where("orderNumber", "==", orderIdOrNumber)
+            .limit(1)
+            .get();
+
+        if (!byNumberQuery.empty) {
+            orderDoc = byNumberQuery.docs[0];
+            orderId = orderDoc.id;
+        } else {
+            // Try by document ID
+            const byIdRef = db.collection("shops").doc(shopId).collection("orders").doc(orderIdOrNumber);
+            const byIdDoc = await byIdRef.get();
+            if (byIdDoc.exists) {
+                orderDoc = byIdDoc;
+                orderId = orderIdOrNumber;
+            }
+        }
+
+        if (!orderDoc || !orderDoc.exists) {
+            await sendTextMessage(instanceName, phone, `❌ No encontré el pedido "${orderIdOrNumber}".`);
+            return { handled: true };
+        }
+
+        const orderData = orderDoc.data();
+
+        if (orderData?.status === "confirmed") {
+            await sendTextMessage(instanceName, phone, `ℹ️ El pedido *#${orderData.orderNumber}* ya estaba confirmado.`);
+            return { handled: true };
+        }
+
+        if (orderData?.status === "cancelled") {
+            await sendTextMessage(instanceName, phone, `❌ El pedido *#${orderData.orderNumber}* está cancelado.`);
+            return { handled: true };
+        }
+
+        // Update status to confirmed
+        await db.collection("shops").doc(shopId).collection("orders").doc(orderId).update({
+            status: "confirmed",
+            confirmedAt: new Date().toISOString(),
+            confirmedBy: phone,
+            updatedAt: new Date().toISOString()
+        });
+
+        // Notify customer if we have their phone
+        if (orderData?.customerPhone) {
+            const customerMsg = `✅ *¡Pedido Confirmado!*\n\n` +
+                `Tu pedido *#${orderData.orderNumber}* ha sido confirmado.\n` +
+                `Total: $${orderData.total?.toLocaleString() || 0}\n\n` +
+                `Te notificaremos cuando esté listo. ¡Gracias! 🙏`;
+
+            try {
+                await sendTextMessage(instanceName, orderData.customerPhone, customerMsg);
+            } catch (e) {
+                console.error("Failed to notify customer:", e);
+            }
+        }
+
+        const successMsg = `✅ *PEDIDO CONFIRMADO*\n\n` +
+            `📦 *#${orderData?.orderNumber}*\n` +
+            `👤 ${orderData?.customerName}\n` +
+            `💰 $${orderData?.total?.toLocaleString() || 0}\n\n` +
+            `_El cliente ha sido notificado._`;
+
+        await sendTextMessage(instanceName, phone, successMsg);
+        return { handled: true };
+    }
+
+    // ------------------------------------------------------------
+    // 5.5. COMMAND: "Inventario" (Low Stock Products)
+    // ------------------------------------------------------------
+    if (command === "inventario" || command === "stock" || command === "bajo stock") {
+        const productsQuery = await db.collection("shops").doc(shopId).collection("products")
+            .get();
+
+        const lowStockProducts: { name: string; stock: number; threshold: number }[] = [];
+
+        productsQuery.forEach(doc => {
+            const data = doc.data();
+            const stock = data.stock ?? 0;
+            const threshold = data.lowStockThreshold ?? 5;
+
+            if (stock <= threshold && data.isActive !== false) {
+                lowStockProducts.push({
+                    name: data.name,
+                    stock,
+                    threshold
+                });
+            }
+        });
+
+        if (lowStockProducts.length === 0) {
+            await sendTextMessage(instanceName, phone, "✅ *INVENTARIO OK*\n\nNo hay productos con bajo stock. ¡Todo bien!");
+            return { handled: true };
+        }
+
+        // Sort by stock (lowest first)
+        lowStockProducts.sort((a, b) => a.stock - b.stock);
+
+        let msg = `⚠️ *PRODUCTOS CON BAJO STOCK*\n\n`;
+        lowStockProducts.slice(0, 10).forEach(p => {
+            const emoji = p.stock === 0 ? "🔴" : "🟡";
+            msg += `${emoji} *${p.name}*\n   Stock: ${p.stock} (mín: ${p.threshold})\n\n`;
+        });
+
+        if (lowStockProducts.length > 10) {
+            msg += `_...y ${lowStockProducts.length - 10} más_\n`;
+        }
+
+        msg += `\n📦 Total: ${lowStockProducts.length} productos necesitan restock.`;
+
+        await sendTextMessage(instanceName, phone, msg);
+        return { handled: true };
+    }
+
+    // ------------------------------------------------------------
+    // 5.6. COMMAND: "Producto [nombre]" (Search Product)
+    // ------------------------------------------------------------
+    if (command.startsWith("producto ") || command.startsWith("buscar producto ")) {
+        const searchTerm = command.replace("buscar producto ", "").replace("producto ", "").trim().toLowerCase();
+
+        if (searchTerm.length < 2) {
+            await sendTextMessage(instanceName, phone, "❌ Escribe al menos 2 letras para buscar.\n_Ejemplo: Producto shampoo_");
+            return { handled: true };
+        }
+
+        const productsQuery = await db.collection("shops").doc(shopId).collection("products")
+            .limit(100)
+            .get();
+
+        const matches: { name: string; price: number; stock: number; id: string }[] = [];
+
+        productsQuery.forEach(doc => {
+            const data = doc.data();
+            if (data.name?.toLowerCase().includes(searchTerm)) {
+                matches.push({
+                    id: doc.id,
+                    name: data.name,
+                    price: data.price || 0,
+                    stock: data.stock ?? 0
+                });
+            }
+        });
+
+        if (matches.length === 0) {
+            await sendTextMessage(instanceName, phone, `🔍 No encontré productos con "${searchTerm}".`);
+            return { handled: true };
+        }
+
+        let msg = `🔍 *RESULTADOS: "${searchTerm}"*\n\n`;
+        matches.slice(0, 8).forEach(p => {
+            const stockEmoji = p.stock === 0 ? "🔴" : p.stock < 5 ? "🟡" : "🟢";
+            msg += `📦 *${p.name}*\n`;
+            msg += `   💰 $${p.price.toLocaleString()} | ${stockEmoji} Stock: ${p.stock}\n\n`;
+        });
+
+        if (matches.length > 8) {
+            msg += `_...y ${matches.length - 8} más_`;
+        }
+
+        await sendTextMessage(instanceName, phone, msg);
+        return { handled: true };
+    }
+
+    // ------------------------------------------------------------
+    // 5.7. COMMAND: "Clientes" (Top Customers This Month)
+    // ------------------------------------------------------------
+    if (command === "clientes" || command === "top clientes") {
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+
+        const ordersQuery = await db.collection("shops").doc(shopId).collection("orders")
+            .where("createdAt", ">=", startOfMonth.toISOString())
+            .get();
+
+        const customerStats: Record<string, { name: string; phone: string; total: number; orders: number }> = {};
+
+        ordersQuery.forEach(doc => {
+            const data = doc.data();
+            if (data.status !== "cancelled" && data.status !== "draft" && data.customerPhone) {
+                const key = data.customerPhone;
+                if (!customerStats[key]) {
+                    customerStats[key] = {
+                        name: data.customerName || "Sin nombre",
+                        phone: data.customerPhone,
+                        total: 0,
+                        orders: 0
+                    };
+                }
+                customerStats[key].total += (data.total || 0);
+                customerStats[key].orders++;
+            }
+        });
+
+        const topCustomers = Object.values(customerStats)
+            .sort((a, b) => b.total - a.total)
+            .slice(0, 10);
+
+        if (topCustomers.length === 0) {
+            await sendTextMessage(instanceName, phone, "📊 No hay clientes registrados este mes aún.");
+            return { handled: true };
+        }
+
+        let msg = `👥 *TOP CLIENTES DEL MES*\n\n`;
+        topCustomers.forEach((c, i) => {
+            const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}.`;
+            msg += `${medal} *${c.name}*\n`;
+            msg += `   💰 $${c.total.toLocaleString()} (${c.orders} pedidos)\n\n`;
+        });
+
+        msg += `_Total: ${Object.keys(customerStats).length} clientes activos_`;
+
+        await sendTextMessage(instanceName, phone, msg);
+        return { handled: true };
+    }
+
+    // ------------------------------------------------------------
+    // 5.8. COMMAND: "Cliente [nombre/tel]" (Search Customer)
+    // ------------------------------------------------------------
+    if (command.startsWith("cliente ") || command.startsWith("buscar cliente ")) {
+        const searchTerm = command.replace("buscar cliente ", "").replace("cliente ", "").trim().toLowerCase();
+
+        if (searchTerm.length < 3) {
+            await sendTextMessage(instanceName, phone, "❌ Escribe al menos 3 caracteres para buscar.\n_Ejemplo: Cliente María_");
+            return { handled: true };
+        }
+
+        // Search in customers collection
+        const customersQuery = await db.collection("shops").doc(shopId).collection("customers")
+            .limit(50)
+            .get();
+
+        const matches: { name: string; phone: string; totalSpent: number; orderCount: number }[] = [];
+
+        customersQuery.forEach(doc => {
+            const data = doc.data();
+            const nameMatch = data.name?.toLowerCase().includes(searchTerm);
+            const phoneMatch = data.phone?.includes(searchTerm);
+
+            if (nameMatch || phoneMatch) {
+                matches.push({
+                    name: data.name || "Sin nombre",
+                    phone: data.phone || "Sin teléfono",
+                    totalSpent: data.totalSpent || 0,
+                    orderCount: data.orderCount || 0
+                });
+            }
+        });
+
+        if (matches.length === 0) {
+            await sendTextMessage(instanceName, phone, `🔍 No encontré clientes con "${searchTerm}".`);
+            return { handled: true };
+        }
+
+        let msg = `👤 *CLIENTES ENCONTRADOS*\n\n`;
+        matches.slice(0, 5).forEach(c => {
+            msg += `👤 *${c.name}*\n`;
+            msg += `   📱 ${c.phone}\n`;
+            msg += `   💰 Total: $${c.totalSpent.toLocaleString()} (${c.orderCount} pedidos)\n\n`;
+        });
+
+        if (matches.length > 5) {
+            msg += `_...y ${matches.length - 5} más_`;
+        }
+
+        await sendTextMessage(instanceName, phone, msg);
+        return { handled: true };
+    }
+
+    // ------------------------------------------------------------
     // 6. COMMAND: "Citas" (List Today's Bookings)
     // ------------------------------------------------------------
     if (command === "citas" || command === "reservaciones" || command === "agenda") {
@@ -237,6 +650,181 @@ export async function handleOwnerCommand(
         });
 
         msg += `\n_Para cancelar: "Cancelar citas de hoy [motivo]"_`;
+
+        await sendTextMessage(instanceName, phone, msg);
+        return { handled: true };
+    }
+
+    // ------------------------------------------------------------
+    // 6.5. COMMAND: "Próximas" (Upcoming Bookings)
+    // ------------------------------------------------------------
+    if (command === "próximas" || command === "proximas" || command === "próximas citas" || command === "semana citas") {
+        const today = new Date();
+        const nextWeek = new Date();
+        nextWeek.setDate(today.getDate() + 7);
+
+        const todayStr = today.toISOString().split("T")[0];
+        const nextWeekStr = nextWeek.toISOString().split("T")[0];
+
+        const bookingsQuery = await db.collection("shops").doc(shopId).collection("bookings")
+            .where("date", ">=", todayStr)
+            .where("date", "<=", nextWeekStr)
+            .orderBy("date")
+            .orderBy("time")
+            .limit(20)
+            .get();
+
+        if (bookingsQuery.empty) {
+            await sendTextMessage(instanceName, phone, "📅 No hay citas agendadas para los próximos 7 días.");
+            return { handled: true };
+        }
+
+        // Group by date
+        const byDate: Record<string, typeof bookingsQuery.docs> = {};
+        bookingsQuery.forEach(doc => {
+            const data = doc.data();
+            if (data.status !== "cancelled") {
+                if (!byDate[data.date]) byDate[data.date] = [];
+                byDate[data.date].push(doc);
+            }
+        });
+
+        let msg = `📅 *CITAS PRÓXIMOS 7 DÍAS*\n\n`;
+
+        for (const [date, docs] of Object.entries(byDate)) {
+            const dateObj = new Date(date + "T12:00:00");
+            const dateStr = dateObj.toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short" });
+            msg += `*${dateStr}* (${docs.length})\n`;
+
+            docs.forEach(doc => {
+                const data = doc.data();
+                const statusEmoji = data.status === "confirmed" ? "✅" : "⏳";
+                msg += `  ${statusEmoji} ${data.time} - ${data.customerName}\n`;
+            });
+            msg += `\n`;
+        }
+
+        const totalCount = Object.values(byDate).reduce((sum, arr) => sum + arr.length, 0);
+        msg += `_Total: ${totalCount} citas_`;
+
+        await sendTextMessage(instanceName, phone, msg);
+        return { handled: true };
+    }
+
+    // ------------------------------------------------------------
+    // 6.6. COMMAND: "Buscar cita [nombre/tel]"
+    // ------------------------------------------------------------
+    if (command.startsWith("buscar cita ") || command.startsWith("cita de ")) {
+        const searchTerm = command.replace("buscar cita ", "").replace("cita de ", "").trim().toLowerCase();
+
+        if (searchTerm.length < 3) {
+            await sendTextMessage(instanceName, phone, "❌ Escribe al menos 3 caracteres.\n_Ejemplo: Buscar cita María_");
+            return { handled: true };
+        }
+
+        const today = new Date().toISOString().split("T")[0];
+
+        // Search future bookings
+        const bookingsQuery = await db.collection("shops").doc(shopId).collection("bookings")
+            .where("date", ">=", today)
+            .limit(50)
+            .get();
+
+        const matches: { date: string; time: string; name: string; phone: string; service: string; status: string }[] = [];
+
+        bookingsQuery.forEach(doc => {
+            const data = doc.data();
+            const nameMatch = data.customerName?.toLowerCase().includes(searchTerm);
+            const phoneMatch = data.customerPhone?.includes(searchTerm);
+
+            if ((nameMatch || phoneMatch) && data.status !== "cancelled") {
+                matches.push({
+                    date: data.date,
+                    time: data.time,
+                    name: data.customerName,
+                    phone: data.customerPhone,
+                    service: data.serviceName,
+                    status: data.status
+                });
+            }
+        });
+
+        if (matches.length === 0) {
+            await sendTextMessage(instanceName, phone, `🔍 No encontré citas futuras para "${searchTerm}".`);
+            return { handled: true };
+        }
+
+        // Sort by date
+        matches.sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+
+        let msg = `🔍 *CITAS ENCONTRADAS*\n\n`;
+        matches.slice(0, 5).forEach(c => {
+            const dateObj = new Date(c.date + "T12:00:00");
+            const dateStr = dateObj.toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short" });
+            const statusEmoji = c.status === "confirmed" ? "✅" : "⏳";
+
+            msg += `${statusEmoji} *${dateStr}* a las *${c.time}*\n`;
+            msg += `   👤 ${c.name}\n`;
+            msg += `   📱 ${c.phone}\n`;
+            msg += `   ✂️ ${c.service}\n\n`;
+        });
+
+        if (matches.length > 5) {
+            msg += `_...y ${matches.length - 5} más_`;
+        }
+
+        await sendTextMessage(instanceName, phone, msg);
+        return { handled: true };
+    }
+
+    // ------------------------------------------------------------
+    // 6.7. COMMAND: "Horario" (Business Hours)
+    // ------------------------------------------------------------
+    if (command === "horario" || command === "horarios" || command === "horas") {
+        const shopDoc = await db.collection("shops").doc(shopId).get();
+        const shopData = shopDoc.data();
+
+        // Try to get booking config for business hours
+        const bookingConfigDoc = await db.collection("shops").doc(shopId)
+            .collection("bookingConfig").doc("config").get();
+        const bookingConfig = bookingConfigDoc.data();
+
+        let msg = `🕒 *HORARIO DEL NEGOCIO*\n\n`;
+
+        if (bookingConfig?.schedule) {
+            const days: Record<string, string> = {
+                monday: "Lunes",
+                tuesday: "Martes",
+                wednesday: "Miércoles",
+                thursday: "Jueves",
+                friday: "Viernes",
+                saturday: "Sábado",
+                sunday: "Domingo"
+            };
+
+            for (const [day, label] of Object.entries(days)) {
+                const schedule = bookingConfig.schedule[day];
+                if (schedule?.closed) {
+                    msg += `🔴 ${label}: Cerrado\n`;
+                } else if (schedule) {
+                    msg += `🟢 ${label}: ${schedule.open} - ${schedule.close}\n`;
+                }
+            }
+        } else if (bookingConfig?.openTime && bookingConfig?.closeTime) {
+            msg += `🟢 Abierto: ${bookingConfig.openTime} - ${bookingConfig.closeTime}\n\n`;
+
+            if (bookingConfig.closedDays?.length > 0) {
+                const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+                const closedNames = bookingConfig.closedDays.map((d: number) => dayNames[d]).join(", ");
+                msg += `🔴 Cerrado: ${closedNames}`;
+            }
+        } else {
+            msg += `No hay horario configurado.\n\nConfigúralo desde:\n/admin/bookings/settings`;
+        }
+
+        if (bookingConfig?.breakEnabled) {
+            msg += `\n\n☕ *Descanso:* ${bookingConfig.breakStartTime} - ${bookingConfig.breakEndTime}`;
+        }
 
         await sendTextMessage(instanceName, phone, msg);
         return { handled: true };
