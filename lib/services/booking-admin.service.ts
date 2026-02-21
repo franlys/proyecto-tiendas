@@ -708,31 +708,45 @@ const getLegacyServicesCollection = (shopId: string) => `shops/${shopId}/service
  */
 export async function getServicesAdmin(shopId: string): Promise<BookingService[]> {
   const db = adminDb();
-  if (!db) return [];
+  if (!db) {
+    console.error("[getServicesAdmin] ❌ Admin DB not initialized");
+    return [];
+  }
+
+  console.log(`[getServicesAdmin] 🔍 Fetching services for shopId: "${shopId}"`);
 
   try {
     // First try the new bookingServices collection
+    const newPath = getServicesCollection(shopId);
+    console.log(`[getServicesAdmin] 📂 Checking new collection: ${newPath}`);
     let snapshot = await db
-      .collection(getServicesCollection(shopId))
+      .collection(newPath)
       .orderBy("order", "asc")
       .get();
 
+    console.log(`[getServicesAdmin] 📊 New collection (${newPath}): ${snapshot.size} docs`);
+
     // If empty, try the legacy 'services' collection
     if (snapshot.empty) {
-      console.log(`[Services] No services in bookingServices, checking legacy 'services' collection for ${shopId}`);
+      const legacyPath = getLegacyServicesCollection(shopId);
+      console.log(`[getServicesAdmin] 📂 Checking legacy collection: ${legacyPath}`);
       try {
         snapshot = await db
-          .collection(getLegacyServicesCollection(shopId))
+          .collection(legacyPath)
           .orderBy("order", "asc")
           .get();
-      } catch {
+        console.log(`[getServicesAdmin] 📊 Legacy collection with order: ${snapshot.size} docs`);
+      } catch (orderErr) {
         // Legacy collection might not have 'order' field, try without ordering
+        console.log(`[getServicesAdmin] ⚠️ Order query failed, trying without order...`, orderErr);
         snapshot = await db
-          .collection(getLegacyServicesCollection(shopId))
+          .collection(legacyPath)
           .get();
+        console.log(`[getServicesAdmin] 📊 Legacy collection without order: ${snapshot.size} docs`);
       }
     }
 
+    console.log(`[getServicesAdmin] ✅ Total docs found: ${snapshot.size}`);
     const services: BookingService[] = [];
     snapshot.forEach((doc) => {
       const data = doc.data();
