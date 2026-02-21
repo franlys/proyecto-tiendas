@@ -172,6 +172,7 @@ export interface BookingService {
   category?: string;         // Categoría opcional ("Uñas")
   isActive: boolean;         // Si está disponible
   order: number;             // Orden de visualización
+  image?: string;            // URL de imagen del servicio
   createdAt: string;
   updatedAt: string;
 }
@@ -185,6 +186,7 @@ export interface CreateServiceInput {
   category?: string;
   isActive?: boolean;
   order?: number;
+  image?: string;
 }
 
 // Input para crear reservación

@@ -753,6 +753,7 @@ export async function getServicesAdmin(shopId: string): Promise<BookingService[]
         category: data.category || "",
         isActive: data.isActive !== false, // Default to true
         order: data.order || 0,
+        image: data.image || data.imageUrl || "",
         createdAt: data.createdAt || new Date().toISOString(),
         updatedAt: data.updatedAt || new Date().toISOString(),
       });
@@ -804,6 +805,7 @@ export async function getActiveServicesAdmin(shopId: string): Promise<BookingSer
             category: data.category || "",
             isActive: true,
             order: data.order || 0,
+            image: data.image || data.imageUrl || "",
             createdAt: data.createdAt || new Date().toISOString(),
             updatedAt: data.updatedAt || new Date().toISOString(),
           });
@@ -825,6 +827,7 @@ export async function getActiveServicesAdmin(shopId: string): Promise<BookingSer
         category: data.category || "",
         isActive: data.isActive !== false,
         order: data.order || 0,
+        image: data.image || data.imageUrl || "",
         createdAt: data.createdAt || new Date().toISOString(),
         updatedAt: data.updatedAt || new Date().toISOString(),
       });
@@ -876,6 +879,7 @@ export async function getServiceByIdAdmin(
       category: data.category || "",
       isActive: data.isActive !== false,
       order: data.order || 0,
+      image: data.image || data.imageUrl || "",
       createdAt: data.createdAt || new Date().toISOString(),
       updatedAt: data.updatedAt || new Date().toISOString(),
     };
@@ -914,6 +918,7 @@ export async function createServiceAdmin(
     category: input.category || "",
     isActive: input.isActive !== false,
     order: input.order ?? maxOrder + 1,
+    image: input.image || "",
     createdAt: now,
     updatedAt: now,
   };
@@ -971,6 +976,7 @@ export async function updateServiceAdmin(
     category: data.category || "",
     isActive: data.isActive !== false,
     order: data.order || 0,
+    image: data.image || data.imageUrl || "",
     createdAt: data.createdAt || new Date().toISOString(),
     updatedAt: data.updatedAt || new Date().toISOString(),
   };

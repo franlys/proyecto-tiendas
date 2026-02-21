@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { ProductList } from "@/components/admin/inventory/product-list";
 import { ProductEditor } from "@/components/admin/inventory/product-editor";
 import { Product } from "@/lib/constants";
-import { Plus, Search, Filter, Loader2, Package, Store, ChevronDown, ArrowLeft, Tag, Scissors, Clock, DollarSign, Eye, EyeOff, Pencil, Trash2, ShoppingBag } from "lucide-react";
+import { Plus, Search, Filter, Loader2, Package, Store, ChevronDown, ArrowLeft, Tag, Scissors, Clock, DollarSign, Eye, EyeOff, Pencil, Trash2, ShoppingBag, ImageIcon } from "lucide-react";
+import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
 import Link from "next/link";
 import { useAuth, InventoryProvider, useInventory, useShops, ShopsProvider } from "@/components/shared";
 import type { BookingService, CreateServiceInput } from "@/lib/types/booking.types";
@@ -50,6 +51,7 @@ const emptyService: CreateServiceInput = {
   price: 0,
   category: "",
   isActive: true,
+  image: "",
 };
 
 type ViewMode = "products" | "services";
@@ -116,6 +118,7 @@ function ServicesContent({ shopId }: { shopId: string }) {
       price: service.price,
       category: service.category,
       isActive: service.isActive,
+      image: service.image || "",
     });
     setEditingService(service);
     setIsCreating(false);
@@ -338,6 +341,19 @@ function ServicesContent({ shopId }: { shopId: string }) {
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white h-20 resize-none"
               placeholder="Descripción del servicio..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-zinc-400 mb-1">
+              <ImageIcon className="inline w-4 h-4 mr-1" />
+              Imagen del servicio
+            </label>
+            <FirebaseImageUpload
+              value={formData.image || ""}
+              onChange={(url) => setFormData({ ...formData, image: url })}
+              folder="services"
+              shopId={shopId}
             />
           </div>
 
