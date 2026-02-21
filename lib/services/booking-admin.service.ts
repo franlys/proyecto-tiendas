@@ -699,24 +699,54 @@ export async function getBookingByIdAdmin(
 
 // ==================== SERVICES CRUD (ADMIN SDK) ====================
 
+// Legacy collection name (used by public shop page)
+const getLegacyServicesCollection = (shopId: string) => `shops/${shopId}/services`;
+
 /**
  * Get all services for a shop
+ * Checks both 'bookingServices' (new) and 'services' (legacy) collections
  */
 export async function getServicesAdmin(shopId: string): Promise<BookingService[]> {
   const db = adminDb();
   if (!db) return [];
 
   try {
-    const snapshot = await db
+    // First try the new bookingServices collection
+    let snapshot = await db
       .collection(getServicesCollection(shopId))
       .orderBy("order", "asc")
       .get();
 
+    // If empty, try the legacy 'services' collection
+    if (snapshot.empty) {
+      console.log(`[Services] No services in bookingServices, checking legacy 'services' collection for ${shopId}`);
+      try {
+        snapshot = await db
+          .collection(getLegacyServicesCollection(shopId))
+          .orderBy("order", "asc")
+          .get();
+      } catch {
+        // Legacy collection might not have 'order' field, try without ordering
+        snapshot = await db
+          .collection(getLegacyServicesCollection(shopId))
+          .get();
+      }
+    }
+
     const services: BookingService[] = [];
     snapshot.forEach((doc) => {
+      const data = doc.data();
       services.push({
         id: doc.id,
-        ...doc.data(),
+        name: data.name || "",
+        description: data.description || "",
+        duration: data.duration || 30,
+        price: data.price || 0,
+        category: data.category || "",
+        isActive: data.isActive !== false, // Default to true
+        order: data.order || 0,
+        image: data.image || data.imageUrl || "", // Support both field names
+        ...data,
       } as BookingService);
     });
 
@@ -729,23 +759,74 @@ export async function getServicesAdmin(shopId: string): Promise<BookingService[]
 
 /**
  * Get active services only
+ * Checks both 'bookingServices' (new) and 'services' (legacy) collections
  */
 export async function getActiveServicesAdmin(shopId: string): Promise<BookingService[]> {
   const db = adminDb();
   if (!db) return [];
 
   try {
-    const snapshot = await db
+    // First try the new bookingServices collection
+    let snapshot = await db
       .collection(getServicesCollection(shopId))
       .where("isActive", "==", true)
       .orderBy("order", "asc")
       .get();
 
+    // If empty, try the legacy 'services' collection
+    if (snapshot.empty) {
+      console.log(`[Services] No active services in bookingServices, checking legacy 'services' collection for ${shopId}`);
+      try {
+        snapshot = await db
+          .collection(getLegacyServicesCollection(shopId))
+          .where("isActive", "==", true)
+          .orderBy("order", "asc")
+          .get();
+      } catch {
+        // Legacy collection might not have these fields, get all and filter
+        const allSnapshot = await db
+          .collection(getLegacyServicesCollection(shopId))
+          .get();
+        const activeDocs: FirebaseFirestore.QueryDocumentSnapshot[] = [];
+        allSnapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.isActive !== false) activeDocs.push(doc);
+        });
+        // Create a mock snapshot-like structure
+        const services: BookingService[] = [];
+        activeDocs.forEach((doc) => {
+          const data = doc.data();
+          services.push({
+            id: doc.id,
+            name: data.name || "",
+            description: data.description || "",
+            duration: data.duration || 30,
+            price: data.price || 0,
+            category: data.category || "",
+            isActive: true,
+            order: data.order || 0,
+            image: data.image || data.imageUrl || "",
+            ...data,
+          } as BookingService);
+        });
+        return services;
+      }
+    }
+
     const services: BookingService[] = [];
     snapshot.forEach((doc) => {
+      const data = doc.data();
       services.push({
         id: doc.id,
-        ...doc.data(),
+        name: data.name || "",
+        description: data.description || "",
+        duration: data.duration || 30,
+        price: data.price || 0,
+        category: data.category || "",
+        isActive: data.isActive !== false,
+        order: data.order || 0,
+        image: data.image || data.imageUrl || "",
+        ...data,
       } as BookingService);
     });
 
@@ -758,6 +839,7 @@ export async function getActiveServicesAdmin(shopId: string): Promise<BookingSer
 
 /**
  * Get a single service by ID
+ * Checks both 'bookingServices' and legacy 'services' collections
  */
 export async function getServiceByIdAdmin(
   shopId: string,
@@ -767,16 +849,34 @@ export async function getServiceByIdAdmin(
   if (!db) return null;
 
   try {
-    const docSnap = await db
+    // First try new collection
+    let docSnap = await db
       .collection(getServicesCollection(shopId))
       .doc(serviceId)
       .get();
 
+    // If not found, try legacy collection
+    if (!docSnap.exists) {
+      docSnap = await db
+        .collection(getLegacyServicesCollection(shopId))
+        .doc(serviceId)
+        .get();
+    }
+
     if (!docSnap.exists) return null;
 
+    const data = docSnap.data() || {};
     return {
       id: docSnap.id,
-      ...docSnap.data(),
+      name: data.name || "",
+      description: data.description || "",
+      duration: data.duration || 30,
+      price: data.price || 0,
+      category: data.category || "",
+      isActive: data.isActive !== false,
+      order: data.order || 0,
+      image: data.image || data.imageUrl || "",
+      ...data,
     } as BookingService;
   } catch (error) {
     console.error("Error getting service:", error);
@@ -827,6 +927,7 @@ export async function createServiceAdmin(
 
 /**
  * Update a service
+ * Checks both 'bookingServices' and legacy 'services' collections
  */
 export async function updateServiceAdmin(
   shopId: string,
@@ -838,8 +939,15 @@ export async function updateServiceAdmin(
     throw new Error("Admin DB not initialized");
   }
 
-  const docRef = db.collection(getServicesCollection(shopId)).doc(serviceId);
-  const docSnap = await docRef.get();
+  // Try new collection first
+  let docRef = db.collection(getServicesCollection(shopId)).doc(serviceId);
+  let docSnap = await docRef.get();
+
+  // If not found, try legacy collection
+  if (!docSnap.exists) {
+    docRef = db.collection(getLegacyServicesCollection(shopId)).doc(serviceId);
+    docSnap = await docRef.get();
+  }
 
   if (!docSnap.exists) {
     return null;
@@ -851,14 +959,24 @@ export async function updateServiceAdmin(
   });
 
   const updated = await docRef.get();
+  const data = updated.data() || {};
   return {
     id: updated.id,
-    ...updated.data(),
+    name: data.name || "",
+    description: data.description || "",
+    duration: data.duration || 30,
+    price: data.price || 0,
+    category: data.category || "",
+    isActive: data.isActive !== false,
+    order: data.order || 0,
+    image: data.image || data.imageUrl || "",
+    ...data,
   } as BookingService;
 }
 
 /**
  * Delete a service
+ * Checks both 'bookingServices' and legacy 'services' collections
  */
 export async function deleteServiceAdmin(
   shopId: string,
@@ -868,8 +986,25 @@ export async function deleteServiceAdmin(
   if (!db) return false;
 
   try {
-    await db.collection(getServicesCollection(shopId)).doc(serviceId).delete();
-    return true;
+    // Try new collection first
+    const newRef = db.collection(getServicesCollection(shopId)).doc(serviceId);
+    const newSnap = await newRef.get();
+
+    if (newSnap.exists) {
+      await newRef.delete();
+      return true;
+    }
+
+    // Try legacy collection
+    const legacyRef = db.collection(getLegacyServicesCollection(shopId)).doc(serviceId);
+    const legacySnap = await legacyRef.get();
+
+    if (legacySnap.exists) {
+      await legacyRef.delete();
+      return true;
+    }
+
+    return false;
   } catch (error) {
     console.error("Error deleting service:", error);
     return false;
