@@ -51,7 +51,7 @@ function BookingsWidget({ shopId, features }: { shopId: string; features: Busine
   const [isLoading, setIsLoading] = useState(true);
   const [expandedBooking, setExpandedBooking] = useState<string | null>(null);
 
-  // Fetch today's bookings
+  // Fetch upcoming bookings (next 7 days)
   useEffect(() => {
     async function fetchBookings() {
       if (!shopId || shopId === "default") {
@@ -60,16 +60,25 @@ function BookingsWidget({ shopId, features }: { shopId: string; features: Busine
       }
 
       try {
-        const today = new Date().toISOString().split("T")[0];
-        const todayBookings = await getBookingsForDate(shopId, today);
+        const allBookings: Booking[] = [];
 
-        // Also get tomorrow's bookings
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const tomorrowStr = tomorrow.toISOString().split("T")[0];
-        const tomorrowBookings = await getBookingsForDate(shopId, tomorrowStr);
+        // Get bookings for the next 7 days
+        for (let i = 0; i < 7; i++) {
+          const date = new Date();
+          date.setDate(date.getDate() + i);
+          const dateStr = date.toISOString().split("T")[0];
+          const dayBookings = await getBookingsForDate(shopId, dateStr);
+          allBookings.push(...dayBookings);
+        }
 
-        setBookings([...todayBookings, ...tomorrowBookings].slice(0, 5));
+        // Sort by date and time
+        allBookings.sort((a, b) => {
+          const dateCompare = a.date.localeCompare(b.date);
+          if (dateCompare !== 0) return dateCompare;
+          return a.time.localeCompare(b.time);
+        });
+
+        setBookings(allBookings.slice(0, 5));
       } catch (error) {
         console.error("Error fetching bookings:", error);
       } finally {
