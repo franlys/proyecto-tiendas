@@ -220,8 +220,8 @@ export async function createBookingAdmin(
 
   const docRef = await db.collection(getBookingsCollection(shopId)).add(bookingData);
 
-  // Reservar el slot
-  await reserveSlotAdmin(shopId, input.date, input.time, docRef.id);
+  // Reservar todos los slots necesarios para la duración del servicio
+  await reserveSlotAdmin(shopId, input.date, input.time, docRef.id, input.serviceDuration);
 
   return {
     id: docRef.id,
@@ -371,11 +371,15 @@ async function generateDaySlotsAdmin(
   return daySlots;
 }
 
+/**
+ * Reserve all slots that a booking covers (based on duration)
+ */
 async function reserveSlotAdmin(
   shopId: string,
   date: string,
   time: string,
-  bookingId: string
+  bookingId: string,
+  durationMinutes?: number
 ): Promise<void> {
   const db = adminDb();
   if (!db) return;
@@ -386,56 +390,50 @@ async function reserveSlotAdmin(
     daySlots = await generateDaySlotsAdmin(shopId, date);
   }
 
-  if (daySlots.slots[time]) {
-    daySlots.slots[time] = {
-      time,
-      available: false,
-      bookingId,
-    };
+  const config = await getBookingConfigAdmin(shopId);
+  const slotDuration = config.slotDurationMinutes;
+  const serviceDuration = durationMinutes || slotDuration;
 
-    await db.doc(`${getSlotsCollection(shopId)}/${date}`).set({
-      ...daySlots,
-      updatedAt: new Date().toISOString(),
-    });
+  // Calculate how many slots to reserve
+  const slotsToReserve = Math.ceil(serviceDuration / slotDuration);
+
+  // Get all slot times sorted
+  const allTimes = Object.keys(daySlots.slots).sort();
+  const startIndex = allTimes.indexOf(time);
+
+  if (startIndex === -1) return;
+
+  // Reserve all consecutive slots for the duration
+  for (let i = 0; i < slotsToReserve && startIndex + i < allTimes.length; i++) {
+    const slotTime = allTimes[startIndex + i];
+    if (daySlots.slots[slotTime]) {
+      daySlots.slots[slotTime] = {
+        time: slotTime,
+        available: false,
+        bookingId,
+      };
+    }
   }
+
+  await db.doc(`${getSlotsCollection(shopId)}/${date}`).set({
+    ...daySlots,
+    updatedAt: new Date().toISOString(),
+  });
 }
 
 export async function getAvailableSlotsAdmin(
   shopId: string,
   date: string
 ): Promise<{ time: string; endTime: string; available: boolean }[]> {
-  const db = adminDb();
-  if (!db) {
-    console.error("Admin DB not initialized");
-    return [];
-  }
-
-  let daySlots = await getDaySlotsAdmin(shopId, date);
-
-  if (!daySlots) {
-    daySlots = await generateDaySlotsAdmin(shopId, date);
-  }
-
   const config = await getBookingConfigAdmin(shopId);
-  const available: { time: string; endTime: string; available: boolean }[] = [];
-
-  for (const [time, slot] of Object.entries(daySlots.slots)) {
-    if (slot.available) {
-      available.push({
-        time,
-        endTime: calculateEndTime(time, config.slotDurationMinutes),
-        available: true,
-      });
-    }
-  }
-
-  return available;
+  // Use the duration-aware function with default slot duration
+  return getAvailableSlotsForDurationAdmin(shopId, date, config.slotDurationMinutes);
 }
 
 /**
  * Get available slots that can accommodate a specific service duration
- * This calculates which start times have enough consecutive availability
- * to fit a service of the given duration (in minutes)
+ * This checks actual bookings and calculates time overlaps
+ * to ensure the full service duration fits without conflicts
  */
 export async function getAvailableSlotsForDurationAdmin(
   shopId: string,
@@ -449,68 +447,81 @@ export async function getAvailableSlotsForDurationAdmin(
   }
 
   const config = await getBookingConfigAdmin(shopId);
-  const slotDuration = config.slotDurationMinutes;
 
-  // Calculate how many consecutive slots are needed
-  const slotsNeeded = Math.ceil(serviceDurationMinutes / slotDuration);
+  // Generate all possible time slots for the day
+  const allSlots = generateTimeSlots({
+    openTime: config.openTime,
+    closeTime: config.closeTime,
+    slotDurationMinutes: config.slotDurationMinutes,
+    breakEnabled: config.breakEnabled,
+    breakStartTime: config.breakStartTime,
+    breakEndTime: config.breakEndTime,
+  });
 
-  // If service duration is equal to or less than slot duration, use standard logic
-  if (slotsNeeded <= 1) {
-    return getAvailableSlotsAdmin(shopId, date);
-  }
+  // Get existing bookings for the date
+  const bookings = await getBookingsForDateAdmin(shopId, date);
 
-  let daySlots = await getDaySlotsAdmin(shopId, date);
+  const closeMinutes = timeToMinutes(config.closeTime);
+  const breakStartMinutes = config.breakEnabled && config.breakStartTime
+    ? timeToMinutes(config.breakStartTime)
+    : 0;
+  const breakEndMinutes = config.breakEnabled && config.breakEndTime
+    ? timeToMinutes(config.breakEndTime)
+    : 0;
 
-  if (!daySlots) {
-    daySlots = await generateDaySlotsAdmin(shopId, date);
-  }
-
-  // Get all slot times sorted
-  const allTimes = Object.keys(daySlots.slots).sort();
   const available: { time: string; endTime: string; available: boolean }[] = [];
 
-  // For each potential start time, check if enough consecutive slots are available
-  for (let i = 0; i < allTimes.length; i++) {
-    const startTime = allTimes[i];
+  for (const slotTime of allSlots) {
+    const slotStart = timeToMinutes(slotTime);
+    const slotEnd = slotStart + serviceDurationMinutes;
 
-    // Check if we have enough slots from this position
-    if (i + slotsNeeded > allTimes.length) {
-      // Not enough slots remaining in the day
+    // 1. Check if service fits before closing time
+    if (slotEnd > closeMinutes) {
       continue;
     }
 
-    // Check if all required consecutive slots are available
-    let allSlotsAvailable = true;
-    for (let j = 0; j < slotsNeeded; j++) {
-      const slotTime = allTimes[i + j];
-      if (!daySlots.slots[slotTime]?.available) {
-        allSlotsAvailable = false;
-        break;
-      }
-
-      // Verify slots are consecutive (no gaps from break time)
-      if (j > 0) {
-        const prevTime = allTimes[i + j - 1];
-        const prevMinutes = timeToMinutes(prevTime);
-        const currentMinutes = timeToMinutes(slotTime);
-        // Slots should be exactly slotDuration apart
-        if (currentMinutes - prevMinutes !== slotDuration) {
-          allSlotsAvailable = false;
-          break;
-        }
+    // 2. Check if service overlaps with break time
+    if (config.breakEnabled && breakStartMinutes > 0) {
+      if (slotStart < breakEndMinutes && slotEnd > breakStartMinutes) {
+        continue;
       }
     }
 
-    if (allSlotsAvailable) {
+    // 3. Check for conflicts with existing bookings
+    let hasConflict = false;
+    for (const booking of bookings) {
+      if (booking.status === "cancelled") continue;
+
+      const bookingStart = timeToMinutes(booking.time);
+      const bookingDuration = booking.serviceDuration || config.slotDurationMinutes;
+      const bookingEnd = bookingStart + bookingDuration;
+
+      // Check time overlap: [slotStart, slotEnd) overlaps with [bookingStart, bookingEnd)
+      if (slotStart < bookingEnd && slotEnd > bookingStart) {
+        hasConflict = true;
+        break;
+      }
+    }
+
+    if (!hasConflict) {
       available.push({
-        time: startTime,
-        endTime: calculateEndTime(startTime, serviceDurationMinutes),
+        time: slotTime,
+        endTime: minutesToTimeStr(slotEnd),
         available: true,
       });
     }
   }
 
   return available;
+}
+
+/**
+ * Helper to convert minutes to time string "HH:MM"
+ */
+function minutesToTimeStr(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
 }
 
 /**
@@ -570,8 +581,8 @@ export async function cancelBookingAdmin(
       updatedAt: new Date().toISOString(),
     });
 
-    // Free up the slot
-    await freeSlotAdmin(shopId, booking.date, booking.time);
+    // Free up all slots for this booking
+    await freeSlotAdmin(shopId, booking.date, booking.time, bookingId);
 
     return { success: true, booking };
   } catch (error) {
@@ -581,25 +592,37 @@ export async function cancelBookingAdmin(
 }
 
 /**
- * Free a slot (mark as available)
+ * Free all slots that were reserved for a booking (by bookingId)
  */
 async function freeSlotAdmin(
   shopId: string,
   date: string,
-  time: string
+  time: string,
+  bookingId?: string
 ): Promise<void> {
   const db = adminDb();
   if (!db) return;
 
   const daySlots = await getDaySlotsAdmin(shopId, date);
 
-  if (daySlots && daySlots.slots[time]) {
-    daySlots.slots[time] = {
-      time,
-      available: true,
-      bookingId: null,
-    };
+  if (!daySlots) return;
 
+  // Free all slots that belong to this booking
+  let updated = false;
+  for (const slotTime of Object.keys(daySlots.slots)) {
+    const slot = daySlots.slots[slotTime];
+    // Free slot if it matches the bookingId OR if it's the start time
+    if (slot.bookingId === bookingId || (slotTime === time && !bookingId)) {
+      daySlots.slots[slotTime] = {
+        time: slotTime,
+        available: true,
+        bookingId: null,
+      };
+      updated = true;
+    }
+  }
+
+  if (updated) {
     await db.doc(`${getSlotsCollection(shopId)}/${date}`).set({
       ...daySlots,
       updatedAt: new Date().toISOString(),
@@ -639,8 +662,8 @@ export async function cancelAllBookingsForDateAdmin(
         updatedAt: new Date().toISOString(),
       });
 
-      // Free the slot
-      await freeSlotAdmin(shopId, booking.date, booking.time);
+      // Free all slots for this booking
+      await freeSlotAdmin(shopId, booking.date, booking.time, booking.id);
 
       cancelledBookings.push(booking);
     }
