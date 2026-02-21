@@ -58,16 +58,32 @@ export async function handleOwnerCommand(
         const storedPassword = shopData?.ownerPassword || "123"; // Default if not set (risky but existing logic uses it)
 
         if (passwordCandidate === storedPassword) {
-            // Success! Update ownerNotificationPhone
-            await db.collection("shops").doc(shopId).update({
-                ownerNotificationPhone: phone,
+            // Normalize phone for storage (remove @s.whatsapp.net and non-digits)
+            const normalizedPhone = phone.replace(/@.*$/, "").replace(/\D/g, "");
+
+            // Success! Update ownerNotificationPhone in both locations
+            const updateData = {
+                ownerNotificationPhone: normalizedPhone,
                 updatedAt: new Date().toISOString()
-            });
+            };
+
+            // Update shop document
+            await db.collection("shops").doc(shopId).update(updateData);
+
+            // Also update whatsapp_bot config if it exists
+            const configRef = db.collection("shops").doc(shopId).collection("whatsapp_bot").doc("config");
+            const configDoc = await configRef.get();
+            if (configDoc.exists) {
+                await configRef.update({ ownerNotificationPhone: normalizedPhone });
+            }
+
+            console.log(`[OwnerCmd] ✅ Owner registered: ${normalizedPhone} for shop ${shopId}`);
 
             return {
                 handled: true,
                 message: `✅ *¡Bienvenido, Dueño!*\n\n` +
                     `Tu número ha sido registrado exitosamente para *${shopData?.name}*.\n\n` +
+                    `📱 *Número registrado:* ${normalizedPhone}\n\n` +
                     `Ahora recibirás notificaciones de pedidos aquí.\n\n` +
                     `📱 *Escribe "Ayuda"* para ver todos los comandos disponibles:\n` +
                     `• Reportes de ventas\n` +
@@ -90,15 +106,27 @@ export async function handleOwnerCommand(
     console.log(`[OwnerCmd] Authorized phones:`, notificationPhones.map(p => p.phone));
 
     // Strict verify: Clean phone must match one of the registered ones
+    // Clean the incoming phone (remove all non-digits)
+    const cleanIncoming = phone.replace(/\D/g, "");
+    // Remove common prefixes for comparison (country codes can vary)
+    const lastDigitsIncoming = cleanIncoming.slice(-10); // Last 10 digits
+
     const isOwnerOrStaff = notificationPhones.some(p => {
         const cleanStored = p.phone?.replace(/\D/g, "") || "";
-        const match = phone.includes(cleanStored);
-        if (match) console.log(`[OwnerCmd] Match found: ${phone} includes ${cleanStored}`);
+        const lastDigitsStored = cleanStored.slice(-10); // Last 10 digits
+
+        // Match if either contains the other OR last 10 digits match
+        const match = phone.includes(cleanStored) ||
+            cleanStored.includes(cleanIncoming) ||
+            lastDigitsIncoming === lastDigitsStored;
+
+        if (match) console.log(`[OwnerCmd] Match found: incoming=${cleanIncoming} stored=${cleanStored}`);
         return p.phone && match;
     });
 
     if (!isOwnerOrStaff) {
-        console.log(`[OwnerCmd] Authorization failed for ${phone}`);
+        console.log(`[OwnerCmd] Authorization failed for ${phone} (clean: ${cleanIncoming})`);
+        console.log(`[OwnerCmd] Registered phones: ${notificationPhones.map(p => p.phone?.replace(/\D/g, "")).join(", ")}`);
         return { handled: false };
     }
 

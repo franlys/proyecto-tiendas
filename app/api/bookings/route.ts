@@ -7,6 +7,7 @@ import {
 import type { CreateBookingInput } from "@/lib/types/booking.types";
 import { sendTextMessage, getInstanceName } from "@/lib/evolution";
 import { getShopBasicInfo } from "@/lib/services/whatsapp-config.service";
+import { addStampsAdmin } from "@/lib/services/loyalty-admin.service";
 
 /**
  * GET /api/bookings?shopId=xxx&date=2026-02-15
@@ -140,6 +141,23 @@ export async function POST(request: NextRequest) {
           ...(bookingData.source && { source: bookingData.source }),
         });
       }
+    }
+
+    // Add loyalty stamps for the booking (non-blocking)
+    if (bookingData.customerPhone && bookingData.customerPhone !== "pending") {
+      addStampsAdmin(
+        shopId,
+        bookingData.customerPhone,
+        booking.id,
+        `CITA-${booking.id.slice(-6).toUpperCase()}`,
+        bookingData.servicePrice || 0
+      ).then(result => {
+        if (result.success) {
+          console.log(`[Booking Loyalty] ✅ Added ${result.stampsAdded} stamp(s) for ${bookingData.customerPhone}. Total: ${result.newTotal}`);
+        }
+      }).catch(err => {
+        console.error("[Booking Loyalty] Error adding stamps:", err);
+      });
     }
 
     // Send WhatsApp notification to owner (non-blocking)
