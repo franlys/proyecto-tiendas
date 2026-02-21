@@ -52,10 +52,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "shopId is required" }, { status: 400 });
     }
 
-    // Validar campos requeridos
+    // Validar campos requeridos (customerPhone can be empty for web-whatsapp bookings)
     const requiredFields = [
       "customerName",
-      "customerPhone",
       "serviceId",
       "serviceName",
       "serviceDuration",
@@ -65,7 +64,7 @@ export async function POST(request: NextRequest) {
     ];
 
     for (const field of requiredFields) {
-      if (!bookingData[field]) {
+      if (!bookingData[field] && bookingData[field] !== 0) {
         return NextResponse.json(
           { error: `${field} is required` },
           { status: 400 }
@@ -73,7 +72,24 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Ensure customerPhone has a default
+    if (!bookingData.customerPhone) {
+      bookingData.customerPhone = "pending";
+    }
+
     const booking = await createBookingAdmin(shopId, bookingData as CreateBookingInput);
+
+    // Update with additional fields if provided (referenceCode, source)
+    if (bookingData.referenceCode || bookingData.source) {
+      const { adminDb } = await import("@/lib/firebase-admin");
+      const db = adminDb();
+      if (db) {
+        await db.collection("shops").doc(shopId).collection("bookings").doc(booking.id).update({
+          ...(bookingData.referenceCode && { referenceCode: bookingData.referenceCode }),
+          ...(bookingData.source && { source: bookingData.source }),
+        });
+      }
+    }
 
     // Send WhatsApp notification to owner (non-blocking)
     notifyOwnerOfNewBooking(shopId, bookingData as CreateBookingInput).catch(err => {

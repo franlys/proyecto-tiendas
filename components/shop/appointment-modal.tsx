@@ -17,8 +17,6 @@ import { Button } from "@/components/ui";
 import { useCart, type ServiceCartItem } from "@/components/shared/cart-context";
 import { useShop } from "@/components/shared";
 import { cn, formatPhoneForWhatsApp } from "@/lib/utils";
-import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 interface AppointmentModalProps {
   isOpen: boolean;
@@ -104,58 +102,43 @@ export function AppointmentModal({
 
     try {
       const dateStr = formatDate(selectedDate);
-      const appointmentNote = `Cita: ${dateStr} a las ${selectedTime}\n${notes ? `Notas: ${notes}` : ""}`;
+      // Generate unique reference code
+      const refCode = `${Date.now().toString(36).toUpperCase().slice(-5)}`;
 
-      // 1. Create Order in Firestore (Real Data for Admin)
-      const orderData = {
-        orderNumber: `ORD-${Date.now().toString().slice(-6)}`, // Temporary ID
-        customerName: "Cliente WhatsApp", // Default
-        customerPhone: "",
-        items: services.map((s) => ({
-          productId: s.id,
-          productName: s.name,
-          quantity: 1,
-          unitPrice: s.price,
-          total: s.price
-        })),
-        subtotal: totalPrice,
-        tax: 0,
-        total: totalPrice,
-        status: "pending",
-        paymentStatus: "pending",
-        isWholesale: false,
-        source: "whatsapp",
-        tableId: tableId || null,
-        notes: appointmentNote,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        // Extra metadata for appointment
-        appointmentDate: selectedDate,
-        appointmentTime: selectedTime,
+      // Format date as ISO string for API (YYYY-MM-DD)
+      const isoDate = selectedDate.toISOString().split("T")[0];
+
+      // Combine all services into one booking
+      const combinedServiceName = services.map(s => s.name).join(", ");
+
+      // Create proper booking via API
+      const bookingPayload = {
+        shopId: shop.slug,
+        customerName: "Cliente WhatsApp", // Will be updated when WhatsApp message is received
+        customerPhone: "", // Will be updated when WhatsApp message is received
+        serviceId: services.length === 1 ? services[0].id : "multi-service",
+        serviceName: combinedServiceName,
+        serviceDuration: totalDuration,
+        servicePrice: totalPrice,
+        date: isoDate,
+        time: selectedTime,
+        notes: `Referencia: ${refCode}${notes ? `\nNotas: ${notes}` : ""}\nPendiente confirmación por WhatsApp`,
+        referenceCode: refCode,
+        source: "web-whatsapp",
       };
 
-      // Write to Firestore: shops/{slug}/orders
-      const docRef = await addDoc(collection(db, "shops", shop.slug, "orders"), orderData);
-      console.log("✅ Appointment Order created:", docRef.id);
+      const response = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bookingPayload),
+      });
 
-      // 1.5 Create Notification
-      try {
-        await addDoc(collection(db, "shops", shop.slug, "notifications"), {
-          type: "new_booking",
-          title: "Nueva Cita Agendada",
-          message: `Cita para ${dateStr} - ${selectedTime}`,
-          read: false,
-          createdAt: serverTimestamp(),
-          data: {
-            orderId: docRef.id,
-            total: totalPrice,
-            date: selectedDate,
-            time: selectedTime
-          }
-        });
-      } catch (e) {
-        console.error("Error creating notification", e);
+      if (!response.ok) {
+        throw new Error("Failed to create booking");
       }
+
+      const { booking } = await response.json();
+      console.log("✅ Booking created:", booking.id);
 
       // Build WhatsApp message
       const servicesList = services
@@ -163,7 +146,7 @@ export function AppointmentModal({
         .join("\n");
 
       let message = `Hola ${shopName}, quiero agendar una cita:
-🆔 Ref: ${docRef.id.slice(0, 5).toUpperCase()}
+🆔 Ref: ${refCode}
 
 📅 *Fecha:* ${dateStr}
 🕐 *Hora:* ${selectedTime}

@@ -420,6 +420,229 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
     }
 
     // ============================================================
+    // PASO 0.9: DETECTAR SOLICITUD DE CITA (Booking Request)
+    // ============================================================
+    // Pattern: "🆔 Ref: XXXXX" or "quiero agendar una cita"
+    const bookingRefMatch = text.match(/🆔\s*Ref:\s*([A-Z0-9]+)/i);
+    const isBookingRequest = bookingRefMatch ||
+      (text.toLowerCase().includes("quiero agendar una cita") && text.includes("Fecha:"));
+
+    if (isBookingRequest) {
+      console.log(`[${instance}] 📅 Booking request detected!`);
+
+      try {
+        const { adminDb } = await import("@/lib/firebase-admin");
+        const { createBookingAdmin } = await import("@/lib/services/booking-admin.service");
+        const { getShopBasicInfo } = await import("@/lib/services/whatsapp-config.service");
+        const { getAllNotificationPhones } = await import("@/lib/handlers/whatsapp-order.handler");
+        const db = adminDb();
+
+        if (db) {
+          // Extract booking details from message
+          const dateMatch = text.match(/Fecha:\s*([^\n]+)/i);
+          const timeMatch = text.match(/Hora:\s*(\d{1,2}:\d{2})/i);
+          const servicesMatch = text.match(/Servicios:\s*([\s\S]*?)(?=Duración|Total|$)/i);
+          const durationMatch = text.match(/Duración[^:]*:\s*([^\n]+)/i);
+          const totalMatch = text.match(/Total[^:]*:\s*\$?([\d,.]+)/i);
+
+          const refCode = bookingRefMatch ? bookingRefMatch[1] : `WA${Date.now().toString().slice(-5)}`;
+          const dateStr = dateMatch ? dateMatch[1].trim() : "";
+          const timeStr = timeMatch ? timeMatch[1].trim() : "";
+          const servicesText = servicesMatch ? servicesMatch[1].trim() : "";
+          const durationText = durationMatch ? durationMatch[1].trim() : "";
+          const totalText = totalMatch ? totalMatch[1].replace(/,/g, "") : "0";
+
+          // Parse date (e.g., "martes, 24 de febrero" -> "2026-02-24")
+          let bookingDate = "";
+          const dayNumMatch = dateStr.match(/(\d{1,2})/);
+          if (dayNumMatch) {
+            const dayNum = parseInt(dayNumMatch[1]);
+            const now = new Date();
+            const year = now.getFullYear();
+            // Determine month from text
+            const monthNames: Record<string, number> = {
+              "enero": 0, "febrero": 1, "marzo": 2, "abril": 3, "mayo": 4, "junio": 5,
+              "julio": 6, "agosto": 7, "septiembre": 8, "octubre": 9, "noviembre": 10, "diciembre": 11
+            };
+            let month = now.getMonth();
+            for (const [name, num] of Object.entries(monthNames)) {
+              if (dateStr.toLowerCase().includes(name)) {
+                month = num;
+                break;
+              }
+            }
+            bookingDate = `${year}-${(month + 1).toString().padStart(2, "0")}-${dayNum.toString().padStart(2, "0")}`;
+          }
+
+          // Parse duration (e.g., "1h 50min" -> 110)
+          let durationMinutes = 60; // default
+          const hoursMatch = durationText.match(/(\d+)\s*h/);
+          const minsMatch = durationText.match(/(\d+)\s*min/);
+          if (hoursMatch || minsMatch) {
+            durationMinutes = (hoursMatch ? parseInt(hoursMatch[1]) * 60 : 0) + (minsMatch ? parseInt(minsMatch[1]) : 0);
+          }
+
+          // Parse services into array
+          const serviceNames = servicesText
+            .split(/[-•·\n]/)
+            .map(s => s.trim())
+            .filter(s => s.length > 0);
+
+          // Check if booking with this ref already exists (created by web modal)
+          const existingBookings = await db.collection("shops").doc(shopId).collection("bookings")
+            .where("referenceCode", "==", refCode)
+            .limit(1)
+            .get();
+
+          if (!existingBookings.empty) {
+            console.log(`[${instance}] Booking with ref ${refCode} found - updating with customer info`);
+            const existingBooking = existingBookings.docs[0];
+            const existingData = existingBooking.data();
+
+            // Update booking with customer phone (was pending from web modal)
+            await existingBooking.ref.update({
+              customerPhone: phone,
+              customerName: pushName || existingData.customerName || "Cliente WhatsApp",
+              source: "whatsapp-confirmed",
+              updatedAt: new Date().toISOString(),
+            });
+
+            // Get formatted date
+            const bookingDate = existingData.date;
+            const bookingTime = existingData.time;
+            const dateObj = new Date(bookingDate + "T12:00:00");
+            const formattedDate = dateObj.toLocaleDateString("es-MX", {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+            });
+
+            // Send confirmation
+            await sendTextMessage(instance, phone,
+              `✅ *¡CITA CONFIRMADA!*\n\n` +
+              `📋 Referencia: *${refCode}*\n` +
+              `📅 Fecha: ${formattedDate}\n` +
+              `🕐 Hora: ${bookingTime}\n` +
+              `💇‍♀️ Servicios: ${existingData.serviceName}\n` +
+              `💰 Total: $${existingData.servicePrice?.toLocaleString() || "Por confirmar"}\n\n` +
+              `⏳ *Estado: Pendiente de confirmación del negocio*\n\n` +
+              `Te enviaremos un recordatorio antes de tu cita. ¡Gracias! 🙏`
+            );
+
+            // Notify owner
+            const notificationPhones = await getAllNotificationPhones(shopId);
+
+            const ownerMsg = `📅 *CITA CONFIRMADA POR WHATSAPP*\n\n` +
+              `📋 Ref: *${refCode}*\n` +
+              `👤 Cliente: ${pushName || "Sin nombre"}\n` +
+              `📱 Teléfono: ${phone}\n` +
+              `📆 Fecha: ${formattedDate}\n` +
+              `🕐 Hora: ${bookingTime}\n` +
+              `💇‍♀️ Servicios: ${existingData.serviceName}\n` +
+              `💰 Total: $${existingData.servicePrice?.toLocaleString()}\n\n` +
+              `_El cliente envió su confirmación por WhatsApp._`;
+
+            for (const staff of notificationPhones) {
+              try {
+                await sendTextMessage(instance, staff.phone, ownerMsg);
+              } catch (err) {
+                console.error(`[${instance}] Failed to notify ${staff.phone}:`, err);
+              }
+            }
+
+            return;
+          }
+
+          // Create proper booking
+          const bookingData = {
+            customerName: pushName || "Cliente WhatsApp",
+            customerPhone: phone,
+            serviceId: "whatsapp-booking",
+            serviceName: serviceNames.join(", ") || "Servicios varios",
+            serviceDuration: durationMinutes,
+            servicePrice: parseFloat(totalText) || 0,
+            date: bookingDate || new Date().toISOString().split("T")[0],
+            time: timeStr || "09:00",
+            notes: `Referencia: ${refCode}\nServicios: ${serviceNames.join(", ")}\nMensaje original enviado por WhatsApp`,
+          };
+
+          const newBooking = await createBookingAdmin(shopId, bookingData);
+          console.log(`[${instance}] ✅ Booking created: ${newBooking.id} (ref: ${refCode})`);
+
+          // Store reference code in booking for future lookups
+          await db.collection("shops").doc(shopId).collection("bookings").doc(newBooking.id).update({
+            referenceCode: refCode,
+            source: "whatsapp"
+          });
+
+          // Create notification for admin
+          await db.collection("shops").doc(shopId).collection("notifications").add({
+            type: "new_booking",
+            title: "Nueva Cita Agendada",
+            message: `Cita para ${dateStr} - ${timeStr}`,
+            read: false,
+            createdAt: new Date().toISOString(),
+            data: {
+              bookingId: newBooking.id,
+              referenceCode: refCode,
+              total: parseFloat(totalText) || 0,
+              date: bookingDate,
+              time: timeStr
+            }
+          });
+
+          // Format date for confirmation message
+          const dateObj = new Date(bookingDate + "T12:00:00");
+          const formattedDate = dateObj.toLocaleDateString("es-MX", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+          });
+
+          // Send confirmation to customer
+          const confirmMsg = `✅ *¡CITA RECIBIDA!*\n\n` +
+            `📋 Referencia: *${refCode}*\n` +
+            `📅 Fecha: ${formattedDate}\n` +
+            `🕐 Hora: ${timeStr}\n` +
+            `💇‍♀️ Servicios: ${serviceNames.join(", ") || "Pendiente confirmación"}\n` +
+            `💰 Total aprox: $${parseFloat(totalText).toLocaleString() || "Por confirmar"}\n\n` +
+            `⏳ *Estado: Pendiente de confirmación*\n\n` +
+            `Te enviaremos un mensaje cuando tu cita sea confirmada. ¡Gracias por tu preferencia! 🙏`;
+
+          await sendTextMessage(instance, phone, confirmMsg);
+
+          // Notify owner/staff
+          const shopInfo = await getShopBasicInfo(shopId);
+          const notificationPhones = await getAllNotificationPhones(shopId);
+
+          const ownerMsg = `📅 *NUEVA CITA RECIBIDA*\n\n` +
+            `📋 Ref: *${refCode}*\n` +
+            `👤 Cliente: ${pushName || "Sin nombre"}\n` +
+            `📱 Teléfono: ${phone}\n` +
+            `📆 Fecha: ${formattedDate}\n` +
+            `🕐 Hora: ${timeStr}\n` +
+            `💇‍♀️ Servicios: ${serviceNames.join(", ")}\n` +
+            `💰 Total: $${parseFloat(totalText).toLocaleString()}\n\n` +
+            `⏱️ Duración: ${durationText}\n\n` +
+            `_Ve al panel de citas para confirmar o reagendar._`;
+
+          for (const staff of notificationPhones) {
+            try {
+              await sendTextMessage(instance, staff.phone, ownerMsg);
+            } catch (err) {
+              console.error(`[${instance}] Failed to notify ${staff.phone}:`, err);
+            }
+          }
+
+          return; // Stop processing - booking handled
+        }
+      } catch (error) {
+        console.error(`[${instance}] Error processing booking request:`, error);
+        // Fall through to generic response if booking creation fails
+      }
+    }
+
+    // ============================================================
     // PASO 1: Verificar si es respuesta a asignación de pedido
     // ============================================================
     try {
