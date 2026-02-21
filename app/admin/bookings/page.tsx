@@ -28,9 +28,6 @@ import { cn } from "@/lib/utils";
 import {
   getBookingsForDate,
   getBookingConfig,
-  confirmBooking,
-  cancelBooking,
-  updateBooking,
   getBookingsForDateRange,
 } from "@/lib/services/booking.service";
 import type { Booking, BookingStatus, BookingConfig } from "@/lib/types/booking.types";
@@ -373,11 +370,31 @@ function BookingsPageContent() {
     return bookings.filter((b) => b.status === statusFilter);
   }, [bookings, statusFilter]);
 
+  // Helper to call booking action API
+  const callBookingAction = async (
+    bookingId: string,
+    action: "confirm" | "cancel" | "complete" | "no_show",
+    reason?: string
+  ) => {
+    const response = await fetch(`/api/bookings/${bookingId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ shopId, action, reason }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || "Error en la operación");
+    }
+
+    return response.json();
+  };
+
   // Actions
   const handleConfirm = async (bookingId: string) => {
     setIsActionLoading(bookingId);
     try {
-      await confirmBooking(shopId, bookingId);
+      await callBookingAction(bookingId, "confirm");
       setBookings((prev) =>
         prev.map((b) => (b.id === bookingId ? { ...b, status: "confirmed" as BookingStatus } : b))
       );
@@ -394,7 +411,7 @@ function BookingsPageContent() {
 
     setIsActionLoading(bookingId);
     try {
-      await cancelBooking(shopId, bookingId);
+      await callBookingAction(bookingId, "cancel");
       setBookings((prev) =>
         prev.map((b) => (b.id === bookingId ? { ...b, status: "cancelled" as BookingStatus } : b))
       );
@@ -414,7 +431,7 @@ function BookingsPageContent() {
   const handleComplete = async (bookingId: string) => {
     setIsActionLoading(bookingId);
     try {
-      await updateBooking(shopId, bookingId, { status: "completed" });
+      await callBookingAction(bookingId, "complete");
       setBookings((prev) =>
         prev.map((b) => (b.id === bookingId ? { ...b, status: "completed" as BookingStatus } : b))
       );
@@ -431,7 +448,7 @@ function BookingsPageContent() {
 
     setIsActionLoading(bookingId);
     try {
-      await updateBooking(shopId, bookingId, { status: "no_show" });
+      await callBookingAction(bookingId, "no_show");
       setBookings((prev) =>
         prev.map((b) => (b.id === bookingId ? { ...b, status: "no_show" as BookingStatus } : b))
       );

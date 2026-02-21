@@ -105,8 +105,11 @@ export function AppointmentModal({
       // Generate unique reference code
       const refCode = `${Date.now().toString(36).toUpperCase().slice(-5)}`;
 
-      // Format date as ISO string for API (YYYY-MM-DD)
-      const isoDate = selectedDate.toISOString().split("T")[0];
+      // Format date as YYYY-MM-DD using LOCAL date (not UTC to avoid timezone issues)
+      const year = selectedDate.getFullYear();
+      const month = (selectedDate.getMonth() + 1).toString().padStart(2, "0");
+      const day = selectedDate.getDate().toString().padStart(2, "0");
+      const isoDate = `${year}-${month}-${day}`;
 
       // Combine all services into one booking
       const combinedServiceName = services.map(s => s.name).join(", ");

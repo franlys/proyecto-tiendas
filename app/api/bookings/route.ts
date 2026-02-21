@@ -77,6 +77,44 @@ export async function POST(request: NextRequest) {
       bookingData.customerPhone = "pending";
     }
 
+    // Check if slot is available before creating
+    const existingBookings = await getBookingsForDateAdmin(shopId, bookingData.date);
+    const requestedTime = bookingData.time;
+    const requestedDuration = bookingData.serviceDuration || 60;
+
+    // Convert time to minutes for comparison
+    const timeToMinutes = (time: string) => {
+      const [h, m] = time.split(":").map(Number);
+      return h * 60 + m;
+    };
+
+    const requestedStart = timeToMinutes(requestedTime);
+    const requestedEnd = requestedStart + requestedDuration;
+
+    // Check for conflicts with existing bookings
+    for (const existing of existingBookings) {
+      if (existing.status === "cancelled") continue;
+
+      const existingStart = timeToMinutes(existing.time);
+      const existingEnd = existingStart + (existing.serviceDuration || 60);
+
+      // Check if times overlap
+      if (requestedStart < existingEnd && requestedEnd > existingStart) {
+        return NextResponse.json(
+          {
+            error: "Slot not available",
+            message: `Ya hay una cita a las ${existing.time} para ${existing.serviceName}`,
+            conflictWith: {
+              time: existing.time,
+              endTime: existing.endTime,
+              service: existing.serviceName
+            }
+          },
+          { status: 409 } // Conflict
+        );
+      }
+    }
+
     const booking = await createBookingAdmin(shopId, bookingData as CreateBookingInput);
 
     // Update with additional fields if provided (referenceCode, source)

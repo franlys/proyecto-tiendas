@@ -438,12 +438,15 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
         const db = adminDb();
 
         if (db) {
-          // Extract booking details from message
-          const dateMatch = text.match(/Fecha:\s*([^\n]+)/i);
-          const timeMatch = text.match(/Hora:\s*(\d{1,2}:\d{2})/i);
-          const servicesMatch = text.match(/Servicios:\s*([\s\S]*?)(?=Duración|Total|$)/i);
-          const durationMatch = text.match(/Duración[^:]*:\s*([^\n]+)/i);
-          const totalMatch = text.match(/Total[^:]*:\s*\$?([\d,.]+)/i);
+          // Extract booking details from message (handle various emoji formats)
+          // Remove special characters that might interfere with parsing
+          const cleanText = text.replace(/[◆◇●○★☆✦✧♦♢]/g, "").replace(/\*/g, "");
+
+          const dateMatch = cleanText.match(/Fecha:\s*([^\n]+)/i);
+          const timeMatch = cleanText.match(/Hora:\s*(\d{1,2}:\d{2})/i);
+          const servicesMatch = cleanText.match(/Servicios:\s*([\s\S]*?)(?=Duración|Total|$)/i);
+          const durationMatch = cleanText.match(/Duración[^:]*:\s*([^\n]+)/i);
+          const totalMatch = cleanText.match(/Total[^:]*:\s*\$?([\d,.\s]+)/i);
 
           const refCode = bookingRefMatch ? bookingRefMatch[1] : `WA${Date.now().toString().slice(-5)}`;
           const dateStr = dateMatch ? dateMatch[1].trim() : "";
@@ -482,11 +485,11 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
             durationMinutes = (hoursMatch ? parseInt(hoursMatch[1]) * 60 : 0) + (minsMatch ? parseInt(minsMatch[1]) : 0);
           }
 
-          // Parse services into array
+          // Parse services into array (clean up formatting artifacts)
           const serviceNames = servicesText
             .split(/[-•·\n]/)
-            .map(s => s.trim())
-            .filter(s => s.length > 0);
+            .map(s => s.trim().replace(/^[\*\s]+|[\*\s]+$/g, "")) // Remove asterisks and whitespace
+            .filter(s => s.length > 1 && !s.match(/^[◆◇●○★☆✦✧♦♢\*\s]+$/)); // Filter out empty or symbol-only entries
 
           // Check if booking with this ref already exists (created by web modal)
           const existingBookings = await db.collection("shops").doc(shopId).collection("bookings")
