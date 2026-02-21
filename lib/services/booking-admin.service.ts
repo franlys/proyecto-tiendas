@@ -738,6 +738,7 @@ export async function getServicesAdmin(shopId: string): Promise<BookingService[]
       const data = doc.data();
       services.push({
         id: doc.id,
+        shopId: data.shopId || shopId,
         name: data.name || "",
         description: data.description || "",
         duration: data.duration || 30,
@@ -745,9 +746,9 @@ export async function getServicesAdmin(shopId: string): Promise<BookingService[]
         category: data.category || "",
         isActive: data.isActive !== false, // Default to true
         order: data.order || 0,
-        image: data.image || data.imageUrl || "", // Support both field names
-        ...data,
-      } as BookingService);
+        createdAt: data.createdAt || new Date().toISOString(),
+        updatedAt: data.updatedAt || new Date().toISOString(),
+      });
     });
 
     return services;
@@ -798,6 +799,7 @@ export async function getActiveServicesAdmin(shopId: string): Promise<BookingSer
           const data = doc.data();
           services.push({
             id: doc.id,
+            shopId: data.shopId || shopId,
             name: data.name || "",
             description: data.description || "",
             duration: data.duration || 30,
@@ -805,9 +807,9 @@ export async function getActiveServicesAdmin(shopId: string): Promise<BookingSer
             category: data.category || "",
             isActive: true,
             order: data.order || 0,
-            image: data.image || data.imageUrl || "",
-            ...data,
-          } as BookingService);
+            createdAt: data.createdAt || new Date().toISOString(),
+            updatedAt: data.updatedAt || new Date().toISOString(),
+          });
         });
         return services;
       }
@@ -818,6 +820,7 @@ export async function getActiveServicesAdmin(shopId: string): Promise<BookingSer
       const data = doc.data();
       services.push({
         id: doc.id,
+        shopId: data.shopId || shopId,
         name: data.name || "",
         description: data.description || "",
         duration: data.duration || 30,
@@ -825,9 +828,9 @@ export async function getActiveServicesAdmin(shopId: string): Promise<BookingSer
         category: data.category || "",
         isActive: data.isActive !== false,
         order: data.order || 0,
-        image: data.image || data.imageUrl || "",
-        ...data,
-      } as BookingService);
+        createdAt: data.createdAt || new Date().toISOString(),
+        updatedAt: data.updatedAt || new Date().toISOString(),
+      });
     });
 
     return services;
@@ -868,6 +871,7 @@ export async function getServiceByIdAdmin(
     const data = docSnap.data() || {};
     return {
       id: docSnap.id,
+      shopId: data.shopId || shopId,
       name: data.name || "",
       description: data.description || "",
       duration: data.duration || 30,
@@ -875,9 +879,9 @@ export async function getServiceByIdAdmin(
       category: data.category || "",
       isActive: data.isActive !== false,
       order: data.order || 0,
-      image: data.image || data.imageUrl || "",
-      ...data,
-    } as BookingService;
+      createdAt: data.createdAt || new Date().toISOString(),
+      updatedAt: data.updatedAt || new Date().toISOString(),
+    };
   } catch (error) {
     console.error("Error getting service:", error);
     return null;
@@ -962,6 +966,7 @@ export async function updateServiceAdmin(
   const data = updated.data() || {};
   return {
     id: updated.id,
+    shopId: data.shopId || shopId,
     name: data.name || "",
     description: data.description || "",
     duration: data.duration || 30,
@@ -969,9 +974,9 @@ export async function updateServiceAdmin(
     category: data.category || "",
     isActive: data.isActive !== false,
     order: data.order || 0,
-    image: data.image || data.imageUrl || "",
-    ...data,
-  } as BookingService;
+    createdAt: data.createdAt || new Date().toISOString(),
+    updatedAt: data.updatedAt || new Date().toISOString(),
+  };
 }
 
 /**
