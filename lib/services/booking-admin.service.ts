@@ -730,20 +730,13 @@ export async function getServicesAdmin(shopId: string): Promise<BookingService[]
     if (snapshot.empty) {
       const legacyPath = getLegacyServicesCollection(shopId);
       console.log(`[getServicesAdmin] 📂 Checking legacy collection: ${legacyPath}`);
-      try {
-        snapshot = await db
-          .collection(legacyPath)
-          .orderBy("order", "asc")
-          .get();
-        console.log(`[getServicesAdmin] 📊 Legacy collection with order: ${snapshot.size} docs`);
-      } catch (orderErr) {
-        // Legacy collection might not have 'order' field, try without ordering
-        console.log(`[getServicesAdmin] ⚠️ Order query failed, trying without order...`, orderErr);
-        snapshot = await db
-          .collection(legacyPath)
-          .get();
-        console.log(`[getServicesAdmin] 📊 Legacy collection without order: ${snapshot.size} docs`);
-      }
+
+      // First try WITHOUT orderBy since legacy docs might not have 'order' field
+      // Firestore only returns docs that HAVE the field when using orderBy
+      snapshot = await db
+        .collection(legacyPath)
+        .get();
+      console.log(`[getServicesAdmin] 📊 Legacy collection: ${snapshot.size} docs`);
     }
 
     console.log(`[getServicesAdmin] ✅ Total docs found: ${snapshot.size}`);
@@ -791,26 +784,16 @@ export async function getActiveServicesAdmin(shopId: string): Promise<BookingSer
     // If empty, try the legacy 'services' collection
     if (snapshot.empty) {
       console.log(`[Services] No active services in bookingServices, checking legacy 'services' collection for ${shopId}`);
-      try {
-        snapshot = await db
-          .collection(getLegacyServicesCollection(shopId))
-          .where("isActive", "==", true)
-          .orderBy("order", "asc")
-          .get();
-      } catch {
-        // Legacy collection might not have these fields, get all and filter
-        const allSnapshot = await db
-          .collection(getLegacyServicesCollection(shopId))
-          .get();
-        const activeDocs: FirebaseFirestore.QueryDocumentSnapshot[] = [];
-        allSnapshot.forEach(doc => {
-          const data = doc.data();
-          if (data.isActive !== false) activeDocs.push(doc);
-        });
-        // Create a mock snapshot-like structure
-        const services: BookingService[] = [];
-        activeDocs.forEach((doc) => {
-          const data = doc.data();
+      // Get all docs and filter in memory (legacy docs might not have isActive or order fields)
+      const allSnapshot = await db
+        .collection(getLegacyServicesCollection(shopId))
+        .get();
+
+      const services: BookingService[] = [];
+      allSnapshot.forEach((doc) => {
+        const data = doc.data();
+        // Only include if isActive is not explicitly false (default to active)
+        if (data.isActive !== false) {
           services.push({
             id: doc.id,
             shopId: data.shopId || shopId,
@@ -824,9 +807,9 @@ export async function getActiveServicesAdmin(shopId: string): Promise<BookingSer
             createdAt: data.createdAt || new Date().toISOString(),
             updatedAt: data.updatedAt || new Date().toISOString(),
           });
-        });
-        return services;
-      }
+        }
+      });
+      return services;
     }
 
     const services: BookingService[] = [];
