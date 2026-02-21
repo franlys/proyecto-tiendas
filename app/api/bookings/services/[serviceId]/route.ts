@@ -49,10 +49,10 @@ export async function GET(
 }
 
 /**
- * PUT /api/bookings/services/[serviceId]
+ * PUT/PATCH /api/bookings/services/[serviceId]
  * Update a service
  */
-export async function PUT(
+async function handleUpdate(
   request: NextRequest,
   { params }: RouteParams
 ) {
@@ -87,6 +87,10 @@ export async function PUT(
     );
   }
 }
+
+// Export both PUT and PATCH
+export const PUT = handleUpdate;
+export const PATCH = handleUpdate;
 
 /**
  * DELETE /api/bookings/services/[serviceId]?shopId=xxx
