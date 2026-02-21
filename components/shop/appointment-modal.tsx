@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -12,11 +12,37 @@ import {
   ChevronRight,
   AlertCircle,
   Loader2,
+  User,
+  Star,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useCart, type ServiceCartItem } from "@/components/shared/cart-context";
 import { useShop } from "@/components/shared";
 import { cn, formatPhoneForWhatsApp } from "@/lib/utils";
+import type { BeautyStaff, BeautyStaffRole, BEAUTY_STAFF_ROLES } from "@/lib/types/staff.types";
+
+// Staff role labels in Spanish
+const ROLE_LABELS: Record<BeautyStaffRole, string> = {
+  owner: "Dueño(a)",
+  manager: "Gerente",
+  stylist: "Estilista",
+  colorist: "Colorista",
+  nail_tech: "Manicurista",
+  esthetician: "Esteticista",
+  massage_therapist: "Masajista",
+  makeup_artist: "Maquillista",
+  barber: "Barbero",
+  receptionist: "Recepcionista",
+};
+
+interface AvailableStaffMember {
+  id: string;
+  name: string;
+  role: BeautyStaffRole;
+  avatar?: string;
+  rating?: number;
+  availableSlots: string[];
+}
 
 interface AppointmentModalProps {
   isOpen: boolean;
@@ -71,14 +97,99 @@ export function AppointmentModal({
   const { services, totalDuration, totalPrice, clearCart, tableId } = useCart();
   const shop = useShop(); // Get full shop data for slug and owner phone
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  // Check if multi-staff mode is enabled (feature is in the features array)
+  const multiStaffEnabled = shop?.features?.includes("multiStaff") ?? false;
+  const totalSteps = multiStaffEnabled ? 4 : 3;
+
+  const [step, setStep] = useState<number>(1);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [selectedStaff, setSelectedStaff] = useState<AvailableStaffMember | null>(null);
+  const [availableStaff, setAvailableStaff] = useState<AvailableStaffMember[]>([]);
+  const [isLoadingStaff, setIsLoadingStaff] = useState(false);
+  const [availableSlots, setAvailableSlots] = useState<{time: string; endTime: string; available: boolean}[]>([]);
+  const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const timeSlots = useMemo(() => generateTimeSlots(), []);
+  const defaultTimeSlots = useMemo(() => generateTimeSlots(), []);
   const availableDates = useMemo(() => getAvailableDates(), []);
+
+  // Fetch available staff when services change (multi-staff mode)
+  useEffect(() => {
+    if (!multiStaffEnabled || !shop?.slug || services.length === 0) {
+      setAvailableStaff([]);
+      return;
+    }
+
+    const fetchStaff = async () => {
+      setIsLoadingStaff(true);
+      try {
+        const serviceIds = services.map(s => s.id).join(",");
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, "0")}-${today.getDate().toString().padStart(2, "0")}`;
+
+        const response = await fetch(
+          `/api/staff/available?shopId=${shop.slug}&services=${serviceIds}&date=${dateStr}`
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableStaff(data.staff || []);
+        }
+      } catch (error) {
+        console.error("Error fetching staff:", error);
+      } finally {
+        setIsLoadingStaff(false);
+      }
+    };
+
+    fetchStaff();
+  }, [multiStaffEnabled, shop?.slug, services]);
+
+  // Fetch available slots when date and staff are selected
+  useEffect(() => {
+    if (!shop?.slug || !selectedDate) {
+      setAvailableSlots([]);
+      return;
+    }
+
+    const fetchSlots = async () => {
+      setIsLoadingSlots(true);
+      try {
+        const year = selectedDate.getFullYear();
+        const month = (selectedDate.getMonth() + 1).toString().padStart(2, "0");
+        const day = selectedDate.getDate().toString().padStart(2, "0");
+        const dateStr = `${year}-${month}-${day}`;
+
+        let url = `/api/bookings/slots?shopId=${shop.slug}&date=${dateStr}&duration=${totalDuration}`;
+
+        // Add staffId if multi-staff mode and staff selected
+        if (multiStaffEnabled && selectedStaff) {
+          url += `&staffId=${selectedStaff.id}`;
+        }
+
+        const response = await fetch(url);
+
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableSlots(data.slots || []);
+        }
+      } catch (error) {
+        console.error("Error fetching slots:", error);
+      } finally {
+        setIsLoadingSlots(false);
+      }
+    };
+
+    fetchSlots();
+  }, [shop?.slug, selectedDate, selectedStaff, multiStaffEnabled, totalDuration]);
+
+  // Reset selections when staff changes
+  useEffect(() => {
+    setSelectedDate(null);
+    setSelectedTime(null);
+  }, [selectedStaff]);
 
   const formatDate = (date: Date): string => {
     return date.toLocaleDateString("es-MX", {
@@ -115,7 +226,7 @@ export function AppointmentModal({
       const combinedServiceName = services.map(s => s.name).join(", ");
 
       // Create proper booking via API
-      const bookingPayload = {
+      const bookingPayload: Record<string, unknown> = {
         shopId: shop.slug,
         customerName: "Cliente WhatsApp", // Will be updated when WhatsApp message is received
         customerPhone: "", // Will be updated when WhatsApp message is received
@@ -129,6 +240,12 @@ export function AppointmentModal({
         referenceCode: refCode,
         source: "web-whatsapp",
       };
+
+      // Add staff info if multi-staff mode
+      if (multiStaffEnabled && selectedStaff) {
+        bookingPayload.assignedStaffId = selectedStaff.id;
+        bookingPayload.assignedStaffName = selectedStaff.name;
+      }
 
       const response = await fetch("/api/bookings", {
         method: "POST",
@@ -148,11 +265,16 @@ export function AppointmentModal({
         .map((s) => `- ${s.name}`)
         .join("\n");
 
+      // Add staff line if selected
+      const staffLine = multiStaffEnabled && selectedStaff
+        ? `\n👩‍💼 *Con:* ${selectedStaff.name}`
+        : "";
+
       let message = `Hola ${shopName}, quiero agendar una cita:
 🆔 Ref: ${refCode}
 
 📅 *Fecha:* ${dateStr}
-🕐 *Hora:* ${selectedTime}
+🕐 *Hora:* ${selectedTime}${staffLine}
 
 💇‍♀️ *Servicios:*
 ${servicesList}
@@ -185,7 +307,49 @@ ${notes ? `\n📝 *Notas:* ${notes}` : ""}
   };
 
   const canProceedToStep2 = services.length > 0;
-  const canProceedToStep3 = selectedDate !== null && selectedTime !== null;
+  const canProceedToStaffStep = services.length > 0;
+  const canProceedToDateStep = multiStaffEnabled ? selectedStaff !== null : true;
+  const canProceedToConfirm = selectedDate !== null && selectedTime !== null;
+
+  // Get current step context
+  const getStepLabel = (stepNum: number): string => {
+    if (multiStaffEnabled) {
+      switch (stepNum) {
+        case 1: return "Servicios";
+        case 2: return "Empleado";
+        case 3: return "Fecha y Hora";
+        case 4: return "Confirmar";
+        default: return "";
+      }
+    } else {
+      switch (stepNum) {
+        case 1: return "Servicios";
+        case 2: return "Fecha y Hora";
+        case 3: return "Confirmar";
+        default: return "";
+      }
+    }
+  };
+
+  const canProceedFromCurrentStep = (): boolean => {
+    if (multiStaffEnabled) {
+      switch (step) {
+        case 1: return canProceedToStaffStep;
+        case 2: return canProceedToDateStep;
+        case 3: return canProceedToConfirm;
+        default: return false;
+      }
+    } else {
+      switch (step) {
+        case 1: return canProceedToStep2;
+        case 2: return canProceedToConfirm;
+        default: return false;
+      }
+    }
+  };
+
+  const isDateTimeStep = multiStaffEnabled ? step === 3 : step === 2;
+  const isConfirmStep = step === totalSteps;
 
   if (!isOpen) return null;
 
@@ -235,7 +399,7 @@ ${notes ? `\n📝 *Notas:* ${notes}` : ""}
           {/* Progress Steps */}
           <div className="px-6 py-4 border-b border-white/10">
             <div className="flex items-center justify-between">
-              {[1, 2, 3].map((s) => (
+              {Array.from({ length: totalSteps }, (_, i) => i + 1).map((s) => (
                 <div key={s} className="flex items-center">
                   <div
                     className={cn(
@@ -247,10 +411,10 @@ ${notes ? `\n📝 *Notas:* ${notes}` : ""}
                   >
                     {step > s ? <CheckCircle className="w-4 h-4" /> : s}
                   </div>
-                  {s < 3 && (
+                  {s < totalSteps && (
                     <div
                       className={cn(
-                        "w-16 sm:w-24 h-0.5 mx-2",
+                        multiStaffEnabled ? "w-12 sm:w-16 h-0.5 mx-1.5" : "w-16 sm:w-24 h-0.5 mx-2",
                         step > s ? "bg-primary" : "bg-white/10"
                       )}
                     />
@@ -259,9 +423,9 @@ ${notes ? `\n📝 *Notas:* ${notes}` : ""}
               ))}
             </div>
             <div className="flex justify-between mt-2 text-xs text-slate-500">
-              <span>Servicios</span>
-              <span>Fecha y Hora</span>
-              <span>Confirmar</span>
+              {Array.from({ length: totalSteps }, (_, i) => i + 1).map((s) => (
+                <span key={s}>{getStepLabel(s)}</span>
+              ))}
             </div>
           </div>
 
@@ -323,9 +487,98 @@ ${notes ? `\n📝 *Notas:* ${notes}` : ""}
               </div>
             )}
 
-            {/* Step 2: Date & Time Selection */}
-            {step === 2 && (
+            {/* Step 2: Staff Selection (multi-staff only) */}
+            {multiStaffEnabled && step === 2 && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-white mb-4">
+                  <User className="w-5 h-5 text-gold" />
+                  <span className="font-medium">Elige tu especialista</span>
+                </div>
+
+                {isLoadingStaff ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    <span className="ml-3 text-slate-400">Cargando...</span>
+                  </div>
+                ) : availableStaff.length === 0 ? (
+                  <div className="text-center py-8">
+                    <AlertCircle className="w-12 h-12 text-slate-500 mx-auto mb-3" />
+                    <p className="text-slate-400">No hay especialistas disponibles para estos servicios</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {availableStaff.map((staff) => {
+                      const isSelected = selectedStaff?.id === staff.id;
+                      return (
+                        <button
+                          key={staff.id}
+                          onClick={() => setSelectedStaff(staff)}
+                          className={cn(
+                            "w-full flex items-center gap-4 p-4 rounded-xl transition-all text-left",
+                            isSelected
+                              ? "bg-primary/20 border-2 border-primary"
+                              : "bg-white/5 border border-white/10 hover:bg-white/10"
+                          )}
+                        >
+                          {/* Avatar */}
+                          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/30 to-orange-400/30 flex items-center justify-center overflow-hidden flex-shrink-0">
+                            {staff.avatar ? (
+                              <img
+                                src={staff.avatar}
+                                alt={staff.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <User className="w-7 h-7 text-white/70" />
+                            )}
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex-1">
+                            <p className="text-white font-medium">{staff.name}</p>
+                            <p className="text-sm text-slate-400">
+                              {ROLE_LABELS[staff.role] || staff.role}
+                            </p>
+                            {staff.rating && (
+                              <div className="flex items-center gap-1 mt-1">
+                                <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                                <span className="text-xs text-slate-300">{staff.rating.toFixed(1)}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Selection indicator */}
+                          {isSelected && (
+                            <CheckCircle className="w-6 h-6 text-primary flex-shrink-0" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Date & Time Selection Step */}
+            {isDateTimeStep && (
               <div className="space-y-6">
+                {/* Show selected staff if multi-staff */}
+                {multiStaffEnabled && selectedStaff && (
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/10 border border-primary/20">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
+                      {selectedStaff.avatar ? (
+                        <img src={selectedStaff.avatar} alt={selectedStaff.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-5 h-5 text-primary" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-white text-sm font-medium">Con {selectedStaff.name}</p>
+                      <p className="text-xs text-slate-400">{ROLE_LABELS[selectedStaff.role]}</p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Date Selection */}
                 <div>
                   <div className="flex items-center gap-2 text-white mb-4">
@@ -338,7 +591,10 @@ ${notes ? `\n📝 *Notas:* ${notes}` : ""}
                       return (
                         <button
                           key={date.toISOString()}
-                          onClick={() => setSelectedDate(date)}
+                          onClick={() => {
+                            setSelectedDate(date);
+                            setSelectedTime(null); // Reset time when date changes
+                          }}
                           className={cn(
                             "p-2 sm:p-3 rounded-xl text-center transition-all",
                             isSelected
@@ -362,31 +618,49 @@ ${notes ? `\n📝 *Notas:* ${notes}` : ""}
                     <Clock className="w-5 h-5 text-gold" />
                     <span className="font-medium">Elige una hora</span>
                   </div>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 sm:gap-2">
-                    {timeSlots.map((time) => {
-                      const isSelected = selectedTime === time;
-                      return (
-                        <button
-                          key={time}
-                          onClick={() => setSelectedTime(time)}
-                          className={cn(
-                            "py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all",
-                            isSelected
-                              ? "bg-primary text-white"
-                              : "bg-white/5 text-slate-300 hover:bg-white/10"
-                          )}
-                        >
-                          {time}
-                        </button>
-                      );
-                    })}
-                  </div>
+
+                  {!selectedDate ? (
+                    <p className="text-slate-500 text-sm">Selecciona una fecha primero</p>
+                  ) : isLoadingSlots ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                      <span className="ml-2 text-slate-400 text-sm">Cargando horarios...</span>
+                    </div>
+                  ) : availableSlots.length === 0 ? (
+                    <div className="text-center py-4">
+                      <AlertCircle className="w-8 h-8 text-slate-500 mx-auto mb-2" />
+                      <p className="text-slate-400 text-sm">No hay horarios disponibles para esta fecha</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 sm:gap-2">
+                      {availableSlots.map((slot) => {
+                        const isSelected = selectedTime === slot.time;
+                        return (
+                          <button
+                            key={slot.time}
+                            onClick={() => setSelectedTime(slot.time)}
+                            disabled={!slot.available}
+                            className={cn(
+                              "py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all",
+                              isSelected
+                                ? "bg-primary text-white"
+                                : slot.available
+                                  ? "bg-white/5 text-slate-300 hover:bg-white/10"
+                                  : "bg-white/5 text-slate-600 cursor-not-allowed line-through"
+                            )}
+                          >
+                            {slot.time}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
-            {/* Step 3: Confirmation */}
-            {step === 3 && selectedDate && selectedTime && (
+            {/* Confirmation Step */}
+            {isConfirmStep && selectedDate && selectedTime && (
               <div className="space-y-6">
                 {/* Summary */}
                 <div className="p-4 rounded-xl bg-white/5 border border-white/10">
@@ -401,6 +675,14 @@ ${notes ? `\n📝 *Notas:* ${notes}` : ""}
                       <Clock className="w-5 h-5 text-primary" />
                       <span className="text-slate-300">{selectedTime}</span>
                     </div>
+                    {multiStaffEnabled && selectedStaff && (
+                      <div className="flex items-center gap-3">
+                        <User className="w-5 h-5 text-primary" />
+                        <span className="text-slate-300">
+                          Con {selectedStaff.name} ({ROLE_LABELS[selectedStaff.role]})
+                        </span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-3">
                       <Sparkles className="w-5 h-5 text-gold" />
                       <span className="text-slate-300">
@@ -447,17 +729,17 @@ ${notes ? `\n📝 *Notas:* ${notes}` : ""}
               {step > 1 && (
                 <Button
                   variant="outline"
-                  onClick={() => setStep((s) => (s > 1 ? (s - 1) as 1 | 2 : s))}
+                  onClick={() => setStep((s) => Math.max(1, s - 1))}
                   className="flex-1"
                 >
                   Atrás
                 </Button>
               )}
 
-              {step < 3 ? (
+              {!isConfirmStep ? (
                 <Button
-                  onClick={() => setStep((s) => (s < 3 ? (s + 1) as 2 | 3 : s))}
-                  disabled={step === 1 ? !canProceedToStep2 : !canProceedToStep3}
+                  onClick={() => setStep((s) => Math.min(totalSteps, s + 1))}
+                  disabled={!canProceedFromCurrentStep()}
                   className="flex-1"
                 >
                   Continuar
@@ -466,10 +748,15 @@ ${notes ? `\n📝 *Notas:* ${notes}` : ""}
               ) : (
                 <Button
                   onClick={handleConfirm}
+                  disabled={isSubmitting}
                   className="flex-1 bg-green-600 hover:bg-green-500"
                 >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  Confirmar en WhatsApp
+                  {isSubmitting ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                  )}
+                  {isSubmitting ? "Procesando..." : "Confirmar en WhatsApp"}
                 </Button>
               )}
             </div>

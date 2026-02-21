@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
     const existingBookings = await getBookingsForDateAdmin(shopId, bookingData.date);
     const requestedTime = bookingData.time;
     const requestedDuration = bookingData.serviceDuration || 60;
+    const assignedStaffId = bookingData.assignedStaffId;
 
     // Convert time to minutes for comparison
     const timeToMinutes = (time: string) => {
@@ -92,22 +93,34 @@ export async function POST(request: NextRequest) {
     const requestedEnd = requestedStart + requestedDuration;
 
     // Check for conflicts with existing bookings
+    // If assignedStaffId is provided, only check conflicts for that staff member
+    // Otherwise, check all bookings (single-staff mode)
     for (const existing of existingBookings) {
       if (existing.status === "cancelled") continue;
+
+      // If multi-staff mode (assignedStaffId provided), only check same staff
+      if (assignedStaffId && existing.assignedStaffId !== assignedStaffId) {
+        continue; // Different staff member, no conflict
+      }
 
       const existingStart = timeToMinutes(existing.time);
       const existingEnd = existingStart + (existing.serviceDuration || 60);
 
       // Check if times overlap
       if (requestedStart < existingEnd && requestedEnd > existingStart) {
+        const staffInfo = assignedStaffId
+          ? ` (${existing.assignedStaffName || "empleado"})`
+          : "";
         return NextResponse.json(
           {
             error: "Slot not available",
-            message: `Ya hay una cita a las ${existing.time} para ${existing.serviceName}`,
+            message: `Ya hay una cita a las ${existing.time} para ${existing.serviceName}${staffInfo}`,
             conflictWith: {
               time: existing.time,
               endTime: existing.endTime,
-              service: existing.serviceName
+              service: existing.serviceName,
+              staffId: existing.assignedStaffId,
+              staffName: existing.assignedStaffName,
             }
           },
           { status: 409 } // Conflict
@@ -166,10 +179,16 @@ async function notifyOwnerOfNewBooking(shopId: string, booking: CreateBookingInp
       month: "long",
     });
 
+    // Include staff info if assigned
+    const staffLine = booking.assignedStaffName
+      ? `👩‍💼 *Atendido por:* ${booking.assignedStaffName}\n`
+      : "";
+
     const message = `📅 *NUEVA RESERVACIÓN*\n\n` +
       `👤 *Cliente:* ${booking.customerName}\n` +
       `📱 *Teléfono:* ${booking.customerPhone}\n` +
       `✂️ *Servicio:* ${booking.serviceName}\n` +
+      staffLine +
       `📆 *Fecha:* ${dateStr}\n` +
       `🕐 *Hora:* ${booking.time}\n` +
       `⏱️ *Duración:* ${booking.serviceDuration} min\n` +

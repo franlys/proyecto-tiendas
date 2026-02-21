@@ -8,3 +8,6 @@ export { ShopLayoutClient } from "./shop-layout-client";
 export { WholesaleModal } from "./wholesale-modal";
 // Phase 22: Appointment Flow
 export { AppointmentModal } from "./appointment-modal";
+// Meal Prep
+export { MealPrepModal } from "./meal-prep-modal";
+export { MealPrepProductCard } from "./meal-prep-product-card";

@@ -58,6 +58,7 @@ export type BusinessType =
     | "bar"                // Bar
     | "pasteleria"         // Pastelería/panadería
     | "food_truck"         // Food truck
+    | "meal_prep"          // Preparación de comidas / Meal Prep
     // Hogar
     | "muebleria"          // Mueblería
     | "ferreteria"         // Ferretería
@@ -150,6 +151,8 @@ export type ProductCategoryType =
     | "ropa_mujer" | "ropa_hombre" | "ropa_ninos" | "calzado" | "accesorios_moda"
     // Alimentos
     | "comida" | "bebidas" | "postres" | "snacks"
+    // Meal Prep
+    | "meal_prep_package" | "proteinas" | "carbohidratos" | "vegetales"
     // Salud
     | "medicamentos" | "suplementos" | "equipo_medico"
     // Hogar
@@ -187,7 +190,9 @@ export type ServiceCategoryType =
     | "clase_yoga" | "clase_pilates" | "entrenamiento_personal"
     // General
     | "evento" | "fotografia_servicio" | "clase_particular"
-    | "otro_servicio";
+    | "otro_servicio"
+    // Meal Prep / Fitness
+    | "personal_training_2x" | "personal_training_3x" | "meal_delivery";
 
 // ============================================
 // LABELS PARA UI
@@ -252,6 +257,11 @@ export const PRODUCT_CATEGORY_LABELS: Record<ProductCategoryType, string> = {
     mascotas: "Mascotas",
     deportes: "Deportes",
     otros: "Otros",
+    // Meal Prep
+    meal_prep_package: "Paquetes de Comida",
+    proteinas: "Proteínas",
+    carbohidratos: "Carbohidratos",
+    vegetales: "Vegetales",
 };
 
 export const SERVICE_CATEGORY_LABELS: Record<ServiceCategoryType, string> = {
@@ -308,6 +318,10 @@ export const SERVICE_CATEGORY_LABELS: Record<ServiceCategoryType, string> = {
     fotografia_servicio: "Sesión Fotográfica",
     clase_particular: "Clase Particular",
     otro_servicio: "Otro Servicio",
+    // Meal Prep / Fitness
+    personal_training_2x: "Entrenamiento Personal (2 días/semana)",
+    personal_training_3x: "Entrenamiento Personal (3 días/semana)",
+    meal_delivery: "Entrega de Comidas",
 };
 
 // ============================================
@@ -1402,6 +1416,36 @@ export const BUSINESS_TYPE_CONFIG: Record<BusinessType, BusinessTypeConfig> = {
         },
         productCategories: ["comida", "bebidas", "snacks"],
         serviceCategories: [],
+    },
+
+    meal_prep: {
+        id: "meal_prep",
+        label: "Meal Prep",
+        labelPlural: "Negocios de Meal Prep",
+        icon: "🥗",
+        description: "Preparación de comidas saludables y entrenamiento personal",
+        category: "food",
+        features: {
+            catalog: true,      // Paquetes de comida
+            services: true,     // Entrenamiento personal
+            bookings: false,    // No necesita citas
+            orders: true,       // Pedidos de paquetes
+            inventory: false,   // No maneja inventario tradicional
+            wholesale: false,
+            repairs: false,
+            rentals: false,
+            tables: false,
+            delivery: true,     // Entrega de comidas
+        },
+        labels: {
+            cta: "Ordenar Paquete",
+            products: "Paquetes",
+            services: "Entrenamiento",
+            booking: "Pedido",
+            order: "Pedido",
+        },
+        productCategories: ["meal_prep_package"],
+        serviceCategories: ["personal_training_2x", "personal_training_3x", "meal_delivery"],
     },
 
     // ========== HOGAR ==========

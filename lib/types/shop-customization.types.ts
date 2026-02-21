@@ -195,6 +195,9 @@ export interface ShopFeatureToggles {
     multiLanguageEnabled: boolean;  // Múltiples idiomas
     analyticsEnabled: boolean;      // Dashboard de analytics
     reportsEnabled: boolean;        // Reportes avanzados
+
+    // Staff / Empleados (para negocios de servicios)
+    multiStaffEnabled: boolean;     // Múltiples empleados (estilistas, manicuristas, etc.)
 }
 
 // ============================================
@@ -304,6 +307,9 @@ export const DEFAULT_FEATURE_TOGGLES: ShopFeatureToggles = {
     multiLanguageEnabled: false,
     analyticsEnabled: true,
     reportsEnabled: false,
+
+    // Staff
+    multiStaffEnabled: false,       // Por defecto, negocio simple (solo dueño)
 };
 
 // ============================================

@@ -140,6 +140,7 @@ export function mapToMainCategory(businessType?: string): MainBusinessCategory {
     cafe: "restaurant", bakery: "restaurant", bar: "restaurant",
     food_truck: "restaurant", catering: "restaurant", pizzeria: "restaurant",
     sushi: "restaurant", taqueria: "restaurant", ice_cream: "restaurant", juice_bar: "restaurant",
+    meal_prep: "restaurant",
 
     // Retail & Commerce
     boutique: "retail", jewelry: "retail", electronics: "retail", furniture: "retail",
@@ -272,7 +273,7 @@ export type FeatureId =
   | "orders" | "kanban" | "whatsappIntegration"
   | "crm" | "clientHistory" | "loyalty"
   | "campaigns" | "promoGenerator" | "emailMarketing"
-  | "staffManagement" | "staffCommissions"
+  | "staffManagement" | "staffCommissions" | "multiStaff"
   | "analytics" | "multiLocation" | "api";
 
 // Features básicos que todas las tiendas nuevas tienen
@@ -646,6 +647,7 @@ export type ProductCategory =
   | "perfumes"
   | "sets"
   | "skincare" // Re-added
+  | "meal_prep_package" // Paquetes de Meal Prep
   | "otros";
 
 
@@ -696,6 +698,7 @@ export const PRODUCT_CATEGORY_LABELS: Record<ProductCategory, string> = {
   electronica: "Electrónica",
   perfumes: "Perfumes",
   sets: "Sets",
+  meal_prep_package: "Paquetes de Comida",
   otros: "Otros",
 };
 
