@@ -716,49 +716,56 @@ export async function getServicesAdmin(shopId: string): Promise<BookingService[]
   console.log(`[getServicesAdmin] 🔍 Fetching services for shopId: "${shopId}"`);
 
   try {
-    // First try the new bookingServices collection
     const newPath = getServicesCollection(shopId);
-    console.log(`[getServicesAdmin] 📂 Checking new collection: ${newPath}`);
-    let snapshot = await db
-      .collection(newPath)
-      .orderBy("order", "asc")
-      .get();
+    const legacyPath = getLegacyServicesCollection(shopId);
 
-    console.log(`[getServicesAdmin] 📊 New collection (${newPath}): ${snapshot.size} docs`);
+    // IMPORTANT: Fetch from BOTH collections and merge them
+    // This ensures we see services no matter which collection they're in
+    console.log(`[getServicesAdmin] 📂 Checking both collections: ${newPath} and ${legacyPath}`);
 
-    // If empty, try the legacy 'services' collection
-    if (snapshot.empty) {
-      const legacyPath = getLegacyServicesCollection(shopId);
-      console.log(`[getServicesAdmin] 📂 Checking legacy collection: ${legacyPath}`);
+    const [newSnapshot, legacySnapshot] = await Promise.all([
+      db.collection(newPath).get(),
+      db.collection(legacyPath).get(),
+    ]);
 
-      // First try WITHOUT orderBy since legacy docs might not have 'order' field
-      // Firestore only returns docs that HAVE the field when using orderBy
-      snapshot = await db
-        .collection(legacyPath)
-        .get();
-      console.log(`[getServicesAdmin] 📊 Legacy collection: ${snapshot.size} docs`);
-    }
+    console.log(`[getServicesAdmin] 📊 New collection: ${newSnapshot.size} docs`);
+    console.log(`[getServicesAdmin] 📊 Legacy collection: ${legacySnapshot.size} docs`);
 
-    console.log(`[getServicesAdmin] ✅ Total docs found: ${snapshot.size}`);
     const services: BookingService[] = [];
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      services.push({
-        id: doc.id,
-        shopId: data.shopId || shopId,
-        name: data.name || "",
-        description: data.description || "",
-        duration: data.duration || 30,
-        price: data.price || 0,
-        category: data.category || "",
-        isActive: data.isActive !== false, // Default to true
-        order: data.order || 0,
-        image: data.image || data.imageUrl || "",
-        createdAt: data.createdAt || new Date().toISOString(),
-        updatedAt: data.updatedAt || new Date().toISOString(),
-      });
-    });
+    const seenIds = new Set<string>();
 
+    // Helper to add services and avoid duplicates
+    const addServices = (snapshot: FirebaseFirestore.QuerySnapshot, source: string) => {
+      snapshot.forEach((doc) => {
+        if (seenIds.has(doc.id)) return; // Skip duplicates
+        seenIds.add(doc.id);
+
+        const data = doc.data();
+        services.push({
+          id: doc.id,
+          shopId: data.shopId || shopId,
+          name: data.name || "",
+          description: data.description || "",
+          duration: data.duration || 30,
+          price: data.price || 0,
+          category: data.category || "",
+          isActive: data.isActive !== false, // Default to true
+          order: data.order || 0,
+          image: data.image || data.imageUrl || "",
+          createdAt: data.createdAt || new Date().toISOString(),
+          updatedAt: data.updatedAt || new Date().toISOString(),
+        });
+      });
+    };
+
+    // Add from both collections
+    addServices(newSnapshot, "bookingServices");
+    addServices(legacySnapshot, "services");
+
+    // Sort by order
+    services.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+    console.log(`[getServicesAdmin] ✅ Total services found: ${services.length}`);
     return services;
   } catch (error) {
     console.error("Error getting services:", error);
@@ -768,76 +775,11 @@ export async function getServicesAdmin(shopId: string): Promise<BookingService[]
 
 /**
  * Get active services only
- * Checks both 'bookingServices' (new) and 'services' (legacy) collections
+ * Uses getServicesAdmin to combine both collections, then filters for active
  */
 export async function getActiveServicesAdmin(shopId: string): Promise<BookingService[]> {
-  const db = adminDb();
-  if (!db) return [];
-
-  try {
-    // First try the new bookingServices collection
-    let snapshot = await db
-      .collection(getServicesCollection(shopId))
-      .where("isActive", "==", true)
-      .orderBy("order", "asc")
-      .get();
-
-    // If empty, try the legacy 'services' collection
-    if (snapshot.empty) {
-      console.log(`[Services] No active services in bookingServices, checking legacy 'services' collection for ${shopId}`);
-      // Get all docs and filter in memory (legacy docs might not have isActive or order fields)
-      const allSnapshot = await db
-        .collection(getLegacyServicesCollection(shopId))
-        .get();
-
-      const services: BookingService[] = [];
-      allSnapshot.forEach((doc) => {
-        const data = doc.data();
-        // Only include if isActive is not explicitly false (default to active)
-        if (data.isActive !== false) {
-          services.push({
-            id: doc.id,
-            shopId: data.shopId || shopId,
-            name: data.name || "",
-            description: data.description || "",
-            duration: data.duration || 30,
-            price: data.price || 0,
-            category: data.category || "",
-            isActive: true,
-            order: data.order || 0,
-            image: data.image || data.imageUrl || "",
-            createdAt: data.createdAt || new Date().toISOString(),
-            updatedAt: data.updatedAt || new Date().toISOString(),
-          });
-        }
-      });
-      return services;
-    }
-
-    const services: BookingService[] = [];
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      services.push({
-        id: doc.id,
-        shopId: data.shopId || shopId,
-        name: data.name || "",
-        description: data.description || "",
-        duration: data.duration || 30,
-        price: data.price || 0,
-        category: data.category || "",
-        isActive: data.isActive !== false,
-        order: data.order || 0,
-        image: data.image || data.imageUrl || "",
-        createdAt: data.createdAt || new Date().toISOString(),
-        updatedAt: data.updatedAt || new Date().toISOString(),
-      });
-    });
-
-    return services;
-  } catch (error) {
-    console.error("Error getting active services:", error);
-    return [];
-  }
+  const allServices = await getServicesAdmin(shopId);
+  return allServices.filter(s => s.isActive);
 }
 
 /**
