@@ -222,6 +222,16 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
     const { key, message, pushName } = data;
     const { getShopBasicInfo } = await import("@/lib/services/whatsapp-config.service");
 
+    // DEBUG: Log raw key data for diagnosis
+    console.log(`[${instance}] 🔍 RAW KEY:`, JSON.stringify({
+      remoteJid: key?.remoteJid,
+      fromMe: key?.fromMe,
+      participant: key?.participant,
+      id: key?.id,
+      pushName,
+      hasMessage: !!message
+    }));
+
     if (!key || !message) {
       console.log(`[${instance}] Ignored: Missing key or message data`);
       return;
