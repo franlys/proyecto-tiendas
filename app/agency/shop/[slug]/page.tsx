@@ -58,6 +58,12 @@ import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
 import { WhatsAppAutomationPanel } from "@/components/shared/whatsapp-automation";
 import { BackgroundGallery, mapToBackgroundCategory } from "@/components/shared/background-gallery";
 import { cn } from "@/lib/utils";
+import {
+    BUSINESS_TYPE_CONFIG,
+    BUSINESS_CATEGORY_LABELS,
+    type BusinessType,
+    type BusinessCategory,
+} from "@/lib/types/business.types";
 
 // Mapeo de categorías para mostrar labels correctos
 const CATEGORY_OPTIONS: { value: ShopCategory; label: string }[] = [
@@ -142,6 +148,7 @@ function ShopDetailContent() {
     // Form States
     const [name, setName] = useState("");
     const [category, setCategory] = useState<ShopCategory>("beauty");
+    const [businessType, setBusinessType] = useState<BusinessType>("otro");
     const [phone, setPhone] = useState("");
 
     // Visual Customization States
@@ -521,6 +528,7 @@ function ShopDetailContent() {
                 setShop(foundShop);
                 setName(foundShop.name);
                 setCategory(foundShop.category || "beauty");
+                setBusinessType((foundShop.businessType as BusinessType) || foundShop.category || "otro");
                 setPhone(foundShop.contact?.phone || "");
                 // Load visual customization data
                 setLogo(foundShop.logo || "");
@@ -585,7 +593,10 @@ function ShopDetailContent() {
                             <div className="flex items-center gap-2 text-sm text-slate-400">
                                 <span>{`/${shop.slug}`}</span>
                                 <span className="w-1 h-1 rounded-full bg-slate-600" />
-                                <span className="uppercase text-xs tracking-wider">{shop.category || "beauty"}</span>
+                                <span className="text-xs tracking-wider">
+                                    {BUSINESS_TYPE_CONFIG[shop.businessType as BusinessType]?.icon || ""}{" "}
+                                    {BUSINESS_TYPE_CONFIG[shop.businessType as BusinessType]?.label || shop.category || "beauty"}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -825,6 +836,53 @@ function ShopDetailContent() {
                                             ))}
                                         </select>
                                     </div>
+
+                                    {/* Tipo de Negocio Específico */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                                            Tipo de Negocio
+                                            <span className="text-cyan-400 ml-2 text-xs">(determina las funciones disponibles)</span>
+                                        </label>
+                                        <select
+                                            value={businessType}
+                                            onChange={(e) => setBusinessType(e.target.value as BusinessType)}
+                                            className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white"
+                                        >
+                                            {(Object.entries(BUSINESS_TYPE_CONFIG) as [BusinessType, typeof BUSINESS_TYPE_CONFIG[BusinessType]][])
+                                                .filter(([key]) => !["beauty", "retail", "repair", "restaurant", "rentcar", "technology"].includes(key))
+                                                .sort((a, b) => a[1].category.localeCompare(b[1].category) || a[1].label.localeCompare(b[1].label))
+                                                .map(([key, config]) => (
+                                                    <option key={key} value={key}>
+                                                        {config.icon} {config.label} - {BUSINESS_CATEGORY_LABELS[config.category]}
+                                                    </option>
+                                                ))}
+                                        </select>
+                                        {/* Preview de features */}
+                                        {businessType && BUSINESS_TYPE_CONFIG[businessType] && (
+                                            <div className="mt-2 flex flex-wrap gap-1">
+                                                {Object.entries(BUSINESS_TYPE_CONFIG[businessType].features).map(([feature, enabled]) => (
+                                                    enabled && (
+                                                        <span
+                                                            key={feature}
+                                                            className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full"
+                                                        >
+                                                            {feature === "catalog" ? "Catálogo" :
+                                                             feature === "services" ? "Servicios" :
+                                                             feature === "bookings" ? "Citas" :
+                                                             feature === "orders" ? "Pedidos" :
+                                                             feature === "inventory" ? "Inventario" :
+                                                             feature === "wholesale" ? "Mayoreo" :
+                                                             feature === "repairs" ? "Reparaciones" :
+                                                             feature === "rentals" ? "Rentas" :
+                                                             feature === "tables" ? "Mesas" :
+                                                             feature === "delivery" ? "Delivery" : feature}
+                                                        </span>
+                                                    )
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+
                                     <div>
                                         <label className="block text-sm font-medium text-slate-300 mb-2">WhatsApp de Contacto</label>
                                         <div className="flex gap-2">
@@ -854,11 +912,11 @@ function ShopDetailContent() {
                                                 updateShop(shop.slug, {
                                                     name,
                                                     category,
-                                                    businessType: category, // Sync business logic type
+                                                    businessType, // Usar el tipo específico seleccionado
                                                     contact: { ...shop.contact, phone }
                                                 });
                                                 // Actualizar el shop local
-                                                setShop(prev => prev ? { ...prev, name, category, businessType: category, contact: { ...prev.contact, phone } } : prev);
+                                                setShop(prev => prev ? { ...prev, name, category, businessType, contact: { ...prev.contact, phone } } : prev);
                                                 setTimeout(() => {
                                                     setSaving(false);
                                                     setSaveSuccess(true);

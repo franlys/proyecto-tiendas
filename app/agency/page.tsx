@@ -831,6 +831,13 @@ function AgencyContent() {
                 </Button>
               </Link>
 
+              <Link href="/agency/business-types">
+                <Button variant="ghost" size="sm" className="px-2 sm:px-3 whitespace-nowrap">
+                  <Store className="w-4 h-4" />
+                  <span className="hidden sm:inline ml-2">Tipos</span>
+                </Button>
+              </Link>
+
               <Link href="/admin/automation">
                 <Button variant="ghost" size="sm" className="px-2 sm:px-3 whitespace-nowrap">
                   <Bot className="w-4 h-4" />

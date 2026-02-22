@@ -33,10 +33,12 @@ import {
   type SubscriptionStatus,
   type ShopCategory
 } from "@/lib/constants";
+import type { BusinessType } from "@/lib/types/business.types";
 
 // RE-EXPORT for consumers that import from here
 export { DEFAULT_FEATURES };
 export type { FeatureId, SubscriptionStatus, ShopCategory, ShopBackground, BackgroundAudio };
+export type { BusinessType };
 
 // ============================================
 // TYPES
@@ -66,7 +68,7 @@ export interface ManagedShop extends ShopConfig {
   enabledFeatures?: FeatureId[];
   features?: FeatureId[]; // Legacy compatibility
   // Business Logic
-  businessType: ShopCategory;
+  businessType: BusinessType | ShopCategory; // Supports both new specific types and legacy categories
   category: ShopCategory; // Added to fix type error
   wholesaleEnabled?: boolean;
   customDomain?: string;

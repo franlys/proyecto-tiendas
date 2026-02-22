@@ -69,10 +69,21 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       }
     }
 
+    // Validar businessType si se proporciona
+    if (body.businessType) {
+      const { BUSINESS_TYPE_CONFIG } = await import("@/lib/types/business.types");
+      if (!BUSINESS_TYPE_CONFIG[body.businessType as keyof typeof BUSINESS_TYPE_CONFIG]) {
+        return errorResponse(
+          `Tipo de negocio inválido: ${body.businessType}`
+        );
+      }
+    }
+
     const input: UpdateShopInput = {};
     if (body.name !== undefined) input.name = body.name;
     if (body.description !== undefined) input.description = body.description;
     if (body.category !== undefined) input.category = body.category;
+    if (body.businessType !== undefined) input.businessType = body.businessType;
     if (body.phone !== undefined) input.phone = body.phone;
     if (body.email !== undefined) input.email = body.email;
     if (body.address !== undefined) input.address = body.address;
