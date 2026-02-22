@@ -119,7 +119,7 @@ export default function BusinessTypesPage() {
 
     const getTypeConfig = (type: BusinessType) => BUSINESS_TYPE_CONFIG[type] || BUSINESS_TYPE_CONFIG.otro;
 
-    if (user?.role !== "super_admin") {
+    if (user?.role !== "SUPER_ADMIN") {
         return (
             <div className="p-8 text-center">
                 <h1 className="text-2xl font-bold text-red-500">Acceso Denegado</h1>
