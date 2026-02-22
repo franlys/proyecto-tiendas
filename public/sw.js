@@ -149,21 +149,34 @@ self.addEventListener('fetch', (event) => {
     // Skip API requests
     if (event.request.url.includes('/api/')) return;
 
+    // Skip cross-origin requests (external images, fonts, etc.)
+    const requestUrl = new URL(event.request.url);
+    const isSameOrigin = requestUrl.origin === self.location.origin;
+
+    if (!isSameOrigin) {
+        // For cross-origin, just fetch without caching
+        return;
+    }
+
     event.respondWith(
         fetch(event.request)
             .then((response) => {
-                // Clone and cache successful responses
-                if (response.ok) {
+                // Only cache successful same-origin responses
+                if (response && response.ok && response.status === 200 && response.type === 'basic') {
                     const responseClone = response.clone();
                     caches.open(CACHE_NAME).then((cache) => {
                         cache.put(event.request, responseClone);
+                    }).catch(() => {
+                        // Ignore cache errors silently
                     });
                 }
                 return response;
             })
             .catch(() => {
                 // Return cached version if available
-                return caches.match(event.request);
+                return caches.match(event.request).then((cachedResponse) => {
+                    return cachedResponse || new Response('Offline', { status: 503 });
+                });
             })
     );
 });
