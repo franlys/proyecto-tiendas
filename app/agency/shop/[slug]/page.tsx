@@ -58,12 +58,7 @@ import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
 import { WhatsAppAutomationPanel } from "@/components/shared/whatsapp-automation";
 import { BackgroundGallery, mapToBackgroundCategory } from "@/components/shared/background-gallery";
 import { cn } from "@/lib/utils";
-import {
-    BUSINESS_TYPE_CONFIG,
-    BUSINESS_CATEGORY_LABELS,
-    type BusinessType,
-    type BusinessCategory,
-} from "@/lib/types/business.types";
+import { BusinessTypeSelector, FeatureBadges } from "@/components/admin/business-type-selector";
 
 // Mapeo de categorías para mostrar labels correctos
 const CATEGORY_OPTIONS: { value: ShopCategory; label: string }[] = [
@@ -148,7 +143,7 @@ function ShopDetailContent() {
     // Form States
     const [name, setName] = useState("");
     const [category, setCategory] = useState<ShopCategory>("beauty");
-    const [businessType, setBusinessType] = useState<BusinessType>("otro");
+    const [businessType, setBusinessType] = useState("otro");
     const [phone, setPhone] = useState("");
 
     // Visual Customization States
@@ -843,42 +838,15 @@ function ShopDetailContent() {
                                             Tipo de Negocio
                                             <span className="text-cyan-400 ml-2 text-xs">(determina las funciones disponibles)</span>
                                         </label>
-                                        <select
+                                        <BusinessTypeSelector
                                             value={businessType}
-                                            onChange={(e) => setBusinessType(e.target.value as BusinessType)}
-                                            className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white"
-                                        >
-                                            {(Object.entries(BUSINESS_TYPE_CONFIG) as [BusinessType, typeof BUSINESS_TYPE_CONFIG[BusinessType]][])
-                                                .filter(([key]) => !["beauty", "retail", "repair", "restaurant", "rentcar", "technology"].includes(key))
-                                                .sort((a, b) => a[1].category.localeCompare(b[1].category) || a[1].label.localeCompare(b[1].label))
-                                                .map(([key, config]) => (
-                                                    <option key={key} value={key}>
-                                                        {config.icon} {config.label} - {BUSINESS_CATEGORY_LABELS[config.category]}
-                                                    </option>
-                                                ))}
-                                        </select>
+                                            onChange={(typeId) => setBusinessType(typeId)}
+                                        />
                                         {/* Preview de features */}
-                                        {businessType && BUSINESS_TYPE_CONFIG[businessType] && (
-                                            <div className="mt-2 flex flex-wrap gap-1">
-                                                {Object.entries(BUSINESS_TYPE_CONFIG[businessType].features).map(([feature, enabled]) => (
-                                                    enabled && (
-                                                        <span
-                                                            key={feature}
-                                                            className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full"
-                                                        >
-                                                            {feature === "catalog" ? "Catálogo" :
-                                                             feature === "services" ? "Servicios" :
-                                                             feature === "bookings" ? "Citas" :
-                                                             feature === "orders" ? "Pedidos" :
-                                                             feature === "inventory" ? "Inventario" :
-                                                             feature === "wholesale" ? "Mayoreo" :
-                                                             feature === "repairs" ? "Reparaciones" :
-                                                             feature === "rentals" ? "Rentas" :
-                                                             feature === "tables" ? "Mesas" :
-                                                             feature === "delivery" ? "Delivery" : feature}
-                                                        </span>
-                                                    )
-                                                ))}
+                                        {businessType && (
+                                            <div className="mt-3">
+                                                <p className="text-xs text-slate-400 mb-2">Funciones habilitadas:</p>
+                                                <FeatureBadges typeId={businessType} />
                                             </div>
                                         )}
                                     </div>
