@@ -7,7 +7,9 @@ import {
     getBookingsForDateAdmin,
     addClosedDateAdmin,
     removeClosedDateAdmin,
-    getClosedDatesAdmin
+    getClosedDatesAdmin,
+    getBookingConfigAdmin,
+    updateBookingConfigAdmin
 } from "@/lib/services/booking-admin.service";
 import {
     handleProductCreation,
@@ -173,7 +175,12 @@ export async function handleOwnerCommand(
             `• *Clientes* - Top clientes del mes\n` +
             `• *Cliente [nombre/tel]* - Buscar cliente\n\n` +
             `*⚙️ CONFIGURACIÓN*\n` +
-            `• *Horario* - Ver horario del negocio\n` +
+            `• *Horario* - Ver horario actual\n` +
+            `• *Horario 9:00 a 18:00* - Cambiar horario\n` +
+            `• *Cerrar los domingos* - Cerrar un día fijo\n` +
+            `• *Abrir los domingos* - Reabrir día fijo\n` +
+            `• *Descanso 13:00 a 14:00* - Hora de comida\n` +
+            `• *Sin descanso* - Quitar descanso\n` +
             `• *Info* - Estado del bot\n` +
             `• *Soy el dueño [pass]* - Vincular número\n\n` +
             `_Los comandos no distinguen mayúsculas._`;
@@ -861,7 +868,220 @@ export async function handleOwnerCommand(
             msg += `\n\n☕ *Descanso:* ${bookingConfig.breakStartTime} - ${bookingConfig.breakEndTime}`;
         }
 
+        msg += `\n\n_Para cambiar, escribe:_\n`;
+        msg += `• "Horario 9:00 a 18:00"\n`;
+        msg += `• "Cerrar los domingos"\n`;
+        msg += `• "Descanso 13:00 a 14:00"`;
+
         await sendTextMessage(instanceName, phone, msg);
+        return { handled: true };
+    }
+
+    // ------------------------------------------------------------
+    // 6.8. COMMAND: "Horario [open] a [close]" (Set Business Hours)
+    // Patterns:
+    //   - "horario 9:00 a 18:00"
+    //   - "horario de 10:00 a 20:00"
+    //   - "abrir de 8 a 6"
+    // ------------------------------------------------------------
+    const scheduleMatch = command.match(/horario\s*(?:de\s+)?(\d{1,2})(?::(\d{2}))?\s*(?:a|hasta|-)\s*(\d{1,2})(?::(\d{2}))?/i);
+    if (scheduleMatch) {
+        const openHour = parseInt(scheduleMatch[1]);
+        const openMin = scheduleMatch[2] ? parseInt(scheduleMatch[2]) : 0;
+        let closeHour = parseInt(scheduleMatch[3]);
+        const closeMin = scheduleMatch[4] ? parseInt(scheduleMatch[4]) : 0;
+
+        // Handle PM times (if hour < 12 and seems like afternoon)
+        if (closeHour < openHour && closeHour < 12) {
+            closeHour += 12; // e.g., "9 a 6" means 9:00 to 18:00
+        }
+
+        // Validate
+        if (openHour < 0 || openHour > 23 || closeHour < 0 || closeHour > 23) {
+            await sendTextMessage(instanceName, phone, "❌ Hora inválida. Usa formato 24h (0-23).\n_Ejemplo: Horario 9:00 a 18:00_");
+            return { handled: true };
+        }
+
+        if (openHour > closeHour || (openHour === closeHour && openMin >= closeMin)) {
+            await sendTextMessage(instanceName, phone, "❌ La hora de apertura debe ser antes del cierre.\n_Ejemplo: Horario 9:00 a 18:00_");
+            return { handled: true };
+        }
+
+        const openTime = `${String(openHour).padStart(2, "0")}:${String(openMin).padStart(2, "0")}`;
+        const closeTime = `${String(closeHour).padStart(2, "0")}:${String(closeMin).padStart(2, "0")}`;
+
+        // Update config
+        await updateBookingConfigAdmin(shopId, { openTime, closeTime });
+
+        const successMsg = `✅ *HORARIO ACTUALIZADO*\n\n` +
+            `🕐 *Apertura:* ${openTime}\n` +
+            `🕕 *Cierre:* ${closeTime}\n\n` +
+            `_Los cambios aplican inmediatamente._`;
+
+        await sendTextMessage(instanceName, phone, successMsg);
+        return { handled: true };
+    }
+
+    // ------------------------------------------------------------
+    // 6.9. COMMAND: "Cerrar los [día]" (Set Weekly Closed Day)
+    // Patterns:
+    //   - "cerrar los domingos"
+    //   - "cerrar los lunes"
+    //   - "cerrar domingos"
+    // ------------------------------------------------------------
+    const closeWeekdayMatch = command.match(/cerrar\s*(?:los\s+)?(?:dias?\s+)?(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado|sábados|sabados|domingo|domingos)/i);
+    if (closeWeekdayMatch) {
+        const dayStr = closeWeekdayMatch[1].toLowerCase();
+        const dayMap: Record<string, number> = {
+            "domingo": 0, "domingos": 0,
+            "lunes": 1,
+            "martes": 2,
+            "miércoles": 3, "miercoles": 3,
+            "jueves": 4,
+            "viernes": 5,
+            "sábado": 6, "sabado": 6, "sábados": 6, "sabados": 6
+        };
+        const dayNum = dayMap[dayStr];
+        const dayNames = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+
+        // Get current config
+        const config = await getBookingConfigAdmin(shopId);
+        const closedDays = config.closedDays || [];
+
+        // Check if already closed
+        if (closedDays.includes(dayNum)) {
+            await sendTextMessage(instanceName, phone, `ℹ️ Los *${dayNames[dayNum]}* ya están marcados como cerrados.`);
+            return { handled: true };
+        }
+
+        // Add the day
+        closedDays.push(dayNum);
+        closedDays.sort((a, b) => a - b);
+
+        await updateBookingConfigAdmin(shopId, { closedDays });
+
+        const closedDayNames = closedDays.map(d => dayNames[d]).join(", ");
+
+        const successMsg = `✅ *DÍA CERRADO*\n\n` +
+            `Los *${dayNames[dayNum]}* ahora están marcados como cerrados.\n\n` +
+            `📅 *Días de cierre semanal:*\n${closedDayNames}\n\n` +
+            `_Para reabrir, escribe: "Abrir los ${dayNames[dayNum].toLowerCase()}"_`;
+
+        await sendTextMessage(instanceName, phone, successMsg);
+        return { handled: true };
+    }
+
+    // ------------------------------------------------------------
+    // 6.10. COMMAND: "Abrir los [día]" (Remove Weekly Closed Day)
+    // Patterns:
+    //   - "abrir los domingos"
+    //   - "abrir los lunes"
+    // ------------------------------------------------------------
+    const openWeekdayMatch = command.match(/abrir\s*(?:los\s+)?(?:dias?\s+)?(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado|sábados|sabados|domingo|domingos)/i);
+    if (openWeekdayMatch) {
+        const dayStr = openWeekdayMatch[1].toLowerCase();
+        const dayMap: Record<string, number> = {
+            "domingo": 0, "domingos": 0,
+            "lunes": 1,
+            "martes": 2,
+            "miércoles": 3, "miercoles": 3,
+            "jueves": 4,
+            "viernes": 5,
+            "sábado": 6, "sabado": 6, "sábados": 6, "sabados": 6
+        };
+        const dayNum = dayMap[dayStr];
+        const dayNames = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+
+        // Get current config
+        const config = await getBookingConfigAdmin(shopId);
+        const closedDays = config.closedDays || [];
+
+        // Check if not closed
+        if (!closedDays.includes(dayNum)) {
+            await sendTextMessage(instanceName, phone, `ℹ️ Los *${dayNames[dayNum]}* ya están abiertos.`);
+            return { handled: true };
+        }
+
+        // Remove the day
+        const newClosedDays = closedDays.filter(d => d !== dayNum);
+
+        await updateBookingConfigAdmin(shopId, { closedDays: newClosedDays });
+
+        let successMsg = `✅ *DÍA ABIERTO*\n\n` +
+            `Los *${dayNames[dayNum]}* ahora están abiertos para citas.`;
+
+        if (newClosedDays.length > 0) {
+            const closedDayNames = newClosedDays.map(d => dayNames[d]).join(", ");
+            successMsg += `\n\n📅 *Días de cierre semanal:*\n${closedDayNames}`;
+        } else {
+            successMsg += `\n\n📅 Ahora atiendes todos los días de la semana.`;
+        }
+
+        await sendTextMessage(instanceName, phone, successMsg);
+        return { handled: true };
+    }
+
+    // ------------------------------------------------------------
+    // 6.11. COMMAND: "Descanso [start] a [end]" (Set Break Time)
+    // Patterns:
+    //   - "descanso 13:00 a 14:00"
+    //   - "descanso de 1 a 2"
+    //   - "hora de comida 12:30 a 13:30"
+    // ------------------------------------------------------------
+    const breakMatch = command.match(/(?:descanso|comida|break)\s*(?:de\s+)?(\d{1,2})(?::(\d{2}))?\s*(?:a|hasta|-)\s*(\d{1,2})(?::(\d{2}))?/i);
+    if (breakMatch) {
+        let startHour = parseInt(breakMatch[1]);
+        const startMin = breakMatch[2] ? parseInt(breakMatch[2]) : 0;
+        let endHour = parseInt(breakMatch[3]);
+        const endMin = breakMatch[4] ? parseInt(breakMatch[4]) : 0;
+
+        // Handle times that seem like noon (12-14 range is typical lunch)
+        if (startHour < 10) startHour += 12; // "1 a 2" means 13:00 to 14:00
+        if (endHour < startHour && endHour < 10) endHour += 12;
+
+        // Validate
+        if (startHour < 0 || startHour > 23 || endHour < 0 || endHour > 23) {
+            await sendTextMessage(instanceName, phone, "❌ Hora inválida. Usa formato 24h (0-23).\n_Ejemplo: Descanso 13:00 a 14:00_");
+            return { handled: true };
+        }
+
+        if (startHour > endHour || (startHour === endHour && startMin >= endMin)) {
+            await sendTextMessage(instanceName, phone, "❌ La hora de inicio debe ser antes del fin.\n_Ejemplo: Descanso 13:00 a 14:00_");
+            return { handled: true };
+        }
+
+        const breakStartTime = `${String(startHour).padStart(2, "0")}:${String(startMin).padStart(2, "0")}`;
+        const breakEndTime = `${String(endHour).padStart(2, "0")}:${String(endMin).padStart(2, "0")}`;
+
+        // Update config
+        await updateBookingConfigAdmin(shopId, {
+            breakEnabled: true,
+            breakStartTime,
+            breakEndTime
+        });
+
+        const successMsg = `✅ *DESCANSO CONFIGURADO*\n\n` +
+            `☕ *Inicio:* ${breakStartTime}\n` +
+            `☕ *Fin:* ${breakEndTime}\n\n` +
+            `Durante este horario no se podrán agendar citas.\n\n` +
+            `_Para quitar el descanso, escribe: "Sin descanso"_`;
+
+        await sendTextMessage(instanceName, phone, successMsg);
+        return { handled: true };
+    }
+
+    // ------------------------------------------------------------
+    // 6.12. COMMAND: "Sin descanso" (Disable Break)
+    // ------------------------------------------------------------
+    if (command === "sin descanso" || command === "quitar descanso" || command === "sin break") {
+        await updateBookingConfigAdmin(shopId, { breakEnabled: false });
+
+        const successMsg = `✅ *DESCANSO ELIMINADO*\n\n` +
+            `Se ha desactivado el horario de descanso.\n` +
+            `Ahora se pueden agendar citas en horario continuo.\n\n` +
+            `_Para configurar un descanso, escribe:_\n"Descanso 13:00 a 14:00"`;
+
+        await sendTextMessage(instanceName, phone, successMsg);
         return { handled: true };
     }
 

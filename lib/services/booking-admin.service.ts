@@ -923,7 +923,9 @@ export async function createServiceAdmin(
     updatedAt: now,
   };
 
-  const docRef = await db.collection(getServicesCollection(shopId)).add(serviceData);
+  // IMPORTANT: Save to legacy 'services' collection so they appear on public website
+  // The public shop page reads from 'services', not 'bookingServices'
+  const docRef = await db.collection(getLegacyServicesCollection(shopId)).add(serviceData);
 
   return {
     id: docRef.id,
