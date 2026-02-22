@@ -142,11 +142,82 @@ export async function POST(request: NextRequest) {
 
     try {
         const body = await request.json();
-        const { sourceDocId, targetSlug, dryRun = true } = body;
+        const { action, shopSlug, dryRun = true } = body;
+
+        // ACTION: migrate-services - Move services from bookingServices to services collection
+        if (action === "migrate-services") {
+            if (!shopSlug) {
+                return NextResponse.json({ error: "shopSlug is required" }, { status: 400 });
+            }
+
+            const sourceRef = db.collection("shops").doc(shopSlug).collection("bookingServices");
+            const targetRef = db.collection("shops").doc(shopSlug).collection("services");
+
+            const sourceSnap = await sourceRef.get();
+
+            if (sourceSnap.empty) {
+                return NextResponse.json({
+                    message: "No services found in bookingServices collection",
+                    shopSlug,
+                });
+            }
+
+            const services = sourceSnap.docs.map(doc => ({
+                id: doc.id,
+                name: doc.data().name,
+                price: doc.data().price,
+                duration: doc.data().duration,
+            }));
+
+            if (dryRun) {
+                return NextResponse.json({
+                    message: "DRY RUN - Services that would be migrated from bookingServices to services:",
+                    shopSlug,
+                    servicesCount: services.length,
+                    services,
+                });
+            }
+
+            // Perform actual migration
+            const batch = db.batch();
+            let migratedCount = 0;
+
+            for (const doc of sourceSnap.docs) {
+                const data = doc.data();
+
+                // Check if already exists in target
+                const existingDoc = await targetRef.doc(doc.id).get();
+                if (existingDoc.exists) {
+                    console.log(`Service ${doc.id} already exists in target, skipping`);
+                    continue;
+                }
+
+                // Create in target location (services)
+                const newDocRef = targetRef.doc(doc.id);
+                batch.set(newDocRef, data);
+
+                // Delete from source location (bookingServices)
+                batch.delete(doc.ref);
+
+                migratedCount++;
+            }
+
+            await batch.commit();
+
+            return NextResponse.json({
+                success: true,
+                message: `Migrated ${migratedCount} services from bookingServices to services`,
+                shopSlug,
+                migratedCount,
+            });
+        }
+
+        // ACTION: migrate-products (original functionality)
+        const { sourceDocId, targetSlug } = body;
 
         if (!sourceDocId || !targetSlug) {
             return NextResponse.json({
-                error: "Missing required fields: sourceDocId, targetSlug"
+                error: "Missing required fields. Use action='migrate-services' with shopSlug, or provide sourceDocId and targetSlug for products"
             }, { status: 400 });
         }
 
