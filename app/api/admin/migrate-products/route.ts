@@ -69,6 +69,18 @@ export async function GET(request: NextRequest) {
                     services = servicesSnap.docs.map(d => ({
                         id: d.id,
                         name: d.data().name,
+                        collection: "services",
+                    }));
+                } catch (e) { /* ignore */ }
+
+                // ALSO check bookingServices collection (new booking system)
+                let bookingServices: any[] = [];
+                try {
+                    const bookingServicesSnap = await db.collection("shops").doc(path).collection("bookingServices").get();
+                    bookingServices = bookingServicesSnap.docs.map(d => ({
+                        id: d.id,
+                        name: d.data().name,
+                        collection: "bookingServices",
                     }));
                 } catch (e) { /* ignore */ }
 
@@ -76,24 +88,30 @@ export async function GET(request: NextRequest) {
                     path,
                     productsCount: products.length,
                     servicesCount: services.length,
+                    bookingServicesCount: bookingServices.length,
                     products,
                     services,
+                    bookingServices,
                 };
             })
         );
 
         // Filter to only show paths that have data
-        const pathsWithData = pathResults.filter(p => p.productsCount > 0 || p.servicesCount > 0);
+        const pathsWithData = pathResults.filter(p =>
+            p.productsCount > 0 || p.servicesCount > 0 || p.bookingServicesCount > 0
+        );
 
         // Summary
         const totalProducts = pathResults.reduce((acc, p) => acc + p.productsCount, 0) + rootProducts.length;
         const totalServices = pathResults.reduce((acc, p) => acc + p.servicesCount, 0);
+        const totalBookingServices = pathResults.reduce((acc, p) => acc + p.bookingServicesCount, 0);
 
         return NextResponse.json({
             summary: {
                 totalShops: shopsSnapshot.size,
                 totalProducts,
                 totalServices,
+                totalBookingServices,
                 pathsChecked: allShopPaths.size,
             },
             // Root level products (if any)
