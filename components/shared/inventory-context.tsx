@@ -8,6 +8,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import { toast } from "sonner";
 import { MOCK_PRODUCTS, type Product } from "@/lib/constants";
 import { db } from "@/lib/firebase";
 import {
@@ -162,6 +163,7 @@ export function InventoryProvider({ children, shopId }: InventoryProviderProps) 
       // Deep clean undefined values to avoid Firestore error
       const cleanProduct = cleanForFirestore(product);
       console.log("[Inventory] Saving product to Firestore:", cleanProduct);
+      console.log("[Inventory] Collection path:", `shops/${shopId}/products`);
       const docRef = await addDoc(colRef, cleanProduct);
 
       // Update with real ID
@@ -171,14 +173,26 @@ export function InventoryProvider({ children, shopId }: InventoryProviderProps) 
       // Update Cache
       const current = [...products, finalProduct]; // Approximation
       localStorage.setItem(getStorageKey(shopId), JSON.stringify(current));
+
+      toast.success("Producto guardado", {
+        description: `"${product.name}" se guardó correctamente en la nube.`,
+      });
     } catch (e) {
       console.error("Error adding product to cloud:", e);
-      // Revert or flag error? For now, keep local optimistic version but alert
-      // In a real app we'd show a toast "Failed to save online"
+      // IMPORTANT: Revert the optimistic update since it failed
+      setProducts(prev => prev.filter(p => p.id !== tempId));
+
+      toast.error("Error al guardar producto", {
+        description: `No se pudo guardar "${product.name}" en la nube. Verifica tu conexión e intenta de nuevo.`,
+        duration: 10000,
+      });
     }
   }, [getCollectionRef, products, shopId]);
 
   const updateProduct = useCallback(async (id: string, updates: Partial<Product>) => {
+    // Store original for rollback
+    const originalProduct = products.find(p => p.id === id);
+
     // Optimistic
     setProducts((prev) =>
       prev.map((p) => (p.id === id ? { ...p, ...updates } : p))
@@ -190,22 +204,47 @@ export function InventoryProvider({ children, shopId }: InventoryProviderProps) 
       const cleanUpdates = cleanForFirestore(updates);
       console.log("[Inventory] Updating product in Firestore:", id, cleanUpdates);
       await updateDoc(docRef, cleanUpdates);
+
+      // Only show toast for significant updates (not stock changes)
+      if (updates.name || updates.price || updates.category) {
+        toast.success("Producto actualizado");
+      }
     } catch (e) {
       console.error("Error updating product in cloud:", e);
+      // Rollback
+      if (originalProduct) {
+        setProducts(prev => prev.map(p => p.id === id ? originalProduct : p));
+      }
+      toast.error("Error al actualizar", {
+        description: "No se pudo guardar los cambios. Intenta de nuevo.",
+        duration: 8000,
+      });
     }
-  }, [shopId]);
+  }, [shopId, products]);
 
   const deleteProduct = useCallback(async (id: string) => {
+    // Store for rollback
+    const deletedProduct = products.find(p => p.id === id);
+
     // Optimistic
     setProducts((prev) => prev.filter((p) => p.id !== id));
 
     try {
       const docRef = doc(db, "shops", shopId, "products", id);
       await deleteDoc(docRef);
+      toast.success("Producto eliminado");
     } catch (e) {
       console.error("Error deleting product in cloud:", e);
+      // Rollback
+      if (deletedProduct) {
+        setProducts(prev => [...prev, deletedProduct]);
+      }
+      toast.error("Error al eliminar", {
+        description: "No se pudo eliminar el producto. Intenta de nuevo.",
+        duration: 8000,
+      });
     }
-  }, [shopId]);
+  }, [shopId, products]);
 
   const updateStock = useCallback((id: string, quantity: number, variantId?: string) => {
     // NOTE: Does not sync to cloud immediately to avoid spamming writes on every click?

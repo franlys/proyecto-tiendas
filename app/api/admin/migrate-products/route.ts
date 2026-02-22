@@ -19,88 +19,93 @@ export async function GET(request: NextRequest) {
         // Get all shop documents
         const shopsSnapshot = await db.collection("shops").get();
 
-        const shopData = await Promise.all(
-            shopsSnapshot.docs.map(async (shopDoc) => {
-                const data = shopDoc.data();
-                const slug = data.slug || "NO_SLUG";
+        // 1. Check ROOT products collection (alternative architecture)
+        let rootProducts: any[] = [];
+        try {
+            const rootProductsSnapshot = await db.collection("products").get();
+            rootProducts = rootProductsSnapshot.docs.map(d => ({
+                id: d.id,
+                name: d.data().name,
+                category: d.data().category,
+                shopId: d.data().shopId,
+            }));
+        } catch (e) {
+            // Root products collection doesn't exist
+        }
 
-                // Count products in this shop's subcollection (by document ID)
-                const productsByDocIdSnapshot = await db
-                    .collection("shops")
-                    .doc(shopDoc.id)
-                    .collection("products")
-                    .get();
+        // 2. Check all possible subcollection paths under ALL documents in shops collection
+        // This includes virtual documents (documents that don't exist but have subcollections)
+        const allShopPaths = new Set<string>();
 
-                // Count services in this shop's subcollection (by document ID)
-                const servicesByDocIdSnapshot = await db
-                    .collection("shops")
-                    .doc(shopDoc.id)
-                    .collection("services")
-                    .get();
+        // Add all real shop document IDs
+        shopsSnapshot.docs.forEach(doc => {
+            allShopPaths.add(doc.id);
+            const slug = doc.data().slug;
+            if (slug) allShopPaths.add(slug);
+        });
 
-                // ALSO check using the slug as path (this is where data is actually stored)
-                let productsBySlugCount = 0;
-                let servicesBySlugCount = 0;
-                let productsBySlug: any[] = [];
-                let servicesBySlug: any[] = [];
+        // Also check for common slug patterns that might have been used
+        const knownSlugs = ["miosotis-nails", "sweet-cravings", "surprise-gifts"];
+        knownSlugs.forEach(slug => allShopPaths.add(slug));
 
-                if (slug !== "NO_SLUG" && slug !== shopDoc.id) {
-                    try {
-                        const productsBySlugSnapshot = await db
-                            .collection("shops")
-                            .doc(slug)
-                            .collection("products")
-                            .get();
-                        productsBySlugCount = productsBySlugSnapshot.size;
-                        productsBySlug = productsBySlugSnapshot.docs.map(d => ({
-                            id: d.id,
-                            name: d.data().name,
-                            category: d.data().category,
-                        }));
+        // Check each path for products/services
+        const pathResults = await Promise.all(
+            Array.from(allShopPaths).map(async (path) => {
+                let products: any[] = [];
+                let services: any[] = [];
 
-                        const servicesBySlugSnapshot = await db
-                            .collection("shops")
-                            .doc(slug)
-                            .collection("services")
-                            .get();
-                        servicesBySlugCount = servicesBySlugSnapshot.size;
-                        servicesBySlug = servicesBySlugSnapshot.docs.map(d => ({
-                            id: d.id,
-                            name: d.data().name,
-                        }));
-                    } catch (e) {
-                        // Slug path doesn't exist, that's fine
-                    }
-                }
+                try {
+                    const productsSnap = await db.collection("shops").doc(path).collection("products").get();
+                    products = productsSnap.docs.map(d => ({
+                        id: d.id,
+                        name: d.data().name,
+                        category: d.data().category,
+                        price: d.data().price,
+                    }));
+                } catch (e) { /* ignore */ }
+
+                try {
+                    const servicesSnap = await db.collection("shops").doc(path).collection("services").get();
+                    services = servicesSnap.docs.map(d => ({
+                        id: d.id,
+                        name: d.data().name,
+                    }));
+                } catch (e) { /* ignore */ }
 
                 return {
-                    documentId: shopDoc.id,
-                    slug,
-                    name: data.name || "Unknown",
-                    // Products/Services stored under document ID path
-                    productsByDocId: productsByDocIdSnapshot.size,
-                    servicesByDocId: servicesByDocIdSnapshot.size,
-                    // Products/Services stored under slug path (where they should be)
-                    productsBySlug: productsBySlugCount,
-                    servicesBySlug: servicesBySlugCount,
-                    // Detail of what's in slug path
-                    productsDetail: productsBySlug,
-                    servicesDetail: servicesBySlug,
+                    path,
+                    productsCount: products.length,
+                    servicesCount: services.length,
+                    products,
+                    services,
                 };
             })
         );
 
+        // Filter to only show paths that have data
+        const pathsWithData = pathResults.filter(p => p.productsCount > 0 || p.servicesCount > 0);
+
         // Summary
-        const totalProducts = shopData.reduce((acc, s) => acc + s.productsBySlug + s.productsByDocId, 0);
-        const totalServices = shopData.reduce((acc, s) => acc + s.servicesBySlug + s.servicesByDocId, 0);
+        const totalProducts = pathResults.reduce((acc, p) => acc + p.productsCount, 0) + rootProducts.length;
+        const totalServices = pathResults.reduce((acc, p) => acc + p.servicesCount, 0);
 
         return NextResponse.json({
             summary: {
-                totalShops: shopData.length,
+                totalShops: shopsSnapshot.size,
                 totalProducts,
                 totalServices,
+                pathsChecked: allShopPaths.size,
             },
-            shops: shopData,
+            // Root level products (if any)
+            rootProducts: rootProducts.length > 0 ? rootProducts : undefined,
+            // Paths that have data
+            pathsWithData,
+            // All shop documents for reference
+            shopDocuments: shopsSnapshot.docs.map(d => ({
+                documentId: d.id,
+                slug: d.data().slug,
+                name: d.data().name,
+            })),
         });
     } catch (error) {
         console.error("Error scanning shops:", error);
