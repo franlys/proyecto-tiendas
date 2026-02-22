@@ -36,6 +36,12 @@ service cloud.firestore {
         allow write: if isShopOwner(shopId);
       }
 
+      // BOOKING SERVICES (new booking system collection)
+      match /bookingServices/{serviceId} {
+        allow read: if true;
+        allow write: if isShopOwner(shopId);
+      }
+
       // SHOP SETTINGS (custom categories, etc.)
       match /settings/{settingId} {
         allow read: if true;
