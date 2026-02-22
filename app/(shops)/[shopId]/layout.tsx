@@ -28,7 +28,7 @@ async function getShopData(shopId: string): Promise<ShopConfig | null> {
       return {
         id: snapshot.docs[0].id,
         name: shopData.name,
-        slug: shopData.slug,
+        slug: shopData.slug || shopId, // Fallback to URL parameter if slug field is missing
         description: shopData.description || "",
         theme: shopData.theme || DEFAULT_THEME,
         contact: shopData.contact || {},
@@ -55,7 +55,7 @@ async function getShopData(shopId: string): Promise<ShopConfig | null> {
       return {
         id: docSnap.id,
         name: shopData.name,
-        slug: shopData.slug,
+        slug: shopData.slug || shopId, // Fallback to URL parameter if slug field is missing
         description: shopData.description || "",
         theme: shopData.theme || DEFAULT_THEME,
         contact: shopData.contact || {},

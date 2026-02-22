@@ -1046,3 +1046,421 @@ export async function reorderServicesAdmin(
     return false;
   }
 }
+
+// ==================== CONVERSATIONS (ADMIN SDK) ====================
+
+const getConversationsCollection = (shopId: string) =>
+  `shops/${shopId}/bookingConversations`;
+
+/**
+ * Find conversation by phone across all shops
+ */
+export async function findConversationByPhoneAdmin(
+  phone: string
+): Promise<{ shopId: string; conversation: BookingConversation } | null> {
+  const db = adminDb();
+  if (!db) return null;
+
+  try {
+    // Search across all shops for active conversation
+    const shopsSnapshot = await db.collection("shops").get();
+
+    for (const shopDoc of shopsSnapshot.docs) {
+      const shopId = shopDoc.id;
+      const conversation = await getConversationAdmin(shopId, phone);
+
+      if (conversation && conversation.state !== "idle") {
+        return { shopId, conversation };
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error("[BookingAdmin] Error finding conversation:", error);
+    return null;
+  }
+}
+
+/**
+ * Get conversation for a specific shop and phone
+ */
+export async function getConversationAdmin(
+  shopId: string,
+  phone: string
+): Promise<BookingConversation | null> {
+  const db = adminDb();
+  if (!db) return null;
+
+  try {
+    const docRef = db.doc(`${getConversationsCollection(shopId)}/${phone}`);
+    const docSnap = await docRef.get();
+
+    if (!docSnap.exists) {
+      return null;
+    }
+
+    const data = docSnap.data() as BookingConversation;
+
+    // Check if expired
+    const expiresAt = data.stateExpiresAt;
+    const expiresAtMs = typeof expiresAt === 'object' && 'toMillis' in expiresAt
+      ? expiresAt.toMillis()
+      : typeof expiresAt === 'number'
+        ? expiresAt
+        : Date.now();
+
+    if (expiresAtMs < Date.now()) {
+      await clearConversationAdmin(shopId, phone);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("[BookingAdmin] Error getting conversation:", error);
+    return null;
+  }
+}
+
+/**
+ * Start a new booking conversation
+ */
+export async function startConversationAdmin(
+  shopId: string,
+  phone: string,
+  bookingId: string,
+  state: ConversationState,
+  stateData: Record<string, unknown> = {}
+): Promise<void> {
+  const db = adminDb();
+  if (!db) return;
+
+  const config = await getBookingConfigAdmin(shopId);
+  const timeoutMs = (config.rescheduleTimeoutMinutes || 30) * 60 * 1000;
+
+  const conversation: BookingConversation = {
+    phone,
+    shopId,
+    currentBookingId: bookingId,
+    state,
+    stateData,
+    stateExpiresAt: { toMillis: () => Date.now() + timeoutMs } as any,
+    lastMessageAt: { toMillis: () => Date.now() } as any,
+  };
+
+  await db.doc(`${getConversationsCollection(shopId)}/${phone}`).set(conversation);
+}
+
+/**
+ * Update conversation state
+ */
+export async function updateConversationStateAdmin(
+  shopId: string,
+  phone: string,
+  state: ConversationState,
+  stateData: Record<string, unknown> = {}
+): Promise<void> {
+  const db = adminDb();
+  if (!db) return;
+
+  const config = await getBookingConfigAdmin(shopId);
+  const timeoutMs = (config.rescheduleTimeoutMinutes || 30) * 60 * 1000;
+  const { FieldValue } = await import("firebase-admin/firestore");
+
+  await db.doc(`${getConversationsCollection(shopId)}/${phone}`).update({
+    state,
+    stateData,
+    stateExpiresAt: new Date(Date.now() + timeoutMs),
+    lastMessageAt: FieldValue.serverTimestamp(),
+  });
+}
+
+/**
+ * Clear/delete conversation
+ */
+export async function clearConversationAdmin(
+  shopId: string,
+  phone: string
+): Promise<void> {
+  const db = adminDb();
+  if (!db) return;
+
+  try {
+    await db.doc(`${getConversationsCollection(shopId)}/${phone}`).delete();
+  } catch (error) {
+    // Ignore if doesn't exist
+  }
+}
+
+// ==================== BOOKING STATUS (ADMIN SDK) ====================
+
+/**
+ * Confirm a booking
+ */
+export async function confirmBookingStatusAdmin(
+  shopId: string,
+  bookingId: string
+): Promise<void> {
+  const db = adminDb();
+  if (!db) return;
+
+  const bookingRef = db.collection(getBookingsCollection(shopId)).doc(bookingId);
+
+  await bookingRef.update({
+    status: "confirmed",
+    customerResponse: "confirmed",
+    customerRespondedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
+}
+
+/**
+ * Reschedule a booking to new date/time
+ */
+export async function rescheduleBookingAdmin(
+  shopId: string,
+  bookingId: string,
+  input: { newDate: string; newTime: string }
+): Promise<Booking | null> {
+  const db = adminDb();
+  if (!db) return null;
+
+  const oldBooking = await getBookingByIdAdmin(shopId, bookingId);
+  if (!oldBooking) return null;
+
+  const config = await getBookingConfigAdmin(shopId);
+
+  // Check availability
+  const isAvailable = await isSlotAvailableAdmin(shopId, input.newDate, input.newTime);
+  if (!isAvailable) {
+    return null;
+  }
+
+  // Free old slot - we need to implement this
+  await freeSlotByBookingIdAdmin(shopId, oldBooking.date, bookingId);
+
+  // Calculate new end time
+  const endTime = calculateEndTime(input.newTime, oldBooking.serviceDuration);
+
+  // Update booking
+  const bookingRef = db.collection(getBookingsCollection(shopId)).doc(bookingId);
+  await bookingRef.update({
+    date: input.newDate,
+    time: input.newTime,
+    endTime,
+    status: "rescheduled",
+    customerResponse: "reschedule",
+    customerRespondedAt: new Date().toISOString(),
+    rescheduledFrom: {
+      date: oldBooking.date,
+      time: oldBooking.time,
+    },
+    updatedAt: new Date().toISOString(),
+  });
+
+  // Reserve new slot
+  await reserveSlotAdmin(shopId, input.newDate, input.newTime, bookingId, oldBooking.serviceDuration);
+
+  return await getBookingByIdAdmin(shopId, bookingId);
+}
+
+/**
+ * Free slot by booking ID
+ */
+async function freeSlotByBookingIdAdmin(
+  shopId: string,
+  date: string,
+  bookingId: string
+): Promise<void> {
+  const db = adminDb();
+  if (!db) return;
+
+  const docRef = db.doc(`${getSlotsCollection(shopId)}/${date}`);
+  const docSnap = await docRef.get();
+
+  if (!docSnap.exists) return;
+
+  const daySlots = docSnap.data() as DaySlots;
+  let updated = false;
+
+  for (const slotTime of Object.keys(daySlots.slots)) {
+    if (daySlots.slots[slotTime].bookingId === bookingId) {
+      daySlots.slots[slotTime] = {
+        time: slotTime,
+        available: true,
+        bookingId: null,
+      };
+      updated = true;
+    }
+  }
+
+  if (updated) {
+    await docRef.set({
+      ...daySlots,
+      updatedAt: new Date().toISOString(),
+    });
+  }
+}
+
+// Re-export helper function for slot reservations
+async function reserveSlotAdmin(
+  shopId: string,
+  date: string,
+  time: string,
+  bookingId: string,
+  durationMinutes?: number
+): Promise<void> {
+  const db = adminDb();
+  if (!db) return;
+
+  let daySlots = await getDaySlotsAdminInternal(shopId, date);
+
+  if (!daySlots) {
+    daySlots = await generateDaySlotsAdminInternal(shopId, date);
+  }
+
+  const config = await getBookingConfigAdmin(shopId);
+  const slotDuration = config.slotDurationMinutes;
+  const serviceDuration = durationMinutes || slotDuration;
+  const slotsToReserve = Math.ceil(serviceDuration / slotDuration);
+  const allTimes = Object.keys(daySlots.slots).sort();
+  const startIndex = allTimes.indexOf(time);
+
+  if (startIndex === -1) return;
+
+  for (let i = 0; i < slotsToReserve && startIndex + i < allTimes.length; i++) {
+    const slotTime = allTimes[startIndex + i];
+    if (daySlots.slots[slotTime]) {
+      daySlots.slots[slotTime] = {
+        time: slotTime,
+        available: false,
+        bookingId,
+      };
+    }
+  }
+
+  await db.doc(`${getSlotsCollection(shopId)}/${date}`).set({
+    ...daySlots,
+    updatedAt: new Date().toISOString(),
+  });
+}
+
+// Internal helpers (avoid name collision)
+async function getDaySlotsAdminInternal(
+  shopId: string,
+  date: string
+): Promise<DaySlots | null> {
+  const db = adminDb();
+  if (!db) return null;
+
+  const docRef = db.doc(`${getSlotsCollection(shopId)}/${date}`);
+  const docSnap = await docRef.get();
+
+  if (docSnap.exists) {
+    return docSnap.data() as DaySlots;
+  }
+
+  return null;
+}
+
+async function generateDaySlotsAdminInternal(
+  shopId: string,
+  date: string
+): Promise<DaySlots> {
+  const db = adminDb();
+  if (!db) {
+    throw new Error("Admin DB not initialized");
+  }
+
+  const config = await getBookingConfigAdmin(shopId);
+  const timeSlots = generateTimeSlotsInternal({
+    openTime: config.openTime,
+    closeTime: config.closeTime,
+    slotDurationMinutes: config.slotDurationMinutes,
+    breakEnabled: config.breakEnabled,
+    breakStartTime: config.breakStartTime,
+    breakEndTime: config.breakEndTime,
+  });
+
+  const slots: Record<string, TimeSlot> = {};
+  for (const time of timeSlots) {
+    slots[time] = {
+      time,
+      available: true,
+      bookingId: null,
+    };
+  }
+
+  const daySlots: DaySlots = {
+    date,
+    shopId,
+    slots,
+    updatedAt: new Date().toISOString() as unknown as import("firebase/firestore").Timestamp,
+  };
+
+  await db.doc(`${getSlotsCollection(shopId)}/${date}`).set(daySlots);
+
+  return daySlots;
+}
+
+function generateTimeSlotsInternal(options: {
+  openTime: string;
+  closeTime: string;
+  slotDurationMinutes: number;
+  breakEnabled?: boolean;
+  breakStartTime?: string;
+  breakEndTime?: string;
+}): string[] {
+  const { openTime, closeTime, slotDurationMinutes, breakEnabled, breakStartTime, breakEndTime } = options;
+
+  const slots: string[] = [];
+  const [openHour, openMin] = openTime.split(":").map(Number);
+  const [closeHour, closeMin] = closeTime.split(":").map(Number);
+
+  let currentMinutes = openHour * 60 + openMin;
+  const closeMinutes = closeHour * 60 + closeMin;
+
+  let breakStartMinutes = 0;
+  let breakEndMinutes = 0;
+  if (breakEnabled && breakStartTime && breakEndTime) {
+    const [breakStartH, breakStartM] = breakStartTime.split(":").map(Number);
+    const [breakEndH, breakEndM] = breakEndTime.split(":").map(Number);
+    breakStartMinutes = breakStartH * 60 + breakStartM;
+    breakEndMinutes = breakEndH * 60 + breakEndM;
+  }
+
+  while (currentMinutes < closeMinutes) {
+    const hours = Math.floor(currentMinutes / 60);
+    const mins = currentMinutes % 60;
+    const timeStr = `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`;
+
+    const slotEndMinutes = currentMinutes + slotDurationMinutes;
+    const isInBreak = breakEnabled &&
+      breakStartMinutes > 0 &&
+      (currentMinutes < breakEndMinutes && slotEndMinutes > breakStartMinutes);
+
+    if (!isInBreak) {
+      slots.push(timeStr);
+    }
+
+    currentMinutes += slotDurationMinutes;
+  }
+
+  return slots;
+}
+
+// Types needed for conversations
+interface BookingConversation {
+  phone: string;
+  shopId: string;
+  currentBookingId: string | null;
+  state: ConversationState;
+  stateData: Record<string, unknown>;
+  stateExpiresAt: { toMillis: () => number };
+  lastMessageAt: { toMillis: () => number };
+}
+
+type ConversationState =
+  | "idle"
+  | "awaiting_confirmation"
+  | "awaiting_new_date"
+  | "awaiting_new_time";

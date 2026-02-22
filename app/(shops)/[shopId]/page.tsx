@@ -40,7 +40,17 @@ export default function ShopHomePage() {
   // Load Data (Real or Mock)
   useEffect(() => {
     async function loadShopData() {
-      if (!shop?.id || !shop?.slug) return;
+      console.log("🏪 [CATALOG] Shop object:", {
+        id: shop?.id,
+        slug: shop?.slug,
+        name: shop?.name,
+        businessType: shop?.businessType,
+      });
+
+      if (!shop?.id || !shop?.slug) {
+        console.warn("⚠️ [CATALOG] Shop ID or Slug is missing!", { id: shop?.id, slug: shop?.slug });
+        return;
+      }
 
       setLoadingData(true);
 

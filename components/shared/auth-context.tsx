@@ -447,12 +447,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (matchingShop && matchingShopId) {
         // Verify password
         if (matchingShop.ownerPassword === password) {
+          // Use slug with fallback to document ID if slug field is missing
+          const shopSlug = matchingShop.slug || matchingShopId;
           const dynamicUser: User = {
-            id: `shop-owner-${matchingShop.slug}`,
-            username: matchingShop.ownerUsername || matchingShop.slug,
+            id: `shop-owner-${shopSlug}`,
+            username: matchingShop.ownerUsername || shopSlug,
             name: matchingShop.name,
             role: "SHOP_OWNER",
-            shopId: matchingShop.slug, // Using SLUG as shopId for cleaner URLs
+            shopId: shopSlug, // Using SLUG as shopId for cleaner URLs (fallback to doc ID if missing)
           };
 
           debugLog("DYNAMIC SHOP OWNER LOGIN SUCCESS ✅", {

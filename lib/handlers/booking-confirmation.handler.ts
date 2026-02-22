@@ -1,16 +1,17 @@
+// Use Admin SDK versions for server-side webhook handlers
 import {
-  findConversationByPhone,
-  getConversation,
-  getBooking,
-  getBookingConfig,
-  confirmBooking,
-  cancelBooking,
-  rescheduleBooking,
-  updateConversationState,
-  clearConversation,
-  getAvailableSlots,
-  isSlotAvailable,
-} from "@/lib/services/booking.service";
+  findConversationByPhoneAdmin as findConversationByPhone,
+  getConversationAdmin as getConversation,
+  getBookingByIdAdmin as getBooking,
+  getBookingConfigAdmin as getBookingConfig,
+  confirmBookingStatusAdmin as confirmBooking,
+  cancelBookingAdmin as cancelBooking,
+  rescheduleBookingAdmin as rescheduleBooking,
+  updateConversationStateAdmin as updateConversationState,
+  clearConversationAdmin as clearConversation,
+  getAvailableSlotsAdmin as getAvailableSlots,
+  isSlotAvailableAdmin as isSlotAvailable,
+} from "@/lib/services/booking-admin.service";
 import type { BookingResponseResult } from "@/lib/types/booking.types";
 
 /**

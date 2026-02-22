@@ -228,7 +228,19 @@ export async function getAllNotificationPhones(shopId: string): Promise<Notifica
     if (!phones.some(p => p.role === "owner")) {
       console.log(`[WhatsApp Order] No owner phone from config, checking shop document...`);
 
-      const shopDoc = await db.collection("shops").doc(shopId).get();
+      // First try by document ID
+      let shopDoc = await db.collection("shops").doc(shopId).get();
+
+      // If not found, try searching by slug field (shopId might be a slug, not UUID)
+      if (!shopDoc.exists) {
+        console.log(`[WhatsApp Order] Shop not found by ID, trying slug query...`);
+        const slugQuery = await db.collection("shops").where("slug", "==", shopId).limit(1).get();
+        if (!slugQuery.empty) {
+          shopDoc = slugQuery.docs[0];
+          console.log(`[WhatsApp Order] ✅ Shop found by slug: ${shopDoc.id}`);
+        }
+      }
+
       if (shopDoc.exists) {
         const data = shopDoc.data();
 

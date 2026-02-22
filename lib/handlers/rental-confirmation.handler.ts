@@ -7,18 +7,18 @@
  * - Cancelación
  */
 
+// Use Admin SDK versions for server-side webhook handlers
 import {
-  findRentalConversationByPhone,
-  getRentalConversation,
-  getRental,
-  getRentalConfig,
-  confirmRental,
-  cancelRental,
-  rescheduleRental,
-  clearRentalConversation,
-  getAvailableVehicles,
-  isVehicleAvailable,
-} from "@/lib/services/rental.service";
+  findRentalConversationByPhoneAdmin as findRentalConversationByPhone,
+  getRentalConversationAdmin as getRentalConversation,
+  getRentalAdmin as getRental,
+  getRentalConfigAdmin as getRentalConfig,
+  confirmRentalAdmin as confirmRental,
+  cancelRentalAdmin as cancelRental,
+  rescheduleRentalAdmin as rescheduleRental,
+  clearRentalConversationAdmin as clearRentalConversation,
+  isVehicleAvailableAdmin as isVehicleAvailable,
+} from "@/lib/services/rental-admin.service";
 import type { RentalConversation } from "@/lib/types/rental.types";
 
 export interface RentalResponseResult {
@@ -139,20 +139,9 @@ Recuerda traer:
     normalizedMessage.includes("MODIFICAR");
 
   if (isReschedule) {
-    // Actualizar estado a esperando nuevas fechas
-    const docRef = await getRentalConversation(shopId, phone);
-    if (docRef) {
-      // Usamos la función de servicio para actualizar
-      const { doc, updateDoc } = await import("firebase/firestore");
-      const { db } = await import("@/lib/firebase");
-      await updateDoc(
-        doc(db, `shops/${shopId}/rentalConversations`, phone),
-        {
-          state: "awaiting_new_dates",
-          stateData: { rentalId },
-        }
-      );
-    }
+    // Actualizar estado a esperando nuevas fechas usando Admin SDK
+    const { updateRentalConversationStateAdmin } = await import("@/lib/services/rental-admin.service");
+    await updateRentalConversationStateAdmin(shopId, phone, "awaiting_new_dates", { rentalId });
 
     return {
       handled: true,
