@@ -39,9 +39,12 @@ export async function handleOwnerCommand(
     // 1. REGISTRATION: "Soy el dueño [slug] [password]"
     // ------------------------------------------------------------
     if (command.startsWith("soy el dueño") || command.startsWith("soy el dueno")) {
+        console.log(`[OwnerCmd] 🔐 Registration attempt for shop ${shopId} from ${phone}`);
+        console.log(`[OwnerCmd] Full text: "${text}"`);
+
         const parts = text.split(" ");
         // Expected: ["Soy", "el", "dueño", "shop-slug", "password"]
-        // Relaxed: Allow them to just say "Soy el dueño [password]" if we can infer shop from instance? 
+        // Relaxed: Allow them to just say "Soy el dueño [password]" if we can infer shop from instance?
         // No, instance might be different. Let's stick to explicit slug for safety, or just password if we trust the instance->shop mapping.
         // Given we have shopId from instance, we can just ask for password.
 
@@ -49,15 +52,19 @@ export async function handleOwnerCommand(
         // OR "Soy el dueño [slug] [password]" (for multi-shop owners?? No, keeps it simple)
 
         const passwordCandidate = parts[parts.length - 1]; // Last word is password
+        console.log(`[OwnerCmd] Password candidate: "${passwordCandidate}"`);
 
         // Fetch shop credentials
         const shopDoc = await db.collection("shops").doc(shopId).get();
         if (!shopDoc.exists) {
-            return { handled: true, message: "❌ Error: Tienda no encontrada." };
+            console.log(`[OwnerCmd] ❌ Shop not found: ${shopId}`);
+            await sendTextMessage(instanceName, phone, "❌ Error: Tienda no encontrada.");
+            return { handled: true };
         }
 
         const shopData = shopDoc.data();
         const storedPassword = shopData?.ownerPassword || "123"; // Default if not set (risky but existing logic uses it)
+        console.log(`[OwnerCmd] Stored password: "${storedPassword}" vs candidate: "${passwordCandidate}"`);
 
         if (passwordCandidate === storedPassword) {
             // Normalize phone for storage (remove @s.whatsapp.net and non-digits)
@@ -81,20 +88,22 @@ export async function handleOwnerCommand(
 
             console.log(`[OwnerCmd] ✅ Owner registered: ${normalizedPhone} for shop ${shopId}`);
 
-            return {
-                handled: true,
-                message: `✅ *¡Bienvenido, Dueño!*\n\n` +
-                    `Tu número ha sido registrado exitosamente para *${shopData?.name}*.\n\n` +
-                    `📱 *Número registrado:* ${normalizedPhone}\n\n` +
-                    `Ahora recibirás notificaciones de pedidos aquí.\n\n` +
-                    `📱 *Escribe "Ayuda"* para ver todos los comandos disponibles:\n` +
-                    `• Reportes de ventas\n` +
-                    `• Gestión de citas\n` +
-                    `• Inventario\n` +
-                    `• Y mucho más...`
-            };
+            const successMsg = `✅ *¡Bienvenido, Dueño!*\n\n` +
+                `Tu número ha sido registrado exitosamente para *${shopData?.name}*.\n\n` +
+                `📱 *Número registrado:* ${normalizedPhone}\n\n` +
+                `Ahora recibirás notificaciones de pedidos aquí.\n\n` +
+                `📱 *Escribe "Ayuda"* para ver todos los comandos disponibles:\n` +
+                `• Reportes de ventas\n` +
+                `• Gestión de citas\n` +
+                `• Inventario\n` +
+                `• Y mucho más...`;
+
+            await sendTextMessage(instanceName, phone, successMsg);
+            return { handled: true };
         } else {
-            return { handled: true, message: "❌ Contraseña incorrecta." };
+            console.log(`[OwnerCmd] ❌ Wrong password for ${shopId}`);
+            await sendTextMessage(instanceName, phone, "❌ Contraseña incorrecta.");
+            return { handled: true };
         }
     }
 
