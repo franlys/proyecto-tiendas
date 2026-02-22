@@ -22,45 +22,85 @@ export async function GET(request: NextRequest) {
         const shopData = await Promise.all(
             shopsSnapshot.docs.map(async (shopDoc) => {
                 const data = shopDoc.data();
+                const slug = data.slug || "NO_SLUG";
 
-                // Count products in this shop's subcollection
-                const productsSnapshot = await db
+                // Count products in this shop's subcollection (by document ID)
+                const productsByDocIdSnapshot = await db
                     .collection("shops")
                     .doc(shopDoc.id)
                     .collection("products")
                     .get();
 
-                // Count services in this shop's subcollection
-                const servicesSnapshot = await db
+                // Count services in this shop's subcollection (by document ID)
+                const servicesByDocIdSnapshot = await db
                     .collection("shops")
                     .doc(shopDoc.id)
                     .collection("services")
                     .get();
 
+                // ALSO check using the slug as path (this is where data is actually stored)
+                let productsBySlugCount = 0;
+                let servicesBySlugCount = 0;
+                let productsBySlug: any[] = [];
+                let servicesBySlug: any[] = [];
+
+                if (slug !== "NO_SLUG" && slug !== shopDoc.id) {
+                    try {
+                        const productsBySlugSnapshot = await db
+                            .collection("shops")
+                            .doc(slug)
+                            .collection("products")
+                            .get();
+                        productsBySlugCount = productsBySlugSnapshot.size;
+                        productsBySlug = productsBySlugSnapshot.docs.map(d => ({
+                            id: d.id,
+                            name: d.data().name,
+                            category: d.data().category,
+                        }));
+
+                        const servicesBySlugSnapshot = await db
+                            .collection("shops")
+                            .doc(slug)
+                            .collection("services")
+                            .get();
+                        servicesBySlugCount = servicesBySlugSnapshot.size;
+                        servicesBySlug = servicesBySlugSnapshot.docs.map(d => ({
+                            id: d.id,
+                            name: d.data().name,
+                        }));
+                    } catch (e) {
+                        // Slug path doesn't exist, that's fine
+                    }
+                }
+
                 return {
                     documentId: shopDoc.id,
-                    slug: data.slug || "NO_SLUG",
+                    slug,
                     name: data.name || "Unknown",
-                    productsCount: productsSnapshot.size,
-                    servicesCount: servicesSnapshot.size,
-                    // Flag if the document ID matches the slug (correct) or not (needs migration)
-                    needsMigration: data.slug && shopDoc.id !== data.slug && productsSnapshot.size > 0,
+                    // Products/Services stored under document ID path
+                    productsByDocId: productsByDocIdSnapshot.size,
+                    servicesByDocId: servicesByDocIdSnapshot.size,
+                    // Products/Services stored under slug path (where they should be)
+                    productsBySlug: productsBySlugCount,
+                    servicesBySlug: servicesBySlugCount,
+                    // Detail of what's in slug path
+                    productsDetail: productsBySlug,
+                    servicesDetail: servicesBySlug,
                 };
             })
         );
 
-        // Group by those that need migration
-        const needsMigration = shopData.filter(s => s.needsMigration);
-        const correct = shopData.filter(s => !s.needsMigration);
+        // Summary
+        const totalProducts = shopData.reduce((acc, s) => acc + s.productsBySlug + s.productsByDocId, 0);
+        const totalServices = shopData.reduce((acc, s) => acc + s.servicesBySlug + s.servicesByDocId, 0);
 
         return NextResponse.json({
             summary: {
                 totalShops: shopData.length,
-                needsMigrationCount: needsMigration.length,
-                correctCount: correct.length,
+                totalProducts,
+                totalServices,
             },
-            needsMigration,
-            correct,
+            shops: shopData,
         });
     } catch (error) {
         console.error("Error scanning shops:", error);
