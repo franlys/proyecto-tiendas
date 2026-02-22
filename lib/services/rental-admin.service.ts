@@ -170,7 +170,8 @@ export async function rescheduleRentalAdmin(
 
   // Calculate new pricing
   const days = calculateDaysBetween(newPickupDate, newReturnDate);
-  const dailyRate = rental.vehicleSnapshot.dailyRate || rental.subtotal / calculateDaysBetween(rental.pickupDate, rental.returnDate);
+  const originalDays = calculateDaysBetween(rental.pickupDate, rental.returnDate);
+  const dailyRate = rental.subtotal / originalDays;
   const newSubtotal = dailyRate * days;
   const newTotal = newSubtotal + (rental.extrasTotal || 0);
 
