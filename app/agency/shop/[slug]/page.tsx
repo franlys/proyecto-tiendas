@@ -59,6 +59,7 @@ import { WhatsAppAutomationPanel } from "@/components/shared/whatsapp-automation
 import { BackgroundGallery, mapToBackgroundCategory } from "@/components/shared/background-gallery";
 import { cn } from "@/lib/utils";
 import { BusinessTypeSelector, FeatureBadges } from "@/components/admin/business-type-selector";
+import { getBusinessType } from "@/lib/types/business-types-v2";
 
 // Mapeo de categorías para mostrar labels correctos
 const CATEGORY_OPTIONS: { value: ShopCategory; label: string }[] = [
@@ -589,8 +590,8 @@ function ShopDetailContent() {
                                 <span>{`/${shop.slug}`}</span>
                                 <span className="w-1 h-1 rounded-full bg-slate-600" />
                                 <span className="text-xs tracking-wider">
-                                    {BUSINESS_TYPE_CONFIG[shop.businessType as BusinessType]?.icon || ""}{" "}
-                                    {BUSINESS_TYPE_CONFIG[shop.businessType as BusinessType]?.label || shop.category || "beauty"}
+                                    {getBusinessType(shop.businessType)?.icon || ""}{" "}
+                                    {getBusinessType(shop.businessType)?.label || shop.category || "beauty"}
                                 </span>
                             </div>
                         </div>
