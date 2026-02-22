@@ -34,9 +34,9 @@ interface ShopData {
 const GROUPED_TYPES = Object.entries(BUSINESS_TYPE_CONFIG).reduce((acc, [key, config]) => {
     const category = config.category;
     if (!acc[category]) acc[category] = [];
-    acc[category].push({ id: key as BusinessType, ...config });
+    acc[category].push(config); // config already has id field
     return acc;
-}, {} as Record<BusinessCategory, (typeof BUSINESS_TYPE_CONFIG[BusinessType] & { id: BusinessType })[]>);
+}, {} as Record<BusinessCategory, (typeof BUSINESS_TYPE_CONFIG[BusinessType])[]>);
 
 // Tipos legacy que no deberían usarse
 const LEGACY_TYPES = ["beauty", "retail", "repair", "restaurant", "rentcar", "technology"];
