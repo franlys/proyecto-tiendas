@@ -523,7 +523,7 @@ function ShopDetailContent() {
                 setShop(foundShop);
                 setName(foundShop.name);
                 setCategory(foundShop.category || "beauty");
-                setBusinessType((foundShop.businessType as BusinessType) || foundShop.category || "otro");
+                setBusinessType(foundShop.businessType || foundShop.category || "otro");
                 setPhone(foundShop.contact?.phone || "");
                 // Load visual customization data
                 setLogo(foundShop.logo || "");
