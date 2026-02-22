@@ -74,10 +74,33 @@ export default function ShopHomePage() {
         // Use slug for subcollection path (consistent with how inventory saves products)
         const shopPath = shop.slug;
 
-        // Fetch Services
-        const servicesRef = collection(db, "shops", shopPath, "services");
-        const servicesSnap = await getDocs(servicesRef);
-        const servicesData = servicesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Service));
+        // Fetch Services from BOTH collections and merge
+        // Services can be in 'services' (legacy) or 'bookingServices' (new)
+        const servicesLegacyRef = collection(db, "shops", shopPath, "services");
+        const servicesNewRef = collection(db, "shops", shopPath, "bookingServices");
+
+        const [legacySnap, newSnap] = await Promise.all([
+          getDocs(servicesLegacyRef),
+          getDocs(servicesNewRef),
+        ]);
+
+        // Merge services, avoiding duplicates by ID
+        const seenIds = new Set<string>();
+        const servicesData: Service[] = [];
+
+        const addService = (doc: any) => {
+          if (seenIds.has(doc.id)) return;
+          seenIds.add(doc.id);
+          const data = doc.data();
+          // Only include active services
+          if (data.isActive !== false) {
+            servicesData.push({ id: doc.id, ...data } as Service);
+          }
+        };
+
+        legacySnap.docs.forEach(addService);
+        newSnap.docs.forEach(addService);
+
         setServices(servicesData);
 
         // Fetch Products
@@ -90,7 +113,8 @@ export default function ShopHomePage() {
           shopPath,
           servicesCount: servicesData.length,
           productsCount: productsData.length,
-          products: productsData,
+          servicesFromLegacy: legacySnap.size,
+          servicesFromNew: newSnap.size,
         });
 
       } catch (error) {
