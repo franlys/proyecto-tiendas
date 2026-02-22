@@ -60,6 +60,7 @@ import { BackgroundGallery, mapToBackgroundCategory } from "@/components/shared/
 import { cn } from "@/lib/utils";
 import { BusinessTypeSelector, FeatureBadges } from "@/components/admin/business-type-selector";
 import { getBusinessType } from "@/lib/types/business-types-v2";
+import type { BusinessType } from "@/lib/types/business.types";
 
 // Mapeo de categorías para mostrar labels correctos
 const CATEGORY_OPTIONS: { value: ShopCategory; label: string }[] = [
@@ -881,11 +882,11 @@ function ShopDetailContent() {
                                                 updateShop(shop.slug, {
                                                     name,
                                                     category,
-                                                    businessType, // Usar el tipo específico seleccionado
+                                                    businessType: businessType as BusinessType,
                                                     contact: { ...shop.contact, phone }
                                                 });
                                                 // Actualizar el shop local
-                                                setShop(prev => prev ? { ...prev, name, category, businessType, contact: { ...prev.contact, phone } } : prev);
+                                                setShop(prev => prev ? { ...prev, name, category, businessType: businessType as BusinessType, contact: { ...prev.contact, phone } } : prev);
                                                 setTimeout(() => {
                                                     setSaving(false);
                                                     setSaveSuccess(true);
