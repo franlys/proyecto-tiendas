@@ -1,0 +1,10 @@
+﻿app/agency/shop/[slug]/page.tsx(66,10): error TS2440: Import declaration conflicts with local declaration of 'CombinedFeaturesBadges'.
+app/agency/shop/[slug]/page.tsx(72,7): error TS2322: Type '"food"' is not assignable to type 'BusinessType'.
+app/agency/shop/[slug]/page.tsx(73,7): error TS2322: Type '"fitness"' is not assignable to type 'BusinessType'.
+app/agency/shop/[slug]/page.tsx(74,7): error TS2322: Type '"health"' is not assignable to type 'BusinessType'.
+app/agency/shop/[slug]/page.tsx(75,7): error TS2322: Type '"automotive"' is not assignable to type 'BusinessType'.
+app/agency/shop/[slug]/page.tsx(76,7): error TS2322: Type '"professional"' is not assignable to type 'BusinessType'.
+app/agency/shop/[slug]/page.tsx(77,7): error TS2322: Type '"home"' is not assignable to type 'BusinessType'.
+app/agency/shop/[slug]/page.tsx(78,7): error TS2322: Type '"entertainment"' is not assignable to type 'BusinessType'.
+app/agency/shop/[slug]/page.tsx(79,7): error TS2322: Type '"education"' is not assignable to type 'BusinessType'.
+app/agency/shop/[slug]/page.tsx(80,7): error TS2322: Type '"other"' is not assignable to type 'BusinessType'.

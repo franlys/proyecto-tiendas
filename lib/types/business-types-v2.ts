@@ -6,6 +6,31 @@
 import { BusinessCategory, BusinessSubcategory, CATEGORY_INFO, SUBCATEGORY_INFO } from "./business-categories.types";
 
 // ============================================
+// NORMALIZACIÓN DE IDs
+// ============================================
+
+/**
+ * Normalizes legacy or informal business type IDs to the canonical IDs
+ * used by the current system.
+ */
+export function normalizeBusinessType(type: string): string {
+    if (!type) return "otro";
+
+    const mapping: Record<string, string> = {
+        "gym": "gimnasio",
+        "mealprep": "meal_prep",
+        "meal-prep": "meal_prep",
+        "foodtruck": "food_truck",
+        "restaurant": "restaurante",
+        "barber": "barberia",
+        "salon": "belleza",
+        "spa": "spa",
+    };
+
+    return mapping[type.toLowerCase()] || type;
+}
+
+// ============================================
 // TIPO DE NEGOCIO
 // ============================================
 

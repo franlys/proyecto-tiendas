@@ -55,7 +55,7 @@ import { cn } from "@/lib/utils";
 import { ShopCategory } from "@/components/shared";
 import { BUSINESS_TYPE_LABELS } from "@/lib/constants";
 import { BusinessTypeMultiSelector } from "@/components/admin/business-type-selector";
-import { getBusinessType } from "@/lib/types/business-types-v2";
+import { getBusinessType, normalizeBusinessType } from "@/lib/types/business-types-v2";
 
 function CreateShopModal({
   isOpen,
@@ -296,9 +296,11 @@ function ShopRow({
           <div>
             <p className="font-medium text-white">{shop.name}</p>
             <div className="flex items-center gap-2">
-              <p className="text-sm text-slate-400">/{shop.slug}</p>
+              <span className="text-xl font-bold text-white group-hover:text-cyan-400 transition-colors">
+                {shop.name}
+              </span>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-slate-300 border border-white/5 uppercase tracking-wider">
-                {shop.businessType ? (BUSINESS_TYPE_LABELS[shop.businessType] || shop.businessType) : "RETAIL"}
+                {shop.businessType ? (BUSINESS_TYPE_LABELS[normalizeBusinessType(shop.businessType)] || shop.businessType) : "RETAIL"}
               </span>
               {shop.wholesaleEnabled && (
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 border border-cyan-500/20 uppercase tracking-wider font-bold">

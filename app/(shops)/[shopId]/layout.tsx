@@ -6,6 +6,7 @@ import { FloatingCart, ShopLayoutClient } from "@/components/shop";
 import { BackgroundAudio } from "@/components/shop/background-audio";
 import { Loader2 } from "lucide-react";
 import { MOCK_SHOPS, DEFAULT_THEME, type ShopConfig } from "@/lib/constants";
+import { normalizeBusinessType, getBusinessType } from "@/lib/types/business-types-v2";
 
 interface ShopLayoutProps {
   children: React.ReactNode;
@@ -34,7 +35,7 @@ async function getShopData(shopId: string): Promise<ShopConfig | null> {
         description: shopData.description || "",
         theme: shopData.theme || DEFAULT_THEME,
         contact: shopData.contact || {},
-        businessType: shopData.businessType || (shopData.category === "beauty" ? "beauty" : shopData.category === "repair" ? "repair" : "retail"),
+        businessType: normalizeBusinessType(shopData.businessType || (shopData.category === "beauty" ? "beauty" : shopData.category === "repair" ? "repair" : "retail")),
         wholesaleEnabled: shopData.wholesaleEnabled || false,
         // Shop features
         features: shopData.features || shopData.enabledFeatures,
@@ -204,24 +205,34 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
                       <a href={`/${shopId}`} className="text-slate-300 hover:text-white transition-colors">
                         Inicio
                       </a>
-                      {/* Only show Servicios for service-based businesses */}
-                      {(shop.businessType === "beauty" || shop.businessType === "repair") && (
-                        <a href={`/${shopId}#servicios`} className="text-slate-300 hover:text-white transition-colors">
-                          Servicios
-                        </a>
-                      )}
-                      {/* Show Productos for retail */}
-                      {(shop.businessType === "retail" || shop.businessType === "technology" || shop.businessType === "restaurant") && (
-                        <a href={`/${shopId}#products`} className="text-slate-300 hover:text-white transition-colors">
-                          Productos
-                        </a>
-                      )}
-                      {/* Only show Reservar for service-based businesses */}
-                      {(shop.businessType === "beauty" || shop.businessType === "repair" || shop.businessType === "rentcar") && (
-                        <a href={`/${shopId}/book`} className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-lg hover:shadow-lg transition-all">
-                          Reservar
-                        </a>
-                      )}
+
+                      {(() => {
+                        const config = getBusinessType(shop.businessType || "");
+                        const features = config?.features;
+
+                        return (
+                          <>
+                            {/* Show Servicios for service-based businesses */}
+                            {features?.services && (
+                              <a href={`/${shopId}#servicios`} className="text-slate-300 hover:text-white transition-colors">
+                                Servicios
+                              </a>
+                            )}
+                            {/* Show Productos for retail and food */}
+                            {features?.catalog && (
+                              <a href={`/${shopId}#products`} className="text-slate-300 hover:text-white transition-colors">
+                                Productos
+                              </a>
+                            )}
+                            {/* Only show Reservar for booking-based businesses */}
+                            {features?.bookings && (
+                              <a href={`/${shopId}/book`} className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-lg hover:shadow-lg transition-all">
+                                Reservar
+                              </a>
+                            )}
+                          </>
+                        );
+                      })()}
                     </nav>
                   </div>
                 </div>

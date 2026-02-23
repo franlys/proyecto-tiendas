@@ -58,17 +58,25 @@ import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
 import { WhatsAppAutomationPanel } from "@/components/shared/whatsapp-automation";
 import { BackgroundGallery, mapToBackgroundCategory } from "@/components/shared/background-gallery";
 import { cn } from "@/lib/utils";
-import { BusinessTypeSelector, FeatureBadges } from "@/components/admin/business-type-selector";
-import { getBusinessType } from "@/lib/types/business-types-v2";
-import type { BusinessType } from "@/lib/types/business.types";
+import { BUSINESS_TYPES } from "@/lib/types/business-types-v2";
+import { BusinessType } from "@/lib/types/business.types";
+import { BusinessTypeSelector, BusinessTypeMultiSelector, FeatureBadges } from "@/components/admin/business-type-selector";
+import { useCombinedBusinessFeatures } from "@/lib/hooks/use-business-features";
+import { getBusinessType, normalizeBusinessType } from "@/lib/types/business-types-v2";
 
 // Mapeo de categorías para mostrar labels correctos
-const CATEGORY_OPTIONS: { value: ShopCategory; label: string }[] = [
-    { value: "retail", label: "Retail / Tienda / Tecnología" },
-    { value: "repair", label: "Servicio Técnico & Ventas" },
-    { value: "beauty", label: "Belleza / Spa / Citas" },
-    { value: "restaurant", label: "Restaurante / Bar" },
-    { value: "rentcar", label: "Rent-a-Car / Alquiler" },
+const CATEGORY_OPTIONS: { value: string; label: string }[] = [
+    { value: "beauty", label: "Belleza / Beauty" },
+    { value: "retail", label: "Tiendas / Retail" },
+    { value: "food", label: "Alimentos / Food" },
+    { value: "fitness", label: "Bienestar / Fitness" },
+    { value: "health", label: "Salud / Health" },
+    { value: "automotive", label: "Automotriz / Automotive" },
+    { value: "professional", label: "Servicios / Professional" },
+    { value: "home", label: "Hogar / Home" },
+    { value: "entertainment", label: "Ocio / Entertainment" },
+    { value: "education", label: "Educación / Education" },
+    { value: "other", label: "Otros" },
 ];
 
 // Mapeo de roles de staff
@@ -93,6 +101,48 @@ interface ShopStaffMember {
 
 // Helper para obtener la key de almacenamiento de staff
 const getStaffStorageKey = (shopSlug: string) => `nexo-shop-staff-${shopSlug}`;
+
+// Componente para mostrar features combinadas de múltiples tipos de negocio
+function CombinedFeaturesBadges({ businessTypes }: { businessTypes: string[] }) {
+    const features = useCombinedBusinessFeatures(businessTypes);
+
+    const featureLabels: Record<string, string> = {
+        hasCatalog: "Catálogo",
+        hasServices: "Servicios",
+        hasBookings: "Citas",
+        hasOrders: "Pedidos",
+        hasInventory: "Inventario",
+        hasWholesale: "Mayoreo",
+        hasRepairs: "Reparaciones",
+        hasRentals: "Rentas",
+        hasTables: "Mesas",
+        hasDelivery: "Delivery",
+    };
+
+    const enabledFeatures = Object.entries(featureLabels)
+        .filter(([key]) => features[key as keyof typeof features])
+        .map(([key, label]) => label);
+
+    if (enabledFeatures.length === 0) return null;
+
+    return (
+        <div className="mt-3">
+            <p className="text-xs text-slate-400 mb-2">
+                Funciones combinadas ({businessTypes.length} {businessTypes.length === 1 ? 'tipo' : 'tipos'}):
+            </p>
+            <div className="flex flex-wrap gap-1">
+                {enabledFeatures.map((feature) => (
+                    <span
+                        key={feature}
+                        className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded"
+                    >
+                        {feature}
+                    </span>
+                ))}
+            </div>
+        </div>
+    );
+}
 
 // Componente para toggle de feature
 function FeatureToggle({
@@ -146,6 +196,7 @@ function ShopDetailContent() {
     const [name, setName] = useState("");
     const [category, setCategory] = useState<ShopCategory>("beauty");
     const [businessType, setBusinessType] = useState("otro");
+    const [businessTypes, setBusinessTypes] = useState<string[]>([]); // Multi-type support
     const [phone, setPhone] = useState("");
 
     // Visual Customization States
@@ -525,7 +576,10 @@ function ShopDetailContent() {
                 setShop(foundShop);
                 setName(foundShop.name);
                 setCategory(foundShop.category || "beauty");
-                setBusinessType(foundShop.businessType || foundShop.category || "otro");
+                setBusinessType(normalizeBusinessType(foundShop.businessType || foundShop.category || "otro"));
+                // Load multi-type business types
+                const rawTypes = foundShop.businessTypes || (foundShop.businessType ? [foundShop.businessType] : []);
+                setBusinessTypes(rawTypes.map(normalizeBusinessType));
                 setPhone(foundShop.contact?.phone || "");
                 // Load visual customization data
                 setLogo(foundShop.logo || "");
@@ -827,29 +881,40 @@ function ShopDetailContent() {
                                             className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white"
                                         >
                                             {CATEGORY_OPTIONS.map((opt) => (
-                                                <option key={opt.value} value={opt.value}>
+                                                <option key={opt.value} value={opt.value as any}>
                                                     {opt.label}
                                                 </option>
                                             ))}
                                         </select>
                                     </div>
 
-                                    {/* Tipo de Negocio Específico */}
+                                    {/* Tipos de Negocio (Multi-select) */}
                                     <div>
                                         <label className="block text-sm font-medium text-slate-300 mb-2">
-                                            Tipo de Negocio
-                                            <span className="text-cyan-400 ml-2 text-xs">(determina las funciones disponibles)</span>
+                                            Tipos de Negocio
+                                            <span className="text-cyan-400 ml-2 text-xs">(puedes combinar varios tipos)</span>
                                         </label>
-                                        <BusinessTypeSelector
-                                            value={businessType}
-                                            onChange={(typeId) => setBusinessType(typeId)}
+                                        <BusinessTypeMultiSelector
+                                            value={businessTypes}
+                                            onChange={(types) => {
+                                                setBusinessTypes(types);
+                                                // Keep primary type in sync
+                                                if (types.length > 0) {
+                                                    const primaryId = normalizeBusinessType(types[0]);
+                                                    setBusinessType(primaryId);
+
+                                                    // Auto-update category based on primary business type
+                                                    const config = BUSINESS_TYPES.find(bt => bt.id === primaryId);
+                                                    if (config && config.category) {
+                                                        setCategory(config.category as any);
+                                                    }
+                                                }
+                                            }}
+                                            maxSelections={5}
                                         />
-                                        {/* Preview de features */}
-                                        {businessType && (
-                                            <div className="mt-3">
-                                                <p className="text-xs text-slate-400 mb-2">Funciones habilitadas:</p>
-                                                <FeatureBadges typeId={businessType} />
-                                            </div>
+                                        {/* Preview de features combinadas */}
+                                        {businessTypes.length > 0 && (
+                                            <CombinedFeaturesBadges businessTypes={businessTypes} />
                                         )}
                                     </div>
 
@@ -879,14 +944,24 @@ function ShopDetailContent() {
                                         <Button
                                             onClick={() => {
                                                 setSaving(true);
+                                                // Use first type as primary, save full array
+                                                const primaryType = businessTypes[0] || businessType;
                                                 updateShop(shop.slug, {
                                                     name,
                                                     category,
-                                                    businessType: businessType as BusinessType,
+                                                    businessType: primaryType as BusinessType,
+                                                    businessTypes: businessTypes,
                                                     contact: { ...shop.contact, phone }
                                                 });
                                                 // Actualizar el shop local
-                                                setShop(prev => prev ? { ...prev, name, category, businessType: businessType as BusinessType, contact: { ...prev.contact, phone } } : prev);
+                                                setShop(prev => prev ? {
+                                                    ...prev,
+                                                    name,
+                                                    category,
+                                                    businessType: primaryType as BusinessType,
+                                                    businessTypes: businessTypes,
+                                                    contact: { ...prev.contact, phone }
+                                                } : prev);
                                                 setTimeout(() => {
                                                     setSaving(false);
                                                     setSaveSuccess(true);
