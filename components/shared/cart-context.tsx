@@ -35,6 +35,9 @@ export interface ProductCartItem {
   // Extras/Addons support
   selectedExtras?: SelectedExtra[];
   extrasTotal?: number; // Pre-calculated total of extras
+
+  // Customization notes (for meal prep, special instructions, etc.)
+  notes?: string;
 }
 
 export type CartItem = ServiceCartItem | ProductCartItem;
@@ -44,7 +47,7 @@ interface CartContextValue {
   services: ServiceCartItem[];
   products: ProductCartItem[];
   addService: (service: Service) => void;
-  addProduct: (product: Product, quantity?: number, variant?: ProductVariant, extras?: SelectedExtra[]) => void;
+  addProduct: (product: Product, quantity?: number, variant?: ProductVariant, extras?: SelectedExtra[], notes?: string) => void;
   removeItem: (id: string, variantId?: string, extrasKey?: string) => void;
   updateProductQuantity: (productId: string, quantity: number, variantId?: string) => void;
 
@@ -52,6 +55,9 @@ interface CartContextValue {
   updateVariantQuantity: (productId: string, variantId: string, quantity: number) => void;
   removeVariant: (productId: string, variantId: string) => void;
   getVariantQuantity: (productId: string, variantId: string) => number;
+
+  // Item notes for customization
+  updateItemNotes: (productId: string, notes: string, variantId?: string) => void;
 
   clearCart: () => void;
   isInCart: (id: string) => boolean;
@@ -135,8 +141,8 @@ export function CartProvider({ children, shopId }: CartProviderProps & { shopId?
     return extras.reduce((sum, e) => sum + (e.price * e.quantity), 0);
   };
 
-  // Add product to cart (with quantity, variant, and extras)
-  const addProduct = useCallback((product: Product, quantity: number = 1, variant?: ProductVariant, extras?: SelectedExtra[]) => {
+  // Add product to cart (with quantity, variant, extras, and notes)
+  const addProduct = useCallback((product: Product, quantity: number = 1, variant?: ProductVariant, extras?: SelectedExtra[], notes?: string) => {
     setItems((prev) => {
       const extrasKey = getExtrasKey(extras);
 
@@ -178,9 +184,23 @@ export function CartProvider({ children, shopId }: CartProviderProps & { shopId?
         quantity,
         selectedExtras: extras,
         extrasTotal,
+        notes,
       };
       return [...prev, productItem];
     });
+  }, []);
+
+  // Update item notes for customization
+  const updateItemNotes = useCallback((productId: string, notes: string, variantId?: string) => {
+    setItems((prev) =>
+      prev.map((item) => {
+        if (item.itemType !== "product") return item;
+        if (item.id === productId && item.variantId === variantId) {
+          return { ...item, notes };
+        }
+        return item;
+      })
+    );
   }, []);
 
   // Remove item from cart
@@ -284,6 +304,7 @@ export function CartProvider({ children, shopId }: CartProviderProps & { shopId?
         updateVariantQuantity,
         removeVariant,
         getVariantQuantity,
+        updateItemNotes,
         clearCart,
         isInCart,
         getProductQuantity, // Total generic

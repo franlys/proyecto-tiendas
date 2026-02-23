@@ -8,6 +8,7 @@ export interface SalesOrderItem {
     quantity: number;
     unitPrice: number;
     total: number;
+    notes?: string; // Item-specific customization notes (e.g., "sin cebolla", "extra proteína")
 }
 
 export interface SalesOrder {
@@ -24,7 +25,7 @@ export interface SalesOrder {
     status: OrderStatus;
     paymentStatus: PaymentStatus;
     paymentMethod?: string;
-    notes?: string;
+    notes?: string; // General order notes
     isWholesale: boolean;
     createdAt: string;
     updatedAt: string;
@@ -33,4 +34,11 @@ export interface SalesOrder {
     deliveredAt?: string;
     tableId?: string;
     source?: string;
+    // Delivery & Scheduling (for meal prep, catering, etc.)
+    deliveryType?: "pickup" | "delivery";
+    scheduledDate?: string; // YYYY-MM-DD
+    scheduledTime?: string; // HH:MM (delivery/pickup time slot)
+    deliveryDistance?: number; // Distance in miles
+    deliveryFee?: number; // Extra fee for distance
+    deliveryCoordinates?: { lat: number; lng: number }; // Customer location
 }

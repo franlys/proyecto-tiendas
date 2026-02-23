@@ -4,9 +4,19 @@ import { useState } from "react";
 import { MessageCircle, X, ShoppingBag, Calendar, Loader2 } from "lucide-react";
 import { useCart, useShop, useOrders, useShopConfig } from "@/components/shared";
 import { AppointmentModal } from "./appointment-modal";
+import { CheckoutDrawer } from "./checkout-drawer";
 import { cn, formatPhoneForWhatsApp } from "@/lib/utils";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+
+// Business types that need detailed checkout (with notes, scheduling, etc.)
+const DETAILED_CHECKOUT_TYPES = [
+  "meal_prep",
+  "catering",
+  "cloud_kitchen",
+  "chef_privado",
+  "loncheras",
+];
 
 export function FloatingCart() {
   const {
@@ -27,6 +37,9 @@ export function FloatingCart() {
   // Phase 22: Appointment modal state
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
 
+  // Checkout drawer state (for meal prep, catering, etc.)
+  const [isCheckoutDrawerOpen, setIsCheckoutDrawerOpen] = useState(false);
+
   const hasServices = services.length > 0;
   const hasProducts = products.length > 0;
 
@@ -34,10 +47,16 @@ export function FloatingCart() {
   const isBeautyBusiness = config.businessType === "beauty";
   const shouldUseAppointmentFlow = isBeautyBusiness && hasServices && !hasProducts;
 
+  // Determine if we should use detailed checkout (for meal prep, etc.)
+  const shouldUseDetailedCheckout = DETAILED_CHECKOUT_TYPES.includes(config.businessType || "") && hasProducts;
+
   const handleClick = () => {
     if (shouldUseAppointmentFlow) {
       // Open appointment modal for beauty businesses with only services
       setIsAppointmentModalOpen(true);
+    } else if (shouldUseDetailedCheckout) {
+      // Open checkout drawer for meal prep businesses
+      setIsCheckoutDrawerOpen(true);
     } else {
       // Direct WhatsApp for retail or mixed orders
       handleWhatsAppClick();
@@ -397,6 +416,12 @@ export function FloatingCart() {
           shopPhone={shop.contact.phone}
         />
       )}
+
+      {/* Checkout Drawer for Meal Prep / Catering businesses */}
+      <CheckoutDrawer
+        isOpen={isCheckoutDrawerOpen}
+        onClose={() => setIsCheckoutDrawerOpen(false)}
+      />
     </>
   );
 }

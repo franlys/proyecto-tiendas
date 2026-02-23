@@ -1,0 +1,513 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import {
+    X,
+    ShoppingBag,
+    MessageCircle,
+    Minus,
+    Plus,
+    MapPin,
+    Clock,
+    Calendar,
+    Truck,
+    Store,
+    FileText,
+    Loader2,
+    ChevronDown,
+    ChevronUp,
+} from "lucide-react";
+import { useCart, useShop, useOrders, useShopConfig } from "@/components/shared";
+import { cn, formatPhoneForWhatsApp } from "@/lib/utils";
+import { db } from "@/lib/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { Button } from "@/components/ui";
+import type { ProductCartItem } from "@/components/shared/cart-context";
+
+interface CheckoutDrawerProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
+    const {
+        products,
+        services,
+        totalPrice,
+        clearCart,
+        updateProductQuantity,
+        updateItemNotes,
+        removeItem,
+    } = useCart();
+    const shop = useShop();
+    const { config } = useShopConfig();
+    const { addOrder } = useOrders();
+
+    // Checkout state
+    const [customerName, setCustomerName] = useState("");
+    const [customerPhone, setCustomerPhone] = useState("");
+    const [customerAddress, setCustomerAddress] = useState("");
+    const [deliveryType, setDeliveryType] = useState<"pickup" | "delivery">("delivery");
+    const [scheduledDate, setScheduledDate] = useState("");
+    const [scheduledTime, setScheduledTime] = useState("");
+    const [orderNotes, setOrderNotes] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Item notes expanded state
+    const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
+
+    // Generate min date (today)
+    const today = new Date().toISOString().split("T")[0];
+
+    // Generate time slots
+    const timeSlots = [];
+    for (let h = 8; h <= 20; h++) {
+        timeSlots.push(`${h.toString().padStart(2, "0")}:00`);
+        timeSlots.push(`${h.toString().padStart(2, "0")}:30`);
+    }
+
+    const toggleItemExpand = (itemKey: string) => {
+        setExpandedItems(prev => ({
+            ...prev,
+            [itemKey]: !prev[itemKey]
+        }));
+    };
+
+    const getItemKey = (item: ProductCartItem, idx: number) => {
+        return `${item.id}-${item.variantId || ""}-${idx}`;
+    };
+
+    const handleSubmit = async () => {
+        if (!customerName || !customerPhone) {
+            alert("Por favor ingresa tu nombre y teléfono");
+            return;
+        }
+
+        if (deliveryType === "delivery" && !customerAddress) {
+            alert("Por favor ingresa tu dirección de entrega");
+            return;
+        }
+
+        if (!shop?.contact.phone || !shop?.slug) return;
+
+        setIsSubmitting(true);
+
+        try {
+            // Build order items with notes
+            const orderItems = products.map((p) => {
+                const basePrice = p.promoPrice || p.price;
+                const extrasTotal = p.extrasTotal || 0;
+                const itemTotal = (basePrice + extrasTotal) * p.quantity;
+
+                let productName = p.name;
+                if (p.variantName) productName += ` (${p.variantName})`;
+                if (p.selectedExtras && p.selectedExtras.length > 0) {
+                    const extrasStr = p.selectedExtras.map(e =>
+                        e.quantity > 1 ? `${e.name} x${e.quantity}` : e.name
+                    ).join(", ");
+                    productName += ` + ${extrasStr}`;
+                }
+
+                return {
+                    productId: p.id,
+                    productName,
+                    quantity: p.quantity,
+                    unitPrice: basePrice + extrasTotal,
+                    total: itemTotal,
+                    notes: p.notes || "", // Item-specific notes
+                    extras: p.selectedExtras || [],
+                };
+            });
+
+            // Create order data
+            const orderData = {
+                orderNumber: `ORD-${Date.now().toString().slice(-6)}`,
+                customerName,
+                customerPhone,
+                customerAddress: deliveryType === "delivery" ? customerAddress : undefined,
+                items: orderItems,
+                subtotal: totalPrice,
+                tax: 0,
+                total: totalPrice,
+                status: "pending",
+                paymentStatus: "pending",
+                isWholesale: false,
+                source: "web",
+                notes: orderNotes,
+                deliveryType,
+                scheduledDate: scheduledDate || undefined,
+                scheduledTime: scheduledTime || undefined,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+            };
+
+            // Save to Firestore
+            const docRef = await addDoc(
+                collection(db, "shops", shop.slug, "orders"),
+                orderData
+            );
+
+            console.log("Order created:", docRef.id);
+
+            // Build WhatsApp message
+            let message = `Hola, soy *${customerName}*\n`;
+            message += `Quiero hacer un pedido en *${shop.name}*:\n`;
+            message += `ID: ${docRef.id}\n\n`;
+
+            message += `📦 *Pedido:*\n`;
+            products.forEach((p) => {
+                const basePrice = p.promoPrice || p.price;
+                const extrasTotal = p.extrasTotal || 0;
+                const subtotal = (basePrice + extrasTotal) * p.quantity;
+                const variantLabel = p.variantName ? ` [${p.variantName}]` : "";
+
+                message += `• ${p.name}${variantLabel} x${p.quantity}: $${subtotal.toLocaleString()}\n`;
+
+                // Add item notes
+                if (p.notes) {
+                    message += `  📝 _${p.notes}_\n`;
+                }
+
+                // Add extras
+                if (p.selectedExtras && p.selectedExtras.length > 0) {
+                    p.selectedExtras.forEach((extra) => {
+                        message += `  ↳ + ${extra.name}${extra.quantity > 1 ? ` x${extra.quantity}` : ""}\n`;
+                    });
+                }
+            });
+
+            message += `\n💰 *Total: $${totalPrice.toLocaleString()}*\n\n`;
+
+            // Delivery info
+            if (deliveryType === "delivery") {
+                message += `🚚 *Entrega a domicilio*\n`;
+                message += `📍 ${customerAddress}\n`;
+            } else {
+                message += `🏪 *Recoger en tienda*\n`;
+            }
+
+            if (scheduledDate) {
+                const dateObj = new Date(scheduledDate + "T12:00:00");
+                const dateStr = dateObj.toLocaleDateString("es", {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long"
+                });
+                message += `📅 Fecha: ${dateStr}\n`;
+            }
+
+            if (scheduledTime) {
+                message += `⏰ Hora: ${scheduledTime}\n`;
+            }
+
+            if (orderNotes) {
+                message += `\n📋 *Notas:* ${orderNotes}\n`;
+            }
+
+            message += `\n📱 Mi teléfono: ${customerPhone}`;
+
+            // Open WhatsApp
+            const cleanPhone = formatPhoneForWhatsApp(shop.contact.phone);
+            const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+            window.location.href = url;
+
+            // Clear and close
+            clearCart();
+            onClose();
+
+        } catch (error) {
+            console.error("Error creating order:", error);
+            alert("Error al procesar el pedido. Intenta de nuevo.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    if (!isOpen) return null;
+
+    const hasItems = products.length > 0 || services.length > 0;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+            {/* Backdrop */}
+            <div
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                onClick={onClose}
+            />
+
+            {/* Drawer */}
+            <div className={cn(
+                "relative w-full sm:max-w-lg max-h-[90vh] overflow-hidden",
+                "bg-slate-900 border border-white/10",
+                "rounded-t-3xl sm:rounded-2xl",
+                "animate-in slide-in-from-bottom duration-300"
+            )}>
+                {/* Header */}
+                <div className="sticky top-0 z-10 bg-slate-900 border-b border-white/10 p-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                                <ShoppingBag className="w-5 h-5 text-primary" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-white">Tu Pedido</h2>
+                                <p className="text-sm text-slate-400">
+                                    {products.length} {products.length === 1 ? "item" : "items"}
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={onClose}
+                            className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Content */}
+                <div className="overflow-y-auto max-h-[calc(90vh-180px)] p-4 space-y-6">
+                    {/* Items */}
+                    {hasItems && (
+                        <div className="space-y-3">
+                            <h3 className="text-sm font-medium text-slate-400">
+                                Productos
+                            </h3>
+                            {products.map((item, idx) => {
+                                const itemKey = getItemKey(item, idx);
+                                const isExpanded = expandedItems[itemKey];
+                                const basePrice = item.promoPrice || item.price;
+                                const extrasTotal = item.extrasTotal || 0;
+                                const itemTotal = (basePrice + extrasTotal) * item.quantity;
+
+                                return (
+                                    <div
+                                        key={itemKey}
+                                        className="bg-white/5 rounded-xl border border-white/10 overflow-hidden"
+                                    >
+                                        {/* Item header */}
+                                        <div className="p-3 flex items-center gap-3">
+                                            {item.image && (
+                                                <img
+                                                    src={item.image}
+                                                    alt={item.name}
+                                                    className="w-14 h-14 rounded-lg object-cover"
+                                                />
+                                            )}
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-white font-medium truncate">
+                                                    {item.name}
+                                                    {item.variantName && (
+                                                        <span className="text-primary"> ({item.variantName})</span>
+                                                    )}
+                                                </p>
+                                                <p className="text-sm text-slate-400">
+                                                    ${basePrice.toLocaleString()} c/u
+                                                </p>
+                                            </div>
+
+                                            {/* Quantity controls */}
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => updateProductQuantity(item.id, item.quantity - 1, item.variantId)}
+                                                    className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                                                >
+                                                    <Minus className="w-4 h-4 text-white" />
+                                                </button>
+                                                <span className="w-6 text-center text-white font-medium">
+                                                    {item.quantity}
+                                                </span>
+                                                <button
+                                                    onClick={() => updateProductQuantity(item.id, item.quantity + 1, item.variantId)}
+                                                    className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                                                >
+                                                    <Plus className="w-4 h-4 text-white" />
+                                                </button>
+                                            </div>
+
+                                            <p className="text-white font-bold w-20 text-right">
+                                                ${itemTotal.toLocaleString()}
+                                            </p>
+                                        </div>
+
+                                        {/* Expand/collapse for notes */}
+                                        <button
+                                            onClick={() => toggleItemExpand(itemKey)}
+                                            className="w-full px-3 py-2 flex items-center justify-between text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-colors border-t border-white/5"
+                                        >
+                                            <span className="flex items-center gap-2">
+                                                <FileText className="w-4 h-4" />
+                                                {item.notes ? "Editar instrucciones" : "Agregar instrucciones"}
+                                            </span>
+                                            {isExpanded ? (
+                                                <ChevronUp className="w-4 h-4" />
+                                            ) : (
+                                                <ChevronDown className="w-4 h-4" />
+                                            )}
+                                        </button>
+
+                                        {/* Notes input */}
+                                        {isExpanded && (
+                                            <div className="p-3 border-t border-white/5 bg-white/5">
+                                                <textarea
+                                                    value={item.notes || ""}
+                                                    onChange={(e) => updateItemNotes(item.id, e.target.value, item.variantId)}
+                                                    placeholder="Ej: Sin cebolla, extra proteína, bajo en sodio..."
+                                                    className="w-full px-3 py-2 bg-slate-800 border border-white/10 rounded-lg text-white placeholder:text-slate-500 text-sm resize-none focus:outline-none focus:border-primary/50"
+                                                    rows={2}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {/* Customer Info */}
+                    <div className="space-y-3">
+                        <h3 className="text-sm font-medium text-slate-400">
+                            Tus datos
+                        </h3>
+                        <div className="space-y-3">
+                            <input
+                                type="text"
+                                value={customerName}
+                                onChange={(e) => setCustomerName(e.target.value)}
+                                placeholder="Tu nombre"
+                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                            />
+                            <input
+                                type="tel"
+                                value={customerPhone}
+                                onChange={(e) => setCustomerPhone(e.target.value)}
+                                placeholder="Tu teléfono (WhatsApp)"
+                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Delivery Type */}
+                    <div className="space-y-3">
+                        <h3 className="text-sm font-medium text-slate-400">
+                            Tipo de entrega
+                        </h3>
+                        <div className="grid grid-cols-2 gap-3">
+                            <button
+                                onClick={() => setDeliveryType("delivery")}
+                                className={cn(
+                                    "flex items-center gap-3 p-4 rounded-xl border transition-all",
+                                    deliveryType === "delivery"
+                                        ? "bg-primary/20 border-primary text-white"
+                                        : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                                )}
+                            >
+                                <Truck className="w-5 h-5" />
+                                <span>Delivery</span>
+                            </button>
+                            <button
+                                onClick={() => setDeliveryType("pickup")}
+                                className={cn(
+                                    "flex items-center gap-3 p-4 rounded-xl border transition-all",
+                                    deliveryType === "pickup"
+                                        ? "bg-primary/20 border-primary text-white"
+                                        : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                                )}
+                            >
+                                <Store className="w-5 h-5" />
+                                <span>Recoger</span>
+                            </button>
+                        </div>
+
+                        {/* Address for delivery */}
+                        {deliveryType === "delivery" && (
+                            <div className="relative">
+                                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                <input
+                                    type="text"
+                                    value={customerAddress}
+                                    onChange={(e) => setCustomerAddress(e.target.value)}
+                                    placeholder="Tu dirección de entrega"
+                                    className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Schedule */}
+                    <div className="space-y-3">
+                        <h3 className="text-sm font-medium text-slate-400">
+                            Programar entrega (opcional)
+                        </h3>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="relative">
+                                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                                <input
+                                    type="date"
+                                    value={scheduledDate}
+                                    onChange={(e) => setScheduledDate(e.target.value)}
+                                    min={today}
+                                    className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-primary/50 [color-scheme:dark]"
+                                />
+                            </div>
+                            <div className="relative">
+                                <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                                <select
+                                    value={scheduledTime}
+                                    onChange={(e) => setScheduledTime(e.target.value)}
+                                    className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-primary/50 appearance-none"
+                                >
+                                    <option value="">Hora</option>
+                                    {timeSlots.map(slot => (
+                                        <option key={slot} value={slot}>{slot}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Order Notes */}
+                    <div className="space-y-3">
+                        <h3 className="text-sm font-medium text-slate-400">
+                            Notas adicionales (opcional)
+                        </h3>
+                        <textarea
+                            value={orderNotes}
+                            onChange={(e) => setOrderNotes(e.target.value)}
+                            placeholder="Instrucciones especiales, alergias, etc..."
+                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 text-sm resize-none focus:outline-none focus:border-primary/50"
+                            rows={3}
+                        />
+                    </div>
+                </div>
+
+                {/* Footer with total and CTA */}
+                <div className="sticky bottom-0 bg-slate-900 border-t border-white/10 p-4">
+                    <div className="flex items-center justify-between mb-4">
+                        <span className="text-slate-400">Total</span>
+                        <span className="text-2xl font-bold text-white">
+                            ${totalPrice.toLocaleString()}
+                        </span>
+                    </div>
+                    <Button
+                        onClick={handleSubmit}
+                        disabled={isSubmitting || !hasItems}
+                        className="w-full py-4 text-lg bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                    >
+                        {isSubmitting ? (
+                            <>
+                                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                                Procesando...
+                            </>
+                        ) : (
+                            <>
+                                <MessageCircle className="w-5 h-5 mr-2" />
+                                Enviar Pedido por WhatsApp
+                            </>
+                        )}
+                    </Button>
+                </div>
+            </div>
+        </div>
+    );
+}
