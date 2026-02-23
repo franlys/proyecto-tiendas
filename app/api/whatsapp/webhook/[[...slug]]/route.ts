@@ -1016,9 +1016,9 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"], 
             if (shopInfo?.logoUrl) {
               try {
                 console.log(`[${instance}] 🖼️ Sending welcome image to ${phone} using URL: ${shopInfo.logoUrl}`);
-                await sendImage(instance, phone, shopInfo.logoUrl, welcomeCaption);
-                console.log(`[${instance}] ✅ Welcome image sent successfully`);
-                return; // Image sent with caption, don't send text
+                const imgResult = await sendImage(instance, phone, shopInfo.logoUrl, welcomeCaption);
+                console.log(`[${instance}] ✅ Welcome image result:`, JSON.stringify(imgResult));
+                // We DON'T return here anymore - let it send the text message too as a fallback/confirmation
               } catch (imgError) {
                 console.error(`[${instance}] ❌ Error sending welcome image:`, imgError);
                 // Fall back to text-only message
@@ -1246,8 +1246,8 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"], 
 
         if (responseText) {
           console.log(`[${instance}] ✉️ Sending text response to ${phone}`);
-          await sendTextMessage(instance, phone, responseText);
-          console.log(`[${instance}] ✅ Text response sent successfully`);
+          const textResult = await sendTextMessage(instance, phone, responseText);
+          console.log(`[${instance}] ✅ Text response result:`, JSON.stringify(textResult));
           return;
         }
       } // End of NLP else block

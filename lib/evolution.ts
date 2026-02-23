@@ -194,8 +194,15 @@ export async function sendTextMessage(
   phone: string,
   message: string
 ): Promise<SendMessageResponse> {
-  // Limpiar número (solo dígitos) si NO es un JID (contiene @)
-  const cleanPhone = phone.includes("@") ? phone : phone.replace(/\D/g, "");
+  // Limpiar número:
+  // - Si es @s.whatsapp.net, quitamos el dominio para máxima compatibilidad con Evolution API v2 individual
+  // - Si es otro JID (groups, lid), lo dejamos igual
+  // - Si no tiene @, quitamos caracteres no numéricos
+  const cleanPhone = phone.endsWith("@s.whatsapp.net")
+    ? phone.replace("@s.whatsapp.net", "")
+    : phone.includes("@")
+      ? phone
+      : phone.replace(/\D/g, "");
 
   return evolutionFetch<SendMessageResponse>(`/message/sendText/${instanceName}`, {
     method: "POST",
@@ -218,8 +225,15 @@ export async function sendButtonMessage(
   description: string,
   buttons: { buttonId: string; buttonText: string }[]
 ): Promise<SendMessageResponse> {
-  // Limpiar número (solo dígitos) si NO es un JID (contiene @)
-  const cleanPhone = phone.includes("@") ? phone : phone.replace(/\D/g, "");
+  // Limpiar número:
+  // - Si es @s.whatsapp.net, quitamos el dominio para máxima compatibilidad con Evolution API v2 individual
+  // - Si es otro JID (groups, lid), lo dejamos igual
+  // - Si no tiene @, quitamos caracteres no numéricos
+  const cleanPhone = phone.endsWith("@s.whatsapp.net")
+    ? phone.replace("@s.whatsapp.net", "")
+    : phone.includes("@")
+      ? phone
+      : phone.replace(/\D/g, "");
 
   return evolutionFetch<SendMessageResponse>(`/message/sendButtons/${instanceName}`, {
     method: "POST",
@@ -246,8 +260,15 @@ export async function sendDocument(
   fileName: string,
   caption?: string
 ): Promise<SendMessageResponse> {
-  // Limpiar número (solo dígitos) si NO es un JID (contiene @)
-  const cleanPhone = phone.includes("@") ? phone : phone.replace(/\D/g, "");
+  // Limpiar número:
+  // - Si es @s.whatsapp.net, quitamos el dominio para máxima compatibilidad con Evolution API v2 individual
+  // - Si es otro JID (groups, lid), lo dejamos igual
+  // - Si no tiene @, quitamos caracteres no numéricos
+  const cleanPhone = phone.endsWith("@s.whatsapp.net")
+    ? phone.replace("@s.whatsapp.net", "")
+    : phone.includes("@")
+      ? phone
+      : phone.replace(/\D/g, "");
 
   return evolutionFetch<SendMessageResponse>(`/message/sendMedia/${instanceName}`, {
     method: "POST",
@@ -272,8 +293,15 @@ export async function sendImage(
   imageUrl: string,
   caption?: string
 ): Promise<SendMessageResponse> {
-  // Limpiar número (solo dígitos) si NO es un JID (contiene @)
-  const cleanPhone = phone.includes("@") ? phone : phone.replace(/\D/g, "");
+  // Limpiar número:
+  // - Si es @s.whatsapp.net, quitamos el dominio para máxima compatibilidad con Evolution API v2 individual
+  // - Si es otro JID (groups, lid), lo dejamos igual
+  // - Si no tiene @, quitamos caracteres no numéricos
+  const cleanPhone = phone.endsWith("@s.whatsapp.net")
+    ? phone.replace("@s.whatsapp.net", "")
+    : phone.includes("@")
+      ? phone
+      : phone.replace(/\D/g, "");
 
   return evolutionFetch<SendMessageResponse>(`/message/sendMedia/${instanceName}`, {
     method: "POST",
