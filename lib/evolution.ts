@@ -187,29 +187,6 @@ export async function getWebhook(instanceName: string): Promise<WebhookConfig | 
 // ============================================
 
 /**
- * Establecer presencia (composing, recording, etc)
- */
-export async function setPresence(
-  instanceName: string,
-  phone: string,
-  presence: "composing" | "recording" | "paused" = "composing"
-): Promise<any> {
-  const cleanPhone = phone.endsWith("@s.whatsapp.net")
-    ? phone.replace("@s.whatsapp.net", "")
-    : phone.includes("@")
-      ? phone
-      : phone.replace(/\D/g, "");
-
-  return evolutionFetch(`/chat/updatePresence/${instanceName}`, {
-    method: "POST",
-    body: JSON.stringify({
-      number: cleanPhone,
-      presence,
-    }),
-  });
-}
-
-/**
  * Enviar mensaje de texto
  */
 export async function sendTextMessage(

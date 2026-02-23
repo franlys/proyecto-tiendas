@@ -3,7 +3,7 @@ import { checkOrderAssignmentResponse } from "@/lib/handlers/order-assignment.ha
 import { checkBookingConfirmationResponse } from "@/lib/handlers/booking-confirmation.handler";
 import { checkRentalConfirmationResponse } from "@/lib/handlers/rental-confirmation.handler";
 import { processWhatsAppOrder } from "@/lib/handlers/whatsapp-order.handler";
-import { sendTextMessage, sendImage, setPresence } from "@/lib/evolution";
+import { sendTextMessage, sendImage } from "@/lib/evolution";
 import {
   getConversationContext,
   setConversationContext,
@@ -1012,12 +1012,6 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"], 
               `👤 Hablar con alguien\n\n` +
               `_Escribe *Menú* para ver todas las opciones_`;
 
-            // WAKE UP SESSION: Set presence to "composing"
-            try {
-              await setPresence(instance, phone, "composing");
-            } catch (pErr) {
-              console.warn(`[${instance}] Failed to set presence:`, pErr);
-            }
 
             // Send logo image with welcome message if logo exists
             if (shopInfo?.logoUrl) {
