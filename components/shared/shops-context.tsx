@@ -189,6 +189,7 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
           ownerNotificationPhone: data.ownerNotificationPhone,
           // Business type
           businessType: data.businessType || data.category || "retail",
+          businessTypes: data.businessTypes || (data.businessType ? [data.businessType] : [data.category || "retail"]),
           category: data.category || data.businessType || "retail",
           wholesaleEnabled: data.wholesaleEnabled ?? false,
           customDomain: data.customDomain,
