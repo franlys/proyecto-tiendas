@@ -806,37 +806,8 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
       console.error("Log init failed", e);
     }
 
-    // CHECK FOR UNSUPPORTED LID (Missing Participant)
-    if (key.remoteJid.includes("@lid") && !key.participant) {
-      console.warn(`[${instance}] Unsupported LID message without participant: ${key.remoteJid}`);
-
-      // Notify Owner
-      try {
-        const { getAllNotificationPhones } = await import("@/lib/handlers/whatsapp-order.handler");
-        const notificationPhones = await getAllNotificationPhones(shopId);
-
-        // Find owner or use first available admin
-        const owner = notificationPhones.find(p => p.role === "owner") || notificationPhones[0];
-
-        console.log(`[${instance}] LID Detect. Found ${notificationPhones.length} phones. Target: ${owner?.phone}`);
-
-        if (owner?.phone) {
-          const ownerMsg = `⚠️ *Atención: Mensaje "Privado"*\n\nRecibimos un mensaje de un Dispositivo Vinculado (LID) que oculta su número. El Bot no puede responderle automáticamente.\n\n💬 *Mensaje:* "${text}"\n\n👉 Por favor responde manualmente desde WhatsApp Business.`;
-          await sendTextMessage(instance, owner.phone, ownerMsg);
-          console.log(`[${instance}] Sent LID notification to: ${owner.phone}`);
-        } else {
-          console.warn(`[${instance}] No notification phones found for LID alert.`);
-        }
-      } catch (e) {
-        console.error("LID Notification failed", e);
-      }
-
-      if (logDocRef) {
-        logDocRef.update({ status: "skipped_lid", error: "Missing participant for LID (Owner Notified)" }).catch(() => { });
-      }
-      // Return 200 OK to WhatsApp to acknowledge receipt
-      return NextResponse.json({ status: "skipped_lid" });
-    }
+    // LID CHECK REMOVED: Allowing auto-responses to all LID users
+    // System will use LID JID as identifier effectively.
 
     // ============================================================
     // PASO 3.3: Comandos de Dueño (Prioridad Alta)
