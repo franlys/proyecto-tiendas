@@ -33,12 +33,13 @@ export async function createCustomer(
     // STRICT FORMATTING: Ensure phone is formatted
     const formattedPhone = formatPhoneForWhatsApp(data.phone);
 
+    const { cleanForFirestore } = await import("@/lib/utils");
     const newCustomer: Customer = {
         ...data,
         id: docRef.id,
-        phone: formattedPhone, // Use formatted phone
+        phone: formattedPhone,
         name: data.name || "",
-        email: data.email || undefined,
+        email: data.email || undefined, // Keep as undefined in the object
         source: "whatsapp",
         registrationState: data.registrationState || "pending_name",
         totalOrders: 0,
@@ -47,7 +48,7 @@ export async function createCustomer(
         updatedAt: now,
     };
 
-    await docRef.set(newCustomer);
+    await docRef.set(cleanForFirestore(newCustomer));
 
     return newCustomer;
 }

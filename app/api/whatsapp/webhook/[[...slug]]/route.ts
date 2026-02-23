@@ -53,6 +53,8 @@ interface WebhookPayload {
     status?: string;
     state?: string;
   };
+  sender?: string; // Real JID (e.g. 18294617939@s.whatsapp.net)
+  destination?: string;
 }
 
 // Store for tracking recent contacts (in production, use Redis or DB)
@@ -130,7 +132,13 @@ function formatBankAccounts(shop: ShopBasicInfo): string {
 
 // Helper to extract phone OR handle LID (Linked Device ID)
 // If it's a LID, we MUST use the participant (real phone JID) if available
-const getPhoneFromJid = (key: any) => {
+const getPhoneFromJid = (key: any, sender?: string) => {
+  // 1. If we have the top-level 'sender' from payload, use it! It's the most reliable "Real JID"
+  if (sender) {
+    return sender.split("@")[0];
+  }
+
+  // 2. Fallback to key data
   const jid = key.remoteJid;
   if (jid.includes("@lid") && key.participant) {
     // Return participant JID (which is the phone number JID)
@@ -185,7 +193,7 @@ export async function POST(request: NextRequest) {
 
     switch (normalizedEvent) {
       case "MESSAGES_UPSERT":
-        await handleNewMessage(instance, data);
+        await handleNewMessage(instance, data, payload.sender);
         break;
 
       case "CONNECTION_UPDATE":
@@ -217,7 +225,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function handleNewMessage(instance: string, data: WebhookPayload["data"]) {
+async function handleNewMessage(instance: string, data: WebhookPayload["data"], sender?: string) {
   try {
     const { key, message, pushName } = data;
     const { getShopBasicInfo } = await import("@/lib/services/whatsapp-config.service");
@@ -267,10 +275,10 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"]) 
 
     const { formatPhoneForWhatsApp } = await import("@/lib/utils");
     // Check strict format
-    const rawPhone = getPhoneFromJid(key);
+    const rawPhone = getPhoneFromJid(key, sender);
 
     // Only format if it's NOT a JID (doesn't contain @)
-    const phone = rawPhone.includes("@") ? rawPhone : formatPhoneForWhatsApp(rawPhone);
+    const phone = (sender || rawPhone).includes("@") ? (sender || rawPhone) : formatPhoneForWhatsApp(rawPhone);
 
     const text = message.conversation || message.extendedTextMessage?.text || "";
 

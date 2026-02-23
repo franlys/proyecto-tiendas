@@ -251,10 +251,12 @@ export async function sendDocument(
     method: "POST",
     body: JSON.stringify({
       number: cleanPhone,
-      mediatype: "document",
-      media: documentUrl,
-      fileName,
-      caption: caption || "",
+      mediaMessage: {
+        mediatype: "document",
+        media: documentUrl,
+        fileName,
+        caption: caption || "",
+      }
     }),
   });
 }
@@ -274,9 +276,11 @@ export async function sendImage(
     method: "POST",
     body: JSON.stringify({
       number: cleanPhone,
-      mediatype: "image",
-      media: imageUrl,
-      caption: caption || "",
+      mediaMessage: {
+        mediatype: "image",
+        media: imageUrl,
+        caption: caption || "",
+      }
     }),
   });
 }
