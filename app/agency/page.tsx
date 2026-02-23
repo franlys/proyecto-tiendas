@@ -54,7 +54,7 @@ import { cn } from "@/lib/utils";
 
 import { ShopCategory } from "@/components/shared";
 import { BUSINESS_TYPE_LABELS } from "@/lib/constants";
-import { BusinessTypeSelector } from "@/components/admin/business-type-selector";
+import { BusinessTypeMultiSelector } from "@/components/admin/business-type-selector";
 import { getBusinessType } from "@/lib/types/business-types-v2";
 
 function CreateShopModal({
@@ -64,19 +64,20 @@ function CreateShopModal({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (data: { name: string; slug: string; category: ShopCategory; businessType: string; description: string; phone: string; wholesale: boolean; customDomain: string; monthlyPrice: number }) => void;
+  onCreate: (data: { name: string; slug: string; category: ShopCategory; businessTypes: string[]; description: string; phone: string; wholesale: boolean; customDomain: string; monthlyPrice: number }) => void;
 }) {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [customDomain, setCustomDomain] = useState("");
-  const [businessType, setBusinessType] = useState("tienda_general");
+  const [businessTypes, setBusinessTypes] = useState<string[]>(["tienda_general"]);
   const [description, setDescription] = useState("");
   const [phone, setPhone] = useState("");
   const [wholesale, setWholesale] = useState(false);
   const [monthlyPrice, setMonthlyPrice] = useState(1500); // Default to 1500 DOP/MXN
 
-  // Derivar category del businessType seleccionado
-  const category = (getBusinessType(businessType)?.category || "retail") as ShopCategory;
+  // Derivar category del primer businessType seleccionado (principal)
+  const primaryType = businessTypes[0];
+  const category = (getBusinessType(primaryType)?.category || "retail") as ShopCategory;
 
   // Auto-generar slug desde nombre
   useEffect(() => {
@@ -91,12 +92,12 @@ function CreateShopModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name && slug && phone) {
-      onCreate({ name, slug, category, businessType, description, phone, wholesale, customDomain, monthlyPrice });
+    if (name && slug && phone && businessTypes.length > 0) {
+      onCreate({ name, slug, category, businessTypes, description, phone, wholesale, customDomain, monthlyPrice });
       setName("");
       setSlug("");
       setCustomDomain("");
-      setBusinessType("tienda_general");
+      setBusinessTypes(["tienda_general"]);
       setDescription("");
       setPhone("");
       setWholesale(false);
@@ -152,11 +153,12 @@ function CreateShopModal({
 
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
-              Tipo de Negocio
+              Tipo(s) de Negocio
             </label>
-            <BusinessTypeSelector
-              value={businessType}
-              onChange={setBusinessType}
+            <BusinessTypeMultiSelector
+              value={businessTypes}
+              onChange={setBusinessTypes}
+              maxSelections={3}
             />
           </div>
 
@@ -755,10 +757,14 @@ function AgencyContent() {
     setShopToDelete(shop);
   };
 
-  const handleCreateShop = async (data: { name: string; slug: string; category: ShopCategory; businessType: string; description: string; phone: string; wholesale: boolean; customDomain: string; monthlyPrice: number }) => {
+  const handleCreateShop = async (data: { name: string; slug: string; category: ShopCategory; businessTypes: string[]; description: string; phone: string; wholesale: boolean; customDomain: string; monthlyPrice: number }) => {
     try {
       debugLog("CREATE SHOP - Form submitted", data);
-      const newShop = await createShop(data);
+      // Pass businessType (primary) and businessTypes (all) to createShop
+      const newShop = await createShop({
+        ...data,
+        businessType: data.businessTypes[0], // Primary type for backwards compatibility
+      });
       debugLog("CREATE SHOP - Result", { success: !!newShop, shopId: newShop?.id });
       setShowCreateModal(false);
     } catch (error: any) {

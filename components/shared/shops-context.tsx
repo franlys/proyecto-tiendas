@@ -68,8 +68,9 @@ export interface ManagedShop extends ShopConfig {
   enabledFeatures?: FeatureId[];
   features?: FeatureId[]; // Legacy compatibility
   // Business Logic
-  businessType: BusinessType | ShopCategory; // Supports both new specific types and legacy categories
-  category: ShopCategory; // Added to fix type error
+  businessType: BusinessType | ShopCategory; // Primary type (for backwards compatibility)
+  businessTypes?: string[]; // Array of all business types (for combos like Meal Prep + Gym)
+  category: ShopCategory; // Legacy category
   wholesaleEnabled?: boolean;
   customDomain?: string;
   paymentLink?: string; // For manual payments
@@ -90,7 +91,8 @@ interface CreateShopData {
   name: string;
   slug: string;
   category: ShopCategory;
-  businessType?: string; // Tipo de negocio específico (100+ opciones)
+  businessType?: string; // Tipo de negocio principal
+  businessTypes?: string[]; // Array de tipos de negocio (para combos como Meal Prep + Gym)
   description: string;
   phone: string;
   wholesale: boolean;
@@ -265,7 +267,8 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
       description: data.description,
       theme: { ...DEFAULT_THEME, id: `theme-${data.slug}`, name: `${data.name} Theme` },
       contact: { phone: data.phone },
-      businessType: (data.businessType || data.category) as BusinessType, // Use specific business type if provided, fallback to category
+      businessType: (data.businessType || data.businessTypes?.[0] || data.category) as BusinessType, // Primary business type
+      businessTypes: data.businessTypes || (data.businessType ? [data.businessType] : [data.category]), // All business types
       wholesaleEnabled: data.wholesale,
       customDomain: data.customDomain,
       category: data.category,
