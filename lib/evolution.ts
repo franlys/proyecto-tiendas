@@ -200,7 +200,7 @@ export async function setPresence(
       ? phone
       : phone.replace(/\D/g, "");
 
-  return evolutionFetch(`/chat/presence/${instanceName}`, {
+  return evolutionFetch(`/chat/updatePresence/${instanceName}`, {
     method: "POST",
     body: JSON.stringify({
       number: cleanPhone,
@@ -231,6 +231,11 @@ export async function sendTextMessage(
     method: "POST",
     body: JSON.stringify({
       number: cleanPhone,
+      options: {
+        delay: 1200,
+        presence: "composing",
+        linkPreview: false,
+      },
       textMessage: {
         text: message,
       },
@@ -330,6 +335,10 @@ export async function sendImage(
     method: "POST",
     body: JSON.stringify({
       number: cleanPhone,
+      options: {
+        delay: 1200,
+        presence: "composing",
+      },
       mediaMessage: {
         mediatype: "image",
         media: imageUrl,
