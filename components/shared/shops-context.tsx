@@ -90,6 +90,7 @@ interface CreateShopData {
   name: string;
   slug: string;
   category: ShopCategory;
+  businessType?: string; // Tipo de negocio específico (100+ opciones)
   description: string;
   phone: string;
   wholesale: boolean;
@@ -264,7 +265,7 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
       description: data.description,
       theme: { ...DEFAULT_THEME, id: `theme-${data.slug}`, name: `${data.name} Theme` },
       contact: { phone: data.phone },
-      businessType: data.category, // Use category directly as they share the same type definition
+      businessType: data.businessType || data.category, // Use specific business type if provided, fallback to category
       wholesaleEnabled: data.wholesale,
       customDomain: data.customDomain,
       category: data.category,

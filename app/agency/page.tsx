@@ -54,6 +54,8 @@ import { cn } from "@/lib/utils";
 
 import { ShopCategory } from "@/components/shared";
 import { BUSINESS_TYPE_LABELS } from "@/lib/constants";
+import { BusinessTypeSelector } from "@/components/admin/business-type-selector";
+import { getBusinessType } from "@/lib/types/business-types-v2";
 
 function CreateShopModal({
   isOpen,
@@ -62,16 +64,19 @@ function CreateShopModal({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (data: { name: string; slug: string; category: ShopCategory; description: string; phone: string; wholesale: boolean; customDomain: string; monthlyPrice: number }) => void;
+  onCreate: (data: { name: string; slug: string; category: ShopCategory; businessType: string; description: string; phone: string; wholesale: boolean; customDomain: string; monthlyPrice: number }) => void;
 }) {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [customDomain, setCustomDomain] = useState("");
-  const [category, setCategory] = useState<ShopCategory>("retail");
+  const [businessType, setBusinessType] = useState("tienda_general");
   const [description, setDescription] = useState("");
   const [phone, setPhone] = useState("");
   const [wholesale, setWholesale] = useState(false);
   const [monthlyPrice, setMonthlyPrice] = useState(1500); // Default to 1500 DOP/MXN
+
+  // Derivar category del businessType seleccionado
+  const category = (getBusinessType(businessType)?.category || "retail") as ShopCategory;
 
   // Auto-generar slug desde nombre
   useEffect(() => {
@@ -87,11 +92,11 @@ function CreateShopModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name && slug && phone) {
-      onCreate({ name, slug, category, description, phone, wholesale, customDomain, monthlyPrice });
+      onCreate({ name, slug, category, businessType, description, phone, wholesale, customDomain, monthlyPrice });
       setName("");
       setSlug("");
       setCustomDomain("");
-      setCategory("retail"); // Reset to valid default
+      setBusinessType("tienda_general");
       setDescription("");
       setPhone("");
       setWholesale(false);
@@ -147,20 +152,12 @@ function CreateShopModal({
 
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
-              Categoría
+              Tipo de Negocio
             </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value as ShopCategory)}
-              className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white"
-            >
-              <option value="technology">Tecnología / Celulares</option>
-              <option value="beauty">Belleza / Spa</option>
-              <option value="retail">Retail / Tienda</option>
-              <option value="repair">Taller / Reparación</option>
-              <option value="restaurant">Restaurante</option>
-              <option value="rentcar">Rent-a-Car</option>
-            </select>
+            <BusinessTypeSelector
+              value={businessType}
+              onChange={setBusinessType}
+            />
           </div>
 
           <div>
@@ -758,7 +755,7 @@ function AgencyContent() {
     setShopToDelete(shop);
   };
 
-  const handleCreateShop = async (data: { name: string; slug: string; category: ShopCategory; description: string; phone: string; wholesale: boolean; customDomain: string; monthlyPrice: number }) => {
+  const handleCreateShop = async (data: { name: string; slug: string; category: ShopCategory; businessType: string; description: string; phone: string; wholesale: boolean; customDomain: string; monthlyPrice: number }) => {
     try {
       debugLog("CREATE SHOP - Form submitted", data);
       const newShop = await createShop(data);
