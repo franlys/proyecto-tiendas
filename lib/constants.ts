@@ -249,6 +249,7 @@ export interface ShopConfig {
   bankAccounts?: ShopBankAccount[];
   // Phase 13: Business Type & Wholesale
   businessType?: BusinessType;
+  businessTypes?: string[]; // Multi-type support
   wholesaleCode?: string;
   wholesaleEnabled?: boolean;
   // Auth (for Mock/Seeding purposes)

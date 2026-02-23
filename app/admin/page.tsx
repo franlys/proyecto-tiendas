@@ -41,11 +41,11 @@ import { DailyReportCard } from "@/components/admin";
 import { DatabaseSeeder } from "@/components/admin/database-seeder";
 import { NotificationBell } from "@/components/admin/notification-bell";
 import { Button } from "@/components/ui";
-import { useBusinessFeatures, type BusinessFeatures } from "@/lib/hooks/use-business-features";
+import { useCombinedBusinessFeatures, type CombinedBusinessFeatures } from "@/lib/hooks/use-business-features";
 import type { BusinessType } from "@/lib/types/business.types";
 
 // Upcoming Bookings Widget for Dashboard
-function BookingsWidget({ shopId, features }: { shopId: string; features: BusinessFeatures }) {
+function BookingsWidget({ shopId, features }: { shopId: string; features: CombinedBusinessFeatures }) {
   const bookingLabel = features.labels.booking || "Cita";
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -281,7 +281,7 @@ function BookingsWidget({ shopId, features }: { shopId: string; features: Busine
 }
 
 // Pending Orders Widget for Dashboard
-function PendingOrdersWidget({ shopId, features }: { shopId: string; features: BusinessFeatures }) {
+function PendingOrdersWidget({ shopId, features }: { shopId: string; features: CombinedBusinessFeatures }) {
   const { orders, updateOrderStatus, getPendingOrders } = useSalesOrders();
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const orderLabel = features.labels.order || "Pedido";
@@ -481,7 +481,7 @@ function generateDemoData() {
   return data;
 }
 
-function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: boolean; shop?: any | null; features: BusinessFeatures }) {
+function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: boolean; shop?: any | null; features: CombinedBusinessFeatures }) {
   const { orders, getTodayOrders } = useSalesOrders();
   const [isClient, setIsClient] = useState(false);
 
@@ -843,7 +843,9 @@ function AdminDashboardWithSubscription() {
 
   // Get shop for business features
   const shop = user?.shopId ? getShop(user.shopId) : null;
-  const features = useBusinessFeatures(shop?.businessType as BusinessType);
+  // Use combined features to support multi-type businesses
+  const businessTypes = shop?.businessTypes || (shop?.businessType ? [shop.businessType] : []);
+  const features = useCombinedBusinessFeatures(businessTypes);
 
   // Redirect Super Admin to Agency Panel immediately
   useEffect(() => {
