@@ -29,6 +29,12 @@ const HYBRID_TYPES = [
   "salon_eventos", "fotografia", "muebleria", "ferreteria"
 ];
 
+// Business types that are "menu-only" - no stock tracking (made-to-order)
+const MENU_ONLY_TYPES = [
+  "meal_prep", "catering", "cloud_kitchen", "chef_privado", "loncheras",
+  "entrenador_personal", "gimnasio", "crossfit", "yoga", "pilates"
+];
+
 // Duration options for services
 const DURATION_OPTIONS = [
   { value: 15, label: "15 min" },
@@ -473,8 +479,9 @@ function ServicesContent({ shopId }: { shopId: string }) {
 // ====================================
 // PRODUCTS CONTENT (for product-based businesses)
 // ====================================
-function ProductsContent({ shopId }: { shopId: string }) {
+function ProductsContent({ shopId, businessType = "" }: { shopId: string; businessType?: string }) {
   const { products, saveProduct, deleteProduct, updateStock, getLowStockProducts, isLoading } = useInventory();
+  const isMenuOnly = MENU_ONLY_TYPES.includes(businessType);
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | undefined>(undefined);
@@ -550,19 +557,23 @@ function ProductsContent({ shopId }: { shopId: string }) {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className={`grid grid-cols-2 ${isMenuOnly ? 'md:grid-cols-2' : 'md:grid-cols-4'} gap-4`}>
         <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
-          <p className="text-zinc-500 text-xs uppercase font-medium mb-1">Total Productos</p>
+          <p className="text-zinc-500 text-xs uppercase font-medium mb-1">{isMenuOnly ? 'Total Menú' : 'Total Productos'}</p>
           <p className="text-2xl font-bold text-white">{products.length}</p>
         </div>
-        <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
-          <p className="text-zinc-500 text-xs uppercase font-medium mb-1">Valor Inventario</p>
-          <p className="text-2xl font-bold text-emerald-400">${totalValue.toLocaleString()}</p>
-        </div>
-        <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
-          <p className="text-zinc-500 text-xs uppercase font-medium mb-1">Bajo Stock</p>
-          <p className="text-2xl font-bold text-red-400">{lowStockCount}</p>
-        </div>
+        {!isMenuOnly && (
+          <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
+            <p className="text-zinc-500 text-xs uppercase font-medium mb-1">Valor Inventario</p>
+            <p className="text-2xl font-bold text-emerald-400">${totalValue.toLocaleString()}</p>
+          </div>
+        )}
+        {!isMenuOnly && (
+          <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
+            <p className="text-zinc-500 text-xs uppercase font-medium mb-1">Bajo Stock</p>
+            <p className="text-2xl font-bold text-red-400">{lowStockCount}</p>
+          </div>
+        )}
         <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
           <p className="text-zinc-500 text-xs uppercase font-medium mb-1">Categorías</p>
           <p className="text-2xl font-bold text-blue-400">{new Set(products.map(p => p.category)).size}</p>
@@ -623,6 +634,7 @@ function ProductsContent({ shopId }: { shopId: string }) {
         onSave={handleSave}
         product={editingProduct}
         shopId={shopId}
+        hideStock={isMenuOnly}
       />
     </div>
   );
@@ -680,7 +692,7 @@ function SmartInventoryContent({ shopId, businessType }: { shopId: string; busin
           <ServicesContent shopId={shopId} />
         ) : (
           <InventoryProvider shopId={shopId}>
-            <ProductsContent shopId={shopId} />
+            <ProductsContent shopId={shopId} businessType={businessType} />
           </InventoryProvider>
         )}
       </div>
@@ -695,7 +707,7 @@ function SmartInventoryContent({ shopId, businessType }: { shopId: string; busin
   // For product-centric businesses (default), show products
   return (
     <InventoryProvider shopId={shopId}>
-      <ProductsContent shopId={shopId} />
+      <ProductsContent shopId={shopId} businessType={businessType} />
     </InventoryProvider>
   );
 }

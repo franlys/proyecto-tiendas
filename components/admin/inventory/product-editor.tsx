@@ -21,6 +21,7 @@ interface ProductEditorProps {
     onClose: () => void;
     onSave: (product: Product) => void;
     shopId: string; // Required for image uploads
+    hideStock?: boolean; // For menu-only businesses (meal prep, etc.)
 }
 
 // Extended product with custom category support
@@ -48,7 +49,7 @@ const EMPTY_PRODUCT: ExtendedProduct = {
     maxExtras: undefined,
 };
 
-export function ProductEditor({ product, isOpen, onClose, onSave, shopId }: ProductEditorProps) {
+export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideStock = false }: ProductEditorProps) {
     const [formData, setFormData] = useState<ExtendedProduct>(EMPTY_PRODUCT);
     const [hasVariants, setHasVariants] = useState(false);
     const [hasExtras, setHasExtras] = useState(false);
@@ -503,24 +504,26 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId }: Prod
 
                                 {/* Pricing & Stock Strategy */}
                                 <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-lg font-semibold text-white">Precios e Inventario</h3>
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="checkbox"
-                                            id="hasVariants"
-                                            checked={hasVariants}
-                                            onChange={(e) => setHasVariants(e.target.checked)}
-                                            className="w-4 h-4 rounded bg-zinc-800 border-zinc-600 text-indigo-500 focus:ring-indigo-500"
-                                        />
-                                        <label htmlFor="hasVariants" className="text-sm text-zinc-300 cursor-pointer select-none">
-                                            Este producto tiene variantes (Tallas, Calidades)
-                                        </label>
-                                    </div>
+                                    <h3 className="text-lg font-semibold text-white">{hideStock ? 'Precios' : 'Precios e Inventario'}</h3>
+                                    {!hideStock && (
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="checkbox"
+                                                id="hasVariants"
+                                                checked={hasVariants}
+                                                onChange={(e) => setHasVariants(e.target.checked)}
+                                                className="w-4 h-4 rounded bg-zinc-800 border-zinc-600 text-indigo-500 focus:ring-indigo-500"
+                                            />
+                                            <label htmlFor="hasVariants" className="text-sm text-zinc-300 cursor-pointer select-none">
+                                                Este producto tiene variantes (Tallas, Calidades)
+                                            </label>
+                                        </div>
+                                    )}
                                 </div>
 
-                                {!hasVariants ? (
-                                    /* Simple Product Strategy */
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-zinc-800/50 p-4 rounded-xl border border-zinc-800">
+                                {(!hasVariants || hideStock) ? (
+                                    /* Simple Product Strategy (or menu-only mode) */
+                                    <div className={`grid ${hideStock ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-4'} gap-4 bg-zinc-800/50 p-4 rounded-xl border border-zinc-800`}>
                                         <div>
                                             <label className="block text-xs font-medium text-zinc-400 mb-1">Precio Público</label>
                                             <input
@@ -542,26 +545,30 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId }: Prod
                                                 placeholder="Opcional"
                                             />
                                         </div>
-                                        <div>
-                                            <label className="block text-xs font-medium text-zinc-400 mb-1">Stock Actual</label>
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                value={formData.stock}
-                                                onChange={(e) => setFormData({ ...formData, stock: Number(e.target.value) })}
-                                                className="w-full bg-zinc-900 border-zinc-700 rounded px-3 py-1.5 text-white"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-medium text-red-400 mb-1">Alerta Mín.</label>
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                value={formData.lowStockThreshold}
-                                                onChange={(e) => setFormData({ ...formData, lowStockThreshold: Number(e.target.value) })}
-                                                className="w-full bg-zinc-900 border-zinc-700 rounded px-3 py-1.5 text-white"
-                                            />
-                                        </div>
+                                        {!hideStock && (
+                                            <>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-zinc-400 mb-1">Stock Actual</label>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        value={formData.stock}
+                                                        onChange={(e) => setFormData({ ...formData, stock: Number(e.target.value) })}
+                                                        className="w-full bg-zinc-900 border-zinc-700 rounded px-3 py-1.5 text-white"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-red-400 mb-1">Alerta Mín.</label>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        value={formData.lowStockThreshold}
+                                                        onChange={(e) => setFormData({ ...formData, lowStockThreshold: Number(e.target.value) })}
+                                                        className="w-full bg-zinc-900 border-zinc-700 rounded px-3 py-1.5 text-white"
+                                                    />
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 ) : (
                                     /* Variants Strategy */
