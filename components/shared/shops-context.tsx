@@ -265,7 +265,7 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
       description: data.description,
       theme: { ...DEFAULT_THEME, id: `theme-${data.slug}`, name: `${data.name} Theme` },
       contact: { phone: data.phone },
-      businessType: data.businessType || data.category, // Use specific business type if provided, fallback to category
+      businessType: (data.businessType || data.category) as BusinessType, // Use specific business type if provided, fallback to category
       wholesaleEnabled: data.wholesale,
       customDomain: data.customDomain,
       category: data.category,
