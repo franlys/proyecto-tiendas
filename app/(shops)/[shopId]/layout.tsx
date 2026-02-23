@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
+import { Suspense } from "react";
 import { ThemeProvider, CartProvider, OrdersProvider } from "@/components/shared";
 import { FloatingCart, ShopLayoutClient } from "@/components/shop";
 import { BackgroundAudio } from "@/components/shop/background-audio";
+import { Loader2 } from "lucide-react";
 import { MOCK_SHOPS, DEFAULT_THEME, type ShopConfig } from "@/lib/constants";
 
 interface ShopLayoutProps {
@@ -226,7 +228,15 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
               </header>
 
               {/* Main Content */}
-              <main>{children}</main>
+              <main>
+                <Suspense fallback={
+                  <div className="flex justify-center py-20">
+                    <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                  </div>
+                }>
+                  {children}
+                </Suspense>
+              </main>
 
               {/* Footer */}
               <footer className="border-t border-white/10 py-8 mt-20">

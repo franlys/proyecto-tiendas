@@ -69,7 +69,11 @@ function generateStars(count: number): Star[] {
 
 function GalaxyBackground() {
   const [stars, setStars] = useState<Star[]>([]);
-  useEffect(() => { setStars(generateStars(80)); }, []);
+  useEffect(() => {
+    // Reduce star count for better performance on mobile/Safari
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    setStars(generateStars(isMobile ? 30 : 60));
+  }, []);
   return (
     <div className="absolute inset-0 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-background to-background" />
@@ -112,7 +116,8 @@ function AuroraBackground() {
 function ParticlesBackground() {
   const [particles, setParticles] = useState<any[]>([]);
   useEffect(() => {
-    setParticles(Array.from({ length: 50 }, (_, i) => ({
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    setParticles(Array.from({ length: isMobile ? 20 : 40 }, (_, i) => ({
       id: i, x: Math.random() * 100, size: Math.random() * 4 + 2, duration: Math.random() * 20 + 15, delay: Math.random() * 5,
     })));
   }, []);

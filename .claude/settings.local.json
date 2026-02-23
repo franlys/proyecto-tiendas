@@ -85,7 +85,15 @@
       "Bash(python3:*)",
       "Bash(pkill:*)",
       "Bash(npx next lint:*)",
-      "Bash(npx ts-node:*)"
+      "Bash(npx ts-node:*)",
+      "Bash(npx.cmd tsc:*)",
+      "Bash(cmd /c \"cd C:\\\\Users\\\\elmae\\\\proyecto-tiendas && npx firebase deploy --only firestore:rules\")",
+      "Bash(powershell -Command:*)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" diff app/agency/shop/[slug]/page.tsx)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" add app/agency/shop/[slug]/page.tsx)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nfix: remove leftover BusinessType cast from shop config\n\nRemoved `as BusinessType` cast that referenced the old type import,\nwhich was causing build failure.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" remote -v)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nfix: replace BUSINESS_TYPE_CONFIG with getBusinessType helper\n\nUse the new getBusinessType function from business-types-v2.ts\ninstead of the removed BUSINESS_TYPE_CONFIG constant.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }
