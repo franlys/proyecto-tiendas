@@ -218,7 +218,8 @@ export async function sendButtonMessage(
   description: string,
   buttons: { buttonId: string; buttonText: string }[]
 ): Promise<SendMessageResponse> {
-  const cleanPhone = phone.replace(/\D/g, "");
+  // Limpiar número (solo dígitos) si NO es un JID (contiene @)
+  const cleanPhone = phone.includes("@") ? phone : phone.replace(/\D/g, "");
 
   return evolutionFetch<SendMessageResponse>(`/message/sendButtons/${instanceName}`, {
     method: "POST",
@@ -245,7 +246,8 @@ export async function sendDocument(
   fileName: string,
   caption?: string
 ): Promise<SendMessageResponse> {
-  const cleanPhone = phone.replace(/\D/g, "");
+  // Limpiar número (solo dígitos) si NO es un JID (contiene @)
+  const cleanPhone = phone.includes("@") ? phone : phone.replace(/\D/g, "");
 
   return evolutionFetch<SendMessageResponse>(`/message/sendMedia/${instanceName}`, {
     method: "POST",
@@ -270,7 +272,8 @@ export async function sendImage(
   imageUrl: string,
   caption?: string
 ): Promise<SendMessageResponse> {
-  const cleanPhone = phone.replace(/\D/g, "");
+  // Limpiar número (solo dígitos) si NO es un JID (contiene @)
+  const cleanPhone = phone.includes("@") ? phone : phone.replace(/\D/g, "");
 
   return evolutionFetch<SendMessageResponse>(`/message/sendMedia/${instanceName}`, {
     method: "POST",

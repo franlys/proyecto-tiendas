@@ -1015,12 +1015,16 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"], 
             // Send logo image with welcome message if logo exists
             if (shopInfo?.logoUrl) {
               try {
+                console.log(`[${instance}] 🖼️ Sending welcome image to ${phone} using URL: ${shopInfo.logoUrl}`);
                 await sendImage(instance, phone, shopInfo.logoUrl, welcomeCaption);
+                console.log(`[${instance}] ✅ Welcome image sent successfully`);
                 return; // Image sent with caption, don't send text
               } catch (imgError) {
-                console.error("Error sending welcome image:", imgError);
+                console.error(`[${instance}] ❌ Error sending welcome image:`, imgError);
                 // Fall back to text-only message
               }
+            } else {
+              console.log(`[${instance}] ℹ️ No logoUrl found for shop, using text-only welcome`);
             }
 
             responseText = welcomeCaption;
@@ -1241,7 +1245,9 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"], 
         }
 
         if (responseText) {
+          console.log(`[${instance}] ✉️ Sending text response to ${phone}`);
           await sendTextMessage(instance, phone, responseText);
+          console.log(`[${instance}] ✅ Text response sent successfully`);
           return;
         }
       } // End of NLP else block
