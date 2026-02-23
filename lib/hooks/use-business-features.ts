@@ -205,3 +205,113 @@ export function isHybridBusiness(businessType: BusinessType | undefined | null):
     const features = getBusinessFeatures(businessType);
     return (features.hasCatalog || features.hasInventory) && features.hasServices;
 }
+
+// ============================================
+// MULTI-TYPE SUPPORT (Para negocios con múltiples tipos)
+// ============================================
+
+import { getBusinessType, type BusinessTypeConfig as BusinessTypeConfigV2 } from "@/lib/types/business-types-v2";
+
+export interface CombinedBusinessFeatures extends BusinessFeatures {
+    // Array de todos los tipos de negocio
+    businessTypes: string[];
+    // Configuraciones de cada tipo
+    typeConfigs: { id: string; label: string; icon: string; features: BusinessFeatures }[];
+    // Indica si es un negocio multi-tipo
+    isMultiType: boolean;
+}
+
+/**
+ * Combina los features de múltiples tipos de negocio
+ * Útil para negocios como "Meal Prep + Entrenamiento" que necesitan
+ * mostrar funcionalidades de ambos tipos.
+ */
+export function getCombinedFeatures(businessTypes: string[]): CombinedBusinessFeatures {
+    // Si no hay tipos o solo hay uno, usar la función normal
+    if (!businessTypes || businessTypes.length === 0) {
+        const defaultFeatures = getBusinessFeatures("otro");
+        return {
+            ...defaultFeatures,
+            businessTypes: ["otro"],
+            typeConfigs: [{
+                id: "otro",
+                label: "Otro",
+                icon: "🏬",
+                features: defaultFeatures,
+            }],
+            isMultiType: false,
+        };
+    }
+
+    // Obtener features de cada tipo
+    const typeConfigs = businessTypes.map(typeId => {
+        const typeInfo = getBusinessType(typeId);
+        const features = getBusinessFeatures(typeId as BusinessType);
+        return {
+            id: typeId,
+            label: typeInfo?.label || typeId,
+            icon: typeInfo?.icon || "🏬",
+            features,
+        };
+    });
+
+    // Combinar todos los features con OR (si cualquier tipo lo tiene, se habilita)
+    const combined: BusinessFeatures = {
+        hasCatalog: typeConfigs.some(t => t.features.hasCatalog),
+        hasServices: typeConfigs.some(t => t.features.hasServices),
+        hasBookings: typeConfigs.some(t => t.features.hasBookings),
+        hasOrders: typeConfigs.some(t => t.features.hasOrders),
+        hasInventory: typeConfigs.some(t => t.features.hasInventory),
+        hasWholesale: typeConfigs.some(t => t.features.hasWholesale),
+        hasRepairs: typeConfigs.some(t => t.features.hasRepairs),
+        hasRentals: typeConfigs.some(t => t.features.hasRentals),
+        hasTables: typeConfigs.some(t => t.features.hasTables),
+        hasDelivery: typeConfigs.some(t => t.features.hasDelivery),
+
+        // Labels del tipo principal (primero de la lista)
+        labels: typeConfigs[0].features.labels,
+
+        // Config del tipo principal
+        config: typeConfigs[0].features.config,
+
+        // Admin modules combinados
+        adminModules: {
+            orders: typeConfigs.some(t => t.features.adminModules.orders),
+            bookings: typeConfigs.some(t => t.features.adminModules.bookings),
+            inventory: typeConfigs.some(t => t.features.adminModules.inventory),
+            services: typeConfigs.some(t => t.features.adminModules.services),
+            repairs: typeConfigs.some(t => t.features.adminModules.repairs),
+            rentals: typeConfigs.some(t => t.features.adminModules.rentals),
+            tables: typeConfigs.some(t => t.features.adminModules.tables),
+            wholesale: typeConfigs.some(t => t.features.adminModules.wholesale),
+            delivery: typeConfigs.some(t => t.features.adminModules.delivery),
+            beautyConsultations: typeConfigs.some(t => t.features.adminModules.beautyConsultations),
+        },
+
+        // Dashboard widgets combinados
+        dashboardWidgets: {
+            pendingOrders: typeConfigs.some(t => t.features.dashboardWidgets.pendingOrders),
+            upcomingBookings: typeConfigs.some(t => t.features.dashboardWidgets.upcomingBookings),
+            inventoryAlerts: typeConfigs.some(t => t.features.dashboardWidgets.inventoryAlerts),
+            repairStatus: typeConfigs.some(t => t.features.dashboardWidgets.repairStatus),
+            tableStatus: typeConfigs.some(t => t.features.dashboardWidgets.tableStatus),
+            rentalCalendar: typeConfigs.some(t => t.features.dashboardWidgets.rentalCalendar),
+        },
+    };
+
+    return {
+        ...combined,
+        businessTypes,
+        typeConfigs,
+        isMultiType: businessTypes.length > 1,
+    };
+}
+
+/**
+ * Hook para obtener features combinados de múltiples tipos de negocio
+ */
+export function useCombinedBusinessFeatures(businessTypes: string[] | undefined): CombinedBusinessFeatures {
+    return useMemo(() => {
+        return getCombinedFeatures(businessTypes || []);
+    }, [businessTypes?.join(",")]);
+}

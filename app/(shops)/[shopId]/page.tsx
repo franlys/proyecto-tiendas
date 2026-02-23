@@ -24,6 +24,7 @@ import {
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { getCombinedFeatures } from "@/lib/hooks/use-business-features";
 
 type TabType = "servicios" | "productos";
 
@@ -128,15 +129,19 @@ export default function ShopHomePage() {
   }, [shop?.id, shop?.slug]);
 
   // 2. Business Logic for Visibility
-  // Ensure "services" and "products" used below refer to the STATE variables, not local consts.
-  // We removed the local const assignments that used MOCK_ directly.
+  // Use combined features when shop has multiple business types
+  const businessTypes = shop?.businessTypes || (shop?.businessType ? [shop.businessType] : []);
+  const combinedFeatures = useMemo(() => getCombinedFeatures(businessTypes), [businessTypes.join(",")]);
 
-  const isServiceBusiness = shop?.businessType === "beauty" || shop?.businessType === "repair";
+  // Feature-based visibility (works for single or multiple types)
+  const isServiceBusiness = combinedFeatures.hasServices && combinedFeatures.hasBookings;
+  const isProductBusiness = combinedFeatures.hasOrders || combinedFeatures.hasCatalog;
   const hasServices = services.length > 0;
+  const hasProducts = products.length > 0;
 
-  // Rule: Retail/Restaurants only show products unless services exist. Beauty shows services.
-  const showServices = isServiceBusiness || hasServices;
-  const showProducts = products.length > 0 || shop?.businessType === "retail" || shop?.businessType === "rentcar" || shop?.businessType === "restaurant";
+  // Show sections based on combined features AND available data
+  const showServices = (combinedFeatures.hasServices || combinedFeatures.hasBookings) && (hasServices || isServiceBusiness);
+  const showProducts = (combinedFeatures.hasCatalog || combinedFeatures.hasOrders) && (hasProducts || isProductBusiness);
 
   // 3. Tab State
   const [activeTab, setActiveTab] = useState<TabType>(() => {
