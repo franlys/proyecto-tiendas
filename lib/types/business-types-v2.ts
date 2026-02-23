@@ -67,9 +67,9 @@ const F = {
     // Servicios con citas (belleza, salud)
     service: { catalog: true, services: true, bookings: true, orders: false, inventory: true, wholesale: false, repairs: false, rentals: false, tables: false, delivery: false },
     // Restaurante con mesas
-    restaurant: { catalog: true, services: false, bookings: true, orders: true, inventory: true, wholesale: false, repairs: false, rentals: false, tables: true, delivery: true },
+    restaurant: { catalog: true, services: false, bookings: true, orders: true, inventory: false, wholesale: false, repairs: false, rentals: false, tables: true, delivery: true },
     // Comida sin mesas
-    food: { catalog: true, services: false, bookings: false, orders: true, inventory: true, wholesale: false, repairs: false, rentals: false, tables: false, delivery: true },
+    food: { catalog: true, services: false, bookings: false, orders: true, inventory: false, wholesale: false, repairs: false, rentals: false, tables: false, delivery: true },
     // Reparación
     repair: { catalog: true, services: true, bookings: true, orders: true, inventory: true, wholesale: true, repairs: true, rentals: false, tables: false, delivery: true },
     // Renta

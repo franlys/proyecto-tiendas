@@ -32,6 +32,8 @@ const HYBRID_TYPES = [
 // Business types that are "menu-only" - no stock tracking (made-to-order)
 const MENU_ONLY_TYPES = [
   "meal_prep", "catering", "cloud_kitchen", "chef_privado", "loncheras",
+  "restaurante", "comida_rapida", "pizzeria", "taqueria", "cafeteria",
+  "reposteria", "sushi", "buffet", "comida_vegana", "bar", "cantina", "cerveceria",
   "entrenador_personal", "gimnasio", "crossfit", "yoga", "pilates"
 ];
 

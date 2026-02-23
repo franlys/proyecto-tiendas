@@ -4,7 +4,8 @@ import { useState } from "react";
 import Image from "next/image";
 import { Plus, Minus, ShoppingBag, Tag, ChevronDown, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCart } from "@/components/shared";
+import { useCart, useShop } from "@/components/shared";
+import { useBusinessFeatures } from "@/lib/hooks/use-business-features";
 import type { Product, ProductVariant } from "@/lib/constants";
 import type { SelectedExtra } from "@/lib/types/product-extra.types";
 import { ExtrasSelector } from "@/components/shop/extras-selector";
@@ -29,14 +30,21 @@ export function ProductCard({ product }: ProductCardProps) {
     ? Math.min(...product.variants!.map(v => v.price))
     : (product.promoPrice || product.price);
 
+  // Business features check for stock management
+  const shop = useShop();
+  const { hasInventory } = useBusinessFeatures(shop?.businessType);
+
   // Stock check - convert to number to handle string values from Firestore
   // For products with variants, check if ANY variant has stock > 0
   const stockNumber = Number(product.stock) || 0;
   const hasAnyVariantStock = hasVariants
     ? product.variants!.some(v => (Number(v.stock) || 0) > 0)
     : false;
-  // Product is only out of stock if: no main stock AND (no variants OR no variant has stock)
-  const isOutOfStock = stockNumber === 0 && (!hasVariants || !hasAnyVariantStock);
+
+  // Product is only out of stock if business follows inventory AND (no main stock AND (no variants OR no variant has stock))
+  const isOutOfStock = hasInventory && stockNumber === 0 && (!hasVariants || !hasAnyVariantStock);
+  const effectiveStock = hasInventory ? stockNumber : 999999;
+
   const hasPromo = !!product.promoPrice;
 
 
@@ -122,10 +130,10 @@ export function ProductCard({ product }: ProductCardProps) {
                     </span>
                     <button
                       onClick={handleSimpleAdd}
-                      disabled={simpleQuantity >= product.stock}
+                      disabled={simpleQuantity >= effectiveStock}
                       className={cn(
                         "w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-colors",
-                        simpleQuantity >= product.stock
+                        simpleQuantity >= effectiveStock
                           ? "bg-slate-200 text-slate-400"
                           : "bg-primary hover:bg-primary/90 text-white"
                       )}
