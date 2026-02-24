@@ -161,7 +161,7 @@ export function ProductCard({ product, hidePriceIfZero }: ProductCardProps) {
           )}
 
           {/* Price Badge */}
-          {!(hidePriceIfZero && basePrice === 0) && (
+          {(!(hidePriceIfZero && basePrice === 0)) && (
             <div className="absolute top-3 left-3 z-10">
               <div className="flex flex-col items-start">
                 <span className="px-3 py-1 rounded-full bg-black/50 backdrop-blur-sm text-white text-sm font-bold">
@@ -351,7 +351,9 @@ function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: P
         <div className="p-4 border-t border-zinc-800 bg-zinc-900/50">
           <div className="flex items-center justify-between mb-3">
             <span className="text-zinc-400">Total:</span>
-            <span className="text-2xl font-bold text-white">${totalPrice.toLocaleString()}</span>
+            <span className="text-2xl font-bold text-white">
+              {hidePriceIfZero && totalPrice === 0 ? "Seleccionable" : `$${totalPrice.toLocaleString()}`}
+            </span>
           </div>
           <button
             onClick={handleAddToCart}

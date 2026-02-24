@@ -27,15 +27,12 @@ interface MealPrepModalProps {
     shopName?: string;
     whatsappNumber?: string;
     catalog?: any[];
+    hidePriceIfZero?: boolean;
 }
 
-export function MealPrepModal({
-    isOpen,
-    onClose,
-    onConfirm,
-    shopName = "Meal Prep",
-    whatsappNumber,
+whatsappNumber,
     catalog = [],
+    hidePriceIfZero,
 }: MealPrepModalProps) {
     const [step, setStep] = useState<"package" | "plates" | "training" | "delivery" | "summary">("package");
     const [selectedPackage, setSelectedPackage] = useState<number>(3);

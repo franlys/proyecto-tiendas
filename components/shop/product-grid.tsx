@@ -72,11 +72,13 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
   const [isMealModalOpen, setIsMealModalOpen] = useState(false);
   const { hasInventory, config } = useCombinedBusinessFeatures(shop?.businessTypes || [shop?.businessType || "otro"]);
 
-  const isMealPrep = hidePriceIfZero ?? (shop?.businessType === "meal_prep" ||
+  const isMealPrep = hidePriceIfZero ||
+    shop?.businessType === "meal_prep" ||
     shop?.businessTypes?.includes("meal_prep") ||
     config.category === "food" ||
     config.category === "entertainment" ||
-    (config.category as string) === "fitness");
+    (config.category as string) === "fitness" ||
+    products.some(p => (p as any).plateCount);
 
   // Group products by category
   const productsByCategory = useMemo(() => {
@@ -213,6 +215,7 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
         shopName={shop?.name}
         whatsappNumber={shop?.contact?.whatsapp || shop?.contact?.phone}
         catalog={products}
+        hidePriceIfZero={isMealPrep}
       />
       {categories.map((category, categoryIndex) => {
         const catInfo = getCategoryInfo(category);
