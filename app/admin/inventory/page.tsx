@@ -493,8 +493,8 @@ function ProductsContent({ shopId, businessType = "" }: { shopId: string; busine
     p.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const lowStockCount = getLowStockProducts().length;
-  const totalValue = products.reduce((acc, p) => acc + (p.price * (p.stock || 0)), 0);
+  const lowStockCount = isMenuOnly ? 0 : getLowStockProducts().length;
+  const totalValue = isMenuOnly ? 0 : products.reduce((acc, p) => acc + (p.price * (p.stock || 0)), 0);
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
@@ -603,6 +603,7 @@ function ProductsContent({ shopId, businessType = "" }: { shopId: string; busine
       {filteredProducts.length > 0 ? (
         <ProductList
           products={filteredProducts}
+          hasInventory={!isMenuOnly}
           onEdit={handleEdit}
           onDelete={handleDelete}
           onUpdateStock={handleUpdateStock}

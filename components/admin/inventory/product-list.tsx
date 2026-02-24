@@ -16,6 +16,7 @@ interface ExtendedProduct extends Product {
 
 interface ProductListProps {
     products: Product[];
+    hasInventory: boolean;
     onEdit: (product: Product) => void;
     onDelete: (productId: string) => void;
     onUpdateStock: (productId: string, newStock: number, variantId?: string) => void;
@@ -58,7 +59,7 @@ function getCategoryDisplayInfo(product: ExtendedProduct): CategoryDisplayInfo {
     };
 }
 
-export function ProductList({ products, onEdit, onDelete, onUpdateStock }: ProductListProps) {
+export function ProductList({ products, hasInventory, onEdit, onDelete, onUpdateStock }: ProductListProps) {
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
     const toggleExpand = (id: string) => {
@@ -106,9 +107,9 @@ export function ProductList({ products, onEdit, onDelete, onUpdateStock }: Produ
                                         </span>
                                     );
                                 })()}
-                                {product.lowStockThreshold >= (product.stock || 0) && (
+                                {hasInventory && (product.lowStockThreshold || 0) >= (product.stock || 0) && (
                                     <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse">
-                                        Low Stock
+                                        Bajo Stock
                                     </span>
                                 )}
                                 {product.variants && product.variants.length > 0 && (

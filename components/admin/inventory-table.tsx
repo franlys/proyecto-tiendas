@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 interface InventoryTableProps {
   onEdit: (product: Product) => void;
   shopId: string;
+  hasInventory: boolean;
 }
 
 // Quick Edit Input Component
@@ -112,6 +113,7 @@ function ProductCard({
   onUpdateStock,
   onUpdatePrice,
   shopId,
+  hasInventory,
 }: {
   product: Product;
   onEdit: () => void;
@@ -119,8 +121,9 @@ function ProductCard({
   onUpdateStock: (stock: number) => void;
   onUpdatePrice: (price: number) => void;
   shopId: string;
+  hasInventory: boolean;
 }) {
-  const stockStatus = getStockStatus(product);
+  const stockStatus = hasInventory ? getStockStatus(product) : "ok";
 
   return (
     <div
@@ -250,7 +253,7 @@ function getStockStatus(product: Product): "out" | "low" | "ok" {
   return "ok";
 }
 
-export function InventoryTable({ onEdit, shopId }: InventoryTableProps) {
+export function InventoryTable({ onEdit, shopId, hasInventory }: InventoryTableProps) {
   const { products, updateStock, updateProduct, deleteProduct } = useInventory();
 
   const handleDelete = (product: Product) => {
@@ -288,6 +291,7 @@ export function InventoryTable({ onEdit, shopId }: InventoryTableProps) {
             key={product.id}
             product={product}
             shopId={shopId}
+            hasInventory={hasInventory}
             onEdit={() => onEdit(product)}
             onDelete={() => handleDelete(product)}
             onUpdateStock={(stock) => handleUpdateStock(product.id, stock)}
@@ -325,7 +329,7 @@ export function InventoryTable({ onEdit, shopId }: InventoryTableProps) {
           </thead>
           <tbody>
             {products.map((product) => {
-              const stockStatus = getStockStatus(product);
+              const stockStatus = hasInventory ? getStockStatus(product) : "ok";
 
               return (
                 <tr

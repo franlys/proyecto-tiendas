@@ -54,7 +54,7 @@ export function ProductCard({ product, hidePriceIfZero }: ProductCardProps) {
   const simpleInCart = simpleQuantity > 0;
 
   const handleSimpleAdd = () => {
-    if (!isOutOfStock && simpleQuantity < stockNumber) {
+    if (!isOutOfStock && simpleQuantity < effectiveStock) {
       addProduct(product, 1);
     }
   };
@@ -202,6 +202,8 @@ function ProductOptionsModal({ product, onClose }: { product: Product, onClose: 
   );
   const [selectedExtras, setSelectedExtras] = useState<SelectedExtra[]>([]);
   const [quantity, setQuantity] = useState(1);
+  const shop = useShop();
+  const { hasInventory } = useCombinedBusinessFeatures(shop?.businessTypes || [shop?.businessType || "otro"]);
 
   // Calculate total price
   const basePrice = selectedVariant?.price || product.promoPrice || product.price;
@@ -270,7 +272,7 @@ function ProductOptionsModal({ product, onClose }: { product: Product, onClose: 
                 {product.variants!.map(variant => {
                   const isSelected = selectedVariant?.id === variant.id;
                   const stock = variant.stock || 0;
-                  const isOutOfStock = stock === 0;
+                  const isOutOfStock = hasInventory && stock === 0;
 
                   return (
                     <button
