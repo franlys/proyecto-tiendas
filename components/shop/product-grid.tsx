@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
-import { ShoppingBag } from "lucide-react";
+import { useMemo, useRef } from "react";
+import { ShoppingBag, ChevronLeft, ChevronRight } from "lucide-react";
 import { ProductCard } from "./product-card";
 import { MealPrepProductCard } from "./meal-prep-product-card";
 import { StaggerContainer, StaggerItem, ScrollReveal, useShop, useCart } from "@/components/shared";
@@ -113,6 +113,18 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
   }, [products, hasInventory]);
 
   const categories = Object.keys(productsByCategory);
+  const scrollRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const scroll = (category: string, direction: 'left' | 'right') => {
+    const container = scrollRefs.current[category];
+    if (container) {
+      const scrollAmount = 300; // Un plato aproximado + gap
+      container.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
 
 
   if (products.length === 0) {
@@ -246,47 +258,63 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
         catalog={products}
         hidePriceIfZero={isMealPrep}
       />
-      {categories.map((category, categoryIndex) => {
+      {categories.map((category) => {
         const catInfo = getCategoryInfo(category);
         return (
-          <div key={category} id={`category-${category}`} className="scroll-mt-32">
+          <div key={category} className="relative">
             {/* Category Header */}
-            <div className="flex items-center justify-between gap-4 mb-8">
+            <div className="flex items-center justify-between gap-4 mb-6">
               <div>
-                <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-2">
+                <h2 className="font-display text-xl md:text-2xl font-bold text-white mb-2 uppercase tracking-tight">
                   {catInfo.label}
                 </h2>
                 {catInfo.isCustom && catInfo.backgroundColor ? (
                   <div
-                    className="w-20 h-1 rounded-full"
+                    className="w-12 h-0.5 rounded-full"
                     style={{ backgroundColor: catInfo.backgroundColor }}
                   />
                 ) : (
-                  <div className="w-20 h-1 bg-gradient-to-r from-gold to-orange-400 rounded-full" />
+                  <div className="w-12 h-0.5 bg-gradient-to-r from-gold to-orange-400 rounded-full" />
                 )}
               </div>
 
-              {isMealPrep && (
+              <div className="flex items-center gap-2">
+                {isMealPrep && (
+                  <button
+                    onClick={() => setIsMealModalOpen(true)}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/30 text-green-400 text-[10px] sm:text-xs font-bold hover:bg-green-500/20 transition-all mr-2"
+                  >
+                    <ChefHat className="w-3 h-3 sm:w-4 h-4" />
+                    Armar Paquete
+                  </button>
+                )}
+                {/* Navigation Arrows */}
                 <button
-                  onClick={() => setIsMealModalOpen(true)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/30 text-green-400 text-[10px] sm:text-xs font-bold hover:bg-green-500/20 transition-all"
+                  onClick={() => scroll(category, 'left')}
+                  className="p-2 rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all hidden md:flex"
+                  aria-label="Anterior"
                 >
-                  <ChefHat className="w-3 h-3 sm:w-4 h-4" />
-                  Armar Paquete
+                  <ChevronLeft className="w-5 h-5" />
                 </button>
-              )}
+                <button
+                  onClick={() => scroll(category, 'right')}
+                  className="p-2 rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all hidden md:flex"
+                  aria-label="Siguiente"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
-            {/* Products Grid (Conditional Carousel) */}
-            {productsByCategory[category]?.length > 3 ? (
-              <div className="md:block">
-                <StaggerContainer
-                  staggerDelay={0.08}
-                  className="flex md:grid md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 overflow-x-auto md:overflow-visible pb-4 md:pb-0 hide-scrollbar snap-x-mandatory"
-                >
-                  {productsByCategory[category]?.map((product) => (
-                    <StaggerItem key={product.id} className="min-w-[260px] md:min-w-0 snap-center">
-                      {/* Si es un negocio de Meal Prep y el producto tiene configuración de platos, usar tarjeta especial */}
+            {/* Horizontal Product Carousel */}
+            <div
+              ref={(el) => { scrollRefs.current[category] = el; }}
+              className="flex gap-4 overflow-x-auto pb-6 hide-scrollbar snap-x-mandatory -mx-2 px-2"
+            >
+              {productsByCategory[category]?.map((product) => (
+                <div key={product.id} className="min-w-[280px] sm:min-w-[320px] md:min-w-[340px] snap-start">
+                  <StaggerContainer staggerDelay={0.05} className="w-full">
+                    <StaggerItem>
                       {isMealPrep && (product as any).plateCount && shop ? (
                         <MealPrepProductCard
                           product={product as any}
@@ -295,7 +323,6 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
                           whatsappNumber={shop.contact?.whatsapp || shop.contact?.phone}
                         />
                       ) : (
-                        /* De lo contrario, usar tarjeta estándar (componentes o paquetes pre-armados) */
                         <ProductCard
                           product={product}
                           hidePriceIfZero={isMealPrep}
@@ -303,34 +330,10 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
                         />
                       )}
                     </StaggerItem>
-                  ))}
-                </StaggerContainer>
-              </div>
-            ) : (
-              <StaggerContainer
-                staggerDelay={0.08}
-                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
-              >
-                {productsByCategory[category]?.map((product) => (
-                  <StaggerItem key={product.id}>
-                    {isMealPrep && (product as any).plateCount && shop ? (
-                      <MealPrepProductCard
-                        product={product as any}
-                        allProducts={products}
-                        shopName={shop.name}
-                        whatsappNumber={shop.contact?.whatsapp || shop.contact?.phone}
-                      />
-                    ) : (
-                      <ProductCard
-                        product={product}
-                        hidePriceIfZero={isMealPrep}
-                        onClickIntercept={() => setIsMealModalOpen(true)}
-                      />
-                    )}
-                  </StaggerItem>
-                ))}
-              </StaggerContainer>
-            )}
+                  </StaggerContainer>
+                </div>
+              ))}
+            </div>
           </div>
         );
       })}
