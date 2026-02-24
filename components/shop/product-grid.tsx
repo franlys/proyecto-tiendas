@@ -294,6 +294,7 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
                     <ProductCard
                       product={product}
                       hidePriceIfZero={isMealPrep}
+                      onClickIntercept={() => setIsMealModalOpen(true)}
                     />
                   )}
                 </StaggerItem>

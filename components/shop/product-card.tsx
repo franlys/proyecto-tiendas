@@ -14,9 +14,10 @@ import { motion, AnimatePresence } from "framer-motion";
 interface ProductCardProps {
   product: Product;
   hidePriceIfZero?: boolean;
+  onClickIntercept?: () => void;
 }
 
-export function ProductCard({ product, hidePriceIfZero }: ProductCardProps) {
+export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: ProductCardProps) {
   const { addProduct, removeItem, getProductQuantity, updateProductQuantity, getVariantQuantity, updateVariantQuantity, removeVariant } = useCart();
 
   // State for modal selection
@@ -59,7 +60,13 @@ export function ProductCard({ product, hidePriceIfZero }: ProductCardProps) {
   const simpleQuantity = !hasVariants ? getProductQuantity(product.id) : 0;
   const simpleInCart = simpleQuantity > 0;
 
-  const handleSimpleAdd = () => {
+  const handleSimpleAdd = (e?: React.MouseEvent) => {
+    if (onClickIntercept && hidePriceIfZero && basePrice === 0) {
+      e?.preventDefault();
+      e?.stopPropagation();
+      onClickIntercept();
+      return;
+    }
     if (!isOutOfStock && simpleQuantity < effectiveStock) {
       addProduct(product, 1);
     }
@@ -117,14 +124,22 @@ export function ProductCard({ product, hidePriceIfZero }: ProductCardProps) {
               {hasOptions ? (
                 /* Options Button (Variants and/or Extras) */
                 <button
-                  onClick={() => setIsModalOpen(true)}
+                  onClick={(e) => {
+                    if (onClickIntercept && hidePriceIfZero && basePrice === 0) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onClickIntercept();
+                    } else {
+                      setIsModalOpen(true);
+                    }
+                  }}
                   className="px-4 py-2 rounded-full bg-white/90 hover:bg-white text-black text-xs font-bold uppercase tracking-wide shadow-lg transition-all active:scale-95"
                 >
                   {hasExtras ? "Personalizar" : "Opciones"}
                 </button>
               ) : (
                 /* Simple Add Toggle */
-                simpleInCart ? (
+                simpleInCart && !(hidePriceIfZero && basePrice === 0) ? (
                   <div className="flex items-center gap-0.5 sm:gap-1 bg-white rounded-full shadow-lg p-0.5 sm:p-1">
                     <button
                       onClick={handleSimpleRemove}
@@ -136,7 +151,7 @@ export function ProductCard({ product, hidePriceIfZero }: ProductCardProps) {
                       {simpleQuantity}
                     </span>
                     <button
-                      onClick={handleSimpleAdd}
+                      onClick={() => handleSimpleAdd()}
                       disabled={simpleQuantity >= effectiveStock}
                       className={cn(
                         "w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-colors",
@@ -150,7 +165,7 @@ export function ProductCard({ product, hidePriceIfZero }: ProductCardProps) {
                   </div>
                 ) : (
                   <button
-                    onClick={handleSimpleAdd}
+                    onClick={(e) => handleSimpleAdd(e)}
                     className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/90 hover:bg-white hover:scale-110 flex items-center justify-center transition-all shadow-lg"
                   >
                     <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-background" />
