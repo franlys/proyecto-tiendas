@@ -161,7 +161,8 @@ export function ProductCard({ product, hidePriceIfZero }: ProductCardProps) {
           )}
 
           {/* Price Badge */}
-          {(!(hidePriceIfZero && basePrice === 0)) && (
+          {/* Price Badge */}
+          {basePrice > 0 && (
             <div className="absolute top-3 left-3 z-10">
               <div className="flex flex-col items-start">
                 <span className="px-3 py-1 rounded-full bg-black/50 backdrop-blur-sm text-white text-sm font-bold">
@@ -302,7 +303,7 @@ function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: P
                       {variant.description && (
                         <p className="text-xs text-zinc-400 mt-0.5">{variant.description}</p>
                       )}
-                      {!(hidePriceIfZero && variant.price === 0) && (
+                      {variant.price > 0 && (
                         <p className="text-sm font-semibold text-emerald-400 mt-1">
                           ${variant.price.toLocaleString()}
                         </p>

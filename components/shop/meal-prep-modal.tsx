@@ -30,7 +30,12 @@ interface MealPrepModalProps {
     hidePriceIfZero?: boolean;
 }
 
-whatsappNumber,
+export function MealPrepModal({
+    isOpen,
+    onClose,
+    onConfirm,
+    shopName = "Meal Prep",
+    whatsappNumber,
     catalog = [],
     hidePriceIfZero,
 }: MealPrepModalProps) {

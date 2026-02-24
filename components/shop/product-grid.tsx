@@ -73,12 +73,13 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
   const { hasInventory, config } = useCombinedBusinessFeatures(shop?.businessTypes || [shop?.businessType || "otro"]);
 
   const isMealPrep = hidePriceIfZero ||
-    shop?.businessType === "meal_prep" ||
-    shop?.businessTypes?.includes("meal_prep") ||
-    config.category === "food" ||
-    config.category === "entertainment" ||
-    (config.category as string) === "fitness" ||
-    products.some(p => (p as any).plateCount);
+    (shop?.businessType as any) === "meal_prep" ||
+    (shop?.businessType as any) === "fitness" ||
+    (shop?.businessType as any) === "entrenamiento" ||
+    shop?.businessTypes?.some(t => ["meal_prep", "fitness", "gym", "entrenamiento", "food", "personal_trainer"].includes(t)) ||
+    (config.category as any) === "food" ||
+    (config.category as any) === "fitness" ||
+    products.some(p => (p as any).plateCount || (p as any).category === "meal_prep_package");
 
   // Group products by category
   const productsByCategory = useMemo(() => {
