@@ -14,6 +14,7 @@ import {
 
 interface ProductGridProps {
   products: Product[];
+  hidePriceIfZero?: boolean;
 }
 
 // Extended product type with custom category colors
@@ -61,14 +62,14 @@ function getCategoryDisplayInfo(product: ExtendedProduct): CategoryDisplayInfo {
   };
 }
 
-export function ProductGrid({ products }: ProductGridProps) {
+export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
   const shop = useShop();
   const { hasInventory, config } = useCombinedBusinessFeatures(shop?.businessTypes || [shop?.businessType || "otro"]);
 
-  const isMealPrep = shop?.businessType === "meal_prep" ||
+  const isMealPrep = hidePriceIfZero ?? (shop?.businessType === "meal_prep" ||
     shop?.businessTypes?.includes("meal_prep") ||
     config.category === "food" ||
-    (config.category as string) === "fitness";
+    (config.category as string) === "fitness");
 
   // Group products by category
   const productsByCategory = useMemo(() => {

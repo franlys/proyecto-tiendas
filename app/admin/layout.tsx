@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import { AuthProvider, useAuth, ShopsProvider, useShops, AgencyProvider, NotificationsProvider } from "@/components/shared";
+import { ThemeProvider, AuthProvider, useAuth, ShopsProvider, useShops, AgencyProvider, NotificationsProvider } from "@/components/shared";
 import { SupportWidget } from "@/components/admin/support-widget";
 
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
@@ -52,11 +52,14 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
   // Get shopId for notifications
   const shopId = user?.shopId || null;
+  const shop = shopId ? (getShop(shopId) || null) : null;
 
   return (
-    <NotificationsProvider shopId={shopId}>
-      {children}
-    </NotificationsProvider>
+    <ThemeProvider shop={shop as any}>
+      <NotificationsProvider shopId={shopId}>
+        {children}
+      </NotificationsProvider>
+    </ThemeProvider>
   );
 }
 

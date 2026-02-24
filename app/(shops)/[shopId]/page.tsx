@@ -411,7 +411,10 @@ export default function ShopHomePage() {
                 <Loader2 className="w-10 h-10 text-gold animate-spin" />
               </div>
             ) : (
-              <ProductGrid products={products} />
+              <ProductGrid
+                products={products}
+                hidePriceIfZero={businessTypes.includes("meal_prep") || shop?.businessType === "meal_prep"}
+              />
             )}
           </div>
         </SectionObserver>
