@@ -14,6 +14,7 @@ import {
     DEFAULT_CATEGORY_COLORS,
     generateCategoryId
 } from "@/lib/types/custom-category.types";
+import { cn } from "@/lib/utils";
 
 interface ProductEditorProps {
     product?: Product; // If null, creating new
@@ -32,6 +33,10 @@ interface ExtendedProduct extends Omit<Product, 'category'> {
         backgroundColor: string;
         textColor: string;
     };
+    // Meal Prep support
+    plateCount?: number;
+    isCustomizable?: boolean;
+    allowedComponentCategories?: string[];
 }
 
 const EMPTY_PRODUCT: ExtendedProduct = {
@@ -47,6 +52,9 @@ const EMPTY_PRODUCT: ExtendedProduct = {
     extras: [],
     extrasRequired: false,
     maxExtras: undefined,
+    plateCount: undefined,
+    isCustomizable: false,
+    allowedComponentCategories: [],
 };
 
 export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideStock = false }: ProductEditorProps) {
@@ -746,6 +754,106 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideSt
                                         </div>
                                     )}
                                 </div>
+
+                                <div className="h-px bg-zinc-800 my-6" />
+
+                                {/* Meal Prep Configuration (Only for menu-only businesses) */}
+                                {hideStock && (
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-lg font-semibold text-white text-emerald-400">Configuración Meal Prep</h3>
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="checkbox"
+                                                    id="isMealPrepPackage"
+                                                    checked={!!(formData.plateCount && formData.plateCount > 0)}
+                                                    onChange={(e) => {
+                                                        const isChecked = e.target.checked;
+                                                        setFormData({
+                                                            ...formData,
+                                                            plateCount: isChecked ? 5 : undefined,
+                                                            isCustomizable: isChecked ? true : false
+                                                        });
+                                                    }}
+                                                    className="w-4 h-4 rounded bg-zinc-800 border-zinc-600 text-emerald-500 focus:ring-emerald-500"
+                                                />
+                                                <label htmlFor="isMealPrepPackage" className="text-sm text-zinc-300 cursor-pointer select-none">
+                                                    Es un Paquete de Comidas (Meal Prep)
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        {(formData.plateCount && formData.plateCount > 0) && (
+                                            <motion.div
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: "auto" }}
+                                                className="bg-emerald-500/5 border border-emerald-500/20 p-4 rounded-xl space-y-4"
+                                            >
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-zinc-400 mb-1">Cantidad de Platos</label>
+                                                        <input
+                                                            type="number"
+                                                            min="1"
+                                                            value={formData.plateCount}
+                                                            onChange={(e) => setFormData({ ...formData, plateCount: Number(e.target.value) })}
+                                                            className="w-full bg-zinc-900 border-zinc-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                            placeholder="Ej. 5, 10, 15"
+                                                        />
+                                                    </div>
+                                                    <div className="flex flex-col justify-center">
+                                                        <div className="flex items-center gap-2">
+                                                            <input
+                                                                type="checkbox"
+                                                                id="isCustomizable"
+                                                                checked={formData.isCustomizable}
+                                                                onChange={(e) => setFormData({ ...formData, isCustomizable: e.target.checked })}
+                                                                className="w-4 h-4 rounded bg-zinc-800 border-zinc-600 text-emerald-500 focus:ring-emerald-500"
+                                                            />
+                                                            <label htmlFor="isCustomizable" className="text-sm text-zinc-300 cursor-pointer">
+                                                                Personalizable por el cliente
+                                                            </label>
+                                                        </div>
+                                                        <p className="text-xs text-zinc-500 mt-1">Si está activo, el cliente podrá elegir los ingredientes.</p>
+                                                    </div>
+                                                </div>
+
+                                                {formData.isCustomizable && (
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-zinc-400 mb-2">Categorías permitidas para componentes</label>
+                                                        <div className="flex flex-wrap gap-2 mb-2">
+                                                            {["Proteínas", "Carbohidratos", "Vegetales", "Frutas", "Postres", "Bebidas"].map((cat) => (
+                                                                <button
+                                                                    key={cat}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        const current = formData.allowedComponentCategories || [];
+                                                                        if (current.includes(cat)) {
+                                                                            setFormData({ ...formData, allowedComponentCategories: current.filter(c => c !== cat) });
+                                                                        } else {
+                                                                            setFormData({ ...formData, allowedComponentCategories: [...current, cat] });
+                                                                        }
+                                                                    }}
+                                                                    className={cn(
+                                                                        "px-3 py-1 rounded-full text-xs font-medium border transition-all",
+                                                                        (formData.allowedComponentCategories || []).includes(cat)
+                                                                            ? "bg-emerald-500/20 border-emerald-500 text-emerald-400"
+                                                                            : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-500"
+                                                                    )}
+                                                                >
+                                                                    {cat}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                        <p className="text-xs text-zinc-500 italic">
+                                                            * El sistema buscará productos en el catálogo que pertenezcan a estas categorías para ofrecerlos como opciones.
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </motion.div>
+                                        )}
+                                    </div>
+                                )}
 
                                 {/* Footer */}
                                 <div className="pt-6 flex justify-end gap-3 sticky bottom-0 bg-zinc-900 pb-2">

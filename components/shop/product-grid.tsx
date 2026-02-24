@@ -69,6 +69,7 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
   const isMealPrep = hidePriceIfZero ?? (shop?.businessType === "meal_prep" ||
     shop?.businessTypes?.includes("meal_prep") ||
     config.category === "food" ||
+    config.category === "entertainment" ||
     (config.category as string) === "fitness");
 
   // Group products by category

@@ -682,6 +682,10 @@ export interface Product {
   extrasRequired?: boolean;
   // Maximum number of extras allowed
   maxExtras?: number;
+  // Meal Prep Package configuration
+  plateCount?: number; // Number of plates in this package
+  isCustomizable?: boolean; // Whether plates can be customized
+  allowedComponentCategories?: string[]; // Categories like "Proteínas", "Carbohidratos"
 }
 
 // Product Category Labels
