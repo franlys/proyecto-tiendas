@@ -156,6 +156,7 @@ export function MealPrepProductCard({
                 shopName={shopName}
                 whatsappNumber={whatsappNumber}
                 catalog={allProducts}
+                hidePriceIfZero={true}
             />
         </>
     );

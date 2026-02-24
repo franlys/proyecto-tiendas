@@ -169,43 +169,58 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
     <div className="space-y-12">
       {/* Global Meal Prep CTA */}
       {isMealPrep && (
-        <ScrollReveal>
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-green-600/20 to-emerald-900/20 border border-green-500/30 p-8 md:p-12 mb-16">
-            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-              <div className="max-w-xl text-center md:text-left">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/20 border border-green-500/30 text-green-400 text-xs font-bold uppercase tracking-wider mb-4">
-                  <ChefHat className="w-4 h-4" />
-                  Meal Prep Personalizado
-                </div>
-                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                  Arma tu paquete y potenta tu nutrición
-                </h2>
-                <p className="text-slate-400 text-lg mb-6">
-                  Mínimo 3 platos. Selección flexible de proteínas, carbohidratos y vegetales. Opción de platos personalizados con tus propias especificaciones.
-                </p>
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
-                  <button
-                    onClick={() => setIsMealModalOpen(true)}
-                    className="flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold transition-all shadow-xl shadow-green-500/20 active:scale-95"
-                  >
-                    Personalizar Orden Ahora
-                    <ArrowRight className="w-5 h-5" />
-                  </button>
-                  <div className="text-sm text-slate-500 italic">
-                    Desde $13 por plato
-                  </div>
-                </div>
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-green-600/30 to-emerald-900/40 border-2 border-green-500/50 p-8 md:p-12 mb-16 shadow-2xl shadow-green-500/10">
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="max-w-xl text-center md:text-left">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-500 text-white text-xs font-bold uppercase tracking-wider mb-6 shadow-lg shadow-green-500/30">
+                <ChefHat className="w-4 h-4" />
+                Plan Nutricional Activo
               </div>
-              <div className="hidden md:block relative w-64 h-64 opacity-20">
-                <ChefHat className="w-full h-full text-green-500" />
+              <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight">
+                ¡Arma tu paquete de <span className="text-green-400">Meal Prep</span> hoy!
+              </h2>
+              <p className="text-slate-300 text-lg mb-8 leading-relaxed">
+                Selecciona tus proteínas, carbohidratos y vegetales favoritos. Mínimo 3 platos personalizados para potenciar tu semana.
+              </p>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-6">
+                <button
+                  onClick={() => setIsMealModalOpen(true)}
+                  className="group relative flex items-center gap-3 px-10 py-5 rounded-full bg-white text-black font-black text-lg transition-all hover:scale-105 active:scale-95 shadow-2xl"
+                >
+                  <ChefHat className="w-6 h-6 text-green-600" />
+                  REALIZAR MI ORDEN
+                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                </button>
+                <div className="px-4 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10">
+                  <span className="text-green-400 font-bold">$13</span>
+                  <span className="text-slate-400 text-sm ml-1">por plato estándar</span>
+                </div>
               </div>
             </div>
 
-            {/* Background elements */}
-            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-96 h-96 bg-green-500/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl" />
+            <div className="hidden lg:block relative group">
+              <div className="absolute inset-0 bg-green-500/20 blur-3xl rounded-full group-hover:bg-green-500/30 transition-all" />
+              <ChefHat className="relative w-48 h-48 text-green-500 animate-pulse" />
+            </div>
           </div>
-        </ScrollReveal>
+
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-96 h-96 bg-green-500/20 rounded-full blur-[100px]" />
+          <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-80 h-80 bg-emerald-500/10 rounded-full blur-[80px]" />
+        </div>
+      )}
+
+      {/* Floating CTA for Mobile */}
+      {isMealPrep && (
+        <div className="fixed bottom-6 right-6 z-40 md:hidden">
+          <button
+            onClick={() => setIsMealModalOpen(true)}
+            className="flex items-center gap-2 p-4 rounded-full bg-green-500 text-white font-bold shadow-2xl shadow-green-500/40 animate-bounce"
+          >
+            <ChefHat className="w-6 h-6" />
+            <span>Ordenar Ahora</span>
+          </button>
+        </div>
       )}
 
       {/* Modal */}
@@ -223,8 +238,8 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
         return (
           <div key={category}>
             {/* Category Header */}
-            <ScrollReveal delay={categoryIndex * 0.1}>
-              <div className="mb-8">
+            <div className="flex items-center justify-between gap-4 mb-8">
+              <div>
                 <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-2">
                   {catInfo.label}
                 </h2>
@@ -237,7 +252,17 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
                   <div className="w-20 h-1 bg-gradient-to-r from-gold to-orange-400 rounded-full" />
                 )}
               </div>
-            </ScrollReveal>
+
+              {isMealPrep && (
+                <button
+                  onClick={() => setIsMealModalOpen(true)}
+                  className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-bold hover:bg-green-500/20 transition-all"
+                >
+                  <ChefHat className="w-4 h-4" />
+                  Armar Paquete
+                </button>
+              )}
+            </div>
 
             {/* Products Grid */}
             <StaggerContainer
