@@ -13,9 +13,10 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface ProductCardProps {
   product: Product;
+  hidePriceIfZero?: boolean;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, hidePriceIfZero }: ProductCardProps) {
   const { addProduct, removeItem, getProductQuantity, updateProductQuantity, getVariantQuantity, updateVariantQuantity, removeVariant } = useCart();
 
   // State for modal selection
@@ -154,13 +155,15 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
 
           {/* Price Badge */}
-          <div className="absolute top-3 left-3 z-10">
-            <div className="flex flex-col items-start">
-              <span className="px-3 py-1 rounded-full bg-black/50 backdrop-blur-sm text-white text-sm font-bold">
-                {hasVariants ? "Desde " : ""}${basePrice.toLocaleString()}
-              </span>
+          {!(hidePriceIfZero && basePrice === 0) && (
+            <div className="absolute top-3 left-3 z-10">
+              <div className="flex flex-col items-start">
+                <span className="px-3 py-1 rounded-full bg-black/50 backdrop-blur-sm text-white text-sm font-bold">
+                  {hasVariants ? "Desde " : ""}${basePrice.toLocaleString()}
+                </span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Info */}

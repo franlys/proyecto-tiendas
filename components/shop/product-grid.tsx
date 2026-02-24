@@ -65,6 +65,9 @@ export function ProductGrid({ products }: ProductGridProps) {
   const shop = useShop();
   const { hasInventory } = useCombinedBusinessFeatures(shop?.businessTypes || [shop?.businessType || "otro"]);
 
+  const isMealPrep = shop?.businessType === "meal_prep" ||
+    shop?.businessTypes?.includes("meal_prep");
+
   // Group products by category
   const productsByCategory = useMemo(() => {
     const grouped: Record<string, Product[]> = {};
@@ -153,14 +156,19 @@ export function ProductGrid({ products }: ProductGridProps) {
             >
               {productsByCategory[category]?.map((product) => (
                 <StaggerItem key={product.id}>
-                  {shop?.businessType === "meal_prep" && (product as any).plateCount ? (
+                  {/* Si es un negocio de Meal Prep y el producto tiene configuración de platos, usar tarjeta especial */}
+                  {isMealPrep && (product as any).plateCount && shop ? (
                     <MealPrepProductCard
                       product={product as any}
                       shopName={shop.name}
                       whatsappNumber={shop.contact?.whatsapp || shop.contact?.phone}
                     />
                   ) : (
-                    <ProductCard product={product} />
+                    /* De lo contrario, usar tarjeta estándar (componentes o paquetes pre-armados) */
+                    <ProductCard
+                      product={product}
+                      hidePriceIfZero={isMealPrep}
+                    />
                   )}
                 </StaggerItem>
               ))}

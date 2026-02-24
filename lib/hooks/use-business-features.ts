@@ -264,7 +264,8 @@ export function getCombinedFeatures(businessTypes: string[]): CombinedBusinessFe
         hasServices: typeConfigs.some(t => t.features.hasServices),
         hasBookings: typeConfigs.some(t => t.features.hasBookings),
         hasOrders: typeConfigs.some(t => t.features.hasOrders),
-        hasInventory: typeConfigs.some(t => t.features.hasInventory),
+        hasInventory: typeConfigs.some(t => t.features.hasInventory) &&
+            !typeConfigs.some(t => t.id === 'meal_prep' || t.id === 'entrenador_personal' || t.id === 'restaurante'),
         hasWholesale: typeConfigs.some(t => t.features.hasWholesale),
         hasRepairs: typeConfigs.some(t => t.features.hasRepairs),
         hasRentals: typeConfigs.some(t => t.features.hasRentals),
