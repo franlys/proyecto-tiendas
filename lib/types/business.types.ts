@@ -1281,7 +1281,7 @@ export const BUSINESS_TYPE_CONFIG: Record<BusinessType, BusinessTypeConfig> = {
             services: false,
             bookings: true,     // Reservaciones de mesa
             orders: true,
-            inventory: true,
+            inventory: false,
             wholesale: false,
             repairs: false,
             rentals: false,
@@ -1311,7 +1311,7 @@ export const BUSINESS_TYPE_CONFIG: Record<BusinessType, BusinessTypeConfig> = {
             services: false,
             bookings: false,
             orders: true,
-            inventory: true,
+            inventory: false,
             wholesale: false,
             repairs: false,
             rentals: false,
@@ -1341,7 +1341,7 @@ export const BUSINESS_TYPE_CONFIG: Record<BusinessType, BusinessTypeConfig> = {
             services: false,
             bookings: true,     // Reservar mesa/VIP
             orders: true,
-            inventory: true,
+            inventory: false,
             wholesale: false,
             repairs: false,
             rentals: false,
@@ -1371,7 +1371,7 @@ export const BUSINESS_TYPE_CONFIG: Record<BusinessType, BusinessTypeConfig> = {
             services: true,     // Pasteles personalizados
             bookings: false,
             orders: true,
-            inventory: true,
+            inventory: false,
             wholesale: true,
             repairs: false,
             rentals: false,
@@ -1401,7 +1401,7 @@ export const BUSINESS_TYPE_CONFIG: Record<BusinessType, BusinessTypeConfig> = {
             services: false,
             bookings: false,
             orders: true,
-            inventory: true,
+            inventory: false,
             wholesale: false,
             repairs: false,
             rentals: false,
@@ -1704,7 +1704,7 @@ export const BUSINESS_TYPE_CONFIG: Record<BusinessType, BusinessTypeConfig> = {
             services: true,
             bookings: true,     // Clases
             orders: true,
-            inventory: true,
+            inventory: false,
             wholesale: false,
             repairs: false,
             rentals: false,

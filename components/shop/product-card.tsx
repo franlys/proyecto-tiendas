@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Plus, Minus, ShoppingBag, Tag, ChevronDown, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCart, useShop } from "@/components/shared";
-import { useBusinessFeatures } from "@/lib/hooks/use-business-features";
+import { useBusinessFeatures, useCombinedBusinessFeatures } from "@/lib/hooks/use-business-features";
 import type { Product, ProductVariant } from "@/lib/constants";
 import type { SelectedExtra } from "@/lib/types/product-extra.types";
 import { ExtrasSelector } from "@/components/shop/extras-selector";
@@ -32,7 +32,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
   // Business features check for stock management
   const shop = useShop();
-  const { hasInventory } = useBusinessFeatures(shop?.businessType);
+  const { hasInventory } = useCombinedBusinessFeatures(shop?.businessTypes || [shop?.businessType || "otro"]);
 
   // Stock check - convert to number to handle string values from Firestore
   // For products with variants, check if ANY variant has stock > 0

@@ -5,7 +5,7 @@ import { ShoppingBag } from "lucide-react";
 import { ProductCard } from "./product-card";
 import { MealPrepProductCard } from "./meal-prep-product-card";
 import { StaggerContainer, StaggerItem, ScrollReveal, useShop } from "@/components/shared";
-import { useBusinessFeatures } from "@/lib/hooks";
+import { useBusinessFeatures, useCombinedBusinessFeatures } from "@/lib/hooks";
 import {
   PRODUCT_CATEGORY_LABELS,
   type Product,
@@ -63,7 +63,7 @@ function getCategoryDisplayInfo(product: ExtendedProduct): CategoryDisplayInfo {
 
 export function ProductGrid({ products }: ProductGridProps) {
   const shop = useShop();
-  const { hasInventory } = useBusinessFeatures(shop?.businessType);
+  const { hasInventory } = useCombinedBusinessFeatures(shop?.businessTypes || [shop?.businessType || "otro"]);
 
   // Group products by category
   const productsByCategory = useMemo(() => {
