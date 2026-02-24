@@ -32,7 +32,8 @@ export function MealPrepProductCard({
 }: MealPrepProductCardProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const basePrice = product.plateCount * product.pricePerPlate;
+    const pricePerPlate = product.pricePerPlate || 13;
+    const basePrice = product.plateCount * pricePerPlate;
 
     const handleConfirm = (plates: MealPlate[], totalPrice: number, distance?: number) => {
         onOrder?.(plates, totalPrice, distance);

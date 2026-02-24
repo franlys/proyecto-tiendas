@@ -72,6 +72,7 @@ export type BusinessType =
     // Entretenimiento
     | "gimnasio"           // Gimnasio
     | "estudio_yoga"       // Estudio de yoga/pilates
+    | "entrenador_personal" // Entrenador personal
     | "salon_eventos"      // Salón de eventos
     | "fotografia"         // Estudio fotográfico
     // Educación
@@ -1786,29 +1787,58 @@ export const BUSINESS_TYPE_CONFIG: Record<BusinessType, BusinessTypeConfig> = {
         label: "Estudio Fotográfico",
         labelPlural: "Estudios Fotográficos",
         icon: "📷",
-        description: "Fotografía profesional y video",
+        description: "Sesiones fotográficas y edición",
         category: "entertainment",
         features: {
-            catalog: true,      // Paquetes
+            catalog: true,
             services: true,
             bookings: true,
             orders: true,
             inventory: true,
             wholesale: false,
             repairs: false,
-            rentals: true,      // Renta de equipo
+            rentals: true,
             tables: false,
             delivery: true,
         },
         labels: {
-            cta: "Ver Paquetes",
-            products: "Productos",
-            services: "Servicios",
+            cta: "Reservar Sesión",
+            products: "Paquetes",
+            services: "Sesiones",
             booking: "Sesión",
             order: "Pedido",
         },
         productCategories: ["otros"],
-        serviceCategories: ["fotografia_servicio", "evento"],
+        serviceCategories: ["fotografia_servicio"],
+    },
+    entrenador_personal: {
+        id: "entrenador_personal",
+        label: "Entrenador Personal",
+        labelPlural: "Entrenadores Personales",
+        icon: "🏃",
+        description: "Entrenamiento personalizado y planes de fitness",
+        category: "entertainment",
+        features: {
+            catalog: true,
+            services: true,
+            bookings: true,
+            orders: true,
+            inventory: false,
+            wholesale: false,
+            repairs: false,
+            rentals: false,
+            tables: false,
+            delivery: false,
+        },
+        labels: {
+            cta: "Contratar",
+            products: "Planes",
+            services: "Entrenamientos",
+            booking: "Sesión",
+            order: "Pedido",
+        },
+        productCategories: ["suplementos", "deportes"],
+        serviceCategories: ["entrenamiento_personal"],
     },
 
     // ========== EDUCACIÓN ==========

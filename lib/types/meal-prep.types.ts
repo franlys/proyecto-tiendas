@@ -16,6 +16,7 @@ export interface MealPlateComponents {
     proteina: string;      // Texto libre: "Pollo", "Res", "Salmón", etc.
     carbohidrato: string;  // Texto libre: "Arroz", "Papa", "Quinoa", etc.
     vegetales: string;     // Texto libre: "Brócoli y zanahoria", etc.
+    frutas: string;        // Texto libre: "Manzana", "Plátano", etc.
 }
 
 /**
@@ -237,6 +238,7 @@ export function createEmptyPlate(id: string): MealPlate {
             proteina: "",
             carbohidrato: "",
             vegetales: "",
+            frutas: "",
         },
     };
 }
@@ -255,7 +257,8 @@ export function isMealPackageComplete(plates: MealPlate[]): boolean {
     return plates.every(plate =>
         plate.components.proteina.trim() !== "" &&
         plate.components.carbohidrato.trim() !== "" &&
-        plate.components.vegetales.trim() !== ""
+        plate.components.vegetales.trim() !== "" &&
+        plate.components.frutas.trim() !== ""
     );
 }
 
@@ -263,10 +266,11 @@ export function isMealPackageComplete(plates: MealPlate[]): boolean {
  * Formatea el resumen de un plato para mostrar
  */
 export function formatPlateDescription(plate: MealPlate): string {
-    const { proteina, carbohidrato, vegetales } = plate.components;
+    const { proteina, carbohidrato, vegetales, frutas } = plate.components;
     const parts = [];
     if (proteina) parts.push(proteina);
     if (carbohidrato) parts.push(carbohidrato);
     if (vegetales) parts.push(vegetales);
+    if (frutas) parts.push(frutas);
     return parts.join(" + ") || "Sin configurar";
 }

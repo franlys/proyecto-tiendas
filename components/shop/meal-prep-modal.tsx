@@ -38,6 +38,7 @@ export function MealPrepModal({
     const [currentPlateIndex, setCurrentPlateIndex] = useState(0);
     const [distance, setDistance] = useState<number | undefined>();
     const [distanceInput, setDistanceInput] = useState("");
+    const [customerNotes, setCustomerNotes] = useState("");
 
     // Reset state when modal opens
     useEffect(() => {
@@ -48,6 +49,7 @@ export function MealPrepModal({
             setCurrentPlateIndex(0);
             setDistance(undefined);
             setDistanceInput("");
+            setCustomerNotes("");
         }
     }, [isOpen]);
 
@@ -138,11 +140,16 @@ export function MealPrepModal({
             message += `  - Proteina: ${plate.components.proteina}\n`;
             message += `  - Carbohidrato: ${plate.components.carbohidrato}\n`;
             message += `  - Vegetales: ${plate.components.vegetales}\n`;
+            message += `  - Frutas: ${plate.components.frutas || "No especificado"}\n`;
             if (plate.isPremiumProtein && plate.premiumSurcharge) {
                 message += `  - (Proteina Premium +$${plate.premiumSurcharge})\n`;
             }
             message += "\n";
         });
+
+        if (customerNotes) {
+            message += `*Notas/Indicaciones especiales:*\n${customerNotes}\n\n`;
+        }
 
         message += `---\n`;
         message += `Subtotal: $${pricing.basePrice}\n`;
@@ -339,6 +346,20 @@ export function MealPrepModal({
                                 />
                             </div>
 
+                            {/* Fruits input */}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    Frutas
+                                </label>
+                                <input
+                                    type="text"
+                                    value={currentPlate.components.frutas}
+                                    onChange={(e) => updatePlateComponent("frutas", e.target.value)}
+                                    placeholder="Ej: Manzana, Plátano, Frutos rojos..."
+                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-green-500/50"
+                                />
+                            </div>
+
                             {/* Navigation */}
                             <div className="flex gap-3">
                                 <Button
@@ -352,7 +373,8 @@ export function MealPrepModal({
                                 <Button
                                     onClick={handleNextPlate}
                                     className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white"
-                                    disabled={!currentPlate.components.proteina || !currentPlate.components.carbohidrato || !currentPlate.components.vegetales}
+                                    // Relaxed validation: only protein is strictly required if they want to use notes later
+                                    disabled={!currentPlate.components.proteina}
                                 >
                                     {currentPlateIndex < plates.length - 1 ? (
                                         <>

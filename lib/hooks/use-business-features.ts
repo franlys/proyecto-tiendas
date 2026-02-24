@@ -69,6 +69,7 @@ export interface BusinessFeatures {
         wholesale: boolean;     // Configuración de mayoreo
         delivery: boolean;      // Configuración de delivery
         beautyConsultations: boolean; // Pre-consultas de belleza
+        trainingPackages: boolean;    // Módulo de paquetes de entrenamiento
     };
 
     // Widgets del dashboard
@@ -123,6 +124,7 @@ export function useBusinessFeatures(businessType: BusinessType | undefined | nul
                 wholesale: features.wholesale,
                 delivery: features.delivery,
                 beautyConsultations: isBeautyBusiness(type),
+                trainingPackages: type === "meal_prep" || type === "gimnasio" || type === "entrenador_personal",
             },
 
             // Widgets del dashboard
@@ -170,6 +172,7 @@ export function getBusinessFeatures(businessType: BusinessType | undefined | nul
             wholesale: features.wholesale,
             delivery: features.delivery,
             beautyConsultations: isBeautyBusiness(businessType),
+            trainingPackages: type === "meal_prep" || type === "gimnasio" || type === "entrenador_personal",
         },
         dashboardWidgets: {
             pendingOrders: features.orders,
@@ -286,6 +289,9 @@ export function getCombinedFeatures(businessTypes: string[]): CombinedBusinessFe
             wholesale: typeConfigs.some(t => t.features.adminModules.wholesale),
             delivery: typeConfigs.some(t => t.features.adminModules.delivery),
             beautyConsultations: typeConfigs.some(t => t.features.adminModules.beautyConsultations),
+            trainingPackages: typeConfigs.some(t =>
+                t.id === "meal_prep" || t.id === "gimnasio" || t.id === "entrenador_personal"
+            ),
         },
 
         // Dashboard widgets combinados

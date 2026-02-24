@@ -3,7 +3,9 @@
 import { useMemo } from "react";
 import { ShoppingBag } from "lucide-react";
 import { ProductCard } from "./product-card";
-import { StaggerContainer, StaggerItem, ScrollReveal } from "@/components/shared";
+import { MealPrepProductCard } from "./meal-prep-product-card";
+import { StaggerContainer, StaggerItem, ScrollReveal, useShop } from "@/components/shared";
+import { useBusinessFeatures } from "@/lib/hooks";
 import {
   PRODUCT_CATEGORY_LABELS,
   type Product,
@@ -60,13 +62,17 @@ function getCategoryDisplayInfo(product: ExtendedProduct): CategoryDisplayInfo {
 }
 
 export function ProductGrid({ products }: ProductGridProps) {
+  const shop = useShop();
+  const { hasInventory } = useBusinessFeatures(shop?.businessType);
+
   // Group products by category
   const productsByCategory = useMemo(() => {
     const grouped: Record<string, Product[]> = {};
 
     // Featured products first
-    const featured = products.filter((p) => p.featured && p.stock > 0);
-    const regular = products.filter((p) => !p.featured || p.stock === 0);
+    // If hasInventory is false, we ignore the stock check
+    const featured = products.filter((p) => p.featured && (!hasInventory || p.stock > 0));
+    const regular = products.filter((p) => !p.featured || (hasInventory && p.stock === 0));
 
     [...featured, ...regular].forEach((product) => {
       const categoryKey = product.category;
@@ -77,7 +83,7 @@ export function ProductGrid({ products }: ProductGridProps) {
     });
 
     return grouped;
-  }, [products]);
+  }, [products, hasInventory]);
 
   const categories = Object.keys(productsByCategory);
 
@@ -122,36 +128,44 @@ export function ProductGrid({ products }: ProductGridProps) {
       {categories.map((category, categoryIndex) => {
         const catInfo = getCategoryInfo(category);
         return (
-        <div key={category}>
-          {/* Category Header */}
-          <ScrollReveal delay={categoryIndex * 0.1}>
-            <div className="mb-8">
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-2">
-                {catInfo.label}
-              </h2>
-              {catInfo.isCustom && catInfo.backgroundColor ? (
-                <div
-                  className="w-20 h-1 rounded-full"
-                  style={{ backgroundColor: catInfo.backgroundColor }}
-                />
-              ) : (
-                <div className="w-20 h-1 bg-gradient-to-r from-gold to-orange-400 rounded-full" />
-              )}
-            </div>
-          </ScrollReveal>
+          <div key={category}>
+            {/* Category Header */}
+            <ScrollReveal delay={categoryIndex * 0.1}>
+              <div className="mb-8">
+                <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-2">
+                  {catInfo.label}
+                </h2>
+                {catInfo.isCustom && catInfo.backgroundColor ? (
+                  <div
+                    className="w-20 h-1 rounded-full"
+                    style={{ backgroundColor: catInfo.backgroundColor }}
+                  />
+                ) : (
+                  <div className="w-20 h-1 bg-gradient-to-r from-gold to-orange-400 rounded-full" />
+                )}
+              </div>
+            </ScrollReveal>
 
-          {/* Products Grid */}
-          <StaggerContainer
-            staggerDelay={0.08}
-            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
-          >
-            {productsByCategory[category]?.map((product) => (
-              <StaggerItem key={product.id}>
-                <ProductCard product={product} />
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
-        </div>
+            {/* Products Grid */}
+            <StaggerContainer
+              staggerDelay={0.08}
+              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
+            >
+              {productsByCategory[category]?.map((product) => (
+                <StaggerItem key={product.id}>
+                  {shop?.businessType === "meal_prep" && (product as any).plateCount ? (
+                    <MealPrepProductCard
+                      product={product as any}
+                      shopName={shop.name}
+                      whatsappNumber={shop.contact?.whatsapp || shop.contact?.phone}
+                    />
+                  ) : (
+                    <ProductCard product={product} />
+                  )}
+                </StaggerItem>
+              ))}
+            </StaggerContainer>
+          </div>
         );
       })}
     </div>
