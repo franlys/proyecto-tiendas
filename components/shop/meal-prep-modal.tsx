@@ -64,11 +64,11 @@ export function MealPrepModal({
 
     // Initialize plates when package is selected
     useEffect(() => {
-        if (step === "plates" && plates.length !== selectedPackage) {
+        if (isOpen && step === "plates" && plates.length === 0) {
             setPlates(createEmptyPlates(selectedPackage));
             setCurrentPlateIndex(0);
         }
-    }, [step, selectedPackage, plates.length]);
+    }, [step, selectedPackage, plates.length, isOpen]);
 
     if (!isOpen) return null;
 
@@ -80,6 +80,8 @@ export function MealPrepModal({
         const seenCats = new Set<string>();
 
         ingredients.forEach(p => {
+            if (!p || !p.category) return; // Seguridad: Ignorar productos sin categoría
+
             if (!grouped[p.category]) grouped[p.category] = [];
             grouped[p.category].push(p);
 
@@ -88,9 +90,9 @@ export function MealPrepModal({
                 // Try to find a nice label or capitalize
                 const label = p.category
                     .split('-')
-                    .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+                    .map((word: string) => word && word.length > 0 ? word.charAt(0).toUpperCase() + word.slice(1) : "")
                     .join(' ');
-                cats.push({ id: p.category, name: label });
+                cats.push({ id: p.category, name: label || p.category });
             }
         });
 
@@ -281,6 +283,18 @@ export function MealPrepModal({
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-4">
+                    {!currentPlate && step === "plates" && (
+                        <div className="flex flex-col items-center justify-center py-10 text-center">
+                            <p className="text-slate-400">Preparando configuración...</p>
+                            <Button
+                                variant="outline"
+                                onClick={() => setStep("package")}
+                                className="mt-4"
+                            >
+                                Volver al inicio
+                            </Button>
+                        </div>
+                    )}
                     {/* Step 1: Package Selection */}
                     {step === "package" && (
                         <div className="space-y-4">
