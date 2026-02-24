@@ -71,7 +71,6 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
   const shop = useShop();
   const { addProduct } = useCart();
   const [isMealModalOpen, setIsMealModalOpen] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<string>("");
   const { hasInventory, config } = useCombinedBusinessFeatures(shop?.businessTypes || [shop?.businessType || "otro"]);
 
   const isMealPrep = hidePriceIfZero ||
@@ -115,45 +114,6 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
 
   const categories = Object.keys(productsByCategory);
 
-  // Scroll Spy Logic
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveCategory(entry.target.id.replace("category-", ""));
-          }
-        });
-      },
-      { threshold: 0.2, rootMargin: "-100px 0px -40% 0px" }
-    );
-
-    categories.forEach((cat) => {
-      const element = document.getElementById(`category-${cat}`);
-      if (element) observer.observe(element);
-    });
-
-    return () => observer.disconnect();
-  }, [categories]);
-
-  // Auto-scroll category buttons when active category changes safely
-  useEffect(() => {
-    if (activeCategory) {
-      const button = document.getElementById(`nav-button-${activeCategory}`);
-      const container = document.getElementById('category-nav-container');
-      if (button && container) {
-        const buttonRect = button.getBoundingClientRect();
-        const containerRect = container.getBoundingClientRect();
-
-        // Solo desplazamos el contenedor horizontalmente, sin afectar el scroll de la ventana
-        const scrollOffset = button.offsetLeft - (container.offsetWidth / 2) + (button.offsetWidth / 2);
-        container.scrollTo({
-          left: scrollOffset,
-          behavior: "smooth"
-        });
-      }
-    }
-  }, [activeCategory]);
 
   if (products.length === 0) {
     return (
@@ -219,43 +179,6 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
 
   return (
     <div className="space-y-12">
-      {/* Category Navigation Carousel */}
-      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-white/5 -mx-4 px-4">
-        <div id="category-nav-container" className="flex items-center gap-2 overflow-x-auto py-3 hide-scrollbar snap-x">
-          {categories.map((catKey) => {
-            const info = getCategoryInfo(catKey);
-            return (
-              <button
-                key={catKey}
-                id={`nav-button-${catKey}`}
-                onClick={() => {
-                  const element = document.getElementById(`category-${catKey}`);
-                  if (element) {
-                    const offset = 100; // Adjust for sticky header
-                    const bodyRect = document.body.getBoundingClientRect().top;
-                    const elementRect = element.getBoundingClientRect().top;
-                    const elementPosition = elementRect - bodyRect;
-                    const offsetPosition = elementPosition - offset;
-
-                    window.scrollTo({
-                      top: offsetPosition,
-                      behavior: "smooth"
-                    });
-                  }
-                }}
-                className={cn(
-                  "px-4 py-2 rounded-full whitespace-nowrap text-xs font-bold transition-all snap-center uppercase tracking-wider",
-                  activeCategory === catKey
-                    ? "bg-primary text-white shadow-lg shadow-primary/20 scale-105"
-                    : "bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-white"
-                )}
-              >
-                {info.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
       {/* Global Meal Prep CTA */}
       {isMealPrep && (
