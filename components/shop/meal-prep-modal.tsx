@@ -70,11 +70,9 @@ export function MealPrepModal({
         }
     }, [step, selectedPackage, plates.length, isOpen]);
 
-    if (!isOpen) return null;
-
     // Extract categories and products from catalog
     const { ingredientCategories, productsByCategory } = useMemo(() => {
-        const ingredients = (catalog || []).filter(p => p.category !== "meal_prep_package");
+        const ingredients = (catalog || []).filter(p => !p || p.category !== "meal_prep_package");
         const grouped: Record<string, any[]> = {};
         const cats: { id: string, name: string }[] = [];
         const seenCats = new Set<string>();
@@ -98,6 +96,8 @@ export function MealPrepModal({
 
         return { ingredientCategories: cats, productsByCategory: grouped };
     }, [catalog]);
+
+    if (!isOpen) return null;
 
     const currentPlate = plates[currentPlateIndex];
     const pricing = calculateMealPrepTotal(plates, selectedTrainingPlan, distance);
