@@ -136,15 +136,20 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
     return () => observer.disconnect();
   }, [categories]);
 
-  // Auto-scroll category buttons when active category changes
+  // Auto-scroll category buttons when active category changes safely
   useEffect(() => {
     if (activeCategory) {
       const button = document.getElementById(`nav-button-${activeCategory}`);
-      if (button) {
-        button.scrollIntoView({
-          behavior: "smooth",
-          block: "nearest",
-          inline: "center"
+      const container = document.getElementById('category-nav-container');
+      if (button && container) {
+        const buttonRect = button.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+
+        // Solo desplazamos el contenedor horizontalmente, sin afectar el scroll de la ventana
+        const scrollOffset = button.offsetLeft - (container.offsetWidth / 2) + (button.offsetWidth / 2);
+        container.scrollTo({
+          left: scrollOffset,
+          behavior: "smooth"
         });
       }
     }
@@ -215,8 +220,8 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
   return (
     <div className="space-y-12">
       {/* Category Navigation Carousel */}
-      <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-white/5 -mx-4 px-4 mb-8">
-        <div className="flex items-center gap-2 overflow-x-auto py-4 hide-scrollbar snap-x">
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-white/5 -mx-4 px-4">
+        <div id="category-nav-container" className="flex items-center gap-2 overflow-x-auto py-3 hide-scrollbar snap-x">
           {categories.map((catKey) => {
             const info = getCategoryInfo(catKey);
             return (
@@ -349,15 +354,42 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
               )}
             </div>
 
-            {/* Products Grid (Mobile Carousel) */}
-            <div className="md:block">
+            {/* Products Grid (Conditional Carousel) */}
+            {productsByCategory[category]?.length > 3 ? (
+              <div className="md:block">
+                <StaggerContainer
+                  staggerDelay={0.08}
+                  className="flex md:grid md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 overflow-x-auto md:overflow-visible pb-4 md:pb-0 hide-scrollbar snap-x-mandatory"
+                >
+                  {productsByCategory[category]?.map((product) => (
+                    <StaggerItem key={product.id} className="min-w-[260px] md:min-w-0 snap-center">
+                      {/* Si es un negocio de Meal Prep y el producto tiene configuración de platos, usar tarjeta especial */}
+                      {isMealPrep && (product as any).plateCount && shop ? (
+                        <MealPrepProductCard
+                          product={product as any}
+                          allProducts={products}
+                          shopName={shop.name}
+                          whatsappNumber={shop.contact?.whatsapp || shop.contact?.phone}
+                        />
+                      ) : (
+                        /* De lo contrario, usar tarjeta estándar (componentes o paquetes pre-armados) */
+                        <ProductCard
+                          product={product}
+                          hidePriceIfZero={isMealPrep}
+                          onClickIntercept={() => setIsMealModalOpen(true)}
+                        />
+                      )}
+                    </StaggerItem>
+                  ))}
+                </StaggerContainer>
+              </div>
+            ) : (
               <StaggerContainer
                 staggerDelay={0.08}
-                className="flex md:grid md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 overflow-x-auto md:overflow-visible pb-4 md:pb-0 hide-scrollbar snap-x-mandatory"
+                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
               >
                 {productsByCategory[category]?.map((product) => (
-                  <StaggerItem key={product.id} className="min-w-[240px] md:min-w-0 snap-center">
-                    {/* Si es un negocio de Meal Prep y el producto tiene configuración de platos, usar tarjeta especial */}
+                  <StaggerItem key={product.id}>
                     {isMealPrep && (product as any).plateCount && shop ? (
                       <MealPrepProductCard
                         product={product as any}
@@ -366,7 +398,6 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
                         whatsappNumber={shop.contact?.whatsapp || shop.contact?.phone}
                       />
                     ) : (
-                      /* De lo contrario, usar tarjeta estándar (componentes o paquetes pre-armados) */
                       <ProductCard
                         product={product}
                         hidePriceIfZero={isMealPrep}
@@ -376,7 +407,7 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
                   </StaggerItem>
                 ))}
               </StaggerContainer>
-            </div>
+            )}
           </div>
         );
       })}
