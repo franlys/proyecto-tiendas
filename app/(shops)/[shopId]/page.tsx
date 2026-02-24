@@ -175,9 +175,12 @@ export default function ShopHomePage() {
   const categories = Object.keys(servicesByCategory) as ServiceCategory[];
 
   // Logic for Loyalty Card - Only show if explicitly enabled in features
-  // Retail shops should NOT show loyalty card by default
-  const isRetailBusiness = shop?.businessType === "retail" || shop?.businessType === "technology" || shop?.businessType === "restaurant";
-  const showLoyalty = shop?.features?.includes("loyalty") && !isRetailBusiness;
+  // Retail, Restaurants and Food businesses should NOT show loyalty card by default
+  const isFoodOrRetail = combinedFeatures.config.category === "food" ||
+    combinedFeatures.config.category === "retail" ||
+    combinedFeatures.config.category === "other";
+
+  const showLoyalty = shop?.features?.includes("loyalty") && !isFoodOrRetail;
 
   return (
     <div className="relative">

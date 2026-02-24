@@ -63,10 +63,12 @@ function getCategoryDisplayInfo(product: ExtendedProduct): CategoryDisplayInfo {
 
 export function ProductGrid({ products }: ProductGridProps) {
   const shop = useShop();
-  const { hasInventory } = useCombinedBusinessFeatures(shop?.businessTypes || [shop?.businessType || "otro"]);
+  const { hasInventory, config } = useCombinedBusinessFeatures(shop?.businessTypes || [shop?.businessType || "otro"]);
 
   const isMealPrep = shop?.businessType === "meal_prep" ||
-    shop?.businessTypes?.includes("meal_prep");
+    shop?.businessTypes?.includes("meal_prep") ||
+    config.category === "food" ||
+    (config.category as string) === "fitness";
 
   // Group products by category
   const productsByCategory = useMemo(() => {
