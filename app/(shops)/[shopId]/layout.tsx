@@ -266,12 +266,73 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
               </main>
 
               {/* Footer */}
-              <footer className="border-t border-white/10 py-8 mt-20">
-                <div className="container mx-auto px-4 text-center text-slate-400">
-                  <p>&copy; {new Date().getFullYear()} {shop.name}. Todos los derechos reservados.</p>
-                  <p className="text-sm mt-2">
-                    Powered by <span className="text-gradient-primary font-semibold">Linko</span>
-                  </p>
+              <footer className="border-t border-white/10 py-12 mt-20 bg-black/20">
+                <div className="container mx-auto px-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 text-center md:text-left">
+                    {/* Brand */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-center md:justify-start gap-3">
+                        {shop.logo ? (
+                          <img src={shop.logo} alt={shop.name} className="w-8 h-8 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                            {shop.name.charAt(0)}
+                          </div>
+                        )}
+                        <span className="font-display font-bold text-white text-lg">{shop.name}</span>
+                      </div>
+                      <p className="text-sm text-slate-400">{shop.description || shop.slogan || `Tu tienda de confianza.`}</p>
+                    </div>
+
+                    {/* Contact Info */}
+                    <div className="space-y-4">
+                      <h4 className="text-white font-semibold">Contacto</h4>
+                      <ul className="text-sm text-slate-400 space-y-2">
+                        {shop.contact?.address && <li>{shop.contact.address}</li>}
+                        {shop.contact?.phone && (
+                          <li>
+                            <a href={`https://wa.me/${(shop.contact.whatsapp || shop.contact.phone).replace(/\D/g, '')}`} className="hover:text-primary transition-colors">
+                              {shop.contact.whatsapp || shop.contact.phone}
+                            </a>
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+
+                    {/* Social links */}
+                    <div className="space-y-4">
+                      <h4 className="text-white font-semibold">Síguenos</h4>
+                      <div className="flex items-center justify-center md:justify-start gap-4">
+                        {shop.social?.instagram && (
+                          <a href={`https://instagram.com/${shop.social.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors" title="Instagram">
+                            <span className="text-xs font-bold">IG</span>
+                          </a>
+                        )}
+                        {shop.social?.facebook && (
+                          <a href={shop.social.facebook.startsWith('http') ? shop.social.facebook : `https://facebook.com/${shop.social.facebook}`} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors" title="Facebook">
+                            <span className="text-xs font-bold">FB</span>
+                          </a>
+                        )}
+                        {shop.social?.tiktok && (
+                          <a href={`https://tiktok.com/@${shop.social.tiktok.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors" title="TikTok">
+                            <span className="text-xs font-bold">TT</span>
+                          </a>
+                        )}
+                        {shop.social?.website && (
+                          <a href={shop.social.website.startsWith('http') ? shop.social.website : `https://${shop.social.website}`} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors" title="Website">
+                            <span className="text-xs font-bold">WWW</span>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-8 border-t border-white/5 text-center text-slate-500 text-sm">
+                    <p>&copy; {new Date().getFullYear()} {shop.name}. Todos los derechos reservados.</p>
+                    <p className="mt-2">
+                      Powered by <span className="text-gradient-primary font-semibold">Linko</span>
+                    </p>
+                  </div>
                 </div>
               </footer>
 

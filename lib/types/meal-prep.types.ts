@@ -10,13 +10,10 @@
 // ============================================
 
 /**
- * Componentes de un plato personalizado
+ * Componentes de un plato personalizado (mapea id_categoria -> nombre_producto)
  */
 export interface MealPlateComponents {
-    proteina: string;      // Texto libre: "Pollo", "Res", "Salmón", etc.
-    carbohidrato: string;  // Texto libre: "Arroz", "Papa", "Quinoa", etc.
-    vegetales: string;     // Texto libre: "Brócoli y zanahoria", etc.
-    frutas: string;        // Texto libre: "Manzana", "Plátano", etc.
+    [categoryId: string]: string;
 }
 
 /**
@@ -25,8 +22,9 @@ export interface MealPlateComponents {
 export interface MealPlate {
     id: string;
     components: MealPlateComponents;
-    isPremiumProtein?: boolean;   // Si usa proteína premium (+$1-$7)
-    premiumSurcharge?: number;    // Cargo extra por proteína premium
+    notes?: string;               // Notas por plato individual
+    isPremiumProtein?: boolean;   // Si usa proteína premium
+    premiumSurcharge?: number;    // Cargo extra
 }
 
 // ============================================
@@ -197,6 +195,13 @@ export interface MealPrepProduct {
     // Permite proteínas premium
     allowPremiumProteins?: boolean;
 
+    // Paquete pre-armado (no personalizable)
+    isCustomizable?: boolean;
+
+    // Categorías de componentes permitidas (ej: ["proteinas", "carbs"])
+    // Si no se especifica, usa todas las del catálogo excepto meal_prep_package
+    allowedComponentCategories?: string[];
+
     // Precios calculados
     basePrice: number;  // plateCount * pricePerPlate
     featured?: boolean;
@@ -234,12 +239,7 @@ export function calculateMealPrepTotal(
 export function createEmptyPlate(id: string): MealPlate {
     return {
         id,
-        components: {
-            proteina: "",
-            carbohidrato: "",
-            vegetales: "",
-            frutas: "",
-        },
+        components: {},
     };
 }
 
@@ -251,14 +251,14 @@ export function createEmptyPlates(count: number): MealPlate[] {
 }
 
 /**
- * Verifica si un paquete está completo (todos los platos tienen los 3 componentes)
+ * Verifica si un paquete está completo (todos los platos tienen sus componentes seleccionados)
+ * Se pasan las categorías requeridas para validar
  */
-export function isMealPackageComplete(plates: MealPlate[]): boolean {
+export function isMealPackageComplete(plates: MealPlate[], requiredCategories: string[]): boolean {
     return plates.every(plate =>
-        plate.components.proteina.trim() !== "" &&
-        plate.components.carbohidrato.trim() !== "" &&
-        plate.components.vegetales.trim() !== "" &&
-        plate.components.frutas.trim() !== ""
+        requiredCategories.every(catId =>
+            plate.components[catId] && plate.components[catId].trim() !== ""
+        )
     );
 }
 
@@ -266,11 +266,10 @@ export function isMealPackageComplete(plates: MealPlate[]): boolean {
  * Formatea el resumen de un plato para mostrar
  */
 export function formatPlateDescription(plate: MealPlate): string {
-    const { proteina, carbohidrato, vegetales, frutas } = plate.components;
-    const parts = [];
-    if (proteina) parts.push(proteina);
-    if (carbohidrato) parts.push(carbohidrato);
-    if (vegetales) parts.push(vegetales);
-    if (frutas) parts.push(frutas);
-    return parts.join(" + ") || "Sin configurar";
+    const parts = Object.values(plate.components).filter(Boolean);
+    let desc = parts.join(" + ") || "Sin configurar";
+    if (plate.notes) {
+        desc += ` (${plate.notes})`;
+    }
+    return desc;
 }

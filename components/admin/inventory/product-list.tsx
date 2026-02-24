@@ -132,31 +132,33 @@ export function ProductList({ products, hasInventory, onEdit, onDelete, onUpdate
                                 </p>
                             </div>
 
-                            <div className="text-right">
-                                <p className="text-sm text-zinc-400">Stock</p>
-                                {/* Inline Editing for Simple Products (no variants or empty variants) */}
-                                {!product.variants || product.variants.length === 0 ? (
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={() => onUpdateStock(product.id, Math.max(0, (product.stock || 0) - 1))}
-                                            className="w-6 h-6 flex items-center justify-center rounded bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-                                        >
-                                            -
-                                        </button>
-                                        <span className="font-mono w-8 text-center text-zinc-200">{product.stock || 0}</span>
-                                        <button
-                                            onClick={() => onUpdateStock(product.id, (product.stock || 0) + 1)}
-                                            className="w-6 h-6 flex items-center justify-center rounded bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-                                        >
-                                            +
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <p className="font-mono text-zinc-200 text-center">
-                                        {product.variants.reduce((acc, v) => acc + (v.stock || 0), 0)}
-                                    </p>
-                                )}
-                            </div>
+                            {hasInventory && (
+                                <div className="text-right">
+                                    <p className="text-sm text-zinc-400">Stock</p>
+                                    {/* Inline Editing for Simple Products (no variants or empty variants) */}
+                                    {!product.variants || product.variants.length === 0 ? (
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => onUpdateStock(product.id, Math.max(0, (product.stock || 0) - 1))}
+                                                className="w-6 h-6 flex items-center justify-center rounded bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                                            >
+                                                -
+                                            </button>
+                                            <span className="font-mono w-8 text-center text-zinc-200">{product.stock || 0}</span>
+                                            <button
+                                                onClick={() => onUpdateStock(product.id, (product.stock || 0) + 1)}
+                                                className="w-6 h-6 flex items-center justify-center rounded bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <p className="font-mono text-zinc-200 text-center">
+                                            {product.variants.reduce((acc, v) => acc + (v.stock || 0), 0)}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         {/* Edit / Expand Buttons */}
@@ -202,7 +204,7 @@ export function ProductList({ products, hasInventory, onEdit, onDelete, onUpdate
                                                     <th className="px-4 py-2">Variante</th>
                                                     <th className="px-4 py-2 text-right">Precio Púb.</th>
                                                     <th className="px-4 py-2 text-right">Mayoreo</th>
-                                                    <th className="px-4 py-2 text-center">Stock</th>
+                                                    {hasInventory && <th className="px-4 py-2 text-center">Stock</th>}
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -211,23 +213,25 @@ export function ProductList({ products, hasInventory, onEdit, onDelete, onUpdate
                                                         <td className="px-4 py-2 font-medium text-zinc-300">{variant.name}</td>
                                                         <td className="px-4 py-2 text-right text-zinc-400">${variant.price}</td>
                                                         <td className="px-4 py-2 text-right text-amber-500/80">${variant.wholesalePrice || "-"}</td>
-                                                        <td className="px-4 py-2">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <button
-                                                                    onClick={() => onUpdateStock(product.id, Math.max(0, (variant.stock || 0) - 1), variant.id)}
-                                                                    className="w-5 h-5 flex items-center justify-center rounded bg-zinc-800 text-zinc-400 hover:bg-zinc-700 text-xs"
-                                                                >
-                                                                    -
-                                                                </button>
-                                                                <span className="font-mono w-6 text-center text-zinc-300">{variant.stock || 0}</span>
-                                                                <button
-                                                                    onClick={() => onUpdateStock(product.id, (variant.stock || 0) + 1, variant.id)}
-                                                                    className="w-5 h-5 flex items-center justify-center rounded bg-zinc-800 text-zinc-400 hover:bg-zinc-700 text-xs"
-                                                                >
-                                                                    +
-                                                                </button>
-                                                            </div>
-                                                        </td>
+                                                        {hasInventory && (
+                                                            <td className="px-4 py-2">
+                                                                <div className="flex items-center justify-center gap-2">
+                                                                    <button
+                                                                        onClick={() => onUpdateStock(product.id, Math.max(0, (variant.stock || 0) - 1), variant.id)}
+                                                                        className="w-5 h-5 flex items-center justify-center rounded bg-zinc-800 text-zinc-400 hover:bg-zinc-700 text-xs"
+                                                                    >
+                                                                        -
+                                                                    </button>
+                                                                    <span className="font-mono w-6 text-center text-zinc-300">{variant.stock || 0}</span>
+                                                                    <button
+                                                                        onClick={() => onUpdateStock(product.id, (variant.stock || 0) + 1, variant.id)}
+                                                                        className="w-5 h-5 flex items-center justify-center rounded bg-zinc-800 text-zinc-400 hover:bg-zinc-700 text-xs"
+                                                                    >
+                                                                        +
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        )}
                                                     </tr>
                                                 ))}
                                             </tbody>

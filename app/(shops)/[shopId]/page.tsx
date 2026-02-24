@@ -12,7 +12,7 @@ import {
   SectionObserver,
 } from "@/components/shared";
 import { ServiceCard, ProductGrid } from "@/components/shop";
-import { Sparkles, MapPin, Phone, Clock, Calendar, ShoppingBag, Loader2 } from "lucide-react";
+import { Sparkles, MapPin, Phone, Clock, Calendar, ShoppingBag, Loader2, Instagram, Facebook, Globe, MessageCircle } from "lucide-react";
 import {
   MOCK_SERVICES,
   MOCK_PRODUCTS,
@@ -260,12 +260,45 @@ export default function ShopHomePage() {
               </p>
             </ScrollReveal>
 
-            {/* Shop Info */}
-            {shop?.contact && (
+            {/* Shop Info & Social Media */}
+            {(shop?.contact || shop?.social) && (
               <ScrollReveal delay={0.4}>
-                <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-400">
-                  {shop.contact.address && <span className="inline-flex items-center gap-2"><MapPin className="w-4 h-4" />{shop.contact.address}</span>}
-                  {shop.contact.phone && <span className="inline-flex items-center gap-2"><Phone className="w-4 h-4" />{shop.contact.phone}</span>}
+                <div className="space-y-6">
+                  <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-400">
+                    {shop?.contact?.address && <span className="inline-flex items-center gap-2"><MapPin className="w-4 h-4" />{shop.contact.address}</span>}
+                    {shop?.contact?.phone && (
+                      <a href={`https://wa.me/${(shop.contact.whatsapp || shop.contact.phone).replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 hover:text-green-400 transition-colors">
+                        <MessageCircle className="w-4 h-4 text-green-500" />
+                        {shop.contact.whatsapp || shop.contact.phone}
+                      </a>
+                    )}
+                  </div>
+
+                  {/* Social Media Icons */}
+                  {shop?.social && (
+                    <div className="flex items-center justify-center gap-5">
+                      {shop.social.instagram && (
+                        <a href={`https://instagram.com/${shop.social.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full glass-panel hover:bg-white/10 text-slate-300 hover:text-white transition-all">
+                          <Instagram className="w-5 h-5" />
+                        </a>
+                      )}
+                      {shop.social.facebook && (
+                        <a href={shop.social.facebook.startsWith('http') ? shop.social.facebook : `https://facebook.com/${shop.social.facebook}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full glass-panel hover:bg-white/10 text-slate-300 hover:text-white transition-all">
+                          <Facebook className="w-5 h-5" />
+                        </a>
+                      )}
+                      {shop.social.tiktok && (
+                        <a href={`https://tiktok.com/@${shop.social.tiktok.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full glass-panel hover:bg-white/10 text-slate-300 hover:text-white transition-all font-bold text-xs">
+                          <span className="w-5 h-5 flex items-center justify-center">TT</span>
+                        </a>
+                      )}
+                      {shop.social.website && (
+                        <a href={shop.social.website.startsWith('http') ? shop.social.website : `https://${shop.social.website}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full glass-panel hover:bg-white/10 text-slate-300 hover:text-white transition-all">
+                          <Globe className="w-5 h-5" />
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </div>
               </ScrollReveal>
             )}
@@ -420,8 +453,8 @@ export default function ShopHomePage() {
         </SectionObserver>
       )}
 
-      {/* Call to Action / Footer Section */}
-      <SectionObserver id="footer" threshold={0.5} className="py-16 border-t border-white/10">
+      {/* Call to Action Section */}
+      <SectionObserver id="footer-cta" threshold={0.5} className="py-16 border-t border-white/10">
         <div className="container mx-auto px-4 text-center">
           <ScrollReveal>
             <div className="glass-panel rounded-2xl p-8 md:p-12 max-w-2xl mx-auto">
@@ -445,6 +478,100 @@ export default function ShopHomePage() {
               </div>
             </div>
           </ScrollReveal>
+        </div>
+      </SectionObserver>
+
+      {/* Contact & Location Section */}
+      <SectionObserver id="contact" threshold={0.3} className="py-16 bg-black/40">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <ScrollReveal direction="left">
+              <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-6">
+                Encuéntranos
+              </h2>
+              <div className="space-y-6">
+                {shop?.contact?.address && (
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <MapPin className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-semibold mb-1">Dirección</h4>
+                      <p className="text-slate-400">{shop.contact.address}</p>
+                    </div>
+                  </div>
+                )}
+                {shop?.contact?.phone && (
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                      <Phone className="w-6 h-6 text-green-500" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-semibold mb-1">WhatsApp / Teléfono</h4>
+                      <a href={`https://wa.me/${(shop.contact.whatsapp || shop.contact.phone).replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors">
+                        {shop.contact.whatsapp || shop.contact.phone}
+                      </a>
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gold/10 flex items-center justify-center flex-shrink-0">
+                    <Clock className="w-6 h-6 text-gold" />
+                  </div>
+                  <div>
+                    <h4 className="text-white font-semibold mb-1">Horario</h4>
+                    <p className="text-slate-400">Consulta nuestro horario de atención o escríbenos directamente.</p>
+                  </div>
+                </div>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal direction="right">
+              <div className="glass-panel p-8 rounded-3xl border border-white/10">
+                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5 text-primary" />
+                  Síguenos en Redes
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {shop?.social?.instagram && (
+                    <a href={`https://instagram.com/${shop.social.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all group">
+                      <Instagram className="w-5 h-5 text-pink-500" />
+                      <span className="text-sm text-slate-300 group-hover:text-white">Instagram</span>
+                    </a>
+                  )}
+                  {shop?.social?.facebook && (
+                    <a href={shop.social.facebook.startsWith('http') ? shop.social.facebook : `https://facebook.com/${shop.social.facebook}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all group">
+                      <Facebook className="w-5 h-5 text-blue-500" />
+                      <span className="text-sm text-slate-300 group-hover:text-white">Facebook</span>
+                    </a>
+                  )}
+                  {shop?.social?.tiktok && (
+                    <a href={`https://tiktok.com/@${shop.social.tiktok.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all group">
+                      <span className="text-sm font-bold text-white">TT</span>
+                      <span className="text-sm text-slate-300 group-hover:text-white">TikTok</span>
+                    </a>
+                  )}
+                  {shop?.social?.website && (
+                    <a href={shop.social.website.startsWith('http') ? shop.social.website : `https://${shop.social.website}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all group">
+                      <Globe className="w-5 h-5 text-cyan-500" />
+                      <span className="text-sm text-slate-300 group-hover:text-white">Website</span>
+                    </a>
+                  )}
+                </div>
+                <div className="mt-8">
+                  <a
+                    href={`https://wa.me/${(shop?.contact?.whatsapp || shop?.contact?.phone || "").replace(/\D/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-4 rounded-2xl bg-green-600 hover:bg-green-500 text-white font-bold flex items-center justify-center gap-3 transition-all shadow-lg shadow-green-600/20"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                    Enviar WhatsApp
+                  </a>
+                </div>
+              </div>
+            </ScrollReveal>
+          </div>
         </div>
       </SectionObserver>
     </div>

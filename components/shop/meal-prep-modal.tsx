@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { X, ChefHat, Plus, Minus, MapPin, Truck, Check } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { X, ChefHat, Plus, Minus, MapPin, Truck, Check, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import {
@@ -23,6 +23,7 @@ interface MealPrepModalProps {
     onConfirm: (plates: MealPlate[], totalPrice: number, distance?: number) => void;
     shopName?: string;
     whatsappNumber?: string;
+    catalog?: any[];
 }
 
 export function MealPrepModal({
@@ -31,6 +32,7 @@ export function MealPrepModal({
     onConfirm,
     shopName = "Meal Prep",
     whatsappNumber,
+    catalog = [],
 }: MealPrepModalProps) {
     const [step, setStep] = useState<"package" | "plates" | "delivery" | "summary">("package");
     const [selectedPackage, setSelectedPackage] = useState<number>(3);
@@ -63,11 +65,36 @@ export function MealPrepModal({
 
     if (!isOpen) return null;
 
+    // Extract categories and products from catalog
+    const { ingredientCategories, productsByCategory } = useMemo(() => {
+        const ingredients = (catalog || []).filter(p => p.category !== "meal_prep_package");
+        const grouped: Record<string, any[]> = {};
+        const cats: { id: string, name: string }[] = [];
+        const seenCats = new Set<string>();
+
+        ingredients.forEach(p => {
+            if (!grouped[p.category]) grouped[p.category] = [];
+            grouped[p.category].push(p);
+
+            if (!seenCats.has(p.category)) {
+                seenCats.add(p.category);
+                // Try to find a nice label or capitalize
+                const label = p.category
+                    .split('-')
+                    .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ');
+                cats.push({ id: p.category, name: label });
+            }
+        });
+
+        return { ingredientCategories: cats, productsByCategory: grouped };
+    }, [catalog]);
+
     const currentPlate = plates[currentPlateIndex];
     const pricing = calculateMealPrepTotal(plates, 13, distance);
     const packageConfig = MEAL_PREP_PACKAGES.find(p => p.plateCount === selectedPackage);
 
-    const updatePlateComponent = (field: keyof MealPlateComponents, value: string) => {
+    const updatePlateComponent = (field: string, value: string) => {
         const newPlates = [...plates];
         newPlates[currentPlateIndex] = {
             ...newPlates[currentPlateIndex],
@@ -75,6 +102,15 @@ export function MealPrepModal({
                 ...newPlates[currentPlateIndex].components,
                 [field]: value,
             },
+        };
+        setPlates(newPlates);
+    };
+
+    const updatePlateNote = (note: string) => {
+        const newPlates = [...plates];
+        newPlates[currentPlateIndex] = {
+            ...newPlates[currentPlateIndex],
+            notes: note,
         };
         setPlates(newPlates);
     };
@@ -88,9 +124,11 @@ export function MealPrepModal({
         };
         // Also update the protein name if selecting premium
         if (protein) {
+            // Find which category looks like "proteina"
+            const proteinCatId = ingredientCategories.find(c => c.id.toLowerCase().includes("protein"))?.id || "proteina";
             newPlates[currentPlateIndex].components = {
                 ...newPlates[currentPlateIndex].components,
-                proteina: protein.name,
+                [proteinCatId]: protein.name,
             };
         }
         setPlates(newPlates);
@@ -133,22 +171,28 @@ export function MealPrepModal({
     };
 
     const generateWhatsAppMessage = (): string => {
-        let message = `Hola! Quiero ordenar un paquete de ${selectedPackage} platos:\n\n`;
+        let message = `Hola! Quiero ordenar un paquete de ${selectedPackage} platos personalizado:\n\n`;
 
         plates.forEach((plate, index) => {
             message += `*Plato ${index + 1}:*\n`;
-            message += `  - Proteina: ${plate.components.proteina}\n`;
-            message += `  - Carbohidrato: ${plate.components.carbohidrato}\n`;
-            message += `  - Vegetales: ${plate.components.vegetales}\n`;
-            message += `  - Frutas: ${plate.components.frutas || "No especificado"}\n`;
+
+            ingredientCategories.forEach((cat: { id: string, name: string }) => {
+                if (plate.components[cat.id]) {
+                    message += `  - ${cat.name}: ${plate.components[cat.id]}\n`;
+                }
+            });
+
             if (plate.isPremiumProtein && plate.premiumSurcharge) {
                 message += `  - (Proteina Premium +$${plate.premiumSurcharge})\n`;
+            }
+            if (plate.notes) {
+                message += `  - Nota: ${plate.notes}\n`;
             }
             message += "\n";
         });
 
         if (customerNotes) {
-            message += `*Notas/Indicaciones especiales:*\n${customerNotes}\n\n`;
+            message += `*Notas Generales:*\n${customerNotes}\n\n`;
         }
 
         message += `---\n`;
@@ -286,82 +330,80 @@ export function MealPrepModal({
                                 ))}
                             </div>
 
-                            {/* Protein input */}
-                            <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">
-                                    Proteina
-                                </label>
-                                <input
-                                    type="text"
-                                    value={currentPlate.components.proteina}
-                                    onChange={(e) => updatePlateComponent("proteina", e.target.value)}
-                                    placeholder="Ej: Pollo, Res, Pescado..."
-                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-green-500/50"
-                                />
+                            {/* Dynamic Category Selection */}
+                            <div className="space-y-6">
+                                {ingredientCategories.map((cat: { id: string, name: string }) => (
+                                    <div key={cat.id} className="space-y-3">
+                                        <label className="block text-sm font-semibold text-white/90">
+                                            {cat.name}
+                                        </label>
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                            {productsByCategory[cat.id]?.map((prod: any) => (
+                                                <button
+                                                    key={prod.id}
+                                                    onClick={() => updatePlateComponent(cat.id, prod.name)}
+                                                    className={cn(
+                                                        "px-3 py-2 rounded-xl text-xs font-medium border transition-all text-center h-full flex items-center justify-center",
+                                                        currentPlate.components[cat.id] === prod.name
+                                                            ? "bg-green-500 border-green-400 text-white shadow-lg shadow-green-500/20"
+                                                            : "bg-white/5 border-white/10 text-slate-400 hover:border-white/20 hover:bg-white/10"
+                                                    )}
+                                                >
+                                                    {prod.name}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        {/* Fallback input for "Other" or custom name */}
+                                        <input
+                                            type="text"
+                                            value={currentPlate.components[cat.id] || ""}
+                                            onChange={(e) => updatePlateComponent(cat.id, e.target.value)}
+                                            placeholder={`O escribe tu ${cat.name.toLowerCase()}...`}
+                                            className="w-full px-3 py-2 text-xs rounded-lg bg-black/20 border border-white/5 text-white placeholder-slate-500 focus:outline-none focus:border-green-500/50"
+                                        />
+                                    </div>
+                                ))}
 
-                                {/* Premium protein shortcuts */}
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                    {PREMIUM_PROTEINS.map((protein) => (
-                                        <button
-                                            key={protein.id}
-                                            onClick={() => setPremiumProtein(protein)}
-                                            className={cn(
-                                                "px-2 py-1 rounded-lg text-xs transition-colors",
-                                                currentPlate.components.proteina === protein.name
-                                                    ? "bg-amber-500 text-black"
-                                                    : "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
-                                            )}
-                                        >
-                                            {protein.name} (+${protein.surcharge})
-                                        </button>
-                                    ))}
+                                {/* Premium protein shortcuts - Only show if current category list doesn't cover them or for easy access */}
+                                <div>
+                                    <label className="block text-sm font-semibold text-amber-400 mb-2">
+                                        Proteinas Premium (Cargo Extra)
+                                    </label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {PREMIUM_PROTEINS.map((protein) => (
+                                            <button
+                                                key={protein.id}
+                                                onClick={() => setPremiumProtein(protein)}
+                                                className={cn(
+                                                    "px-3 py-2 rounded-xl text-xs font-medium border transition-all",
+                                                    currentPlate.isPremiumProtein && currentPlate.premiumSurcharge === protein.surcharge && currentPlate.components[ingredientCategories.find((c: any) => c.id.toLowerCase().includes("protein"))?.id || "proteina"] === protein.name
+                                                        ? "bg-amber-500 border-amber-400 text-black shadow-lg shadow-amber-500/20"
+                                                        : "bg-amber-500/10 border-amber-500/20 text-amber-300 hover:bg-amber-500/20"
+                                                )}
+                                            >
+                                                {protein.name} (+${protein.surcharge})
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Per-Dish Notes */}
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-300 mb-2">
+                                        Notas para este plato
+                                    </label>
+                                    <textarea
+                                        value={currentPlate.notes || ""}
+                                        onChange={(e) => updatePlateNote(e.target.value)}
+                                        placeholder="Ej: Sin sal, extra vegetales, etc."
+                                        rows={2}
+                                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-green-500/50 resize-none text-sm"
+                                    />
                                 </div>
                             </div>
 
-                            {/* Carbohydrate input */}
-                            <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">
-                                    Carbohidrato
-                                </label>
-                                <input
-                                    type="text"
-                                    value={currentPlate.components.carbohidrato}
-                                    onChange={(e) => updatePlateComponent("carbohidrato", e.target.value)}
-                                    placeholder="Ej: Arroz, Papa, Quinoa..."
-                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-green-500/50"
-                                />
-                            </div>
-
-                            {/* Vegetables input */}
-                            <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">
-                                    Vegetales
-                                </label>
-                                <input
-                                    type="text"
-                                    value={currentPlate.components.vegetales}
-                                    onChange={(e) => updatePlateComponent("vegetales", e.target.value)}
-                                    placeholder="Ej: Brocoli y zanahoria, Ensalada mixta..."
-                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-green-500/50"
-                                />
-                            </div>
-
-                            {/* Fruits input */}
-                            <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">
-                                    Frutas
-                                </label>
-                                <input
-                                    type="text"
-                                    value={currentPlate.components.frutas}
-                                    onChange={(e) => updatePlateComponent("frutas", e.target.value)}
-                                    placeholder="Ej: Manzana, Plátano, Frutos rojos..."
-                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-green-500/50"
-                                />
-                            </div>
-
                             {/* Navigation */}
-                            <div className="flex gap-3">
+                            <div className="flex gap-3 pt-4 border-t border-white/10">
                                 <Button
                                     variant="outline"
                                     onClick={handlePrevPlate}
@@ -372,9 +414,8 @@ export function MealPrepModal({
                                 </Button>
                                 <Button
                                     onClick={handleNextPlate}
-                                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white"
-                                    // Relaxed validation: only protein is strictly required if they want to use notes later
-                                    disabled={!currentPlate.components.proteina}
+                                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/20"
+                                    disabled={Object.keys(currentPlate.components).length === 0}
                                 >
                                     {currentPlateIndex < plates.length - 1 ? (
                                         <>
@@ -382,7 +423,7 @@ export function MealPrepModal({
                                             <Plus className="w-4 h-4 ml-2" />
                                         </>
                                     ) : (
-                                        "Continuar"
+                                        "Resumen de Entrega"
                                     )}
                                 </Button>
                             </div>

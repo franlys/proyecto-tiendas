@@ -6,19 +6,27 @@ import { ChefHat, UtensilsCrossed } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MealPrepModal } from "./meal-prep-modal";
 import type { MealPlate } from "@/lib/types/meal-prep.types";
+import { useCart } from "@/components/shared";
+import { ShoppingCart } from "lucide-react";
 
 interface MealPrepPackageProduct {
     id: string;
     name: string;
     description: string;
+    category: any;
     image?: string;
     plateCount: number;
     pricePerPlate: number;
     featured?: boolean;
+    isCustomizable?: boolean;
+    stock: number;
+    lowStockThreshold: number;
+    price: number;
 }
 
 interface MealPrepProductCardProps {
     product: MealPrepPackageProduct;
+    allProducts?: any[]; // Todos los productos para el modal
     shopName?: string;
     whatsappNumber?: string;
     onOrder?: (plates: MealPlate[], totalPrice: number, distance?: number) => void;
@@ -26,18 +34,36 @@ interface MealPrepProductCardProps {
 
 export function MealPrepProductCard({
     product,
+    allProducts,
     shopName,
     whatsappNumber,
     onOrder,
 }: MealPrepProductCardProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const { addProduct } = useCart();
 
     const pricePerPlate = product.pricePerPlate || 13;
     const basePrice = product.plateCount * pricePerPlate;
+    const isCustomizable = product.isCustomizable !== false; // Default true
 
     const handleConfirm = (plates: MealPlate[], totalPrice: number, distance?: number) => {
+        // Create a detailed summary of the plates for the cart notes
+        const platesSummary = plates.map((p, i) => {
+            const components = Object.entries(p.components)
+                .map(([catId, prodName]) => `${catId}: ${prodName}`)
+                .join(', ');
+            return `Plato ${i + 1}: ${components}${p.notes ? ` (Nota: ${p.notes})` : ''}`;
+        }).join(' | ');
+
+        addProduct(product as any, 1, undefined, undefined, platesSummary);
+
         onOrder?.(plates, totalPrice, distance);
         setIsModalOpen(false);
+    };
+
+    const handleAddToCart = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        addProduct(product as any, 1);
     };
 
     return (
@@ -80,12 +106,22 @@ export function MealPrepProductCard({
 
                     {/* Order Button */}
                     <div className="absolute bottom-3 right-3 z-10">
-                        <button
-                            onClick={() => setIsModalOpen(true)}
-                            className="px-4 py-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-xs font-bold uppercase tracking-wide shadow-lg transition-all active:scale-95"
-                        >
-                            Personalizar
-                        </button>
+                        {isCustomizable ? (
+                            <button
+                                onClick={() => setIsModalOpen(true)}
+                                className="px-4 py-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-xs font-bold uppercase tracking-wide shadow-lg transition-all active:scale-95"
+                            >
+                                Personalizar
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleAddToCart}
+                                className="p-2 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg transition-all active:scale-95"
+                                title="Agregar al carrito"
+                            >
+                                <ShoppingCart className="w-5 h-5" />
+                            </button>
+                        )}
                     </div>
 
                     {/* Price Badge */}
@@ -119,6 +155,7 @@ export function MealPrepProductCard({
                 onConfirm={handleConfirm}
                 shopName={shopName}
                 whatsappNumber={whatsappNumber}
+                catalog={allProducts}
             />
         </>
     );

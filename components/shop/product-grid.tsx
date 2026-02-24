@@ -163,6 +163,7 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
                   {isMealPrep && (product as any).plateCount && shop ? (
                     <MealPrepProductCard
                       product={product as any}
+                      allProducts={products}
                       shopName={shop.name}
                       whatsappNumber={shop.contact?.whatsapp || shop.contact?.phone}
                     />

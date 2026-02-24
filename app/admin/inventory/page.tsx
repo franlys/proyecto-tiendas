@@ -488,7 +488,10 @@ function ProductsContent({ shopId, businessType = "" }: { shopId: string; busine
   const shop = useShop();
   const combinedFeatures = useCombinedBusinessFeatures(shop?.businessTypes || [shop?.businessType || "otro"]);
   const { products, saveProduct, deleteProduct, updateStock, getLowStockProducts, isLoading } = useInventory();
-  const isMenuOnly = MENU_ONLY_TYPES.includes(businessType);
+
+  // A business is "menu only" if it doesn't track inventory
+  const isMenuOnly = !combinedFeatures.hasInventory || MENU_ONLY_TYPES.includes(businessType);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | undefined>(undefined);
