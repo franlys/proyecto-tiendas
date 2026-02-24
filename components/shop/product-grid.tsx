@@ -76,10 +76,20 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
     (shop?.businessType as any) === "meal_prep" ||
     (shop?.businessType as any) === "fitness" ||
     (shop?.businessType as any) === "entrenamiento" ||
-    shop?.businessTypes?.some(t => ["meal_prep", "fitness", "gym", "entrenamiento", "food", "personal_trainer"].includes(t)) ||
+    shop?.businessTypes?.some(t => ["meal_prep", "fitness", "gym", "entrenamiento", "food", "personal_trainer", "gimnasio", "entrenador_personal"].includes(t)) ||
     (config.category as any) === "food" ||
     (config.category as any) === "fitness" ||
     products.some(p => (p as any).plateCount || (p as any).category === "meal_prep_package");
+
+  console.log("🥘 [DEBUG] isMealPrep logic:", {
+    shopSlug: shop?.slug,
+    isMealPrep,
+    hidePriceIfZero,
+    businessType: shop?.businessType,
+    businessTypes: shop?.businessTypes,
+    category: config.category,
+    hasPlateCount: products.some(p => (p as any).plateCount)
+  });
 
   // Group products by category
   const productsByCategory = useMemo(() => {
@@ -256,9 +266,9 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
               {isMealPrep && (
                 <button
                   onClick={() => setIsMealModalOpen(true)}
-                  className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-bold hover:bg-green-500/20 transition-all"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/30 text-green-400 text-[10px] sm:text-xs font-bold hover:bg-green-500/20 transition-all"
                 >
-                  <ChefHat className="w-4 h-4" />
+                  <ChefHat className="w-3 h-3 sm:w-4 h-4" />
                   Armar Paquete
                 </button>
               )}

@@ -446,7 +446,13 @@ export default function ShopHomePage() {
             ) : (
               <ProductGrid
                 products={products}
-                hidePriceIfZero={businessTypes.includes("meal_prep") || shop?.businessType === "meal_prep"}
+                hidePriceIfZero={
+                  businessTypes.some(t => ["meal_prep", "fitness", "entrenamiento", "entrenador_personal", "gimnasio", "gym", "personal_trainer"].includes(t)) ||
+                  shop?.businessType === "meal_prep" ||
+                  products.some(p => (p as any).plateCount || (p as any).category === "meal_prep_package") ||
+                  (combinedFeatures.config.category as any) === "food" ||
+                  (combinedFeatures.config.category as any) === "fitness"
+                }
               />
             )}
           </div>

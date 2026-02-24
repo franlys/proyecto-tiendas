@@ -44,6 +44,7 @@ async function getShopData(shopId: string): Promise<ShopConfig | null> {
                   shopData.category === "health" ? "clinica" :
                     "retail")
         ),
+        businessTypes: shopData.businessTypes || [],
         wholesaleEnabled: shopData.wholesaleEnabled || false,
         // Shop features
         features: shopData.features || shopData.enabledFeatures,
@@ -79,6 +80,7 @@ async function getShopData(shopId: string): Promise<ShopConfig | null> {
                   shopData.category === "health" ? "clinica" :
                     "retail")
         ),
+        businessTypes: shopData.businessTypes || [],
         wholesaleEnabled: shopData.wholesaleEnabled || false,
         features: shopData.features || shopData.enabledFeatures,
         banner: shopData.banner,
