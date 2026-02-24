@@ -7,7 +7,8 @@ import { Product } from "@/lib/constants";
 import { Plus, Search, Filter, Loader2, Package, Store, ChevronDown, ArrowLeft, Tag, Scissors, Clock, DollarSign, Eye, EyeOff, Pencil, Trash2, ShoppingBag, ImageIcon } from "lucide-react";
 import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
 import Link from "next/link";
-import { useAuth, InventoryProvider, useInventory, useShops, ShopsProvider } from "@/components/shared";
+import { useAuth, InventoryProvider, useInventory, useShops, ShopsProvider, useShop } from "@/components/shared";
+import { useCombinedBusinessFeatures } from "@/lib/hooks";
 import type { BookingService, CreateServiceInput } from "@/lib/types/booking.types";
 import { cn } from "@/lib/utils";
 
@@ -76,6 +77,8 @@ function ServicesContent({ shopId }: { shopId: string }) {
   const [formData, setFormData] = useState<CreateServiceInput>(emptyService);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const shop = useShop();
+  const combinedFeatures = useCombinedBusinessFeatures(shop?.businessTypes || [shop?.businessType || "otro"]);
 
   // Load services
   useEffect(() => {
@@ -223,9 +226,9 @@ function ServicesContent({ shopId }: { shopId: string }) {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Servicios</h1>
+          <h1 className="text-3xl font-bold text-white tracking-tight">{combinedFeatures.labels?.services || "Servicios"}</h1>
           <p className="text-zinc-400 mt-1">
-            Gestión de servicios y precios <span className="text-xs text-zinc-600 bg-zinc-900 px-2 py-0.5 rounded ml-2">Tienda: {shopId}</span>
+            Gestión de {(combinedFeatures.labels?.services || "servicios").toLowerCase()} y precios <span className="text-xs text-zinc-600 bg-zinc-900 px-2 py-0.5 rounded ml-2">Tienda: {shopId}</span>
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -241,7 +244,7 @@ function ServicesContent({ shopId }: { shopId: string }) {
             className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95"
           >
             <Plus size={20} />
-            Nuevo Servicio
+            Nuevo {(combinedFeatures.labels?.services || "Servicio").replace(/s$/, "")}
           </button>
         </div>
       </div>
@@ -249,7 +252,7 @@ function ServicesContent({ shopId }: { shopId: string }) {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
-          <p className="text-zinc-500 text-xs uppercase font-medium mb-1">Total Servicios</p>
+          <p className="text-zinc-500 text-xs uppercase font-medium mb-1">Total {combinedFeatures.labels?.services || "Servicios"}</p>
           <p className="text-2xl font-bold text-white">{services.length}</p>
         </div>
         <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
@@ -482,6 +485,8 @@ function ServicesContent({ shopId }: { shopId: string }) {
 // PRODUCTS CONTENT (for product-based businesses)
 // ====================================
 function ProductsContent({ shopId, businessType = "" }: { shopId: string; businessType?: string }) {
+  const shop = useShop();
+  const combinedFeatures = useCombinedBusinessFeatures(shop?.businessTypes || [shop?.businessType || "otro"]);
   const { products, saveProduct, deleteProduct, updateStock, getLowStockProducts, isLoading } = useInventory();
   const isMenuOnly = MENU_ONLY_TYPES.includes(businessType);
   const [searchTerm, setSearchTerm] = useState("");
@@ -535,9 +540,9 @@ function ProductsContent({ shopId, businessType = "" }: { shopId: string; busine
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Productos</h1>
+          <h1 className="text-3xl font-bold text-white tracking-tight">{combinedFeatures.labels?.products || "Productos"}</h1>
           <p className="text-zinc-400 mt-1">
-            Gestión de productos y existencias <span className="text-xs text-zinc-600 bg-zinc-900 px-2 py-0.5 rounded ml-2">Tienda: {shopId}</span>
+            Gestión de {(combinedFeatures.labels?.products || "productos").toLowerCase()} y existencias <span className="text-xs text-zinc-600 bg-zinc-900 px-2 py-0.5 rounded ml-2">Tienda: {shopId}</span>
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -553,7 +558,7 @@ function ProductsContent({ shopId, businessType = "" }: { shopId: string; busine
             className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95"
           >
             <Plus size={20} />
-            Nuevo Producto
+            Nuevo {(combinedFeatures.labels?.products || "Producto").replace(/s$/, "")}
           </button>
         </div>
       </div>
@@ -561,7 +566,7 @@ function ProductsContent({ shopId, businessType = "" }: { shopId: string; busine
       {/* Stats Cards */}
       <div className={`grid grid-cols-2 ${isMenuOnly ? 'md:grid-cols-2' : 'md:grid-cols-4'} gap-4`}>
         <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
-          <p className="text-zinc-500 text-xs uppercase font-medium mb-1">{isMenuOnly ? 'Total Menú' : 'Total Productos'}</p>
+          <p className="text-zinc-500 text-xs uppercase font-medium mb-1">Total {combinedFeatures.labels?.products || "Productos"}</p>
           <p className="text-2xl font-bold text-white">{products.length}</p>
         </div>
         {!isMenuOnly && (

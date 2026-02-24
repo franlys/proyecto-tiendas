@@ -56,6 +56,7 @@ import { ShopCategory } from "@/components/shared";
 import { BUSINESS_TYPE_LABELS } from "@/lib/constants";
 import { BusinessTypeMultiSelector } from "@/components/admin/business-type-selector";
 import { getBusinessType, normalizeBusinessType } from "@/lib/types/business-types-v2";
+import { useCombinedBusinessFeatures } from "@/lib/hooks";
 
 function CreateShopModal({
   isOpen,
@@ -74,6 +75,8 @@ function CreateShopModal({
   const [phone, setPhone] = useState("");
   const [wholesale, setWholesale] = useState(false);
   const [monthlyPrice, setMonthlyPrice] = useState(1500); // Default to 1500 DOP/MXN
+
+  const combinedFeatures = useCombinedBusinessFeatures(businessTypes);
 
   // Derivar category del primer businessType seleccionado (principal)
   const primaryType = businessTypes[0];
@@ -160,6 +163,21 @@ function CreateShopModal({
               onChange={setBusinessTypes}
               maxSelections={3}
             />
+            {/* Identity Preview Block */}
+            <div className="mt-3 p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 space-y-2">
+              <div className="flex items-center gap-2 text-cyan-400">
+                <Sparkles className="w-4 h-4" />
+                <span className="text-xs font-bold uppercase tracking-wider">Identidad Identificada</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="text-[10px] text-slate-400">
+                  Categoría: <span className="text-white font-medium">{category.toUpperCase()}</span>
+                </div>
+                <div className="text-[10px] text-slate-400">
+                  Etiquetas: <span className="text-white font-medium">{combinedFeatures.labels?.products} / {combinedFeatures.labels?.services}</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div>

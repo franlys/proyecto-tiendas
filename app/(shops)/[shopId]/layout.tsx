@@ -35,7 +35,15 @@ async function getShopData(shopId: string): Promise<ShopConfig | null> {
         description: shopData.description || "",
         theme: shopData.theme || DEFAULT_THEME,
         contact: shopData.contact || {},
-        businessType: normalizeBusinessType(shopData.businessType || (shopData.category === "beauty" ? "beauty" : shopData.category === "repair" ? "repair" : "retail")),
+        businessType: normalizeBusinessType(
+          shopData.businessType ||
+          (shopData.category === "beauty" ? "beauty" :
+            shopData.category === "repair" ? "repair" :
+              shopData.category === "food" ? "restaurante" :
+                shopData.category === "fitness" ? "gimnasio" :
+                  shopData.category === "health" ? "clinica" :
+                    "retail")
+        ),
         wholesaleEnabled: shopData.wholesaleEnabled || false,
         // Shop features
         features: shopData.features || shopData.enabledFeatures,
@@ -62,7 +70,15 @@ async function getShopData(shopId: string): Promise<ShopConfig | null> {
         description: shopData.description || "",
         theme: shopData.theme || DEFAULT_THEME,
         contact: shopData.contact || {},
-        businessType: shopData.businessType || (shopData.category === "beauty" ? "beauty" : shopData.category === "repair" ? "repair" : "retail"),
+        businessType: normalizeBusinessType(
+          shopData.businessType ||
+          (shopData.category === "beauty" ? "beauty" :
+            shopData.category === "repair" ? "repair" :
+              shopData.category === "food" ? "restaurante" :
+                shopData.category === "fitness" ? "gimnasio" :
+                  shopData.category === "health" ? "clinica" :
+                    "retail")
+        ),
         wholesaleEnabled: shopData.wholesaleEnabled || false,
         features: shopData.features || shopData.enabledFeatures,
         banner: shopData.banner,

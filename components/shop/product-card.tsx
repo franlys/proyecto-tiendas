@@ -43,7 +43,12 @@ export function ProductCard({ product, hidePriceIfZero }: ProductCardProps) {
     : false;
 
   // Product is only out of stock if business follows inventory AND (no main stock AND (no variants OR no variant has stock))
-  const isOutOfStock = hasInventory && stockNumber === 0 && (!hasVariants || !hasAnyVariantStock);
+  // SPECIAL: If hidePriceIfZero is active and price is 0, it's likely a menu component, so never show "Agotado"
+  const isOutOfStock = hasInventory &&
+    stockNumber === 0 &&
+    (!hasVariants || !hasAnyVariantStock) &&
+    !(hidePriceIfZero && basePrice === 0);
+
   const effectiveStock = hasInventory ? stockNumber : 999999;
 
   const hasPromo = !!product.promoPrice;
@@ -183,6 +188,7 @@ export function ProductCard({ product, hidePriceIfZero }: ProductCardProps) {
           <ProductOptionsModal
             product={product}
             onClose={() => setIsModalOpen(false)}
+            hidePriceIfZero={hidePriceIfZero}
           />
         )}
       </AnimatePresence>
@@ -190,7 +196,7 @@ export function ProductCard({ product, hidePriceIfZero }: ProductCardProps) {
   );
 }
 
-function ProductOptionsModal({ product, onClose }: { product: Product, onClose: () => void }) {
+function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: Product, onClose: () => void, hidePriceIfZero?: boolean }) {
   const { addProduct, getVariantQuantity, removeVariant, updateVariantQuantity } = useCart();
 
   const hasVariants = product.variants && product.variants.length > 0;
@@ -295,9 +301,11 @@ function ProductOptionsModal({ product, onClose }: { product: Product, onClose: 
                       {variant.description && (
                         <p className="text-xs text-zinc-400 mt-0.5">{variant.description}</p>
                       )}
-                      <p className="text-sm font-semibold text-emerald-400 mt-1">
-                        ${variant.price.toLocaleString()}
-                      </p>
+                      {!(hidePriceIfZero && variant.price === 0) && (
+                        <p className="text-sm font-semibold text-emerald-400 mt-1">
+                          ${variant.price.toLocaleString()}
+                        </p>
+                      )}
                       {isOutOfStock && <span className="text-xs text-red-400">Agotado</span>}
                     </button>
                   );

@@ -303,7 +303,7 @@ export default function ShopHomePage() {
                   )}
                 >
                   <Calendar className="w-4 h-4" />
-                  Servicios
+                  {combinedFeatures.labels?.services || "Servicios"}
                 </button>
                 <button
                   onClick={() => setActiveTab("productos")}
@@ -315,7 +315,7 @@ export default function ShopHomePage() {
                   )}
                 >
                   <ShoppingBag className="w-4 h-4" />
-                  Productos
+                  {combinedFeatures.labels?.products || "Productos"}
                 </button>
               </div>
             </div>
