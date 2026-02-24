@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Product, ProductVariant, ProductCategory, PRODUCT_CATEGORY_LABELS, ProductExtra } from "@/lib/constants";
+import { Product, ProductVariant, ProductCategory, PRODUCT_CATEGORY_LABELS, ProductExtra, MealPlate } from "@/lib/constants";
 import type { ProductExtra as ProductExtraType } from "@/lib/types/product-extra.types";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, Trash2, Tag, Palette, Check } from "lucide-react";
@@ -23,6 +23,7 @@ interface ProductEditorProps {
     onSave: (product: Product) => void;
     shopId: string; // Required for image uploads
     hideStock?: boolean; // For menu-only businesses (meal prep, etc.)
+    allProducts?: Product[]; // For selecting components for predefined plates
 }
 
 // Extended product with custom category support
@@ -37,6 +38,8 @@ interface ExtendedProduct extends Omit<Product, 'category'> {
     plateCount?: number;
     isCustomizable?: boolean;
     allowedComponentCategories?: string[];
+    predefinedPlates?: MealPlate[];
+    infiniteStock?: boolean;
 }
 
 const EMPTY_PRODUCT: ExtendedProduct = {
@@ -48,6 +51,8 @@ const EMPTY_PRODUCT: ExtendedProduct = {
     lowStockThreshold: 5,
     category: "otros",
     image: "https://via.placeholder.com/400",
+    infiniteStock: false,
+    predefinedPlates: [],
     variants: [],
     extras: [],
     extrasRequired: false,
@@ -57,7 +62,7 @@ const EMPTY_PRODUCT: ExtendedProduct = {
     allowedComponentCategories: [],
 };
 
-export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideStock = false }: ProductEditorProps) {
+export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideStock = false, allProducts = [] }: ProductEditorProps) {
     const [formData, setFormData] = useState<ExtendedProduct>(EMPTY_PRODUCT);
     const [hasVariants, setHasVariants] = useState(false);
     const [hasExtras, setHasExtras] = useState(false);
@@ -513,20 +518,34 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideSt
                                 {/* Pricing & Stock Strategy */}
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className="text-lg font-semibold text-white">{hideStock ? 'Precios' : 'Precios e Inventario'}</h3>
-                                    {!hideStock && (
+                                    <div className="flex flex-wrap items-center gap-4">
                                         <div className="flex items-center gap-2">
                                             <input
                                                 type="checkbox"
-                                                id="hasVariants"
-                                                checked={hasVariants}
-                                                onChange={(e) => setHasVariants(e.target.checked)}
-                                                className="w-4 h-4 rounded bg-zinc-800 border-zinc-600 text-indigo-500 focus:ring-indigo-500"
+                                                id="infiniteStock"
+                                                checked={formData.infiniteStock}
+                                                onChange={(e) => setFormData({ ...formData, infiniteStock: e.target.checked })}
+                                                className="w-4 h-4 rounded bg-zinc-800 border-zinc-600 text-emerald-500 focus:ring-emerald-500"
                                             />
-                                            <label htmlFor="hasVariants" className="text-sm text-zinc-300 cursor-pointer select-none">
-                                                Este producto tiene variantes (Tallas, Calidades)
+                                            <label htmlFor="infiniteStock" className="text-sm text-zinc-300 cursor-pointer select-none">
+                                                Stock Infinito (Menú)
                                             </label>
                                         </div>
-                                    )}
+                                        {!hideStock && (
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="checkbox"
+                                                    id="hasVariants"
+                                                    checked={hasVariants}
+                                                    onChange={(e) => setHasVariants(e.target.checked)}
+                                                    className="w-4 h-4 rounded bg-zinc-800 border-zinc-600 text-indigo-500 focus:ring-indigo-500"
+                                                />
+                                                <label htmlFor="hasVariants" className="text-sm text-zinc-300 cursor-pointer select-none">
+                                                    Variantes (Tallas, Calidades)
+                                                </label>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {(!hasVariants || hideStock) ? (
@@ -561,8 +580,9 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideSt
                                                         type="number"
                                                         min="0"
                                                         value={formData.stock}
+                                                        disabled={formData.infiniteStock}
                                                         onChange={(e) => setFormData({ ...formData, stock: Number(e.target.value) })}
-                                                        className="w-full bg-zinc-900 border-zinc-700 rounded px-3 py-1.5 text-white"
+                                                        className="w-full bg-zinc-900 border-zinc-700 rounded px-3 py-1.5 text-white disabled:opacity-50"
                                                     />
                                                 </div>
                                                 <div>
@@ -571,8 +591,9 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideSt
                                                         type="number"
                                                         min="0"
                                                         value={formData.lowStockThreshold}
+                                                        disabled={formData.infiniteStock}
                                                         onChange={(e) => setFormData({ ...formData, lowStockThreshold: Number(e.target.value) })}
-                                                        className="w-full bg-zinc-900 border-zinc-700 rounded px-3 py-1.5 text-white"
+                                                        className="w-full bg-zinc-900 border-zinc-700 rounded px-3 py-1.5 text-white disabled:opacity-50"
                                                     />
                                                 </div>
                                             </>
@@ -819,35 +840,85 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideSt
                                                 </div>
 
                                                 {formData.isCustomizable && (
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-zinc-400 mb-2">Categorías permitidas para componentes</label>
-                                                        <div className="flex flex-wrap gap-2 mb-2">
-                                                            {["Proteínas", "Carbohidratos", "Vegetales", "Frutas", "Postres", "Bebidas"].map((cat) => (
-                                                                <button
-                                                                    key={cat}
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        const current = formData.allowedComponentCategories || [];
-                                                                        if (current.includes(cat)) {
-                                                                            setFormData({ ...formData, allowedComponentCategories: current.filter(c => c !== cat) });
-                                                                        } else {
-                                                                            setFormData({ ...formData, allowedComponentCategories: [...current, cat] });
-                                                                        }
-                                                                    }}
-                                                                    className={cn(
-                                                                        "px-3 py-1 rounded-full text-xs font-medium border transition-all",
-                                                                        (formData.allowedComponentCategories || []).includes(cat)
-                                                                            ? "bg-emerald-500/20 border-emerald-500 text-emerald-400"
-                                                                            : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-500"
-                                                                    )}
-                                                                >
-                                                                    {cat}
-                                                                </button>
-                                                            ))}
+                                                    <div className="space-y-4">
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-zinc-400 mb-2">Categorías permitidas para componentes</label>
+                                                            <div className="flex flex-wrap gap-2 mb-2">
+                                                                {["Proteínas", "Carbohidratos", "Vegetales", "Frutas", "Postres", "Bebidas"].map((cat) => (
+                                                                    <button
+                                                                        key={cat}
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const current = formData.allowedComponentCategories || [];
+                                                                            if (current.includes(cat)) {
+                                                                                setFormData({ ...formData, allowedComponentCategories: current.filter(c => c !== cat) });
+                                                                            } else {
+                                                                                setFormData({ ...formData, allowedComponentCategories: [...current, cat] });
+                                                                            }
+                                                                        }}
+                                                                        className={cn(
+                                                                            "px-3 py-1 rounded-full text-xs font-medium border transition-all",
+                                                                            (formData.allowedComponentCategories || []).includes(cat)
+                                                                                ? "bg-emerald-500/20 border-emerald-500 text-emerald-400"
+                                                                                : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-500"
+                                                                        )}
+                                                                    >
+                                                                        {cat}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                            <p className="text-xs text-zinc-500 italic">
+                                                                * El sistema buscará productos en el catálogo que pertenezcan a estas categorías para ofrecerlos como opciones.
+                                                            </p>
                                                         </div>
-                                                        <p className="text-xs text-zinc-500 italic">
-                                                            * El sistema buscará productos en el catálogo que pertenezcan a estas categorías para ofrecerlos como opciones.
-                                                        </p>
+
+                                                        {/* Predefined Plates Editor */}
+                                                        <div className="pt-4 border-t border-zinc-800">
+                                                            <div className="flex items-center justify-between mb-4">
+                                                                <h4 className="text-sm font-semibold text-white">Platos Pre-configurados (Opcional)</h4>
+                                                                <p className="text-xs text-zinc-500">Configura ejemplos para el cliente</p>
+                                                            </div>
+
+                                                            <div className="space-y-4">
+                                                                {Array.from({ length: formData.plateCount || 0 }).map((_, plateIdx) => (
+                                                                    <div key={plateIdx} className="bg-zinc-900/50 p-3 rounded-lg border border-zinc-800">
+                                                                        <p className="text-xs font-bold text-zinc-500 mb-2 uppercase">Plato {plateIdx + 1}</p>
+                                                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                                                            {(formData.allowedComponentCategories || []).map(catName => {
+                                                                                const currentPlate = (formData.predefinedPlates || [])[plateIdx] || { id: `plate-${plateIdx + 1}`, components: {} };
+                                                                                const selectedValue = currentPlate.components[catName] || "";
+
+                                                                                return (
+                                                                                    <div key={catName}>
+                                                                                        <label className="block text-[10px] text-zinc-500 mb-1">{catName}</label>
+                                                                                        <select
+                                                                                            value={selectedValue}
+                                                                                            onChange={(e) => {
+                                                                                                const newPlates = [...(formData.predefinedPlates || [])];
+                                                                                                if (!newPlates[plateIdx]) {
+                                                                                                    newPlates[plateIdx] = { id: `plate-${plateIdx + 1}`, components: {} };
+                                                                                                }
+                                                                                                newPlates[plateIdx].components[catName] = e.target.value;
+                                                                                                setFormData({ ...formData, predefinedPlates: newPlates });
+                                                                                            }}
+                                                                                            className="w-full bg-zinc-800 border-zinc-700 rounded px-2 py-1 text-xs text-white"
+                                                                                        >
+                                                                                            <option value="">Seleccionar...</option>
+                                                                                            {allProducts
+                                                                                                .filter(p => p.category === catName || p.id === selectedValue)
+                                                                                                .map(p => (
+                                                                                                    <option key={p.id} value={p.name}>{p.name}</option>
+                                                                                                ))
+                                                                                            }
+                                                                                        </select>
+                                                                                    </div>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 )}
                                             </motion.div>
@@ -871,7 +942,6 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideSt
                                         {product ? "Guardar Cambios" : "Crear Producto"}
                                     </button>
                                 </div>
-
                             </form>
                         </div>
                     </motion.div>

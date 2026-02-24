@@ -26,8 +26,10 @@ export const WEBHOOK_BASE_URL = PRODUCTION_URL;
 import type { BusinessType } from "@/lib/types/business.types";
 import { BUSINESS_TYPE_CONFIG as FULL_BUSINESS_CONFIG } from "@/lib/types/business.types";
 import type { ProductExtra } from "@/lib/types/product-extra.types";
+import type { MealPlate } from "@/lib/types/meal-prep.types";
 export type { BusinessType };
 export type { ProductExtra };
+export type { MealPlate };
 
 // Las 6 categorías principales de UI (legacy)
 export type MainBusinessCategory = "beauty" | "retail" | "repair" | "restaurant" | "rentcar" | "technology";
@@ -686,6 +688,8 @@ export interface Product {
   plateCount?: number; // Number of plates in this package
   isCustomizable?: boolean; // Whether plates can be customized
   allowedComponentCategories?: string[]; // Categories like "Proteínas", "Carbohidratos"
+  predefinedPlates?: MealPlate[]; // Array of plates with pre-selected components
+  infiniteStock?: boolean; // Whether to treat this product as always in stock
 }
 
 // Product Category Labels

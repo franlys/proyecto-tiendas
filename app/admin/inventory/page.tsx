@@ -646,6 +646,7 @@ function ProductsContent({ shopId, businessType = "" }: { shopId: string; busine
         product={editingProduct}
         shopId={shopId}
         hideStock={isMenuOnly}
+        allProducts={products}
       />
     </div>
   );

@@ -43,11 +43,12 @@ export function ProductCard({ product, hidePriceIfZero }: ProductCardProps) {
     : false;
 
   // Product is only out of stock if business follows inventory AND (no main stock AND (no variants OR no variant has stock))
-  // SPECIAL: If hidePriceIfZero is active, it's likely a menu component, so never show "Agotado"
+  // SPECIAL: If hidePriceIfZero is active or infiniteStock is true, it's likely a menu component, so never show "Agotado"
   const isOutOfStock = hasInventory &&
     stockNumber === 0 &&
     (!hasVariants || !hasAnyVariantStock) &&
-    !hidePriceIfZero;
+    !hidePriceIfZero &&
+    !product.infiniteStock;
 
   const effectiveStock = hasInventory ? stockNumber : 999999;
 
