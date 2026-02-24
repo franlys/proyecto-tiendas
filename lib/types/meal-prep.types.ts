@@ -25,7 +25,14 @@ export interface MealPlate {
     notes?: string;               // Notas por plato individual
     isPremiumProtein?: boolean;   // Si usa proteína premium
     premiumSurcharge?: number;    // Cargo extra
+    isCustom?: boolean;           // Si el plato es personalizado (entrada libre), sube a $15
 }
+
+// Precios base
+export const MEAL_PREP_PRICES = {
+    STANDARD_PLATE: 13,
+    CUSTOM_PLATE: 15,
+};
 
 // ============================================
 // PROTEÍNAS PREMIUM
@@ -44,11 +51,12 @@ export interface PremiumProtein {
  * Proteínas premium predefinidas
  */
 export const PREMIUM_PROTEINS: PremiumProtein[] = [
-    { id: "beef", name: "Res Premium", surcharge: 1 },
+    { id: "res_premium", name: "Res Premium", surcharge: 1 },
     { id: "shrimp", name: "Camarones", surcharge: 5 },
     { id: "salmon", name: "Salmón", surcharge: 7 },
-    { id: "steak", name: "Filete", surcharge: 5 },
-    { id: "lamb", name: "Cordero", surcharge: 6 },
+    { id: "churrasco", name: "Churrasco", surcharge: 6 },
+    { id: "filete_mignon", name: "Filete Mignon", surcharge: 7 },
+    { id: "steak", name: "Steak / Filete", surcharge: 5 },
 ];
 
 // ============================================
@@ -87,11 +95,12 @@ export interface MealPrepOrder {
     id: string;
     packageType: MealPrepPackageType;
     plates: MealPlate[];
-    basePrice: number;          // plateCount * pricePerPlate
+    basePrice: number;          // platos * precio_base
     premiumTotal: number;       // Sum of all premium surcharges
     deliveryDistance?: number;  // Distancia en millas
     deliverySurcharge: number;  // $30 si >10 millas
-    totalPrice: number;         // basePrice + premiumTotal + deliverySurcharge
+    trainingPlan?: TrainingPlanConfig; // Plan de entrenamiento opcional
+    totalPrice: number;         // basePrice + premiumTotal + deliverySurcharge + trainingPlan.price
     customerNotes?: string;
     createdAt: string;
 }
@@ -137,7 +146,7 @@ export interface DeliveryConfig {
 
 export const DEFAULT_DELIVERY_CONFIG: DeliveryConfig = {
     freeDistanceMiles: 10,
-    surchargeAmount: 30,
+    surchargeAmount: 30, // Se cobra si es mayor a 10 millas, pero el usuario dijo que el flujo es fundamental
 };
 
 // ============================================
@@ -216,20 +225,32 @@ export interface MealPrepProduct {
  */
 export function calculateMealPrepTotal(
     plates: MealPlate[],
-    pricePerPlate: number,
+    trainingPlan?: TrainingPlanConfig,
     distanceMiles?: number
-): { basePrice: number; premiumTotal: number; deliverySurcharge: number; total: number } {
-    const basePrice = plates.length * pricePerPlate;
+): {
+    basePrice: number;
+    premiumTotal: number;
+    deliverySurcharge: number;
+    trainingTotal: number;
+    total: number
+} {
+    // Calcular base considerando platos estandard vs custom
+    const basePrice = plates.reduce((sum, plate) => {
+        return sum + (plate.isCustom ? MEAL_PREP_PRICES.CUSTOM_PLATE : MEAL_PREP_PRICES.STANDARD_PLATE);
+    }, 0);
+
     const premiumTotal = plates.reduce((sum, plate) => sum + (plate.premiumSurcharge || 0), 0);
     const deliverySurcharge = distanceMiles && distanceMiles > DEFAULT_DELIVERY_CONFIG.freeDistanceMiles
         ? DEFAULT_DELIVERY_CONFIG.surchargeAmount
         : 0;
+    const trainingTotal = trainingPlan?.monthlyPrice || 0;
 
     return {
         basePrice,
         premiumTotal,
         deliverySurcharge,
-        total: basePrice + premiumTotal + deliverySurcharge,
+        trainingTotal,
+        total: basePrice + premiumTotal + deliverySurcharge + trainingTotal,
     };
 }
 

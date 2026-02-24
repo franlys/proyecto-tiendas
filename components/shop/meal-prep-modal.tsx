@@ -15,6 +15,9 @@ import {
     calculateMealPrepTotal,
     isMealPackageComplete,
     formatPlateDescription,
+    MEAL_PREP_PRICES,
+    TRAINING_PLANS,
+    TrainingPlanConfig,
 } from "@/lib/types/meal-prep.types";
 
 interface MealPrepModalProps {
@@ -34,12 +37,13 @@ export function MealPrepModal({
     whatsappNumber,
     catalog = [],
 }: MealPrepModalProps) {
-    const [step, setStep] = useState<"package" | "plates" | "delivery" | "summary">("package");
+    const [step, setStep] = useState<"package" | "plates" | "training" | "delivery" | "summary">("package");
     const [selectedPackage, setSelectedPackage] = useState<number>(3);
     const [plates, setPlates] = useState<MealPlate[]>([]);
     const [currentPlateIndex, setCurrentPlateIndex] = useState(0);
     const [distance, setDistance] = useState<number | undefined>();
     const [distanceInput, setDistanceInput] = useState("");
+    const [selectedTrainingPlan, setSelectedTrainingPlan] = useState<TrainingPlanConfig | undefined>();
     const [customerNotes, setCustomerNotes] = useState("");
 
     // Reset state when modal opens
@@ -51,6 +55,7 @@ export function MealPrepModal({
             setCurrentPlateIndex(0);
             setDistance(undefined);
             setDistanceInput("");
+            setSelectedTrainingPlan(undefined);
             setCustomerNotes("");
         }
     }, [isOpen]);
@@ -91,7 +96,7 @@ export function MealPrepModal({
     }, [catalog]);
 
     const currentPlate = plates[currentPlateIndex];
-    const pricing = calculateMealPrepTotal(plates, 13, distance);
+    const pricing = calculateMealPrepTotal(plates, selectedTrainingPlan, distance);
     const packageConfig = MEAL_PREP_PACKAGES.find(p => p.plateCount === selectedPackage);
 
     const updatePlateComponent = (field: string, value: string) => {
@@ -102,6 +107,7 @@ export function MealPrepModal({
                 ...newPlates[currentPlateIndex].components,
                 [field]: value,
             },
+            isCustom: false, // Selección del menú desactiva el modo custom
         };
         setPlates(newPlates);
     };
@@ -111,6 +117,7 @@ export function MealPrepModal({
         newPlates[currentPlateIndex] = {
             ...newPlates[currentPlateIndex],
             notes: note,
+            isCustom: note.trim().length > 0 && Object.keys(newPlates[currentPlateIndex].components).length === 0
         };
         setPlates(newPlates);
     };
@@ -121,6 +128,7 @@ export function MealPrepModal({
             ...newPlates[currentPlateIndex],
             isPremiumProtein: protein !== null,
             premiumSurcharge: protein?.surcharge || 0,
+            isCustom: false, // Selección del menú desactiva el modo custom
         };
         // Also update the protein name if selecting premium
         if (protein) {
@@ -146,7 +154,7 @@ export function MealPrepModal({
         if (currentPlateIndex < plates.length - 1) {
             setCurrentPlateIndex(currentPlateIndex + 1);
         } else {
-            setStep("delivery");
+            setStep("training");
         }
     };
 
@@ -170,11 +178,16 @@ export function MealPrepModal({
         onConfirm(plates, pricing.total, distance);
     };
 
+    const handleSelectTraining = (plan: TrainingPlanConfig | undefined) => {
+        setSelectedTrainingPlan(plan);
+    };
+
     const generateWhatsAppMessage = (): string => {
         let message = `Hola! Quiero ordenar un paquete de ${selectedPackage} platos personalizado:\n\n`;
 
         plates.forEach((plate, index) => {
-            message += `*Plato ${index + 1}:*\n`;
+            const platePrice = plate.isCustom ? MEAL_PREP_PRICES.CUSTOM_PLATE : MEAL_PREP_PRICES.STANDARD_PLATE;
+            message += `*Plato ${index + 1} (${plate.isCustom ? 'Personalizado' : 'Estándar'} - $${platePrice}):*\n`;
 
             ingredientCategories.forEach((cat: { id: string, name: string }) => {
                 if (plate.components[cat.id]) {
@@ -186,22 +199,29 @@ export function MealPrepModal({
                 message += `  - (Proteina Premium +$${plate.premiumSurcharge})\n`;
             }
             if (plate.notes) {
-                message += `  - Nota: ${plate.notes}\n`;
+                message += `  - Nota/Especificaciones: ${plate.notes}\n`;
             }
             message += "\n";
         });
+
+        if (selectedTrainingPlan) {
+            message += `*Añadir Paquete de Entrenamiento:*\n - ${selectedTrainingPlan.label} ($${selectedTrainingPlan.monthlyPrice}/mes)\n\n`;
+        }
 
         if (customerNotes) {
             message += `*Notas Generales:*\n${customerNotes}\n\n`;
         }
 
         message += `---\n`;
-        message += `Subtotal: $${pricing.basePrice}\n`;
+        message += `Subtotal Platos: $${pricing.basePrice}\n`;
         if (pricing.premiumTotal > 0) {
             message += `Proteinas Premium: +$${pricing.premiumTotal}\n`;
         }
+        if (selectedTrainingPlan) {
+            message += `Entrenamiento: +$${pricing.trainingTotal}\n`;
+        }
         if (pricing.deliverySurcharge > 0) {
-            message += `Cargo por distancia (>${DEFAULT_DELIVERY_CONFIG.freeDistanceMiles} millas): +$${pricing.deliverySurcharge}\n`;
+            message += `Distancia: +$${pricing.deliverySurcharge}\n`;
         }
         message += `*Total: $${pricing.total}*\n`;
 
@@ -244,12 +264,12 @@ export function MealPrepModal({
 
                 {/* Progress */}
                 <div className="flex gap-1 px-4 py-2 bg-black/20">
-                    {["package", "plates", "delivery", "summary"].map((s, i) => (
+                    {["package", "plates", "training", "delivery", "summary"].map((s, i) => (
                         <div
                             key={s}
                             className={cn(
                                 "flex-1 h-1 rounded-full transition-colors",
-                                ["package", "plates", "delivery", "summary"].indexOf(step) >= i
+                                ["package", "plates", "training", "delivery", "summary"].indexOf(step) >= i
                                     ? "bg-green-500"
                                     : "bg-white/10"
                             )}
@@ -267,7 +287,7 @@ export function MealPrepModal({
                             </p>
 
                             <div className="grid grid-cols-2 gap-3">
-                                {MEAL_PREP_PACKAGES.map((pkg) => (
+                                {MEAL_PREP_PACKAGES.filter(p => p.plateCount >= 3).map((pkg) => (
                                     <button
                                         key={pkg.type}
                                         onClick={() => handlePackageSelect(pkg.plateCount)}
@@ -283,7 +303,7 @@ export function MealPrepModal({
                                         </div>
                                         <div className="text-sm text-slate-400">platos</div>
                                         <div className="text-lg font-semibold text-green-400 mt-2">
-                                            ${pkg.plateCount * pkg.pricePerPlate}
+                                            ${pkg.plateCount * MEAL_PREP_PRICES.STANDARD_PLATE}
                                         </div>
                                     </button>
                                 ))}
@@ -333,7 +353,7 @@ export function MealPrepModal({
                             {/* Dynamic Category Selection */}
                             <div className="space-y-6">
                                 {ingredientCategories.map((cat: { id: string, name: string }) => (
-                                    <div key={cat.id} className="space-y-3">
+                                    <div key={cat.id} className={cn("space-y-3 transition-opacity", currentPlate.isCustom ? "opacity-30 pointer-events-none" : "opacity-100")}>
                                         <label className="block text-sm font-semibold text-white/90">
                                             {cat.name}
                                         </label>
@@ -353,16 +373,54 @@ export function MealPrepModal({
                                                 </button>
                                             ))}
                                         </div>
-                                        {/* Fallback input for "Other" or custom name */}
-                                        <input
-                                            type="text"
-                                            value={currentPlate.components[cat.id] || ""}
-                                            onChange={(e) => updatePlateComponent(cat.id, e.target.value)}
-                                            placeholder={`O escribe tu ${cat.name.toLowerCase()}...`}
-                                            className="w-full px-3 py-2 text-xs rounded-lg bg-black/20 border border-white/5 text-white placeholder-slate-500 focus:outline-none focus:border-green-500/50"
-                                        />
                                     </div>
                                 ))}
+
+                                {/* Custom Selection Toggle */}
+                                <div className="p-4 rounded-xl border-2 transition-all border-dashed border-white/10 hover:border-indigo-500/30 bg-white/5">
+                                    <div className="flex items-center justify-between gap-4 mb-4">
+                                        <div className="flex-1">
+                                            <h4 className="font-bold text-white text-sm">¿Deseas personalizar este plato totalmente?</h4>
+                                            <p className="text-xs text-slate-400 mt-1">
+                                                Si no encuentras lo que buscas en el menú, escribe exactamente lo que deseas.
+                                            </p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const newPlates = [...plates];
+                                                newPlates[currentPlateIndex].isCustom = !newPlates[currentPlateIndex].isCustom;
+                                                if (newPlates[currentPlateIndex].isCustom) {
+                                                    newPlates[currentPlateIndex].components = {};
+                                                }
+                                                setPlates(newPlates);
+                                            }}
+                                            className={cn(
+                                                "px-4 py-2 rounded-lg text-xs font-bold transition-all",
+                                                currentPlate.isCustom
+                                                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
+                                                    : "bg-white/10 text-slate-300 hover:bg-white/20"
+                                            )}
+                                        >
+                                            {currentPlate.isCustom ? "Plato Personalizado ACTIVO" : "Personalizar Plato (+$2)"}
+                                        </button>
+                                    </div>
+
+                                    {(currentPlate.isCustom || currentPlate.notes) && (
+                                        <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                                            <label className="block text-xs font-semibold text-indigo-400 uppercase tracking-wider">
+                                                Especificaciones Detalladas ($15)
+                                            </label>
+                                            <textarea
+                                                value={currentPlate.notes || ""}
+                                                onChange={(e) => updatePlateNote(e.target.value)}
+                                                placeholder="Ej: Plato con carne asada, papas al horno con romero y espárragos frescos. Sin sal."
+                                                rows={3}
+                                                className="w-full px-4 py-3 rounded-xl bg-black/40 border border-indigo-500/30 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 resize-none text-sm"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
 
                                 {/* Premium protein shortcuts - Only show if current category list doesn't cover them or for easy access */}
                                 <div>
@@ -387,19 +445,6 @@ export function MealPrepModal({
                                     </div>
                                 </div>
 
-                                {/* Per-Dish Notes */}
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-300 mb-2">
-                                        Notas para este plato
-                                    </label>
-                                    <textarea
-                                        value={currentPlate.notes || ""}
-                                        onChange={(e) => updatePlateNote(e.target.value)}
-                                        placeholder="Ej: Sin sal, extra vegetales, etc."
-                                        rows={2}
-                                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-green-500/50 resize-none text-sm"
-                                    />
-                                </div>
                             </div>
 
                             {/* Navigation */}
@@ -415,7 +460,7 @@ export function MealPrepModal({
                                 <Button
                                     onClick={handleNextPlate}
                                     className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/20"
-                                    disabled={Object.keys(currentPlate.components).length === 0}
+                                    disabled={Object.keys(currentPlate.components).length === 0 && !currentPlate.notes}
                                 >
                                     {currentPlateIndex < plates.length - 1 ? (
                                         <>
@@ -423,8 +468,67 @@ export function MealPrepModal({
                                             <Plus className="w-4 h-4 ml-2" />
                                         </>
                                     ) : (
-                                        "Resumen de Entrega"
+                                        "Añadir Entrenamiento"
                                     )}
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Step 2.5: Training Selection (Optional) */}
+                    {step === "training" && (
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-bold text-white mb-2">¿Deseas añadir un Plan de Entrenamiento?</h3>
+                            <p className="text-sm text-slate-400">Potencia tus resultados con un plan de entrenamiento personalizado.</p>
+
+                            <div className="space-y-3">
+                                {TRAINING_PLANS.map((plan) => (
+                                    <button
+                                        key={plan.type}
+                                        onClick={() => handleSelectTraining(plan)}
+                                        className={cn(
+                                            "w-full p-4 rounded-xl border-2 transition-all text-left flex justify-between items-center",
+                                            selectedTrainingPlan?.type === plan.type
+                                                ? "border-green-500 bg-green-500/20"
+                                                : "border-white/10 bg-white/5 hover:border-white/20"
+                                        )}
+                                    >
+                                        <div>
+                                            <div className="font-bold text-white">{plan.label}</div>
+                                            <div className="text-xs text-slate-400">Entrenamiento personalizado</div>
+                                        </div>
+                                        <div className="text-xl font-bold text-green-400">
+                                            ${plan.monthlyPrice}
+                                        </div>
+                                    </button>
+                                ))}
+
+                                <button
+                                    onClick={() => handleSelectTraining(undefined)}
+                                    className={cn(
+                                        "w-full p-3 rounded-xl border-2 transition-all text-sm font-medium",
+                                        !selectedTrainingPlan
+                                            ? "border-white/40 bg-white/10 text-white"
+                                            : "border-white/10 text-slate-400 hover:border-white/20"
+                                    )}
+                                >
+                                    No, gracias. Solo las comidas.
+                                </button>
+                            </div>
+
+                            <div className="flex gap-3 pt-6 border-t border-white/10">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setStep("plates")}
+                                    className="flex-1 border-white/20 text-slate-300"
+                                >
+                                    Volver
+                                </Button>
+                                <Button
+                                    onClick={() => setStep("delivery")}
+                                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white"
+                                >
+                                    Continuar a Entrega
                                 </Button>
                             </div>
                         </div>
@@ -470,7 +574,7 @@ export function MealPrepModal({
                             <div className="flex gap-3">
                                 <Button
                                     variant="outline"
-                                    onClick={() => setStep("plates")}
+                                    onClick={() => setStep("training")}
                                     className="flex-1 border-white/20 text-slate-300"
                                 >
                                     Volver
@@ -490,49 +594,61 @@ export function MealPrepModal({
                         <div className="space-y-4">
                             {/* Plates summary */}
                             <div className="space-y-2">
-                                {plates.map((plate, index) => (
-                                    <div
-                                        key={index}
-                                        className="p-3 rounded-lg bg-white/5 border border-white/10"
-                                    >
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <p className="text-white font-medium">Plato {index + 1}</p>
-                                                <p className="text-sm text-slate-400">
-                                                    {formatPlateDescription(plate)}
-                                                </p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-green-400 font-medium">$13</p>
-                                                {plate.premiumSurcharge ? (
-                                                    <p className="text-xs text-amber-400">+${plate.premiumSurcharge}</p>
-                                                ) : null}
+                                {plates.map((plate, index) => {
+                                    const platePrice = plate.isCustom ? MEAL_PREP_PRICES.CUSTOM_PLATE : MEAL_PREP_PRICES.STANDARD_PLATE;
+                                    return (
+                                        <div
+                                            key={index}
+                                            className="p-3 rounded-lg bg-white/5 border border-white/10"
+                                        >
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <p className="text-white font-medium flex items-center gap-2">
+                                                        Plato {index + 1}
+                                                        {plate.isCustom && <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded border border-indigo-500/30 uppercase">Personalizado</span>}
+                                                    </p>
+                                                    <p className="text-sm text-slate-400">
+                                                        {formatPlateDescription(plate)}
+                                                    </p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-green-400 font-medium">${platePrice}</p>
+                                                    {plate.premiumSurcharge ? (
+                                                        <p className="text-xs text-amber-400">+${plate.premiumSurcharge}</p>
+                                                    ) : null}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
 
                             {/* Pricing breakdown */}
                             <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/30 space-y-2">
-                                <div className="flex justify-between text-slate-300">
-                                    <span>Subtotal ({selectedPackage} platos x $13)</span>
+                                <div className="flex justify-between text-slate-300 text-sm">
+                                    <span>Subtotal Platos</span>
                                     <span>${pricing.basePrice}</span>
                                 </div>
                                 {pricing.premiumTotal > 0 && (
-                                    <div className="flex justify-between text-amber-400">
+                                    <div className="flex justify-between text-amber-400 text-sm">
                                         <span>Proteinas Premium</span>
                                         <span>+${pricing.premiumTotal}</span>
                                     </div>
                                 )}
+                                {selectedTrainingPlan && (
+                                    <div className="flex justify-between text-green-400 text-sm">
+                                        <span>Plan: {selectedTrainingPlan.label}</span>
+                                        <span>+${pricing.trainingTotal}</span>
+                                    </div>
+                                )}
                                 {pricing.deliverySurcharge > 0 && (
-                                    <div className="flex justify-between text-amber-400">
+                                    <div className="flex justify-between text-amber-400 text-sm">
                                         <span>Cargo por distancia</span>
                                         <span>+${pricing.deliverySurcharge}</span>
                                     </div>
                                 )}
                                 <div className="flex justify-between text-lg font-bold text-white pt-2 border-t border-white/10">
-                                    <span>Total</span>
+                                    <span>Total Final</span>
                                     <span className="text-green-400">${pricing.total}</span>
                                 </div>
                             </div>
