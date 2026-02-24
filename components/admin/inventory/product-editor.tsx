@@ -531,24 +531,22 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideSt
                                                 Stock Infinito (Menú)
                                             </label>
                                         </div>
-                                        {!hideStock && (
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="checkbox"
-                                                    id="hasVariants"
-                                                    checked={hasVariants}
-                                                    onChange={(e) => setHasVariants(e.target.checked)}
-                                                    className="w-4 h-4 rounded bg-zinc-800 border-zinc-600 text-indigo-500 focus:ring-indigo-500"
-                                                />
-                                                <label htmlFor="hasVariants" className="text-sm text-zinc-300 cursor-pointer select-none">
-                                                    Variantes (Tallas, Calidades)
-                                                </label>
-                                            </div>
-                                        )}
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="checkbox"
+                                                id="hasVariants"
+                                                checked={hasVariants}
+                                                onChange={(e) => setHasVariants(e.target.checked)}
+                                                className="w-4 h-4 rounded bg-zinc-800 border-zinc-600 text-indigo-500 focus:ring-indigo-500"
+                                            />
+                                            <label htmlFor="hasVariants" className="text-sm text-zinc-300 cursor-pointer select-none">
+                                                Variantes (Tallas, Calidades)
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {(!hasVariants || hideStock) ? (
+                                {(!hasVariants) ? (
                                     /* Simple Product Strategy (or menu-only mode) */
                                     <div className={`grid ${hideStock ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-4'} gap-4 bg-zinc-800/50 p-4 rounded-xl border border-zinc-800`}>
                                         <div>
@@ -632,15 +630,18 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideSt
                                                         className="w-full bg-zinc-900 border-zinc-700 rounded px-3 py-1.5 text-white text-sm"
                                                     />
                                                 </div>
-                                                <div className="w-20">
-                                                    <label className="block text-xs text-zinc-500 mb-1">Stock</label>
-                                                    <input
-                                                        type="number"
-                                                        value={variant.stock || 0}
-                                                        onChange={(e) => updateVariant(index, "stock", Number(e.target.value))}
-                                                        className="w-full bg-zinc-900 border-zinc-700 rounded px-3 py-1.5 text-white text-sm text-center"
-                                                    />
-                                                </div>
+                                                {!hideStock && (
+                                                    <div className="w-20">
+                                                        <label className="block text-xs text-zinc-500 mb-1">Stock</label>
+                                                        <input
+                                                            type="number"
+                                                            value={variant.stock || 0}
+                                                            disabled={formData.infiniteStock}
+                                                            onChange={(e) => updateVariant(index, "stock", Number(e.target.value))}
+                                                            className="w-full bg-zinc-900 border-zinc-700 rounded px-3 py-1.5 text-white text-sm text-center disabled:opacity-50"
+                                                        />
+                                                    </div>
+                                                )}
                                                 <button
                                                     type="button"
                                                     onClick={() => removeVariant(index)}

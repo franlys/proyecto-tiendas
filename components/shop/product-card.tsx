@@ -279,7 +279,7 @@ function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: P
                 {product.variants!.map(variant => {
                   const isSelected = selectedVariant?.id === variant.id;
                   const stock = variant.stock || 0;
-                  const isOutOfStock = hasInventory && stock === 0;
+                  const isOutOfStock = hasInventory && stock === 0 && !product.infiniteStock;
 
                   return (
                     <button
