@@ -1439,7 +1439,7 @@ export const BUSINESS_TYPE_CONFIG: Record<BusinessType, BusinessTypeConfig> = {
             delivery: true,     // Entrega de comidas
         },
         labels: {
-            cta: "Ordenar Paquete",
+            cta: "Adquirir mi plan",
             products: "Paquetes",
             services: "Entrenamiento",
             booking: "Pedido",
@@ -1712,7 +1712,7 @@ export const BUSINESS_TYPE_CONFIG: Record<BusinessType, BusinessTypeConfig> = {
             delivery: false,
         },
         labels: {
-            cta: "Ver Membresías",
+            cta: "Ver Planes",
             products: "Productos",
             services: "Clases",
             booking: "Clase",
@@ -1831,7 +1831,7 @@ export const BUSINESS_TYPE_CONFIG: Record<BusinessType, BusinessTypeConfig> = {
             delivery: false,
         },
         labels: {
-            cta: "Contratar",
+            cta: "Agendar Entrenamiento",
             products: "Planes",
             services: "Entrenamientos",
             booking: "Sesión",

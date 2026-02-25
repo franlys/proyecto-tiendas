@@ -110,7 +110,7 @@ export const BUSINESS_TYPES: BusinessTypeConfig[] = [
     { id: "boba_tea", label: "Boba Tea / Bubble Tea", icon: "🧋", category: "food", subcategory: "beverages", keywords: ["boba", "bubble tea", "te de perlas"], features: F.food, labels: { cta: "Ordenar", products: "Bebidas", services: "Servicios" } },
 
     // ========== FOOD - MEAL PREP ==========
-    { id: "meal_prep", label: "Meal Prep", icon: "🥗", category: "food", subcategory: "meal_prep_catering", keywords: ["meal prep", "comida fitness", "preparacion"], features: { ...F.food, services: true, bookings: true, inventory: false }, labels: { cta: "Ver Paquetes", products: "Paquetes", services: "Planes" } },
+    { id: "meal_prep", label: "Meal Prep", icon: "🥗", category: "food", subcategory: "meal_prep_catering", keywords: ["meal prep", "comida fitness", "preparacion"], features: { ...F.food, services: true, bookings: true, inventory: false }, labels: { cta: "Adquirir mi plan", products: "Paquetes", services: "Planes" } },
     { id: "cloud_kitchen", label: "Cloud Kitchen / Dark Kitchen", icon: "👨‍🍳", category: "food", subcategory: "meal_prep_catering", keywords: ["cloud kitchen", "dark kitchen", "cocina fantasma"], features: F.food, labels: { cta: "Ordenar", products: "Menú", services: "Servicios" } },
     { id: "catering", label: "Catering", icon: "🍴", category: "food", subcategory: "meal_prep_catering", keywords: ["catering", "banquetes", "eventos"], features: { ...F.food, services: true, bookings: true }, labels: { cta: "Cotizar", products: "Menús", services: "Servicios" } },
     { id: "chef_privado", label: "Chef Privado", icon: "👨‍🍳", category: "food", subcategory: "meal_prep_catering", keywords: ["chef", "privado", "domicilio"], features: F.consultancy, labels: { cta: "Reservar", products: "Menús", services: "Servicios" } },
@@ -181,11 +181,11 @@ export const BUSINESS_TYPES: BusinessTypeConfig[] = [
     { id: "quiropractico", label: "Quiropráctico", icon: "🦴", category: "health", subcategory: "alternative", keywords: ["quiropractico", "espalda", "columna"], features: F.service, labels: { cta: "Agendar Cita", products: "Productos", services: "Tratamientos" } },
 
     // ========== FITNESS - GYMS ==========
-    { id: "gimnasio", label: "Gimnasio", icon: "💪", category: "fitness", subcategory: "gyms", keywords: ["gimnasio", "gym", "pesas"], features: { ...F.service, orders: true }, labels: { cta: "Ver Membresías", products: "Productos", services: "Clases" } },
+    { id: "gimnasio", label: "Gimnasio", icon: "💪", category: "fitness", subcategory: "gyms", keywords: ["gimnasio", "gym", "pesas"], features: { ...F.service, orders: true }, labels: { cta: "Ver Planes", products: "Productos", services: "Clases" } },
     { id: "crossfit", label: "CrossFit Box", icon: "🏋️", category: "fitness", subcategory: "gyms", keywords: ["crossfit", "box", "funcional"], features: F.service, labels: { cta: "Ver Clases", products: "Productos", services: "WODs" } },
 
     // ========== FITNESS - TRAINING ==========
-    { id: "entrenador_personal", label: "Entrenador Personal", icon: "🏃", category: "fitness", subcategory: "training", keywords: ["personal trainer", "entrenador", "fitness"], features: F.consultancy, labels: { cta: "Contratar", products: "Planes", services: "Entrenamientos" } },
+    { id: "entrenador_personal", label: "Entrenador Personal", icon: "🏃", category: "fitness", subcategory: "training", keywords: ["personal trainer", "entrenador", "fitness"], features: F.consultancy, labels: { cta: "Agendar Entrenamiento", products: "Planes", services: "Entrenamientos" } },
 
     // ========== FITNESS - MIND BODY ==========
     { id: "yoga", label: "Estudio de Yoga", icon: "🧘", category: "fitness", subcategory: "mind_body", keywords: ["yoga", "meditacion", "zen"], features: F.service, labels: { cta: "Ver Clases", products: "Productos", services: "Clases" } },

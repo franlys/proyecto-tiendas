@@ -337,11 +337,12 @@ export default function ShopHomePage() {
             {isServiceBusiness && hasServices && (
               <ScrollReveal delay={0.5}>
                 <div className="mt-8">
-                  <Link href={`/${shop?.slug || shop?.id}/book`}>
-                    <button className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-400 text-white font-semibold rounded-full shadow-lg shadow-primary/25 transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/30">
-                      <Calendar className="w-5 h-5" />
-                      Reservar Cita
-                    </button>
+                  <Link
+                    href={`/${shop?.slug || shop?.id}/book`}
+                    className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-400 text-white font-semibold rounded-full shadow-lg shadow-primary/25 transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/30"
+                  >
+                    <Calendar className="w-5 h-5" />
+                    {combinedFeatures.labels?.cta || "Reservar Cita"}
                   </Link>
                 </div>
               </ScrollReveal>
@@ -496,13 +497,13 @@ export default function ShopHomePage() {
             <div className="glass-panel rounded-2xl p-8 md:p-12 max-w-2xl mx-auto">
               <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-4">
                 {activeTab === "servicios"
-                  ? "¿Listo para tu cita?"
-                  : "¿Listo para tu pedido?"}
+                  ? `¿Listo para tu ${combinedFeatures.labels?.booking.toLowerCase() || "cita"}?`
+                  : `¿Listo para tu ${combinedFeatures.labels?.order.toLowerCase() || "pedido"}?`}
               </h2>
               <p className="text-slate-400 mb-6">
                 {activeTab === "servicios"
-                  ? "Selecciona los servicios que deseas y haz clic en el botón de WhatsApp para agendar."
-                  : "Puedes combinar servicios y productos en un solo pedido. ¡Recógelos en tu próxima visita!"}
+                  ? `Selecciona los ${combinedFeatures.labels?.services.toLowerCase() || "servicios"} que deseas y haz clic en el botón de WhatsApp para agendar.`
+                  : `Puedes combinar ${combinedFeatures.labels?.services.toLowerCase() || "servicios"} y ${combinedFeatures.labels?.products.toLowerCase() || "productos"} en un solo pedido.`}
               </p>
               <div className="flex items-center justify-center gap-2 text-gold">
                 <Sparkles className="w-5 h-5" />
