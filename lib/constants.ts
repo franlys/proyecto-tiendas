@@ -228,6 +228,7 @@ export interface ShopBankAccount {
 }
 
 import { Coordinates } from "./utils/distance";
+export type { Coordinates };
 
 export interface ShopConfig {
   id: string;

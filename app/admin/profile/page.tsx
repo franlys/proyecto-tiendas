@@ -23,7 +23,8 @@ import {
     Bot,
     CreditCard,
     Calendar,
-    X
+    X,
+    Navigation
 } from "lucide-react";
 import {
     AuthProvider,
