@@ -696,7 +696,7 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
           {/* Reparaciones - Solo si tiene repairs */}
           {features.hasRepairs && (
             <Link
-              href="/admin/repairs"
+              href="/admin/repair"
               className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
             >
               <div className="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
@@ -972,7 +972,7 @@ function AdminDashboardWithSubscription() {
 
                 {/* Reparaciones - Solo si tiene repairs */}
                 {features.adminModules.repairs && (
-                  <Link href="/admin/repairs">
+                  <Link href="/admin/repair">
                     <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-orange-400 hover:text-orange-300">
                       <Wrench className="w-4 h-4" />
                       <span className="hidden sm:inline ml-1">{features.labels.services}</span>
