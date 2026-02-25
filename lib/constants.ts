@@ -227,6 +227,8 @@ export interface ShopBankAccount {
   instructions?: string; // "Enviar comprobante a..."
 }
 
+import { Coordinates } from "./utils/distance";
+
 export interface ShopConfig {
   id: string;
   name: string;
@@ -244,6 +246,7 @@ export interface ShopConfig {
     address?: string;
     city?: string;
   };
+  coordinates?: Coordinates;
   social?: ShopSocialMedia;
   schedule?: ShopSchedule;
   ownerNotificationPhone?: string;

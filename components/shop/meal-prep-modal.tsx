@@ -19,6 +19,8 @@ import {
     TRAINING_PLANS,
     TrainingPlanConfig,
 } from "@/lib/types/meal-prep.types";
+import { geocodeAddress, getCurrentLocation, calculateDistance, Coordinates } from "@/lib/utils/distance";
+import { Loader2, Navigation } from "lucide-react";
 
 interface MealPrepModalProps {
     isOpen: boolean;
@@ -28,6 +30,7 @@ interface MealPrepModalProps {
     whatsappNumber?: string;
     catalog?: any[];
     hidePriceIfZero?: boolean;
+    businessCoordinates?: Coordinates;
 }
 
 export function MealPrepModal({
@@ -38,6 +41,7 @@ export function MealPrepModal({
     whatsappNumber,
     catalog = [],
     hidePriceIfZero,
+    businessCoordinates,
 }: MealPrepModalProps) {
     const [step, setStep] = useState<"package" | "plates" | "training" | "delivery" | "summary">("package");
     const [selectedPackage, setSelectedPackage] = useState<number>(3);
@@ -47,6 +51,10 @@ export function MealPrepModal({
     const [distanceInput, setDistanceInput] = useState("");
     const [selectedTrainingPlan, setSelectedTrainingPlan] = useState<TrainingPlanConfig | undefined>();
     const [customerNotes, setCustomerNotes] = useState("");
+    const [isGeocoding, setIsGeocoding] = useState(false);
+    const [isLocating, setIsLocating] = useState(false);
+    const [address, setAddress] = useState("");
+    const [error, setError] = useState<string | null>(null);
 
     // Reset state when modal opens
     useEffect(() => {
@@ -558,36 +566,99 @@ export function MealPrepModal({
                                 <div>
                                     <p className="text-white font-medium">Distancia de entrega</p>
                                     <p className="text-sm text-slate-400">
-                                        Gratis hasta {DEFAULT_DELIVERY_CONFIG.freeDistanceMiles} millas.
+                                        Gratis hasta {DEFAULT_DELIVERY_CONFIG.freeDistanceMiles} mi.
                                         Cargo de ${DEFAULT_DELIVERY_CONFIG.surchargeAmount} para distancias mayores.
                                     </p>
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">
-                                    Distancia aproximada (millas)
+                            <div className="space-y-3">
+                                <label className="block text-sm font-medium text-slate-300">
+                                    Tu dirección de entrega
                                 </label>
-                                <input
-                                    type="number"
-                                    value={distanceInput}
-                                    onChange={(e) => setDistanceInput(e.target.value)}
-                                    placeholder="Ej: 5"
-                                    min="0"
-                                    step="0.1"
-                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-green-500/50"
-                                />
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={address}
+                                        onChange={(e) => setAddress(e.target.value)}
+                                        placeholder="Calle, Ciudad, Código Postal..."
+                                        className="flex-1 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-green-500/50"
+                                    />
+                                    <Button
+                                        onClick={async () => {
+                                            if (!address.trim()) return;
+                                            setIsGeocoding(true);
+                                            setError(null);
+                                            const coords = await geocodeAddress(address);
+                                            if (coords && businessCoordinates) {
+                                                const dist = calculateDistance(businessCoordinates, coords);
+                                                setDistance(dist);
+                                                setDistanceInput(dist.toString());
+                                            } else if (!businessCoordinates) {
+                                                console.warn("Business coordinates missing");
+                                                setError("Error: No se encontró la ubicación del negocio.");
+                                            } else {
+                                                setError("No se pudo encontrar la dirección.");
+                                            }
+                                            setIsGeocoding(false);
+                                        }}
+                                        disabled={isGeocoding || !address.trim()}
+                                        className="bg-green-600 hover:bg-green-700"
+                                    >
+                                        {isGeocoding ? <Loader2 className="w-4 h-4 animate-spin" /> : "Buscar"}
+                                    </Button>
+                                </div>
+
+                                <Button
+                                    variant="outline"
+                                    onClick={async () => {
+                                        setIsLocating(true);
+                                        setError(null);
+                                        try {
+                                            const coords = await getCurrentLocation();
+                                            if (businessCoordinates) {
+                                                const dist = calculateDistance(businessCoordinates, coords);
+                                                setDistance(dist);
+                                                setDistanceInput(dist.toString());
+                                            }
+                                        } catch (err: any) {
+                                            setError(err.message || "Error al obtener ubicación");
+                                        } finally {
+                                            setIsLocating(false);
+                                        }
+                                    }}
+                                    disabled={isLocating}
+                                    className="w-full border-white/10 text-slate-300 bg-white/5 hover:bg-white/10"
+                                >
+                                    {isLocating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Navigation className="w-4 h-4 mr-2" />}
+                                    Usar mi ubicación actual
+                                </Button>
+
+                                {distance !== undefined && (
+                                    <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center animate-in zoom-in-95">
+                                        <p className="text-green-400 font-bold">
+                                            Distancia calculada: {distance} millas
+                                        </p>
+                                        {distance > DEFAULT_DELIVERY_CONFIG.freeDistanceMiles ? (
+                                            <p className="text-xs text-amber-300 mt-1">
+                                                Cargo adicional de ${DEFAULT_DELIVERY_CONFIG.surchargeAmount} aplicado.
+                                            </p>
+                                        ) : (
+                                            <p className="text-xs text-green-300 mt-1">
+                                                ¡Entrega gratis!
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+
+                                {error && (
+                                    <p className="text-xs text-red-400 p-2 bg-red-400/10 rounded-lg">
+                                        {error}
+                                    </p>
+                                )}
                             </div>
 
-                            {parseFloat(distanceInput) > DEFAULT_DELIVERY_CONFIG.freeDistanceMiles && (
-                                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                                    <p className="text-sm text-amber-300">
-                                        Se aplicara un cargo de ${DEFAULT_DELIVERY_CONFIG.surchargeAmount} por la distancia.
-                                    </p>
-                                </div>
-                            )}
-
-                            <div className="flex gap-3">
+                            <div className="flex gap-3 pt-4">
                                 <Button
                                     variant="outline"
                                     onClick={() => setStep("training")}
@@ -596,7 +667,8 @@ export function MealPrepModal({
                                     Volver
                                 </Button>
                                 <Button
-                                    onClick={handleDistanceContinue}
+                                    onClick={() => setStep("summary")}
+                                    disabled={distance === undefined}
                                     className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white"
                                 >
                                     Continuar

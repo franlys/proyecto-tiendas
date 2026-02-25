@@ -257,6 +257,7 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
         whatsappNumber={shop?.contact?.whatsapp || shop?.contact?.phone}
         catalog={products}
         hidePriceIfZero={isMealPrep}
+        businessCoordinates={shop?.coordinates}
       />
       {categories.map((category) => {
         const catInfo = getCategoryInfo(category);
