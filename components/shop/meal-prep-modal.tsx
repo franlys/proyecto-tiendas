@@ -61,6 +61,7 @@ export function MealPrepModal({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [orderSuccess, setOrderSuccess] = useState<{ id: string, number: string } | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [expandedProductId, setExpandedProductId] = useState<string | null>(null);
 
     // Reset state when modal opens
     useEffect(() => {
@@ -440,20 +441,63 @@ export function MealPrepModal({
                                             {cat.name}
                                         </label>
                                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                            {productsByCategory[cat.id]?.map((prod: any) => (
-                                                <button
-                                                    key={prod.id}
-                                                    onClick={() => updatePlateComponent(cat.id, prod.name)}
-                                                    className={cn(
-                                                        "px-3 py-2 rounded-xl text-xs font-medium border transition-all text-center h-full flex items-center justify-center",
-                                                        currentPlate.components[cat.id] === prod.name
-                                                            ? "bg-green-500 border-green-400 text-white shadow-lg shadow-green-500/20"
-                                                            : "bg-white/5 border-white/10 text-slate-400 hover:border-white/20 hover:bg-white/10"
-                                                    )}
-                                                >
-                                                    {prod.name}
-                                                </button>
-                                            ))}
+                                            {productsByCategory[cat.id]?.map((prod: any) => {
+                                                const hasVariants = prod.variants && prod.variants.length > 0;
+                                                const isExpanded = expandedProductId === prod.id;
+                                                const isSelected = currentPlate.components[cat.id]?.startsWith(prod.name);
+
+                                                return (
+                                                    <div key={prod.id} className={cn("contents", isExpanded && "col-span-full")}>
+                                                        <button
+                                                            onClick={() => {
+                                                                if (hasVariants) {
+                                                                    setExpandedProductId(isExpanded ? null : prod.id);
+                                                                } else {
+                                                                    updatePlateComponent(cat.id, prod.name);
+                                                                    setExpandedProductId(null);
+                                                                }
+                                                            }}
+                                                            className={cn(
+                                                                "px-3 py-2 rounded-xl text-xs font-medium border transition-all text-center h-full flex flex-col items-center justify-center gap-1",
+                                                                isSelected
+                                                                    ? "bg-green-500 border-green-400 text-white shadow-lg shadow-green-500/20"
+                                                                    : "bg-white/5 border-white/10 text-slate-400 hover:border-white/20 hover:bg-white/10",
+                                                                isExpanded && "border-primary ring-1 ring-primary/50"
+                                                            )}
+                                                        >
+                                                            <span>{prod.name}</span>
+                                                            {hasVariants && (
+                                                                <span className="text-[10px] opacity-70">
+                                                                    {isExpanded ? "Cerrar opciones" : "Ver opciones"}
+                                                                </span>
+                                                            )}
+                                                        </button>
+
+                                                        {/* Sub-grid for variants */}
+                                                        {isExpanded && hasVariants && (
+                                                            <div className="col-span-full grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 bg-black/40 rounded-xl border border-white/10 animate-in fade-in slide-in-from-top-2 duration-200 mt-1">
+                                                                {prod.variants.map((v: any) => (
+                                                                    <button
+                                                                        key={v.id}
+                                                                        onClick={() => {
+                                                                            updatePlateComponent(cat.id, `${prod.name} (${v.name})`);
+                                                                            setExpandedProductId(null);
+                                                                        }}
+                                                                        className={cn(
+                                                                            "px-3 py-2 rounded-lg text-xs font-medium border transition-all text-center",
+                                                                            currentPlate.components[cat.id] === `${prod.name} (${v.name})`
+                                                                                ? "bg-primary border-primary text-white"
+                                                                                : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
+                                                                        )}
+                                                                    >
+                                                                        {v.name}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                 ))}

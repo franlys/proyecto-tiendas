@@ -61,7 +61,7 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
   const simpleInCart = simpleQuantity > 0;
 
   const handleSimpleAdd = (e?: React.MouseEvent) => {
-    if (onClickIntercept && hidePriceIfZero && basePrice === 0 && !hasOptions) {
+    if (onClickIntercept && hidePriceIfZero) {
       e?.preventDefault();
       e?.stopPropagation();
       onClickIntercept();
@@ -125,7 +125,7 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
                 /* Options Button (Variants and/or Extras) */
                 <button
                   onClick={(e) => {
-                    const shouldIntercept = onClickIntercept && hidePriceIfZero && basePrice === 0 && !hasOptions;
+                    const shouldIntercept = onClickIntercept && hidePriceIfZero;
                     if (shouldIntercept) {
                       e.preventDefault();
                       e.stopPropagation();
