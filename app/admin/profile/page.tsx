@@ -35,7 +35,8 @@ import { updateBookingConfig } from "@/lib/services/booking.service";
 import { Button, PhoneInput, type PhoneInputValue } from "@/components/ui";
 
 import { BankAccountsManager } from "@/components/admin/bank-accounts-manager";
-import { ShopBankAccount, DEFAULT_THEME } from "@/lib/constants";
+import { ShopBankAccount, DEFAULT_THEME, Coordinates } from "@/lib/constants";
+import { geocodeAddress } from "@/lib/utils/distance";
 
 interface ShopProfile {
     logo: string;
@@ -47,6 +48,7 @@ interface ShopProfile {
     email: string;
     address: string;
     city: string;
+    coordinates?: Coordinates;
     ownerNotificationPhone?: string;
     // Bank Accounts
     bankAccounts: ShopBankAccount[];
@@ -139,6 +141,7 @@ function ProfileContent() {
                     email: shop.contact?.email || "",
                     address: shop.contact?.address || "",
                     city: shop.contact?.city || "",
+                    coordinates: shop.coordinates,
                     ownerNotificationPhone: shop.ownerNotificationPhone || "",
                     bankAccounts: shop.bankAccounts || [],
                     // Load Social Media
@@ -210,6 +213,8 @@ function ProfileContent() {
                 },
                 // Save Schedule for profile display
                 schedule: profile.schedule,
+                // Save coordinates
+                coordinates: profile.coordinates,
             });
 
             // 2. Update Booking Config (for slots generation)
@@ -540,6 +545,47 @@ function ProfileContent() {
                                         placeholder="Ciudad, Estado"
                                         className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white placeholder-slate-500"
                                     />
+                                </div>
+
+                                <div className="p-4 rounded-xl bg-cyan-500/5 border border-cyan-500/20 space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Navigation className="w-4 h-4 text-cyan-400" />
+                                            <span className="text-white font-bold text-sm">Ubicación del Negocio</span>
+                                        </div>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={async () => {
+                                                const fullAddress = `${profile.address}, ${profile.city}`;
+                                                if (!profile.address || !profile.city) {
+                                                    alert("Por favor ingresa dirección y ciudad primero.");
+                                                    return;
+                                                }
+                                                setSaving(true);
+                                                const coords = await geocodeAddress(fullAddress);
+                                                if (coords) {
+                                                    setProfile(prev => ({ ...prev, coordinates: coords }));
+                                                    alert("¡Negocio geolocalizado correctamente!");
+                                                } else {
+                                                    alert("No se pudo encontrar la ubicación exacta. Por favor revisa la dirección.");
+                                                }
+                                                setSaving(false);
+                                            }}
+                                            className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+                                        >
+                                            Geolocalizar
+                                        </Button>
+                                    </div>
+                                    <p className="text-xs text-slate-400">
+                                        Esto es necesario para que el sistema calcule automáticamente la distancia de entrega de tus clientes.
+                                    </p>
+                                    {profile.coordinates && (
+                                        <div className="flex gap-4 text-[10px] font-mono text-cyan-400/70">
+                                            <span>LAT: {profile.coordinates.lat}</span>
+                                            <span>LNG: {profile.coordinates.lng}</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
