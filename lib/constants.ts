@@ -483,26 +483,6 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
     ownerPassword: "123",
     features: ["inventory", "orders", "whatsappIntegration"],
   },
-  "demo": {
-    id: "demo-v1",
-    name: "Tienda Demo",
-    slug: "demo",
-    description: "Esta es una tienda de demostración para probar todas las funcionalidades.",
-    theme: {
-      id: "demo-theme",
-      name: "Demo Theme",
-      primaryColor: "#0ea5e9",
-      accentColor: "#facc15",
-      style: "premium-dark",
-    },
-    contact: {
-      phone: "+34 600 000 000",
-      email: "demo@linko.app",
-      address: "Centro de Demostración, Madrid",
-    },
-    businessType: "retail",
-    features: ["inventory", "orders", "whatsappIntegration", "loyalty"],
-  },
 };
 
 

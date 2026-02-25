@@ -646,8 +646,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Ver Tienda - Siempre visible */}
           <Link
-            href={`/${shop?.slug || "demo"}`}
-            className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
+            href={shop?.slug ? `/${shop.slug}` : "#"}
+            onClick={(e) => !shop?.slug && e.preventDefault()}
+            className={`flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group ${!shop?.slug ? "opacity-50 cursor-not-allowed" : ""}`}
           >
             <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
               <Store className="w-5 h-5 text-primary" />
