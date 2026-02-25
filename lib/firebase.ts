@@ -55,7 +55,7 @@ try {
     // Standard initialization is usually sufficient for most projects.
     db = initializeFirestore(app, {
         experimentalForceLongPolling: true,
-    });
+    }, 'default');
     console.log("✅ Firestore initialized with experimentalForceLongPolling");
 } catch (error) {
     console.warn("⚠️ Failed to initialize Firestore with settings, falling back to standard getFirestore:", error);
