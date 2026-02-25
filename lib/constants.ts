@@ -494,7 +494,7 @@ export const NAV_ITEMS = [
 ] as const;
 
 // Service Categories
-export type ServiceCategory = "cabello" | "unas" | "spa" | "barberia" | "facial";
+export type ServiceCategory = "cabello" | "unas" | "spa" | "barberia" | "facial" | "entrenamiento";
 
 export interface Service {
   id: string;
@@ -633,7 +633,8 @@ export const CATEGORY_LABELS: Record<ServiceCategory, string> = {
   unas: "Uñas",
   spa: "Spa & Masajes",
   barberia: "Barbería",
-  facial: "Facial",
+  facial: "Faciales",
+  entrenamiento: "Entrenamiento",
 };
 
 // ============================================

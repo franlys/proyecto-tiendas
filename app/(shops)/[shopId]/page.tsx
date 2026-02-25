@@ -25,6 +25,11 @@ import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { getCombinedFeatures } from "@/lib/hooks/use-business-features";
+import {
+  TrainingPackage,
+  FREQUENCY_LABELS,
+  BILLING_CYCLE_LABELS
+} from "@/lib/types/training-package.types";
 
 type TabType = "servicios" | "productos";
 
@@ -101,6 +106,31 @@ export default function ShopHomePage() {
 
         legacySnap.docs.forEach(addService);
         newSnap.docs.forEach(addService);
+
+        // Fetch Training Packages
+        try {
+          // Training packages use the REAL ID for the collection path
+          const trainingRef = collection(db, "shops", shop.id, "training-packages");
+          const trainingSnap = await getDocs(trainingRef);
+
+          trainingSnap.docs.forEach(docSnap => {
+            const data = docSnap.data() as TrainingPackage;
+            if (data.isActive !== false) {
+              // Map TrainingPackage to Service
+              servicesData.push({
+                id: docSnap.id,
+                name: data.name,
+                description: `${data.description || ""}${data.description ? ". " : ""}${FREQUENCY_LABELS[data.sessionsPerWeek]} / ${BILLING_CYCLE_LABELS[data.billingCycle]}`,
+                price: data.price,
+                duration: data.sessionDuration,
+                category: "entrenamiento",
+                image: "https://images.unsplash.com/photo-1517836357463-d25dfeac0050?w=400&h=400&fit=crop", // GYM default
+              } as Service);
+            }
+          });
+        } catch (err) {
+          console.error("Error loading training packages:", err);
+        }
 
         setServices(servicesData);
 

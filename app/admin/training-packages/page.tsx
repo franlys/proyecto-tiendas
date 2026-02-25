@@ -267,9 +267,10 @@ interface PackageEditorProps {
     package_?: TrainingPackage;
     onSave: (pkg: Omit<TrainingPackage, "id" | "createdAt" | "updatedAt">) => void;
     onClose: () => void;
+    isSaving?: boolean;
 }
 
-function PackageEditor({ package_, onSave, onClose }: PackageEditorProps) {
+function PackageEditor({ package_, onSave, onClose, isSaving = false }: PackageEditorProps) {
     const [name, setName] = useState(package_?.name || "");
     const [description, setDescription] = useState(package_?.description || "");
     const [sessionsPerWeek, setSessionsPerWeek] = useState<SessionFrequency>(package_?.sessionsPerWeek || 2);
@@ -555,10 +556,11 @@ function PackageEditor({ package_, onSave, onClose }: PackageEditorProps) {
                         </button>
                         <button
                             type="submit"
-                            disabled={!name.trim()}
-                            className="flex-1 px-4 py-2.5 bg-primary hover:bg-primary/90 disabled:bg-zinc-700 text-white rounded-lg font-medium transition-colors"
+                            disabled={!name.trim() || isSaving}
+                            className="flex-1 px-4 py-2.5 bg-primary hover:bg-primary/90 disabled:bg-zinc-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                         >
-                            {package_ ? "Guardar Cambios" : "Crear Paquete"}
+                            {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
+                            {isSaving ? "Guardando..." : (package_ ? "Guardar Cambios" : "Crear Paquete")}
                         </button>
                     </div>
                 </form>
@@ -696,6 +698,7 @@ function TrainingPackagesContent({ shopId: inputId }: { shopId: string }) {
 
     const [packages, setPackages] = useState<TrainingPackage[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
     const [editingPackage, setEditingPackage] = useState<TrainingPackage | null>(null);
     const [isCreating, setIsCreating] = useState(false);
 
@@ -722,6 +725,7 @@ function TrainingPackagesContent({ shopId: inputId }: { shopId: string }) {
     }
 
     async function handleSavePackage(pkgData: Omit<TrainingPackage, "id" | "createdAt" | "updatedAt">) {
+        setIsSaving(true);
         try {
             const now = new Date().toISOString();
 
@@ -751,8 +755,12 @@ function TrainingPackagesContent({ shopId: inputId }: { shopId: string }) {
             await loadPackages();
             setEditingPackage(null);
             setIsCreating(false);
+            alert("¡Paquete guardado correctamente!");
         } catch (err) {
             console.error("Error saving package:", err);
+            alert("Error al guardar el paquete. Por favor, intenta de nuevo.");
+        } finally {
+            setIsSaving(false);
         }
     }
 
@@ -887,14 +895,20 @@ function TrainingPackagesContent({ shopId: inputId }: { shopId: string }) {
 
             {/* Editor Modal */}
             <AnimatePresence>
-                {(isCreating || editingPackage) && (
+                {isCreating && (
                     <PackageEditor
-                        package_={editingPackage || undefined}
                         onSave={handleSavePackage}
-                        onClose={() => {
-                            setIsCreating(false);
-                            setEditingPackage(null);
-                        }}
+                        onClose={() => setIsCreating(false)}
+                        isSaving={isSaving}
+                    />
+                )}
+
+                {editingPackage && (
+                    <PackageEditor
+                        package_={editingPackage}
+                        onSave={handleSavePackage}
+                        onClose={() => setEditingPackage(null)}
+                        isSaving={isSaving}
                     />
                 )}
             </AnimatePresence>
