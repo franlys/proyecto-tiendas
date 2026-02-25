@@ -121,6 +121,12 @@ service cloud.firestore {
         allow read: if true;
         allow write: if true; // Public booking flow
       }
+
+      // TRAINING PACKAGES - CRM/Admin
+      match /training-packages/{packageId} {
+        allow read: if true;
+        allow write: if isShopOwner(shopId);
+      }
     }
     
     // PRODUCTS: If stored as root collection (optional architecture)
