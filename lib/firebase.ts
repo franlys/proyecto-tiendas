@@ -1,5 +1,5 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
+import { getAuth, Auth } from "firebase/auth";
 import { getFirestore, initializeFirestore, Firestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
@@ -23,8 +23,8 @@ if (!firebaseConfig.apiKey) {
 }
 
 // Initialize Firebase with safety wrappers
-let app;
-let auth;
+let app: FirebaseApp | undefined;
+let auth: Auth | undefined;
 
 try {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
@@ -35,7 +35,18 @@ try {
     if (!app) {
         app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     }
+    if (app && !auth) {
+        auth = getAuth(app);
+    }
 }
+
+if (!app || !auth) {
+    throw new Error("Firebase app or auth could not be initialized");
+}
+
+const finalApp = app as FirebaseApp;
+const finalAuth = auth as Auth;
+
 
 // Initialize Firestore with robust fallback
 let db: Firestore;
@@ -57,6 +68,7 @@ try {
     }
 }
 
-const storage = getStorage(app);
+const storage = getStorage(finalApp);
 
-export { app, auth, db, storage };
+export { finalApp as app, finalAuth as auth, db, storage };
+
