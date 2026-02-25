@@ -46,7 +46,10 @@ interface ShopCoordinatesProps {
     shopId: string;
 }
 
-function ShopCoordinatesConfig({ shopId }: ShopCoordinatesProps) {
+function ShopCoordinatesConfig({ shopId: inputId }: ShopCoordinatesProps) {
+    const { resolveShopId } = useShops();
+    const shopId = resolveShopId(inputId);
+
     const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
     const [address, setAddress] = useState("");
     const [isLoading, setIsLoading] = useState(true);
@@ -56,7 +59,7 @@ function ShopCoordinatesConfig({ shopId }: ShopCoordinatesProps) {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        loadCoordinates();
+        if (shopId) loadCoordinates();
     }, [shopId]);
 
     async function loadCoordinates() {
@@ -85,12 +88,16 @@ function ShopCoordinatesConfig({ shopId }: ShopCoordinatesProps) {
         setError(null);
         try {
             const docRef = doc(db, "shops", shopId);
-            await updateDoc(docRef, {
+            // Replaced updateDoc with setDoc(..., { merge: true }) for robustness
+            await setDoc(docRef, {
                 coordinates: coords,
                 ...(addr && { businessAddress: addr }),
-            });
+                updatedAt: new Date().toISOString()
+            }, { merge: true });
+
             setCoordinates(coords);
             if (addr) setAddress(addr);
+            alert("¡Ubicación guardada correctamente!");
         } catch (err) {
             console.error("Error saving coordinates:", err);
             setError("Error al guardar las coordenadas");
@@ -436,11 +443,10 @@ function PackageEditor({ package_, onSave, onClose }: PackageEditorProps) {
                                         key={value}
                                         type="button"
                                         onClick={() => setLocationType(value as typeof locationType)}
-                                        className={`flex-1 px-4 py-2 rounded-lg border transition-colors ${
-                                            locationType === value
-                                                ? "bg-primary/20 border-primary text-primary"
-                                                : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-600"
-                                        }`}
+                                        className={`flex-1 px-4 py-2 rounded-lg border transition-colors ${locationType === value
+                                            ? "bg-primary/20 border-primary text-primary"
+                                            : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-600"
+                                            }`}
                                     >
                                         {label}
                                     </button>
@@ -527,14 +533,12 @@ function PackageEditor({ package_, onSave, onClose }: PackageEditorProps) {
                             <button
                                 type="button"
                                 onClick={() => setIsActive(!isActive)}
-                                className={`relative w-12 h-6 rounded-full transition-colors ${
-                                    isActive ? "bg-emerald-500" : "bg-zinc-700"
-                                }`}
+                                className={`relative w-12 h-6 rounded-full transition-colors ${isActive ? "bg-emerald-500" : "bg-zinc-700"
+                                    }`}
                             >
                                 <div
-                                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                                        isActive ? "left-7" : "left-1"
-                                    }`}
+                                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${isActive ? "left-7" : "left-1"
+                                        }`}
                                 />
                             </button>
                         </div>
@@ -577,9 +581,8 @@ function PackageCard({ package_, onEdit, onDelete, onToggleActive }: PackageCard
     return (
         <motion.div
             layout
-            className={`bg-zinc-900 border rounded-xl overflow-hidden ${
-                package_.isActive ? "border-zinc-800" : "border-zinc-800/50 opacity-60"
-            }`}
+            className={`bg-zinc-900 border rounded-xl overflow-hidden ${package_.isActive ? "border-zinc-800" : "border-zinc-800/50 opacity-60"
+                }`}
         >
             <div className="p-5">
                 {/* Header */}
@@ -623,8 +626,8 @@ function PackageCard({ package_, onEdit, onDelete, onToggleActive }: PackageCard
                             {package_.locationType === "both"
                                 ? "Ambos"
                                 : package_.locationType === "online"
-                                ? "En línea"
-                                : "Presencial"}
+                                    ? "En línea"
+                                    : "Presencial"}
                         </span>
                     </div>
                 </div>
@@ -658,11 +661,10 @@ function PackageCard({ package_, onEdit, onDelete, onToggleActive }: PackageCard
                 <div className="flex items-center gap-2 pt-4 border-t border-zinc-800">
                     <button
                         onClick={onToggleActive}
-                        className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                            package_.isActive
-                                ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"
-                                : "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30"
-                        }`}
+                        className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${package_.isActive
+                            ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"
+                            : "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30"
+                            }`}
                     >
                         {package_.isActive ? "Desactivar" : "Activar"}
                     </button>
@@ -688,14 +690,17 @@ function PackageCard({ package_, onEdit, onDelete, onToggleActive }: PackageCard
 // ============================================
 // MAIN CONTENT
 // ============================================
-function TrainingPackagesContent({ shopId }: { shopId: string }) {
+function TrainingPackagesContent({ shopId: inputId }: { shopId: string }) {
+    const { resolveShopId } = useShops();
+    const shopId = resolveShopId(inputId);
+
     const [packages, setPackages] = useState<TrainingPackage[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [editingPackage, setEditingPackage] = useState<TrainingPackage | null>(null);
     const [isCreating, setIsCreating] = useState(false);
 
     useEffect(() => {
-        loadPackages();
+        if (shopId) loadPackages();
     }, [shopId]);
 
     async function loadPackages() {

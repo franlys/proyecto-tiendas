@@ -111,6 +111,7 @@ interface ShopsContextType {
   updateShopCredentials: (shopId: string, username: string, password: string) => Promise<void>;
   isShopActive: (shopId: string) => boolean;
   deleteShop: (shopId: string) => Promise<void>;
+  resolveShopId: (slugOrId: string) => string;
   // Subscription management
   updateSubscriptionStatus: (shopId: string, status: SubscriptionStatus) => Promise<void>;
   registerPayment: (shopId: string, method?: "stripe" | "manual") => Promise<void>;
@@ -240,6 +241,11 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
   // ============================================
 
   const getShop = useCallback((shopId: string) => shops.find((s) => s.id === shopId || s.slug === shopId), [shops]);
+
+  const resolveShopId = useCallback((slugOrId: string) => {
+    const shop = shops.find(s => s.id === slugOrId || s.slug === slugOrId);
+    return shop?.id || slugOrId;
+  }, [shops]);
 
   const isShopActive = useCallback((shopId: string) => {
     const shop = shops.find((s) => s.slug === shopId || s.id === shopId);
@@ -429,6 +435,7 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
         updateShopFeatures,
         toggleFeature,
         restoreDemos,
+        resolveShopId,
         isLoading,
         isInitialized: !isLoading
       }}
