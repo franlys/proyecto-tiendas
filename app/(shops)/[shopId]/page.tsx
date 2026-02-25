@@ -12,7 +12,7 @@ import {
   SectionObserver,
 } from "@/components/shared";
 import { ServiceCard, ProductGrid } from "@/components/shop";
-import { Sparkles, MapPin, Phone, Clock, Calendar, ShoppingBag, Loader2, Instagram, Facebook, Globe, MessageCircle } from "lucide-react";
+import { Sparkles, MapPin, Phone, Clock, Calendar, ShoppingBag, Loader2, Instagram, Facebook, Globe, MessageCircle, ChefHat } from "lucide-react";
 import {
   MOCK_SERVICES,
   MOCK_PRODUCTS,
@@ -487,6 +487,8 @@ export default function ShopHomePage() {
             ) : (
               <ProductGrid
                 products={products}
+                businessCoordinates={shop?.coordinates}
+                businessAddress={shop?.contact?.address}
                 trainingPackages={services.filter(s => s.category === "entrenamiento")}
                 isMealModalOpen={isMealModalOpen}
                 setIsMealModalOpen={setIsMealModalOpen}

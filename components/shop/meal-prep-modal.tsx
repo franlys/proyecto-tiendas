@@ -31,6 +31,7 @@ interface MealPrepModalProps {
     catalog?: any[];
     hidePriceIfZero?: boolean;
     businessCoordinates?: Coordinates;
+    businessAddress?: string;
     shopId?: string;
     trainingPackages?: any[];
 }
@@ -44,6 +45,7 @@ export function MealPrepModal({
     catalog = [],
     hidePriceIfZero,
     businessCoordinates,
+    businessAddress,
     shopId,
     trainingPackages = [],
 }: MealPrepModalProps) {
@@ -77,6 +79,8 @@ export function MealPrepModal({
     const [orderSuccess, setOrderSuccess] = useState<{ id: string, number: string } | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [expandedProductId, setExpandedProductId] = useState<string | null>(null);
+    const [deliveryType, setDeliveryType] = useState<"entrega" | "recogida">("entrega");
+    const [addressDetails, setAddressDetails] = useState("");
 
     // Reset state when modal opens
     useEffect(() => {
@@ -89,6 +93,8 @@ export function MealPrepModal({
             setDistanceInput("");
             setSelectedTrainingPlan(undefined);
             setCustomerNotes("");
+            setDeliveryType("entrega");
+            setAddressDetails("");
         }
     }, [isOpen]);
 
@@ -130,7 +136,11 @@ export function MealPrepModal({
     if (!isOpen) return null;
 
     const currentPlate = plates[currentPlateIndex];
-    const pricing = calculateMealPrepTotal(plates, selectedTrainingPlan, distance);
+    // Calculate pricing summary
+    const pricing = useMemo(() => {
+        const calculatedDistance = deliveryType === "recogida" ? 0 : distance;
+        return calculateMealPrepTotal(plates, selectedTrainingPlan, calculatedDistance);
+    }, [plates, selectedTrainingPlan, distance, deliveryType]);
     const packageConfig = MEAL_PREP_PACKAGES.find(p => p.plateCount === selectedPackage);
 
     const updatePlateComponent = (field: string, value: string) => {
@@ -243,7 +253,8 @@ export function MealPrepModal({
                     shopId,
                     customerName,
                     customerPhone,
-                    customerAddress: address,
+                    customerAddress: deliveryType === "recogida" ? "Recogida en local" : `${address}${addressDetails ? `, ${addressDetails}` : ""}`,
+                    deliveryType,
                     items,
                     total: pricing.total,
                     notes: customerNotes
@@ -677,104 +688,171 @@ export function MealPrepModal({
 
                     {/* Step 3: Delivery */}
                     {step === "delivery" && (
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
-                                <MapPin className="w-6 h-6 text-green-400" />
-                                <div>
-                                    <p className="text-white font-medium">Distancia de entrega</p>
-                                    <p className="text-sm text-slate-400">
-                                        Gratis hasta {DEFAULT_DELIVERY_CONFIG.freeDistanceMiles} mi.
-                                        Cargo de ${DEFAULT_DELIVERY_CONFIG.surchargeAmount} para distancias mayores.
-                                    </p>
-                                </div>
+                        <div className="space-y-6">
+                            {/* Delivery Type Selector */}
+                            <div className="flex p-1 rounded-2xl bg-white/5 border border-white/10">
+                                <button
+                                    onClick={() => setDeliveryType("entrega")}
+                                    className={cn(
+                                        "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all font-bold text-sm",
+                                        deliveryType === "entrega" ? "bg-green-600 text-white shadow-lg" : "text-slate-400 hover:text-white"
+                                    )}
+                                >
+                                    <Truck className="w-4 h-4" />
+                                    A Domicilio
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setDeliveryType("recogida");
+                                        setDistance(0);
+                                        setError(null);
+                                    }}
+                                    className={cn(
+                                        "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all font-bold text-sm",
+                                        deliveryType === "recogida" ? "bg-green-600 text-white shadow-lg" : "text-slate-400 hover:text-white"
+                                    )}
+                                >
+                                    <ChefHat className="w-4 h-4" />
+                                    Pasar a Recoger
+                                </button>
                             </div>
 
-                            <div className="space-y-3">
-                                <label className="block text-sm font-medium text-slate-300">
-                                    Tu dirección de entrega
-                                </label>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={address}
-                                        onChange={(e) => setAddress(e.target.value)}
-                                        placeholder="Calle, Ciudad, Código Postal..."
-                                        className="flex-1 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-green-500/50"
-                                    />
-                                    <Button
-                                        onClick={async () => {
-                                            if (!address.trim()) return;
-                                            setIsGeocoding(true);
-                                            setError(null);
-                                            const coords = await geocodeAddress(address);
-                                            if (coords && businessCoordinates) {
-                                                const dist = calculateDistance(businessCoordinates, coords);
-                                                setDistance(dist);
-                                                setDistanceInput(dist.toString());
-                                            } else if (!businessCoordinates) {
-                                                console.warn("Business coordinates missing");
-                                                setError("Error: No se encontró la ubicación del negocio.");
-                                            } else {
-                                                setError("No se pudo encontrar la dirección.");
-                                            }
-                                            setIsGeocoding(false);
-                                        }}
-                                        disabled={isGeocoding || !address.trim()}
-                                        className="bg-green-600 hover:bg-green-700"
-                                    >
-                                        {isGeocoding ? <Loader2 className="w-4 h-4 animate-spin" /> : "Buscar"}
-                                    </Button>
-                                </div>
-
-                                <Button
-                                    variant="outline"
-                                    onClick={async () => {
-                                        setIsLocating(true);
-                                        setError(null);
-                                        try {
-                                            if (!businessCoordinates) {
-                                                throw new Error("La ubicación del negocio no está configurada. Por favor, contacta al administrador.");
-                                            }
-                                            const coords = await getCurrentLocation();
-                                            const dist = calculateDistance(businessCoordinates, coords);
-                                            setDistance(dist);
-                                            setDistanceInput(dist.toString());
-                                        } catch (err: any) {
-                                            setError(err.message || "Error al obtener ubicación");
-                                        } finally {
-                                            setIsLocating(false);
-                                        }
-                                    }}
-                                    disabled={isLocating}
-                                    className="w-full border-white/10 text-slate-300 bg-white/5 hover:bg-white/10"
-                                >
-                                    {isLocating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Navigation className="w-4 h-4 mr-2" />}
-                                    Usar mi ubicación actual
-                                </Button>
-
-                                {distance !== undefined && (
-                                    <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center animate-in zoom-in-95">
-                                        <p className="text-green-400 font-bold">
-                                            Distancia calculada: {distance} millas
-                                        </p>
-                                        {distance > DEFAULT_DELIVERY_CONFIG.freeDistanceMiles ? (
-                                            <p className="text-xs text-amber-300 mt-1">
-                                                Cargo adicional de ${DEFAULT_DELIVERY_CONFIG.surchargeAmount} aplicado.
+                            {deliveryType === "entrega" ? (
+                                <div className="space-y-4 animate-in slide-in-from-left-4">
+                                    <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
+                                        <MapPin className="w-6 h-6 text-green-400" />
+                                        <div>
+                                            <p className="text-white font-medium">Distancia de entrega</p>
+                                            <p className="text-sm text-slate-400">
+                                                Gratis hasta {DEFAULT_DELIVERY_CONFIG.freeDistanceMiles} mi.
+                                                Cargo de ${DEFAULT_DELIVERY_CONFIG.surchargeAmount} para mayores.
                                             </p>
-                                        ) : (
-                                            <p className="text-xs text-green-300 mt-1">
-                                                ¡Entrega gratis!
-                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <div className="space-y-1">
+                                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">
+                                                Dirección Principal (Calle, Ciudad)
+                                            </label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={address}
+                                                    onChange={(e) => setAddress(e.target.value)}
+                                                    placeholder="Ej: Calle 10, Santo Domingo..."
+                                                    className="flex-1 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-green-500/50"
+                                                />
+                                                <Button
+                                                    onClick={async () => {
+                                                        if (!address.trim()) return;
+                                                        setIsGeocoding(true);
+                                                        setError(null);
+                                                        const coords = await geocodeAddress(address);
+                                                        if (coords && businessCoordinates) {
+                                                            const dist = calculateDistance(businessCoordinates, coords);
+                                                            setDistance(dist);
+                                                            setDistanceInput(dist.toString());
+                                                        } else if (!businessCoordinates) {
+                                                            setError("Error: Ubicación del negocio no configurada.");
+                                                        } else {
+                                                            setError("No se pudo encontrar la dirección.");
+                                                        }
+                                                        setIsGeocoding(false);
+                                                    }}
+                                                    disabled={isGeocoding || !address.trim()}
+                                                    className="bg-green-600 hover:bg-green-700"
+                                                >
+                                                    {isGeocoding ? <Loader2 className="w-4 h-4 animate-spin" /> : "Buscar"}
+                                                </Button>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">
+                                                Detalles Adicionales (Apto, Piso, Oficina)
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={addressDetails}
+                                                onChange={(e) => setAddressDetails(e.target.value)}
+                                                placeholder="Ej: Apto 4B, 2do Piso, Res. Las Palmas"
+                                                className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-green-500/50"
+                                            />
+                                        </div>
+
+                                        <Button
+                                            variant="outline"
+                                            onClick={async () => {
+                                                setIsLocating(true);
+                                                setError(null);
+                                                try {
+                                                    if (!businessCoordinates) {
+                                                        throw new Error("La ubicación del negocio no está configurada.");
+                                                    }
+                                                    const coords = await getCurrentLocation();
+                                                    const dist = calculateDistance(businessCoordinates, coords);
+                                                    setDistance(dist);
+                                                    setDistanceInput(dist.toString());
+                                                } catch (err: any) {
+                                                    setError(err.message || "Error al obtener ubicación");
+                                                } finally {
+                                                    setIsLocating(false);
+                                                }
+                                            }}
+                                            disabled={isLocating}
+                                            className="w-full border-white/10 text-slate-300 bg-white/5 hover:bg-white/10 h-11"
+                                        >
+                                            {isLocating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Navigation className="w-4 h-4 mr-2 text-green-500" />}
+                                            Usar mi ubicación actual
+                                        </Button>
+
+                                        {distance !== undefined && (
+                                            <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-center animate-in zoom-in-95">
+                                                <p className="text-green-400 font-bold">
+                                                    Distancia: {distance} millas
+                                                </p>
+                                                {distance > DEFAULT_DELIVERY_CONFIG.freeDistanceMiles ? (
+                                                    <p className="text-xs text-amber-300 mt-1">
+                                                        Cargo de ${DEFAULT_DELIVERY_CONFIG.surchargeAmount} aplicado.
+                                                    </p>
+                                                ) : (
+                                                    <p className="text-xs text-green-300 mt-1">
+                                                        ¡Entrega GRATIS!
+                                                    </p>
+                                                )}
+                                            </div>
                                         )}
                                     </div>
-                                )}
+                                </div>
+                            ) : (
+                                <div className="space-y-6 animate-in slide-in-from-right-4">
+                                    <div className="p-6 rounded-2xl bg-green-500/5 border border-green-500/20 text-center space-y-4">
+                                        <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto border-2 border-green-500/30">
+                                            <ChefHat className="w-8 h-8 text-green-400" />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-white font-bold text-lg">Recogida en Local</h4>
+                                            <p className="text-sm text-slate-400 mt-2">
+                                                Podrás pasar por tu pedido una vez esté listo. ¡Sin cargos de envío!
+                                            </p>
+                                        </div>
 
-                                {error && (
-                                    <p className="text-xs text-red-400 p-2 bg-red-400/10 rounded-lg">
-                                        {error}
-                                    </p>
-                                )}
-                            </div>
+                                        {businessAddress && (
+                                            <div className="pt-4 border-t border-white/10">
+                                                <p className="text-xs font-bold text-green-500 uppercase tracking-widest mb-1">Nuestra Dirección</p>
+                                                <p className="text-sm text-white font-medium">{businessAddress}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {error && (
+                                <p className="text-xs text-red-400 p-3 bg-red-400/10 rounded-xl border border-red-400/20">
+                                    {error}
+                                </p>
+                            )}
 
                             <div className="flex gap-3 pt-4">
                                 <Button
@@ -786,8 +864,8 @@ export function MealPrepModal({
                                 </Button>
                                 <Button
                                     onClick={() => setStep("info")}
-                                    disabled={distance === undefined}
-                                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white"
+                                    disabled={deliveryType === "entrega" && distance === undefined}
+                                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold h-12"
                                 >
                                     Continuar
                                 </Button>
@@ -905,6 +983,17 @@ export function MealPrepModal({
                                     <span>Total Final</span>
                                     <span className="text-green-400">${pricing.total}</span>
                                 </div>
+                            </div>
+
+                            {/* Delivery Summary */}
+                            <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2">
+                                <div className="flex items-center gap-2 text-white font-bold text-sm">
+                                    {deliveryType === "entrega" ? <Truck className="w-4 h-4 text-green-400" /> : <ChefHat className="w-4 h-4 text-green-400" />}
+                                    {deliveryType === "entrega" ? "Entrega a Domicilio" : "Recogida en Local"}
+                                </div>
+                                <p className="text-sm text-slate-400">
+                                    {deliveryType === "entrega" ? `${address}${addressDetails ? ` (${addressDetails})` : ""}` : businessAddress || "Dirección del local"}
+                                </p>
                             </div>
 
                             {/* Action buttons */}

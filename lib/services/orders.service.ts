@@ -32,6 +32,7 @@ export interface Order {
     paymentStatus: "pending" | "paid" | "failed";
     paymentMethod?: string;
     notes?: string;
+    deliveryType?: "entrega" | "recogida";
     createdAt: string;
     updatedAt: string;
 }

@@ -15,6 +15,7 @@ interface ConfirmOrderRequest {
     total: number;
     notes?: string;
     type?: "order" | "training";
+    deliveryType?: "entrega" | "recogida";
 }
 
 export async function POST(request: NextRequest) {
@@ -29,7 +30,8 @@ export async function POST(request: NextRequest) {
             items,
             total,
             notes,
-            type = "order"
+            type = "order",
+            deliveryType = "entrega"
         } = body;
 
         // 1. Validaciones básicas
@@ -58,6 +60,7 @@ export async function POST(request: NextRequest) {
             status: "pending",
             paymentStatus: "pending",
             notes,
+            deliveryType,
         });
 
         // 4. Notificar al Cliente vía WhatsApp (Evolution API)
@@ -67,6 +70,10 @@ export async function POST(request: NextRequest) {
 
             let clientMsg = `¡Hola ${customerName}! 👋\n\n`;
             clientMsg += `Hemos recibido tu pedido *#${order.orderNumber}* en *${shop.name}*.\n\n`;
+            clientMsg += `📦 Modo: *${deliveryType === "recogida" ? "Pasar a recoger" : "Entrega a domicilio"}*\n`;
+            if (deliveryType === "entrega" && customerAddress) {
+                clientMsg += `📍 Dirección: ${customerAddress}\n`;
+            }
             clientMsg += `💰 Total: $${total.toLocaleString()}\n`;
             clientMsg += `📝 Estado: *Pendiente de revisión*\n\n`;
             clientMsg += `Te notificaremos pronto sobre los siguientes pasos. ¡Gracias por tu confianza!`;
@@ -108,6 +115,10 @@ export async function POST(request: NextRequest) {
             ownerMsg += `Número: *#${order.orderNumber}*\n`;
             ownerMsg += `Cliente: ${customerName}\n`;
             ownerMsg += `Teléfono: ${customerPhone}\n`;
+            ownerMsg += `Tipo: *${deliveryType === "recogida" ? "Para Recoger" : "Dírecto a Domicilio"}*\n`;
+            if (customerAddress) {
+                ownerMsg += `📍 Direcc: ${customerAddress}\n`;
+            }
             ownerMsg += `Total: *$${total.toLocaleString()}*\n\n`;
             ownerMsg += `Revisa los detalles en tu panel de administración.`;
 

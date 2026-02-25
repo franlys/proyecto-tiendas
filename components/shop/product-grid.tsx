@@ -23,6 +23,8 @@ interface ProductGridProps {
   trainingPackages?: any[];
   isMealModalOpen?: boolean;
   setIsMealModalOpen?: (open: boolean) => void;
+  businessCoordinates?: any;
+  businessAddress?: string;
 }
 
 // Extended product type with custom category colors
@@ -76,6 +78,8 @@ export function ProductGrid({
   trainingPackages = [],
   isMealModalOpen = false,
   setIsMealModalOpen = () => { },
+  businessCoordinates,
+  businessAddress,
 }: ProductGridProps) {
   const shop = useShop();
   const { addProduct } = useCart();
@@ -265,7 +269,8 @@ export function ProductGrid({
         whatsappNumber={shop?.contact?.whatsapp || shop?.contact?.phone}
         catalog={products}
         hidePriceIfZero={isMealPrep}
-        businessCoordinates={shop?.coordinates}
+        businessCoordinates={businessCoordinates}
+        businessAddress={businessAddress}
         trainingPackages={trainingPackages}
       />
       {categories.map((category) => {
