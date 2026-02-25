@@ -32,6 +32,7 @@ interface MealPrepModalProps {
     hidePriceIfZero?: boolean;
     businessCoordinates?: Coordinates;
     shopId?: string;
+    trainingPackages?: any[];
 }
 
 export function MealPrepModal({
@@ -44,7 +45,21 @@ export function MealPrepModal({
     hidePriceIfZero,
     businessCoordinates,
     shopId,
+    trainingPackages = [],
 }: MealPrepModalProps) {
+    const displayTrainingPlans = useMemo(() => {
+        if (trainingPackages && trainingPackages.length > 0) {
+            return trainingPackages.map(pkg => ({
+                type: pkg.id,
+                label: pkg.name,
+                monthlyPrice: pkg.price,
+                daysPerWeek: 0, // No metadata for this yet
+                ...pkg
+            }));
+        }
+        return TRAINING_PLANS;
+    }, [trainingPackages]);
+
     const [step, setStep] = useState<"package" | "plates" | "training" | "delivery" | "info" | "summary">("package");
     const [selectedPackage, setSelectedPackage] = useState<number>(3);
     const [plates, setPlates] = useState<MealPlate[]>([]);
@@ -608,7 +623,7 @@ export function MealPrepModal({
                             <p className="text-sm text-slate-400">Potencia tus resultados con un plan de entrenamiento personalizado.</p>
 
                             <div className="space-y-3">
-                                {TRAINING_PLANS.map((plan) => (
+                                {displayTrainingPlans.map((plan) => (
                                     <button
                                         key={plan.type}
                                         onClick={() => handleSelectTraining(plan)}
@@ -717,12 +732,13 @@ export function MealPrepModal({
                                         setIsLocating(true);
                                         setError(null);
                                         try {
-                                            const coords = await getCurrentLocation();
-                                            if (businessCoordinates) {
-                                                const dist = calculateDistance(businessCoordinates, coords);
-                                                setDistance(dist);
-                                                setDistanceInput(dist.toString());
+                                            if (!businessCoordinates) {
+                                                throw new Error("La ubicación del negocio no está configurada. Por favor, contacta al administrador.");
                                             }
+                                            const coords = await getCurrentLocation();
+                                            const dist = calculateDistance(businessCoordinates, coords);
+                                            setDistance(dist);
+                                            setDistanceInput(dist.toString());
                                         } catch (err: any) {
                                             setError(err.message || "Error al obtener ubicación");
                                         } finally {

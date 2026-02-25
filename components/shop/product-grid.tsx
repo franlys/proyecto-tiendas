@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 interface ProductGridProps {
   products: Product[];
   hidePriceIfZero?: boolean;
+  trainingPackages?: any[];
 }
 
 // Extended product type with custom category colors
@@ -67,7 +68,11 @@ function getCategoryDisplayInfo(product: ExtendedProduct): CategoryDisplayInfo {
   };
 }
 
-export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
+export function ProductGrid({
+  products,
+  hidePriceIfZero,
+  trainingPackages = [],
+}: ProductGridProps) {
   const shop = useShop();
   const { addProduct } = useCart();
   const [isMealModalOpen, setIsMealModalOpen] = useState(false);
@@ -258,6 +263,7 @@ export function ProductGrid({ products, hidePriceIfZero }: ProductGridProps) {
         catalog={products}
         hidePriceIfZero={isMealPrep}
         businessCoordinates={shop?.coordinates}
+        trainingPackages={trainingPackages}
       />
       {categories.map((category) => {
         const catInfo = getCategoryInfo(category);

@@ -477,6 +477,7 @@ export default function ShopHomePage() {
             ) : (
               <ProductGrid
                 products={products}
+                trainingPackages={services.filter(s => s.category === "entrenamiento")}
                 hidePriceIfZero={
                   businessTypes.some(t => ["meal_prep", "fitness", "entrenamiento", "entrenador_personal", "gimnasio", "gym", "personal_trainer"].includes(t)) ||
                   shop?.businessType === "meal_prep" ||
