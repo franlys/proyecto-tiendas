@@ -725,18 +725,24 @@ function TrainingPackagesContent({ shopId: inputId }: { shopId: string }) {
         try {
             const now = new Date().toISOString();
 
+            // Clean undefined values for Firestore
+            const cleanData = Object.entries(pkgData).reduce((acc, [key, value]) => {
+                if (value !== undefined) acc[key] = value;
+                return acc;
+            }, {} as any);
+
             if (editingPackage) {
                 // Update existing
                 const docRef = doc(db, "shops", shopId, "training-packages", editingPackage.id);
                 await updateDoc(docRef, {
-                    ...pkgData,
+                    ...cleanData,
                     updatedAt: now,
                 });
             } else {
                 // Create new
                 const colRef = collection(db, "shops", shopId, "training-packages");
                 await addDoc(colRef, {
-                    ...pkgData,
+                    ...cleanData,
                     createdAt: now,
                     updatedAt: now,
                 });
@@ -783,8 +789,14 @@ function TrainingPackagesContent({ shopId: inputId }: { shopId: string }) {
             const colRef = collection(db, "shops", shopId, "training-packages");
 
             for (const pkg of DEFAULT_TRAINING_PACKAGES) {
+                // Clean undefined values
+                const cleanPkg = Object.entries(pkg).reduce((acc, [key, value]) => {
+                    if (value !== undefined) acc[key] = value;
+                    return acc;
+                }, {} as any);
+
                 await addDoc(colRef, {
-                    ...pkg,
+                    ...cleanPkg,
                     createdAt: now,
                     updatedAt: now,
                 });
