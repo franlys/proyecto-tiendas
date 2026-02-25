@@ -173,16 +173,14 @@ export default function ShopHomePage() {
   const showServices = (combinedFeatures.hasServices || combinedFeatures.hasBookings) && (hasServices || isServiceBusiness);
   const showProducts = (combinedFeatures.hasCatalog || combinedFeatures.hasOrders) && (hasProducts || isProductBusiness);
 
-  // 3. Tab State
+  // 3. UI State
   const [activeTab, setActiveTab] = useState<TabType>(() => {
     const queryTab = searchParams.get("tab") as TabType;
-    // We can't rely on 'showServices' here immediately because data is loading.
-    // Default to business type logic for initial state
     const initialShowServices = shop?.businessType === "beauty" || shop?.businessType === "repair";
-
     if (queryTab) return queryTab;
     return initialShowServices ? "servicios" : "productos";
   });
+  const [isMealModalOpen, setIsMealModalOpen] = useState(false);
 
   // Update active tab once data is loaded if needed (optional, purely UX)
 
@@ -333,10 +331,11 @@ export default function ShopHomePage() {
               </ScrollReveal>
             )}
 
-            {/* Book Appointment Button - Only for Service Businesses */}
-            {isServiceBusiness && hasServices && (
-              <ScrollReveal delay={0.5}>
-                <div className="mt-8">
+            {/* Main Action Button (CTA) */}
+            <ScrollReveal delay={0.5}>
+              <div className="mt-8 flex flex-wrap justify-center gap-4">
+                {/* Book Appointment - Only if has services that are NOT training (unless gym) */}
+                {isServiceBusiness && hasServices && services.some(s => s.category !== "entrenamiento" || shop?.businessType === "gimnasio") && (
                   <Link
                     href={`/${shop?.slug || shop?.id}/book`}
                     className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-400 text-white font-semibold rounded-full shadow-lg shadow-primary/25 transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/30"
@@ -344,9 +343,20 @@ export default function ShopHomePage() {
                     <Calendar className="w-5 h-5" />
                     {combinedFeatures.labels?.cta || "Reservar Cita"}
                   </Link>
-                </div>
-              </ScrollReveal>
-            )}
+                )}
+
+                {/* Meal Prep Constructor Button - For Meal Prep shops or shops with Meal Prep category */}
+                {(shop?.businessType === "meal_prep" || products.some(p => (p as any).category === "meal_prep_package")) && (
+                  <button
+                    onClick={() => setIsMealModalOpen(true)}
+                    className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 text-white font-semibold rounded-full shadow-lg shadow-green-500/25 transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/30"
+                  >
+                    <ChefHat className="w-5 h-5" />
+                    {shop?.businessType === "meal_prep" ? "Armar mi Plan" : "Personalizar Plato"}
+                  </button>
+                )}
+              </div>
+            </ScrollReveal>
           </div>
         </div>
       </SectionObserver>
@@ -478,6 +488,8 @@ export default function ShopHomePage() {
               <ProductGrid
                 products={products}
                 trainingPackages={services.filter(s => s.category === "entrenamiento")}
+                isMealModalOpen={isMealModalOpen}
+                setIsMealModalOpen={setIsMealModalOpen}
                 hidePriceIfZero={
                   businessTypes.some(t => ["meal_prep", "fitness", "entrenamiento", "entrenador_personal", "gimnasio", "gym", "personal_trainer"].includes(t)) ||
                   shop?.businessType === "meal_prep" ||

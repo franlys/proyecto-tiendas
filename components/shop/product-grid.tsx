@@ -21,6 +21,8 @@ interface ProductGridProps {
   products: Product[];
   hidePriceIfZero?: boolean;
   trainingPackages?: any[];
+  isMealModalOpen?: boolean;
+  setIsMealModalOpen?: (open: boolean) => void;
 }
 
 // Extended product type with custom category colors
@@ -72,10 +74,11 @@ export function ProductGrid({
   products,
   hidePriceIfZero,
   trainingPackages = [],
+  isMealModalOpen = false,
+  setIsMealModalOpen = () => { },
 }: ProductGridProps) {
   const shop = useShop();
   const { addProduct } = useCart();
-  const [isMealModalOpen, setIsMealModalOpen] = useState(false);
   const { hasInventory, config } = useCombinedBusinessFeatures(shop?.businessTypes || [shop?.businessType || "otro"]);
 
   const isMealPrep = hidePriceIfZero ||
