@@ -8,6 +8,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import { localToken } from "@/lib/utils/safe-storage";
 
 export type CampaignStatus = "draft" | "scheduled" | "sending" | "completed" | "paused" | "failed";
 export type AudienceSegment = "all" | "wholesale" | "inactive" | "birthday" | "new" | "vip";
@@ -214,7 +215,7 @@ export function MarketingProvider({ children, shopId }: MarketingProviderProps) 
   useEffect(() => {
     const storageKey = getStorageKey(shopId);
     try {
-      const stored = localStorage.getItem(storageKey);
+      const stored = localToken.get(storageKey);
       if (stored) {
         setCampaigns(JSON.parse(stored));
       } else {
@@ -232,7 +233,7 @@ export function MarketingProvider({ children, shopId }: MarketingProviderProps) 
   // Save to localStorage
   useEffect(() => {
     if (!isLoading) {
-      localStorage.setItem(getStorageKey(shopId), JSON.stringify(campaigns));
+      localToken.set(getStorageKey(shopId), JSON.stringify(campaigns));
     }
   }, [campaigns, isLoading, shopId]);
 
@@ -336,13 +337,13 @@ export function MarketingProvider({ children, shopId }: MarketingProviderProps) 
         prev.map((c) =>
           c.id === id
             ? {
-                ...c,
-                progress: {
-                  sent: c.progress.sent + (success ? 1 : 0),
-                  failed: c.progress.failed + (success ? 0 : 1),
-                  total: phones.length,
-                },
-              }
+              ...c,
+              progress: {
+                sent: c.progress.sent + (success ? 1 : 0),
+                failed: c.progress.failed + (success ? 0 : 1),
+                total: phones.length,
+              },
+            }
             : c
         )
       );
@@ -350,10 +351,10 @@ export function MarketingProvider({ children, shopId }: MarketingProviderProps) 
       setCurrentJob((prev) =>
         prev
           ? {
-              ...prev,
-              currentIndex: i + 1,
-              errors: success ? prev.errors : [...prev.errors, phones[i]],
-            }
+            ...prev,
+            currentIndex: i + 1,
+            errors: success ? prev.errors : [...prev.errors, phones[i]],
+          }
           : null
       );
 

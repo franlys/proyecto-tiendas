@@ -23,6 +23,7 @@ import {
   serverTimestamp,
   Timestamp
 } from "firebase/firestore";
+import { localToken } from "@/lib/utils/safe-storage";
 
 import { SalesOrder, OrderStatus, SalesOrderItem } from "@/lib/types/order.types";
 export type { SalesOrder, OrderStatus, SalesOrderItem };
@@ -182,7 +183,7 @@ export function SalesOrdersProvider({ children, shopId }: SalesOrdersProviderPro
     });
 
     // Load notification config from localStorage (client preference) or could be Firestore too
-    const storedNotifications = localStorage.getItem(getNotificationKey(shopId));
+    const storedNotifications = localToken.get(getNotificationKey(shopId));
     if (storedNotifications) {
       setNotificationConfig(JSON.parse(storedNotifications));
     }
@@ -295,7 +296,7 @@ export function SalesOrdersProvider({ children, shopId }: SalesOrdersProviderPro
   const updateNotificationConfig = useCallback((config: Partial<NotificationConfig>) => {
     setNotificationConfig((prev) => {
       const updated = { ...prev, ...config };
-      localStorage.setItem(getNotificationKey(shopId), JSON.stringify(updated));
+      localToken.set(getNotificationKey(shopId), JSON.stringify(updated));
       return updated;
     });
   }, [shopId]);

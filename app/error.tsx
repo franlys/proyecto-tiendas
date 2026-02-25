@@ -52,14 +52,13 @@ export default function GlobalError({
                     </Link>
                 </div>
 
-                {process.env.NODE_ENV === "development" && (
-                    <div className="mt-8 pt-8 border-t border-white/5 text-left overflow-auto">
-                        <p className="text-xs font-mono text-red-400/70 whitespace-pre">
-                            {error.message}
-                            {error.stack && `\n\n${error.stack.split("\n").slice(0, 3).join("\n")}`}
-                        </p>
-                    </div>
-                )}
+                {/* Debug info - Show even in production for now to troubleshoot iPad error */}
+                <div className="mt-8 pt-8 border-t border-white/5 text-left overflow-auto">
+                    <p className="text-[10px] font-mono text-slate-500 mb-2">Error ID: {error.digest || "N/A"}</p>
+                    <p className="text-xs font-mono text-red-400/70 whitespace-pre-wrap">
+                        {error.message || "Unknown Error"}
+                    </p>
+                </div>
             </div>
         </div>
     );

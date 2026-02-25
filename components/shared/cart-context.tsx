@@ -8,6 +8,7 @@ import {
   type ReactNode,
   useEffect
 } from "react";
+import { localToken } from "@/lib/utils/safe-storage";
 import type { Service, Product, ProductVariant } from "@/lib/constants";
 import type { SelectedExtra } from "@/lib/types/product-extra.types";
 
@@ -86,7 +87,7 @@ export function CartProvider({ children, shopId }: CartProviderProps & { shopId?
     if (!shopId) return;
 
     const key = `shop-cart-${shopId}`;
-    const saved = localStorage.getItem(key);
+    const saved = localToken.get(key);
 
     if (saved) {
       try {
@@ -105,7 +106,7 @@ export function CartProvider({ children, shopId }: CartProviderProps & { shopId?
   useEffect(() => {
     if (!shopId) return;
     const key = `shop-cart-${shopId}`;
-    localStorage.setItem(key, JSON.stringify(items));
+    localToken.set(key, JSON.stringify(items));
   }, [items, shopId]);
 
   // Add service to cart

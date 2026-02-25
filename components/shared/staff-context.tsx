@@ -8,6 +8,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import { localToken } from "@/lib/utils/safe-storage";
 
 // ============================================
 // ROLE-BASED ACCESS CONTROL (RBAC)
@@ -281,12 +282,12 @@ export function StaffProvider({ children, shopId, currentUserId }: StaffProvider
   useEffect(() => {
     const storageKey = getStorageKey(shopId);
     try {
-      const stored = localStorage.getItem(storageKey);
+      const stored = localToken.get(storageKey);
       if (stored) {
         setStaff(JSON.parse(stored));
       } else {
         setStaff(DEMO_STAFF);
-        localStorage.setItem(storageKey, JSON.stringify(DEMO_STAFF));
+        localToken.set(storageKey, JSON.stringify(DEMO_STAFF));
       }
     } catch (error) {
       console.error("Error loading staff:", error);
@@ -299,7 +300,7 @@ export function StaffProvider({ children, shopId, currentUserId }: StaffProvider
   // Save to localStorage
   useEffect(() => {
     if (!isLoading) {
-      localStorage.setItem(getStorageKey(shopId), JSON.stringify(staff));
+      localToken.set(getStorageKey(shopId), JSON.stringify(staff));
     }
   }, [staff, isLoading, shopId]);
 

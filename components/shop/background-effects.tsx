@@ -71,8 +71,8 @@ function GalaxyBackground() {
   const [stars, setStars] = useState<Star[]>([]);
   useEffect(() => {
     // Reduce star count for better performance on mobile/Safari
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    setStars(generateStars(isMobile ? 30 : 60));
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+    setStars(generateStars(isMobile ? 20 : 60));
   }, []);
   return (
     <div className="absolute inset-0 overflow-hidden">
@@ -116,8 +116,8 @@ function AuroraBackground() {
 function ParticlesBackground() {
   const [particles, setParticles] = useState<any[]>([]);
   useEffect(() => {
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    setParticles(Array.from({ length: isMobile ? 20 : 40 }, (_, i) => ({
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+    setParticles(Array.from({ length: isMobile ? 12 : 40 }, (_, i) => ({
       id: i, x: Math.random() * 100, size: Math.random() * 4 + 2, duration: Math.random() * 20 + 15, delay: Math.random() * 5,
     })));
   }, []);
@@ -160,7 +160,17 @@ function GridBackground() {
 
 function BokehBackground() {
   const [bokeh, setBokeh] = useState<any[]>([]);
-  useEffect(() => { setBokeh(Array.from({ length: 15 }, (_, i) => ({ id: i, x: Math.random() * 100, y: Math.random() * 100, size: Math.random() * 150 + 50, duration: Math.random() * 10 + 10, delay: Math.random() * 5 }))); }, []);
+  useEffect(() => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+    setBokeh(Array.from({ length: isMobile ? 6 : 15 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * (isMobile ? 100 : 150) + 50,
+      duration: Math.random() * 10 + 10,
+      delay: Math.random() * 5
+    })));
+  }, []);
   return (
     <div className="absolute inset-0 overflow-hidden">
       <div className="absolute inset-0 bg-background" />

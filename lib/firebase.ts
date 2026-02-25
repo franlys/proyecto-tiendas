@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore, initializeFirestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore, Firestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -22,14 +22,41 @@ if (!firebaseConfig.apiKey) {
     console.log("✅ Firebase Config Loaded for Project:", firebaseConfig.projectId);
 }
 
-// Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
-// Use Long Polling to avoid WebSocket timeouts/blocks
-// IMPORTANT: Specify 'default' database ID because the database was created as 'default' not '(default)'
-const db = initializeFirestore(app, {
-    experimentalForceLongPolling: true,
-}, 'default');
+// Initialize Firebase with safety wrappers
+let app;
+let auth;
+
+try {
+    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+    auth = getAuth(app);
+} catch (error) {
+    console.error("❌ CRITICAL: Failed to initialize Firebase App/Auth:", error);
+    // Fallback if app fails (this shouldn't happen unless keys are totally invalid)
+    if (!app) {
+        app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    }
+}
+
+// Initialize Firestore with robust fallback
+let db: Firestore;
+try {
+    // IMPORTANT: Specify 'default' database ID only if you explicitly created one named 'default'.
+    // Standard initialization is usually sufficient for most projects.
+    db = initializeFirestore(app, {
+        experimentalForceLongPolling: true,
+    });
+    console.log("✅ Firestore initialized with experimentalForceLongPolling");
+} catch (error) {
+    console.warn("⚠️ Failed to initialize Firestore with settings, falling back to standard getFirestore:", error);
+    try {
+        db = getFirestore(app);
+        console.log("✅ Firestore initialized with standard getFirestore");
+    } catch (innerError) {
+        console.error("❌ CRITICAL: Failed to initialize Firestore even with fallback:", innerError);
+        db = getFirestore(app);
+    }
+}
+
 const storage = getStorage(app);
 
 export { app, auth, db, storage };

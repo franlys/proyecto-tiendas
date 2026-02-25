@@ -207,7 +207,14 @@ export function LoyaltyCard({
                             Pedido #{stamp.orderNumber}
                           </p>
                           <p className="text-slate-400 text-xs">
-                            {new Date(stamp.date).toLocaleDateString()}
+                            {(() => {
+                              try {
+                                const d = new Date(stamp.date);
+                                return isNaN(d.getTime()) ? "Fecha no disponible" : d.toLocaleDateString();
+                              } catch (e) {
+                                return "Fecha no disponible";
+                              }
+                            })()}
                           </p>
                         </div>
                         <span className="text-primary font-bold">
@@ -233,7 +240,14 @@ export function LoyaltyCard({
                         <div>
                           <p className="text-white text-sm">{redemption.reward}</p>
                           <p className="text-slate-400 text-xs">
-                            {new Date(redemption.date).toLocaleDateString()}
+                            {(() => {
+                              try {
+                                const d = new Date(redemption.date);
+                                return isNaN(d.getTime()) ? "Fecha no disponible" : d.toLocaleDateString();
+                              } catch (e) {
+                                return "Fecha no disponible";
+                              }
+                            })()}
                           </p>
                         </div>
                         <Gift className="w-5 h-5 text-gold" />

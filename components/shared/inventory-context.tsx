@@ -11,6 +11,7 @@ import {
 import { toast } from "sonner";
 import { MOCK_PRODUCTS, type Product } from "@/lib/constants";
 import { db } from "@/lib/firebase";
+import { localToken } from "@/lib/utils/safe-storage";
 import {
   collection,
   query,
@@ -86,12 +87,12 @@ export function InventoryProvider({ children, shopId }: InventoryProviderProps) 
 
           setProducts(cloudProducts);
           // Update local cache
-          localStorage.setItem(getStorageKey(shopId), JSON.stringify(cloudProducts));
+          localToken.set(getStorageKey(shopId), JSON.stringify(cloudProducts));
           debugLog(`INVENTORY: Loaded ${cloudProducts.length} items from Cloud ☁️`);
         } else {
           // 2. Fallback to LocalStorage (Offline or First Run)
           debugLog("INVENTORY: Cloud empty, checking local storage...");
-          const stored = localStorage.getItem(getStorageKey(shopId));
+          const stored = localToken.get(getStorageKey(shopId));
 
           if (stored) {
             const localProducts = JSON.parse(stored).map((p: Product) => ({
@@ -113,7 +114,7 @@ export function InventoryProvider({ children, shopId }: InventoryProviderProps) 
       } catch (error) {
         console.error("Error loading inventory:", error);
         // Fallback to local on error
-        const stored = localStorage.getItem(getStorageKey(shopId));
+        const stored = localToken.get(getStorageKey(shopId));
         if (stored) {
           const localProducts = JSON.parse(stored).map((p: Product) => ({
             ...p,
@@ -172,7 +173,7 @@ export function InventoryProvider({ children, shopId }: InventoryProviderProps) 
 
       // Update Cache
       const current = [...products, finalProduct]; // Approximation
-      localStorage.setItem(getStorageKey(shopId), JSON.stringify(current));
+      localToken.set(getStorageKey(shopId), JSON.stringify(current));
 
       toast.success("Producto guardado", {
         description: `"${product.name}" se guardó correctamente en la nube.`,

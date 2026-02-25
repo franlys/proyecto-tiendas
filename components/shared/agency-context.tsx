@@ -8,6 +8,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import { localToken } from "@/lib/utils/safe-storage";
 
 // Phase 24: Agency configuration for white-label support
 export interface AgencyConfig {
@@ -45,7 +46,7 @@ export function AgencyProvider({ children }: { children: ReactNode }) {
   // Load config from localStorage on mount
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localToken.get(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         setConfig({ ...DEFAULT_AGENCY, ...parsed });
@@ -68,7 +69,7 @@ export function AgencyProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(newConfig));
+        localToken.set(STORAGE_KEY, JSON.stringify(newConfig));
       } catch (error) {
         console.error("Error saving agency config:", error);
       }
@@ -81,7 +82,7 @@ export function AgencyProvider({ children }: { children: ReactNode }) {
   const resetToDefaults = useCallback(() => {
     setConfig(DEFAULT_AGENCY);
     try {
-      localStorage.removeItem(STORAGE_KEY);
+      localToken.remove(STORAGE_KEY);
     } catch (error) {
       console.error("Error resetting agency config:", error);
     }

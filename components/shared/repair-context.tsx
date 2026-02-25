@@ -8,6 +8,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import { localToken } from "@/lib/utils/safe-storage";
 
 export type RepairStatus = "received" | "diagnosing" | "repairing" | "ready" | "delivered";
 
@@ -149,13 +150,13 @@ export function RepairProvider({ children, shopId }: RepairProviderProps) {
   useEffect(() => {
     const storageKey = getStorageKey(shopId);
     try {
-      const stored = localStorage.getItem(storageKey);
+      const stored = localToken.get(storageKey);
       if (stored) {
         setTickets(JSON.parse(stored));
       } else {
         // Initialize with demo data
         setTickets(DEMO_TICKETS);
-        localStorage.setItem(storageKey, JSON.stringify(DEMO_TICKETS));
+        localToken.set(storageKey, JSON.stringify(DEMO_TICKETS));
       }
     } catch (error) {
       console.error("Error loading repair tickets:", error);
@@ -169,7 +170,7 @@ export function RepairProvider({ children, shopId }: RepairProviderProps) {
   useEffect(() => {
     if (!isLoading) {
       const storageKey = getStorageKey(shopId);
-      localStorage.setItem(storageKey, JSON.stringify(tickets));
+      localToken.set(storageKey, JSON.stringify(tickets));
     }
   }, [tickets, isLoading, shopId]);
 

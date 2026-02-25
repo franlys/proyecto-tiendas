@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { localToken } from "@/lib/utils/safe-storage";
 
 interface BackgroundAudioProps {
     audioUrl: string;
@@ -50,7 +51,7 @@ export function BackgroundAudio({
         audioRef.current = audio;
 
         // Check localStorage for user preference
-        const savedPref = localStorage.getItem("shop-audio-muted");
+        const savedPref = localToken.get("shop-audio-muted");
         if (savedPref === "false") {
             // User previously enabled audio
             setShowPulse(true);
@@ -73,7 +74,7 @@ export function BackgroundAudio({
             if (!hasInteracted) {
                 setHasInteracted(true);
                 // Check local storage. Default to ON (unmuted) if not set.
-                const savedPref = localStorage.getItem("shop-audio-muted");
+                const savedPref = localToken.get("shop-audio-muted");
                 const shouldPlay = savedPref !== "true"; // Play if "false" or null (default)
 
                 if (shouldPlay && audioRef.current) {
@@ -104,7 +105,7 @@ export function BackgroundAudio({
         setShowPulse(false);
 
         // Save preference
-        localStorage.setItem("shop-audio-muted", String(newMuted));
+        localToken.set("shop-audio-muted", String(newMuted));
 
         // If unmuting, ensure audio is playing
         if (!newMuted) {

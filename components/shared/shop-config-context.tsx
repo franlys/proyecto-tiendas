@@ -8,6 +8,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import { localToken } from "@/lib/utils/safe-storage";
 import type { BackgroundEffect } from "@/components/shop/background-effects";
 import type { BusinessType } from "@/lib/constants";
 
@@ -127,7 +128,7 @@ export function ShopConfigProvider({
     }
 
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localToken.get(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         setConfig((prev) => ({ ...prev, ...parsed }));
@@ -146,7 +147,7 @@ export function ShopConfigProvider({
   const saveConfig = useCallback(() => {
     if (!enablePersistence) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+      localToken.set(STORAGE_KEY, JSON.stringify(config));
       console.log("Config saved:", config);
     } catch (error) {
       console.error("Error saving config:", error);
@@ -166,7 +167,7 @@ export function ShopConfigProvider({
     if (!isLoading && enablePersistence) {
       const timeoutId = setTimeout(() => {
         try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+          localToken.set(STORAGE_KEY, JSON.stringify(config));
         } catch (error) {
           console.error("Error auto-saving config:", error);
         }

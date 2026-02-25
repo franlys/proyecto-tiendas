@@ -10,6 +10,7 @@ import {
 } from "react";
 import { db } from "@/lib/firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
+import { localToken } from "@/lib/utils/safe-storage";
 
 // ============================================
 // DEBUG LOGGING - SUPER ADMIN
@@ -238,14 +239,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Update last activity timestamp
   const updateActivity = useCallback(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(ACTIVITY_STORAGE_KEY, Date.now().toString());
-    }
+    localToken.set(ACTIVITY_STORAGE_KEY, Date.now().toString());
   }, []);
 
   // Check if session has expired
   const checkSessionExpiration = useCallback((): boolean => {
-    const lastActivity = localStorage.getItem(ACTIVITY_STORAGE_KEY);
+    const lastActivity = localToken.get(ACTIVITY_STORAGE_KEY);
     if (!lastActivity) return false;
 
     const elapsed = Date.now() - parseInt(lastActivity, 10);
@@ -255,8 +254,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Clear session (logout due to inactivity)
   const clearSession = useCallback(() => {
     setUser(null);
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-    localStorage.removeItem(ACTIVITY_STORAGE_KEY);
+    localToken.remove(AUTH_STORAGE_KEY);
+    localToken.remove(ACTIVITY_STORAGE_KEY);
   }, []);
 
   // Load session and shop configs from localStorage on init
@@ -264,7 +263,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     debugLog("INIT - Loading session from localStorage");
 
     // Load shop session configs
-    const storedSessions = localStorage.getItem(SHOP_SESSIONS_KEY);
+    const storedSessions = localToken.get(SHOP_SESSIONS_KEY);
     if (storedSessions) {
       try {
         setShopSessions({ ...DEFAULT_SHOP_SESSIONS, ...JSON.parse(storedSessions) });
@@ -275,24 +274,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // MIGRATION: Check for legacy "nexo" auth data
-    const legacyAuth = localStorage.getItem("nexo-auth");
-    const migrationAuthDone = localStorage.getItem("linko-migration-auth-v1");
+    const legacyAuth = localToken.get("nexo-auth");
+    const migrationAuthDone = localToken.get("linko-migration-auth-v1");
 
     if (legacyAuth && !migrationAuthDone) {
       debugWarn("MIGRATION: Found legacy auth data. Restoring session...");
-      localStorage.setItem(AUTH_STORAGE_KEY, legacyAuth);
-      localStorage.setItem("linko-migration-auth-v1", "true");
+      localToken.set(AUTH_STORAGE_KEY, legacyAuth);
+      localToken.set("linko-migration-auth-v1", "true");
 
       // Also migrate shop sessions and activity if present
-      const legacySessions = localStorage.getItem("nexo-shop-sessions");
-      if (legacySessions) localStorage.setItem(SHOP_SESSIONS_KEY, legacySessions);
+      const legacySessions = localToken.get("nexo-shop-sessions");
+      if (legacySessions) localToken.set(SHOP_SESSIONS_KEY, legacySessions);
 
-      const legacyActivity = localStorage.getItem("nexo-last-activity");
-      if (legacyActivity) localStorage.setItem(ACTIVITY_STORAGE_KEY, legacyActivity);
+      const legacyActivity = localToken.get("nexo-last-activity");
+      if (legacyActivity) localToken.set(ACTIVITY_STORAGE_KEY, legacyActivity);
     }
 
     // Load auth session
-    const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+    const stored = localToken.get(AUTH_STORAGE_KEY);
     debugLog("Stored auth data found", { hasStoredAuth: !!stored });
 
     if (stored) {
@@ -307,7 +306,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         // Check expiration based on user type
-        const lastActivity = localStorage.getItem(ACTIVITY_STORAGE_KEY);
+        const lastActivity = localToken.get(ACTIVITY_STORAGE_KEY);
         if (lastActivity) {
           const elapsed = Date.now() - parseInt(lastActivity, 10);
           let timeout = DEFAULT_ADMIN_TIMEOUT;
@@ -346,7 +345,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch {
         debugError("Failed to parse stored auth, removing");
-        localStorage.removeItem(AUTH_STORAGE_KEY);
+        localToken.remove(AUTH_STORAGE_KEY);
       }
     } else {
       debugLog("No stored session found - user needs to login");
@@ -410,7 +409,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         canConfigureWhatsApp: userRecord.user.role === "SUPER_ADMIN",
       });
       setUser(userRecord.user);
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userRecord.user));
+      localToken.set(AUTH_STORAGE_KEY, JSON.stringify(userRecord.user));
       updateActivity();
       setSessionExpired(false);
       return true;
@@ -465,7 +464,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
 
           setUser(dynamicUser);
-          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(dynamicUser));
+          localToken.set(AUTH_STORAGE_KEY, JSON.stringify(dynamicUser));
           updateActivity();
           setSessionExpired(false);
           return true;
@@ -496,7 +495,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const userRecord = shopStaff[username.toLowerCase()];
     if (userRecord && userRecord.password === password) {
       setUser(userRecord.user);
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userRecord.user));
+      localToken.set(AUTH_STORAGE_KEY, JSON.stringify(userRecord.user));
       updateActivity();
       setSessionExpired(false);
       return true;
@@ -526,7 +525,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ...config,
         },
       };
-      localStorage.setItem(SHOP_SESSIONS_KEY, JSON.stringify(updated));
+      localToken.set(SHOP_SESSIONS_KEY, JSON.stringify(updated));
       return updated;
     });
   };

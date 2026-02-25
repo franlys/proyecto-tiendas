@@ -11,6 +11,7 @@ import {
 import type { SalesOrder } from "./sales-orders-context";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
+import { localToken } from "@/lib/utils/safe-storage";
 
 export interface ClientNote {
   id: string;
@@ -61,12 +62,12 @@ export function ClientsProvider({ children, orders, shopId }: ClientsProviderPro
   // Load notes and VIP status from localStorage
   useEffect(() => {
     try {
-      const storedNotes = localStorage.getItem(NOTES_STORAGE_KEY);
+      const storedNotes = localToken.get(NOTES_STORAGE_KEY);
       if (storedNotes) {
         setClientNotes(JSON.parse(storedNotes));
       }
 
-      const storedVIP = localStorage.getItem(VIP_STORAGE_KEY);
+      const storedVIP = localToken.get(VIP_STORAGE_KEY);
       if (storedVIP) {
         setClientVIP(JSON.parse(storedVIP));
       }
@@ -78,7 +79,7 @@ export function ClientsProvider({ children, orders, shopId }: ClientsProviderPro
   // Save notes to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(clientNotes));
+      localToken.set(NOTES_STORAGE_KEY, JSON.stringify(clientNotes));
     } catch (error) {
       console.error("Error saving notes:", error);
     }
@@ -87,7 +88,7 @@ export function ClientsProvider({ children, orders, shopId }: ClientsProviderPro
   // Save VIP status to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem(VIP_STORAGE_KEY, JSON.stringify(clientVIP));
+      localToken.set(VIP_STORAGE_KEY, JSON.stringify(clientVIP));
     } catch (error) {
       console.error("Error saving VIP status:", error);
     }
