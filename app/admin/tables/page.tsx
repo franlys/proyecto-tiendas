@@ -28,7 +28,7 @@ export default function TablesPage() {
     const [tableCount, setTableCount] = useState(10);
 
     const tables = Array.from({ length: tableCount }, (_, i) => i + 1);
-    const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://nexo.app";
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://linko.app";
 
     return (
         <div className="space-y-8 p-6">

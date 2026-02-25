@@ -16,6 +16,7 @@ import {
     Loader2,
     ChevronDown,
     ChevronUp,
+    Check,
 } from "lucide-react";
 import { useCart, useShop, useOrders, useShopConfig } from "@/components/shared";
 import { cn, formatPhoneForWhatsApp } from "@/lib/utils";
@@ -52,6 +53,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
     const [scheduledTime, setScheduledTime] = useState("");
     const [orderNotes, setOrderNotes] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [orderSuccess, setOrderSuccess] = useState<{ id: string, number: string } | null>(null);
 
     // Item notes expanded state
     const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
@@ -109,115 +111,48 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                 }
 
                 return {
-                    productId: p.id,
-                    productName,
+                    id: p.id,
+                    name: productName,
                     quantity: p.quantity,
-                    unitPrice: basePrice + extrasTotal,
-                    total: itemTotal,
-                    notes: p.notes || "", // Item-specific notes
-                    extras: p.selectedExtras || [],
+                    price: basePrice + extrasTotal,
+                    notes: p.notes || "",
                 };
             });
 
-            // Create order data
-            const orderData = {
-                orderNumber: `ORD-${Date.now().toString().slice(-6)}`,
-                customerName,
-                customerPhone,
-                customerAddress: deliveryType === "delivery" ? customerAddress : undefined,
-                items: orderItems,
-                subtotal: totalPrice,
-                tax: 0,
-                total: totalPrice,
-                status: "pending",
-                paymentStatus: "pending",
-                isWholesale: false,
-                source: "web",
-                notes: orderNotes,
-                deliveryType,
-                scheduledDate: scheduledDate || undefined,
-                scheduledTime: scheduledTime || undefined,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-            };
-
-            // Save to Firestore
-            const docRef = await addDoc(
-                collection(db, "shops", shop.slug, "orders"),
-                orderData
-            );
-
-            console.log("Order created:", docRef.id);
-
-            // Build WhatsApp message
-            let message = `Hola, soy *${customerName}*\n`;
-            message += `Quiero hacer un pedido en *${shop.name}*:\n`;
-            message += `ID: ${docRef.id}\n\n`;
-
-            message += `📦 *Pedido:*\n`;
-            products.forEach((p) => {
-                const basePrice = p.promoPrice || p.price;
-                const extrasTotal = p.extrasTotal || 0;
-                const subtotal = (basePrice + extrasTotal) * p.quantity;
-                const variantLabel = p.variantName ? ` [${p.variantName}]` : "";
-
-                message += `• ${p.name}${variantLabel} x${p.quantity}: $${subtotal.toLocaleString()}\n`;
-
-                // Add item notes
-                if (p.notes) {
-                    message += `  📝 _${p.notes}_\n`;
-                }
-
-                // Add extras
-                if (p.selectedExtras && p.selectedExtras.length > 0) {
-                    p.selectedExtras.forEach((extra) => {
-                        message += `  ↳ + ${extra.name}${extra.quantity > 1 ? ` x${extra.quantity}` : ""}\n`;
-                    });
-                }
+            // Call internal API
+            const response = await fetch("/api/orders/confirm", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    shopId: shop.id || shop.slug, // Ensure we have the ID
+                    customerName,
+                    customerPhone,
+                    customerAddress: deliveryType === "delivery" ? customerAddress : "Recoger en tienda",
+                    items: orderItems,
+                    total: totalPrice,
+                    notes: JSON.stringify({
+                        deliveryType,
+                        scheduledDate,
+                        scheduledTime,
+                        orderNotes
+                    })
+                })
             });
 
-            message += `\n💰 *Total: $${totalPrice.toLocaleString()}*\n\n`;
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || "Error al procesar el pedido");
 
-            // Delivery info
-            if (deliveryType === "delivery") {
-                message += `🚚 *Entrega a domicilio*\n`;
-                message += `📍 ${customerAddress}\n`;
-            } else {
-                message += `🏪 *Recoger en tienda*\n`;
-            }
+            console.log("Order confirmed internally:", result.orderId);
 
-            if (scheduledDate) {
-                const dateObj = new Date(scheduledDate + "T12:00:00");
-                const dateStr = dateObj.toLocaleDateString("es", {
-                    weekday: "long",
-                    day: "numeric",
-                    month: "long"
-                });
-                message += `📅 Fecha: ${dateStr}\n`;
-            }
+            // Set success state
+            setOrderSuccess({ id: result.orderId, number: result.orderNumber });
 
-            if (scheduledTime) {
-                message += `⏰ Hora: ${scheduledTime}\n`;
-            }
-
-            if (orderNotes) {
-                message += `\n📋 *Notas:* ${orderNotes}\n`;
-            }
-
-            message += `\n📱 Mi teléfono: ${customerPhone}`;
-
-            // Open WhatsApp
-            const cleanPhone = formatPhoneForWhatsApp(shop.contact.phone);
-            const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
-            window.location.href = url;
-
-            // Clear and close
+            // Clear cart 
             clearCart();
-            onClose();
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error creating order:", error);
-            alert("Error al procesar el pedido. Intenta de nuevo.");
+            alert(error.message || "Error al procesar el pedido. Intenta de nuevo.");
         } finally {
             setIsSubmitting(false);
         }
@@ -483,29 +418,49 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
 
                 {/* Footer with total and CTA */}
                 <div className="sticky bottom-0 bg-slate-900 border-t border-white/10 p-4">
-                    <div className="flex items-center justify-between mb-4">
-                        <span className="text-slate-400">Total</span>
-                        <span className="text-2xl font-bold text-white">
-                            ${totalPrice.toLocaleString()}
-                        </span>
-                    </div>
-                    <Button
-                        onClick={handleSubmit}
-                        disabled={isSubmitting || !hasItems}
-                        className="w-full py-4 text-lg bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-                    >
-                        {isSubmitting ? (
-                            <>
-                                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                                Procesando...
-                            </>
-                        ) : (
-                            <>
-                                <MessageCircle className="w-5 h-5 mr-2" />
-                                Enviar Pedido por WhatsApp
-                            </>
-                        )}
-                    </Button>
+                    {orderSuccess ? (
+                        <div className="text-center py-6 space-y-4 animate-in zoom-in-95">
+                            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto border-2 border-green-500/50">
+                                <Check className="w-8 h-8 text-green-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-white">¡Pedido Registrado!</h3>
+                                <p className="text-slate-400 text-sm mt-1">Número de orden: <span className="text-primary font-bold">{orderSuccess.number}</span></p>
+                            </div>
+                            <Button
+                                onClick={onClose}
+                                className="w-full bg-primary hover:bg-primary/90 text-white py-6"
+                            >
+                                Entendido
+                            </Button>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="flex items-center justify-between mb-4">
+                                <span className="text-slate-400">Total</span>
+                                <span className="text-2xl font-bold text-white">
+                                    ${totalPrice.toLocaleString()}
+                                </span>
+                            </div>
+                            <Button
+                                onClick={handleSubmit}
+                                disabled={isSubmitting || !hasItems}
+                                className="w-full py-6 text-lg bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                                        Procesando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Truck className="w-5 h-5 mr-2" />
+                                        Confirmar Pedido
+                                    </>
+                                )}
+                            </Button>
+                        </>
+                    )}
                 </div>
             </div>
         </div>

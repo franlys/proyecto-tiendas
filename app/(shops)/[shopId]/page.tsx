@@ -124,7 +124,7 @@ export default function ShopHomePage() {
                 price: data.price,
                 duration: data.sessionDuration,
                 category: "entrenamiento",
-                image: "https://images.unsplash.com/photo-1517836357463-d25dfeac0050?w=400&h=400&fit=crop", // GYM default
+                image: data.image || "https://images.unsplash.com/photo-1517836357463-d25dfeac0050?w=400&h=400&fit=crop", // GYM default fallback
               } as Service);
             }
           });

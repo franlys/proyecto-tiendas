@@ -100,7 +100,7 @@ interface ShopStaffMember {
 }
 
 // Helper para obtener la key de almacenamiento de staff
-const getStaffStorageKey = (shopSlug: string) => `nexo-shop-staff-${shopSlug}`;
+const getStaffStorageKey = (shopSlug: string) => `linko-shop-staff-${shopSlug}`;
 
 // Componente para mostrar features combinadas de múltiples tipos de negocio
 function CombinedFeaturesBadges({ businessTypes }: { businessTypes: string[] }) {

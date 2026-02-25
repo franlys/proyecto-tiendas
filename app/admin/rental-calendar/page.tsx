@@ -49,7 +49,7 @@ export default function RentalCalendarPage() {
   const [loading, setLoading] = useState(true);
   const [availability, setAvailability] = useState<Record<string, VehicleMonthAvailability>>({});
 
-  const shopId = user?.shopId || "nexo-agency";
+  const shopId = user?.shopId || "linko-agency";
 
   // Cargar vehículos y reservas
   useEffect(() => {
@@ -496,19 +496,18 @@ export default function RentalCalendarPage() {
                           })}
                         </p>
                         <span
-                          className={`inline-block text-xs px-2 py-1 rounded ${
-                            rental.status === "active"
+                          className={`inline-block text-xs px-2 py-1 rounded ${rental.status === "active"
                               ? "bg-green-500/20 text-green-400"
                               : rental.status === "confirmed"
-                              ? "bg-blue-500/20 text-blue-400"
-                              : "bg-yellow-500/20 text-yellow-400"
-                          }`}
+                                ? "bg-blue-500/20 text-blue-400"
+                                : "bg-yellow-500/20 text-yellow-400"
+                            }`}
                         >
                           {rental.status === "active"
                             ? "En curso"
                             : rental.status === "confirmed"
-                            ? "Confirmada"
-                            : "Pendiente"}
+                              ? "Confirmada"
+                              : "Pendiente"}
                         </span>
                       </div>
                     </div>

@@ -31,6 +31,7 @@ interface MealPrepModalProps {
     catalog?: any[];
     hidePriceIfZero?: boolean;
     businessCoordinates?: Coordinates;
+    shopId?: string;
 }
 
 export function MealPrepModal({
@@ -42,8 +43,9 @@ export function MealPrepModal({
     catalog = [],
     hidePriceIfZero,
     businessCoordinates,
+    shopId,
 }: MealPrepModalProps) {
-    const [step, setStep] = useState<"package" | "plates" | "training" | "delivery" | "summary">("package");
+    const [step, setStep] = useState<"package" | "plates" | "training" | "delivery" | "info" | "summary">("package");
     const [selectedPackage, setSelectedPackage] = useState<number>(3);
     const [plates, setPlates] = useState<MealPlate[]>([]);
     const [currentPlateIndex, setCurrentPlateIndex] = useState(0);
@@ -54,6 +56,10 @@ export function MealPrepModal({
     const [isGeocoding, setIsGeocoding] = useState(false);
     const [isLocating, setIsLocating] = useState(false);
     const [address, setAddress] = useState("");
+    const [customerName, setCustomerName] = useState("");
+    const [customerPhone, setCustomerPhone] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [orderSuccess, setOrderSuccess] = useState<{ id: string, number: string } | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     // Reset state when modal opens
@@ -186,8 +192,60 @@ export function MealPrepModal({
         setStep("summary");
     };
 
-    const handleConfirm = () => {
-        onConfirm(plates, pricing.total, distance);
+    const handleConfirm = async () => {
+        if (!customerName || !customerPhone || !shopId) {
+            setError("Por favor completa tu nombre y teléfono");
+            return;
+        }
+
+        setIsSubmitting(true);
+        setError(null);
+
+        try {
+            const items = plates.map((plate, index) => ({
+                id: `plate-${index}`,
+                name: `Plato ${index + 1}: ${formatPlateDescription(plate)}`,
+                quantity: 1,
+                price: plate.isCustom ? MEAL_PREP_PRICES.CUSTOM_PLATE : MEAL_PREP_PRICES.STANDARD_PLATE,
+                notes: plate.notes
+            }));
+
+            if (selectedTrainingPlan) {
+                items.push({
+                    id: `training-${selectedTrainingPlan.type}`,
+                    name: `Entrenamiento: ${selectedTrainingPlan.label}`,
+                    quantity: 1,
+                    price: selectedTrainingPlan.monthlyPrice,
+                    notes: ""
+                });
+            }
+
+            const response = await fetch("/api/orders/confirm", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    shopId,
+                    customerName,
+                    customerPhone,
+                    customerAddress: address,
+                    items,
+                    total: pricing.total,
+                    notes: customerNotes
+                })
+            });
+
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || "Error al procesar el pedido");
+
+            setOrderSuccess({ id: result.orderId, number: result.orderNumber });
+            setStep("summary"); // Mostrar éxito en el resumen
+
+        } catch (err: any) {
+            console.error("Error order:", err);
+            setError(err.message || "Error al procesar el pedido");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleSelectTraining = (plan: TrainingPlanConfig | undefined) => {
@@ -276,12 +334,12 @@ export function MealPrepModal({
 
                 {/* Progress */}
                 <div className="flex gap-1 px-4 py-2 bg-black/20">
-                    {["package", "plates", "training", "delivery", "summary"].map((s, i) => (
+                    {["package", "plates", "training", "delivery", "info", "summary"].map((s, i) => (
                         <div
                             key={s}
                             className={cn(
                                 "flex-1 h-1 rounded-full transition-colors",
-                                ["package", "plates", "training", "delivery", "summary"].indexOf(step) >= i
+                                ["package", "plates", "training", "delivery", "info", "summary"].indexOf(step) >= i
                                     ? "bg-green-500"
                                     : "bg-white/10"
                             )}
@@ -667,11 +725,59 @@ export function MealPrepModal({
                                     Volver
                                 </Button>
                                 <Button
-                                    onClick={() => setStep("summary")}
+                                    onClick={() => setStep("info")}
                                     disabled={distance === undefined}
                                     className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white"
                                 >
                                     Continuar
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Step INFO: Customer Info */}
+                    {step === "info" && (
+                        <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
+                            <h3 className="text-lg font-bold text-white mb-2">Tus Datos de Contacto</h3>
+                            <p className="text-sm text-slate-400">Necesitamos estos datos para procesar tu pedido y contactarte.</p>
+
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-slate-300">Nombre Completo</label>
+                                    <input
+                                        type="text"
+                                        value={customerName}
+                                        onChange={(e) => setCustomerName(e.target.value)}
+                                        placeholder="Ej: Juan Pérez"
+                                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-green-500"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-slate-300">WhatsApp (10 dígitos)</label>
+                                    <input
+                                        type="tel"
+                                        value={customerPhone}
+                                        onChange={(e) => setCustomerPhone(e.target.value)}
+                                        placeholder="Ej: 8097654321"
+                                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-green-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 pt-6 border-t border-white/10">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setStep("delivery")}
+                                    className="flex-1 border-white/20 text-slate-300"
+                                >
+                                    Volver
+                                </Button>
+                                <Button
+                                    onClick={() => setStep("summary")}
+                                    disabled={!customerName || customerPhone.length < 10}
+                                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white"
+                                >
+                                    Ver Resumen
                                 </Button>
                             </div>
                         </div>
@@ -742,38 +848,48 @@ export function MealPrepModal({
                             </div>
 
                             {/* Action buttons */}
-                            <div className="flex gap-3">
-                                <Button
-                                    variant="outline"
-                                    onClick={() => setStep("delivery")}
-                                    className="flex-1 border-white/20 text-slate-300"
-                                >
-                                    Volver
-                                </Button>
-                                {whatsappNumber ? (
-                                    <a
-                                        href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=${generateWhatsAppMessage()}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex-1"
+                            {orderSuccess ? (
+                                <div className="text-center py-4 space-y-4 animate-in zoom-in-95">
+                                    <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto border-2 border-green-500/50">
+                                        <Check className="w-8 h-8 text-green-400" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-white">¡Pedido Confirmado!</h3>
+                                        <p className="text-slate-400 text-sm mt-1">Registrado como: <span className="text-primary font-bold">{orderSuccess.number}</span></p>
+                                    </div>
+                                    <p className="text-xs text-slate-400">Te contactaremos vía WhatsApp para confirmar los detalles.</p>
+                                    <Button
+                                        onClick={onClose}
+                                        className="w-full bg-primary hover:bg-primary/90 text-white"
                                     >
-                                        <Button
-                                            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white"
-                                        >
-                                            <Truck className="w-4 h-4 mr-2" />
-                                            Ordenar por WhatsApp
-                                        </Button>
-                                    </a>
-                                ) : (
+                                        Cerrar
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="flex gap-3">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setStep("delivery")}
+                                        className="flex-1 border-white/20 text-slate-300"
+                                    >
+                                        Volver
+                                    </Button>
                                     <Button
                                         onClick={handleConfirm}
+                                        disabled={isSubmitting}
                                         className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white"
                                     >
-                                        <Truck className="w-4 h-4 mr-2" />
-                                        Confirmar Pedido
+                                        {isSubmitting ? (
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                            <>
+                                                <Truck className="w-4 h-4 mr-2" />
+                                                Confirmar Pedido
+                                            </>
+                                        )}
                                     </Button>
-                                )}
-                            </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

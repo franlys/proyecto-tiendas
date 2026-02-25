@@ -8,7 +8,7 @@ export default function PrivacyPage() {
         <div className="space-y-4 text-slate-300">
           <section>
             <h2 className="text-xl font-semibold text-white mb-2">1. Datos Recopilados</h2>
-            <p>Nexo recopila información básica de registro (nombre, email) y datos operativos de tu negocio.</p>
+            <p>Linko recopila información básica de registro (nombre, email) y datos operativos de tu negocio.</p>
           </section>
 
           <section>

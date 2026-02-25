@@ -11,7 +11,7 @@ export function SupportWidget() {
 
     const handleContact = () => {
         const message = encodeURIComponent(
-            "Hola, necesito ayuda técnica con el panel de administración de Nexo."
+            "Hola, necesito ayuda técnica con el panel de administración de Linko."
         );
         window.open(`https://wa.me/${config.whatsapp}?text=${message}`, "_blank");
     };

@@ -20,6 +20,7 @@ export type CustomerResponse =
 export interface Booking {
   id: string;
   shopId: string;
+  orderNumber?: string;
 
   // Info del cliente
   customerName: string;
@@ -211,6 +212,7 @@ export interface CreateBookingInput {
   notes?: string;
   assignedStaffId?: string;
   assignedStaffName?: string;
+  orderNumber?: string;
 }
 
 // Input para reagendar

@@ -440,7 +440,7 @@ function ProfilePage() {
         <div className="container mx-auto px-4 text-center text-slate-500 text-sm">
           Powered by{" "}
           <span className="text-gradient-primary font-semibold">
-            NEXO
+            LINKO
           </span>
         </div>
       </footer>

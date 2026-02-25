@@ -96,6 +96,7 @@ export interface ShopBasicInfo {
     website?: string;
     contact?: {
         phone?: string;
+        email?: string;
         address?: string; // For "Ubicacion"
         city?: string;
         googleMapsUrl?: string;

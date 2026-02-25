@@ -190,6 +190,33 @@ export async function createBookingAdmin(
     throw new Error("Admin DB not initialized");
   }
 
+  const shopRef = db.collection("shops").doc(shopId);
+  const orderNumber = await db.runTransaction(async (transaction) => {
+    const shopDoc = await transaction.get(shopRef);
+    if (!shopDoc.exists) {
+      throw new Error("La tienda no existe");
+    }
+
+    const data = shopDoc.data() || {};
+    // Use lastBookingNumber or lastOrderNumber (let's use a common one or separate if preferred)
+    // The user asked for "internal readable IDs", let's use a shared counter for simplicity or separate.
+    // Let's use lastOrderNumber to keep it consistent across the shop's "transactions" if possible, 
+    // but shops usually want separate counters. Let's use lastOrderNumber for all since they are all "orders/bookings".
+    const currentNumber = data.lastOrderNumber || 1000;
+    const nextNumber = currentNumber + 1;
+
+    transaction.update(shopRef, { lastOrderNumber: nextNumber });
+
+    // Generate prefix from slug
+    const prefix = (data.slug || shopId)
+      .split("-")
+      .map((word: string) => word[0])
+      .join("")
+      .toUpperCase();
+
+    return `${prefix}-${nextNumber}`;
+  });
+
   const endTime = calculateEndTime(input.time, input.serviceDuration);
   const now = new Date().toISOString();
 
@@ -214,6 +241,7 @@ export async function createBookingAdmin(
     assignedStaffName: input.assignedStaffName || null,
     notes: input.notes || null,
     internalNotes: null,
+    orderNumber, // Added sequential ID
     createdAt: now,
     updatedAt: now,
   };

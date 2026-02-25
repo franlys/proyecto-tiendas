@@ -42,7 +42,7 @@ export default function TermsPage() {
               1. Introducción
             </h2>
             <p className="text-slate-300 leading-relaxed">
-              Bienvenido a Nexo. Estos términos y condiciones rigen el uso de
+              Bienvenido a Linko. Estos términos y condiciones rigen el uso de
               nuestra plataforma de gestión de citas y servicios para negocios. Al utilizar
               nuestros servicios, aceptas cumplir con estos términos.
             </p>
@@ -184,7 +184,7 @@ export default function TermsPage() {
             <div className="space-y-2 text-slate-300">
               <p>
                 <strong className="text-white">Email:</strong>{" "}
-                legal@nexoapp.mx
+                legal@linko.app
               </p>
               <p>
                 <strong className="text-white">WhatsApp:</strong>{" "}

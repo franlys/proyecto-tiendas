@@ -101,6 +101,7 @@ export async function getShopBasicInfo(shopId: string): Promise<ShopBasicInfo | 
             website: data.customDomain || `${PRODUCTION_URL}/${data.slug}`,
             contact: {
                 phone: data.contact?.phone,
+                email: data.contact?.email || data.ownerEmail,
                 address: data.contact?.address,
                 city: data.contact?.city,
             },

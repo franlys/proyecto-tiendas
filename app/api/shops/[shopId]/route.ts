@@ -17,7 +17,7 @@ export async function GET(
 
   // 2. Buscar en cookies (sincronizado desde localStorage del cliente)
   const cookieStore = await cookies();
-  const managedShopsCookie = cookieStore.get("nexo-managed-shops");
+  const managedShopsCookie = cookieStore.get("linko-managed-shops");
 
   if (managedShopsCookie?.value) {
     try {

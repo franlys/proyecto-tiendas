@@ -11,7 +11,7 @@ export default function AutomationPage() {
   const { canConfigureWhatsApp, isLoading: authLoading, user } = useAuth();
 
   // Usar el shopId del usuario o un identificador para la agencia
-  const shopSlug = user?.shopId || "nexo-agency";
+  const shopSlug = user?.shopId || "linko-agency";
 
   // Only SUPER_ADMIN can configure WhatsApp
   if (authLoading) {

@@ -8,6 +8,7 @@ import type { CreateBookingInput } from "@/lib/types/booking.types";
 import { sendTextMessage, getInstanceName } from "@/lib/evolution";
 import { getShopBasicInfo } from "@/lib/services/whatsapp-config.service";
 import { addStampsAdmin } from "@/lib/services/loyalty-admin.service";
+import { sendEmail, emailTemplates } from "@/lib/email";
 
 /**
  * GET /api/bookings?shopId=xxx&date=2026-02-15
@@ -161,7 +162,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Send WhatsApp notification to owner (non-blocking)
-    notifyOwnerOfNewBooking(shopId, bookingData as CreateBookingInput).catch(err => {
+    notifyOwnerOfNewBooking(shopId, {
+      ...(bookingData as CreateBookingInput),
+      orderNumber: booking.orderNumber
+    }).catch(err => {
       console.error("Error notifying owner of booking:", err);
     });
 
@@ -181,6 +185,29 @@ export async function POST(request: NextRequest) {
 async function notifyOwnerOfNewBooking(shopId: string, booking: CreateBookingInput) {
   try {
     const shopInfo = await getShopBasicInfo(shopId);
+
+    // 1. Send Email Notification
+    if (shopInfo?.contact?.email) {
+      try {
+        const emailContent = emailTemplates.appointmentConfirmation({
+          clientName: booking.customerName,
+          serviceName: booking.serviceName,
+          date: booking.date,
+          time: booking.time,
+          shopName: shopInfo.name || shopId,
+        });
+
+        await sendEmail({
+          to: shopInfo.contact.email,
+          subject: `Nueva cita recibida: #${booking.orderNumber}`,
+          html: emailContent
+        });
+        console.log(`[Booking Notify] 📧 Sent email notification to ${shopInfo.contact.email}`);
+      } catch (emailErr) {
+        console.error("[Booking Notify] Email error:", emailErr);
+      }
+    }
+
     if (!shopInfo?.ownerNotificationPhone) {
       console.log(`[Booking Notify] No owner phone for shop ${shopId}`);
       return;
@@ -202,7 +229,7 @@ async function notifyOwnerOfNewBooking(shopId: string, booking: CreateBookingInp
       ? `👩‍💼 *Atendido por:* ${booking.assignedStaffName}\n`
       : "";
 
-    const message = `📅 *NUEVA RESERVACIÓN*\n\n` +
+    const message = `📅 *NUEVA RESERVACIÓN* (#${booking.orderNumber})\n\n` +
       `👤 *Cliente:* ${booking.customerName}\n` +
       `📱 *Teléfono:* ${booking.customerPhone}\n` +
       `✂️ *Servicio:* ${booking.serviceName}\n` +

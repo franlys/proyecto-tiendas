@@ -16,6 +16,10 @@ const DETAILED_CHECKOUT_TYPES = [
   "cloud_kitchen",
   "chef_privado",
   "loncheras",
+  "retail",
+  "technology",
+  "boutique",
+  "restaurant"
 ];
 
 export function FloatingCart() {

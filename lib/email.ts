@@ -43,7 +43,7 @@ export async function sendEmail(
   if (process.env.RESEND_API_KEY) {
     try {
       const data = await resend.emails.send({
-        from: from || "Nexo <no-reply@nexoapp.mx>",
+        from: from || "Linko <no-reply@linko.app>",
         to: Array.isArray(to) ? to : [to],
         subject,
         html,
@@ -99,7 +99,7 @@ export function generateEmailTemplate(
   branding?: BrandingConfig
 ): string {
   const {
-    name = "Nexo",
+    name = "Linko",
     logo = "",
     primaryColor = "#06b6d4", // cyan-500
     secondaryColor = "#0f172a", // slate-900

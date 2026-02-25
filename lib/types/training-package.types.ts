@@ -11,6 +11,7 @@ export interface TrainingPackage {
     id: string;
     name: string;
     description?: string;
+    image?: string;
 
     // Session details
     sessionsPerWeek: SessionFrequency;

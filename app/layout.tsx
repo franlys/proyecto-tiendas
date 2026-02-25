@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   description:
     "Linko: La plataforma universal para conectar tu negocio con tus clientes. Ideal para salones, talleres, tiendas y consultorios.",
   keywords: [
-    "Nexo",
+    "Linko",
     "reservas online",
     "citas",
     "estética",

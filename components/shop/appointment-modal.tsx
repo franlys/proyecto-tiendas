@@ -99,7 +99,7 @@ export function AppointmentModal({
 
   // Check if multi-staff mode is enabled (feature is in the features array)
   const multiStaffEnabled = shop?.features?.includes("multiStaff") ?? false;
-  const totalSteps = multiStaffEnabled ? 4 : 3;
+  const totalSteps = multiStaffEnabled ? 5 : 4;
 
   const [step, setStep] = useState<number>(1);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -107,10 +107,13 @@ export function AppointmentModal({
   const [selectedStaff, setSelectedStaff] = useState<AvailableStaffMember | null>(null);
   const [availableStaff, setAvailableStaff] = useState<AvailableStaffMember[]>([]);
   const [isLoadingStaff, setIsLoadingStaff] = useState(false);
-  const [availableSlots, setAvailableSlots] = useState<{time: string; endTime: string; available: boolean}[]>([]);
+  const [availableSlots, setAvailableSlots] = useState<{ time: string; endTime: string; available: boolean }[]>([]);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const [notes, setNotes] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState<{ id: string, number: string } | null>(null);
 
   const defaultTimeSlots = useMemo(() => generateTimeSlots(), []);
   const availableDates = useMemo(() => getAvailableDates(), []);
@@ -250,15 +253,30 @@ export function AppointmentModal({
       const response = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bookingPayload),
+        body: JSON.stringify({
+          ...bookingPayload,
+          customerName,
+          customerPhone: customerPhone || "pending",
+        }),
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        throw new Error("Failed to create booking");
+        throw new Error(result.error || "Failed to create booking");
       }
 
-      const { booking } = await response.json();
-      console.log("✅ Booking created:", booking.id);
+      console.log("✅ Booking created:", result.booking.id);
+
+      // Set success state
+      setBookingSuccess({
+        id: result.booking.id,
+        number: result.booking.orderNumber || result.booking.referenceCode || result.booking.id.slice(-6).toUpperCase()
+      });
+
+      // We still want to send the WhatsApp confirmation (Business to Customer)
+      // But we can do it automatically from the backend or let the user click.
+      // The user requested automation.
 
       // Build WhatsApp message
       const servicesList = services
@@ -349,6 +367,7 @@ ${notes ? `\n📝 *Notas:* ${notes}` : ""}
   };
 
   const isDateTimeStep = multiStaffEnabled ? step === 3 : step === 2;
+  const isInfoStep = multiStaffEnabled ? step === 4 : step === 3;
   const isConfirmStep = step === totalSteps;
 
   if (!isOpen) return null;
@@ -659,6 +678,40 @@ ${notes ? `\n📝 *Notas:* ${notes}` : ""}
               </div>
             )}
 
+            {/* Step 4: Customer Info */}
+            {isInfoStep && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 text-white mb-2">
+                  <User className="w-5 h-5 text-gold" />
+                  <span className="font-medium">Tus datos de contacto</span>
+                </div>
+                <p className="text-sm text-slate-400">Para confirmarte la cita y enviarte recordatorios.</p>
+
+                <div className="space-y-4 pt-2">
+                  <div className="space-y-2">
+                    <label className="text-sm text-slate-300">Nombre Completo</label>
+                    <input
+                      type="text"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      placeholder="Ej: María García"
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm text-slate-300">WhatsApp (10 dígitos)</label>
+                    <input
+                      type="tel"
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      placeholder="Ej: 8097654321"
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Confirmation Step */}
             {isConfirmStep && selectedDate && selectedTime && (
               <div className="space-y-6">
@@ -712,55 +765,82 @@ ${notes ? `\n📝 *Notas:* ${notes}` : ""}
                 </div>
 
                 {/* WhatsApp Info */}
-                <div className="flex items-start gap-3 p-4 rounded-xl bg-green-500/10 border border-green-500/20">
-                  <MessageCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <div className="flex items-start gap-3 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                  <Sparkles className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
                   <p className="text-sm text-slate-300">
-                    Al confirmar, se abrirá WhatsApp con tu solicitud de cita lista para enviar.
-                    El negocio confirmará tu horario.
+                    Tu cita se registrará automáticamente en nuestro sistema y recibirás un aviso por WhatsApp.
                   </p>
                 </div>
               </div>
             )}
+
+            {/* Success State */}
+            {bookingSuccess && (
+              <div className="flex flex-col items-center justify-center py-10 space-y-6 text-center animate-in zoom-in-95">
+                <div className="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center border-2 border-green-500/50">
+                  <CheckCircle className="w-12 h-12 text-green-400" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-white">¡Cita Solicitada!</h3>
+                  <p className="text-slate-400 mt-2">Hemos registrado tu cita correctamente.</p>
+                </div>
+                <div className="px-6 py-3 bg-white/5 border border-white/10 rounded-2xl">
+                  <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">ID de Cita</p>
+                  <p className="text-3xl font-mono font-bold text-primary">{bookingSuccess.number}</p>
+                </div>
+                <p className="text-sm text-slate-400 max-w-xs">
+                  Te contactaremos pronto para confirmar la disponibilidad final.
+                </p>
+                <Button onClick={onClose} className="w-full bg-primary hover:bg-primary/90">
+                  Cerrar
+                </Button>
+              </div>
+            )}
           </div>
 
-          {/* Footer */}
-          <div className="sticky bottom-0 bg-surface/95 backdrop-blur-sm border-t border-white/10 px-6 py-4">
-            <div className="flex gap-3">
-              {step > 1 && (
-                <Button
-                  variant="outline"
-                  onClick={() => setStep((s) => Math.max(1, s - 1))}
-                  className="flex-1"
-                >
-                  Atrás
-                </Button>
-              )}
+          {/* Footer (Hide if success) */}
+          {!bookingSuccess && (
+            <div className="sticky bottom-0 bg-surface/95 backdrop-blur-sm border-t border-white/10 px-6 py-4">
+              <div className="flex gap-3">
+                {step > 1 && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setStep((s) => Math.max(1, s - 1))}
+                    className="flex-1"
+                  >
+                    Atrás
+                  </Button>
+                )}
 
-              {!isConfirmStep ? (
-                <Button
-                  onClick={() => setStep((s) => Math.min(totalSteps, s + 1))}
-                  disabled={!canProceedFromCurrentStep()}
-                  className="flex-1"
-                >
-                  Continuar
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleConfirm}
-                  disabled={isSubmitting}
-                  className="flex-1 bg-green-600 hover:bg-green-500"
-                >
-                  {isSubmitting ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                  )}
-                  {isSubmitting ? "Procesando..." : "Confirmar en WhatsApp"}
-                </Button>
-              )}
+                {!isConfirmStep ? (
+                  <Button
+                    onClick={() => setStep((s) => Math.min(totalSteps, s + 1))}
+                    disabled={
+                      (isDateTimeStep && !canProceedToConfirm) ||
+                      (isInfoStep && (!customerName || customerPhone.length < 10))
+                    }
+                    className="flex-1"
+                  >
+                    Continuar
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleConfirm}
+                    disabled={isSubmitting}
+                    className="flex-1 bg-green-600 hover:bg-green-500 h-14"
+                  >
+                    {isSubmitting ? (
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    ) : (
+                      <CheckCircle className="w-5 h-5 mr-2" />
+                    )}
+                    {isSubmitting ? "Procesando..." : "Confirmar Cita"}
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>

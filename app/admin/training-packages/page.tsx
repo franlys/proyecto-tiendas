@@ -35,7 +35,9 @@ import {
     X,
     Package,
     Zap,
+    ImageIcon,
 } from "lucide-react";
+import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -281,6 +283,7 @@ function PackageEditor({ package_, onSave, onClose, isSaving = false }: PackageE
     const [locationType, setLocationType] = useState<"in_person" | "online" | "both">(package_?.locationType || "both");
     const [maxDistanceMiles, setMaxDistanceMiles] = useState(package_?.maxDistanceMiles || 10);
     const [extraMileFee, setExtraMileFee] = useState(package_?.extraMileFee || 50);
+    const [image, setImage] = useState(package_?.image || "");
     const [isActive, setIsActive] = useState(package_?.isActive ?? true);
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -296,6 +299,7 @@ function PackageEditor({ package_, onSave, onClose, isSaving = false }: PackageE
             locationType,
             maxDistanceMiles: locationType !== "online" ? maxDistanceMiles : undefined,
             extraMileFee: locationType !== "online" ? extraMileFee : undefined,
+            image,
             isActive,
             sortOrder: package_?.sortOrder || 0,
         });
@@ -453,6 +457,23 @@ function PackageEditor({ package_, onSave, onClose, isSaving = false }: PackageE
                                     </button>
                                 ))}
                             </div>
+                        </div>
+
+                        {/* Image Upload */}
+                        <div>
+                            <label className="block text-sm text-zinc-400 mb-2 flex items-center gap-2">
+                                <ImageIcon className="w-4 h-4" />
+                                Foto de referencia
+                            </label>
+                            <FirebaseImageUpload
+                                value={image}
+                                onChange={setImage}
+                                folder="training-packages"
+                                shopId="admin" // Using admin or resolve proper shopId if needed
+                            />
+                            <p className="text-xs text-zinc-500 mt-2">
+                                Una imagen atractiva ayuda a que los clientes se interesen más.
+                            </p>
                         </div>
 
                         {/* Distance Config (only for in-person) */}
