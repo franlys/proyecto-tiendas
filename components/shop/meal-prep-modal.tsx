@@ -21,6 +21,8 @@ import {
 } from "@/lib/types/meal-prep.types";
 import { geocodeAddress, getCurrentLocation, calculateDistance, Coordinates } from "@/lib/utils/distance";
 import { Loader2, Navigation } from "lucide-react";
+import { ExtrasSelector } from "./extras-selector";
+import { SelectedExtra } from "@/lib/types/product-extra.types";
 
 interface MealPrepModalProps {
     isOpen: boolean;
@@ -157,6 +159,20 @@ export function MealPrepModal({
         setPlates(newPlates);
     };
 
+    const updatePlateExtras = (catId: string, extras: SelectedExtra[]) => {
+        const newPlates = [...plates];
+        const currentPlate = newPlates[currentPlateIndex];
+        const newComponentExtras = {
+            ...(currentPlate.componentExtras || {}),
+            [catId]: extras
+        };
+        newPlates[currentPlateIndex] = {
+            ...currentPlate,
+            componentExtras: newComponentExtras
+        };
+        setPlates(newPlates);
+    };
+
     const updatePlateNote = (note: string) => {
         const newPlates = [...plates];
         newPlates[currentPlateIndex] = {
@@ -220,8 +236,14 @@ export function MealPrepModal({
     };
 
     const handleConfirm = async () => {
-        if (!customerName || !customerPhone || !shopId) {
-            setError("Por favor completa tu nombre y teléfono");
+        if (!customerName || !customerPhone) {
+            setError("Por favor completa tu nombre y teléfono en el paso anterior");
+            setStep("info");
+            return;
+        }
+
+        if (!shopId) {
+            setError("Error: No se pudo identificar la tienda. Contacta soporte.");
             return;
         }
 
@@ -290,6 +312,11 @@ export function MealPrepModal({
             ingredientCategories.forEach((cat: { id: string, name: string }) => {
                 if (plate.components[cat.id]) {
                     message += `  - ${cat.name}: ${plate.components[cat.id]}\n`;
+                    const extras = plate.componentExtras?.[cat.id];
+                    if (extras && extras.length > 0) {
+                        const extrasStr = extras.map(e => e.quantity > 1 ? `${e.name} x${e.quantity}` : e.name).join(", ");
+                        message += `    (Extras: ${extrasStr})\n`;
+                    }
                 }
             });
 
@@ -477,7 +504,8 @@ export function MealPrepModal({
                                                     <div key={prod.id} className={cn("contents", isExpanded && "col-span-full")}>
                                                         <button
                                                             onClick={() => {
-                                                                if (hasVariants) {
+                                                                const hasExtras = prod.extras && prod.extras.length > 0;
+                                                                if (hasVariants || hasExtras) {
                                                                     setExpandedProductId(isExpanded ? null : prod.id);
                                                                 } else {
                                                                     updatePlateComponent(cat.id, prod.name);
@@ -485,41 +513,75 @@ export function MealPrepModal({
                                                                 }
                                                             }}
                                                             className={cn(
-                                                                "px-3 py-2 rounded-xl text-xs font-medium border transition-all text-center h-full flex flex-col items-center justify-center gap-1",
+                                                                "px-3 py-2 rounded-xl text-xs font-medium border transition-all text-center h-full flex flex-col items-center justify-center gap-1 min-h-[60px]",
                                                                 isSelected
                                                                     ? "bg-green-500 border-green-400 text-white shadow-lg shadow-green-500/20"
                                                                     : "bg-white/5 border-white/10 text-slate-400 hover:border-white/20 hover:bg-white/10",
-                                                                isExpanded && "border-primary ring-1 ring-primary/50"
+                                                                isExpanded && "border-green-500 ring-1 ring-green-500/50"
                                                             )}
                                                         >
-                                                            <span>{prod.name}</span>
-                                                            {hasVariants && (
+                                                            <span className="font-bold">{prod.name}</span>
+                                                            {(hasVariants || (prod.extras && prod.extras.length > 0)) && (
                                                                 <span className="text-[10px] opacity-70">
-                                                                    {isExpanded ? "Cerrar opciones" : "Ver opciones"}
+                                                                    {isExpanded ? "Cerrar" : (prod.extras && prod.extras.length > 0 ? "Personalizar" : "Ver opciones")}
                                                                 </span>
                                                             )}
                                                         </button>
 
-                                                        {/* Sub-grid for variants */}
-                                                        {isExpanded && hasVariants && (
-                                                            <div className="col-span-full grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 bg-black/40 rounded-xl border border-white/10 animate-in fade-in slide-in-from-top-2 duration-200 mt-1">
-                                                                {prod.variants.map((v: any) => (
-                                                                    <button
-                                                                        key={v.id}
-                                                                        onClick={() => {
-                                                                            updatePlateComponent(cat.id, `${prod.name} (${v.name})`);
-                                                                            setExpandedProductId(null);
-                                                                        }}
-                                                                        className={cn(
-                                                                            "px-3 py-2 rounded-lg text-xs font-medium border transition-all text-center",
-                                                                            currentPlate.components[cat.id] === `${prod.name} (${v.name})`
-                                                                                ? "bg-primary border-primary text-white"
-                                                                                : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
-                                                                        )}
-                                                                    >
-                                                                        {v.name}
-                                                                    </button>
-                                                                ))}
+                                                        {/* Expanded section for variants and extras */}
+                                                        {isExpanded && (hasVariants || (prod.extras && prod.extras.length > 0)) && (
+                                                            <div className="col-span-full space-y-4 p-4 bg-black/40 rounded-xl border border-white/10 animate-in fade-in slide-in-from-top-2 duration-200 mt-1">
+                                                                {hasVariants && (
+                                                                    <div className="space-y-2">
+                                                                        <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Opciones / Tamaños</p>
+                                                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                                                            {prod.variants.map((v: any) => (
+                                                                                <button
+                                                                                    key={v.id}
+                                                                                    onClick={() => {
+                                                                                        updatePlateComponent(cat.id, `${prod.name} (${v.name})`);
+                                                                                        // No cerramos automáticamente si hay extras, para dejar que el usuario configure más
+                                                                                        if (!(prod.extras && prod.extras.length > 0)) {
+                                                                                            setExpandedProductId(null);
+                                                                                        }
+                                                                                    }}
+                                                                                    className={cn(
+                                                                                        "px-3 py-2 rounded-lg text-xs font-medium border transition-all text-center",
+                                                                                        currentPlate.components[cat.id] === `${prod.name} (${v.name})`
+                                                                                            ? "bg-green-500 border-green-400 text-white"
+                                                                                            : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
+                                                                                    )}
+                                                                                >
+                                                                                    {v.name}
+                                                                                </button>
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+
+                                                                {prod.extras && prod.extras.length > 0 && (
+                                                                    <div className="space-y-2">
+                                                                        <ExtrasSelector
+                                                                            extras={prod.extras}
+                                                                            selectedExtras={currentPlate.componentExtras?.[cat.id] || []}
+                                                                            onExtrasChange={(extras) => updatePlateExtras(cat.id, extras)}
+                                                                            className="bg-transparent border-0 p-0"
+                                                                        />
+                                                                    </div>
+                                                                )}
+
+                                                                <Button
+                                                                    onClick={() => {
+                                                                        // Si no seleccionó variante pero la tiene, obligar o usar base
+                                                                        if (!currentPlate.components[cat.id]) {
+                                                                            updatePlateComponent(cat.id, prod.name);
+                                                                        }
+                                                                        setExpandedProductId(null);
+                                                                    }}
+                                                                    className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/10 text-xs py-2 h-auto"
+                                                                >
+                                                                    Confirmar y Continuar
+                                                                </Button>
                                                             </div>
                                                         )}
                                                     </div>
@@ -1016,28 +1078,43 @@ export function MealPrepModal({
                                     </Button>
                                 </div>
                             ) : (
-                                <div className="flex gap-3">
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setStep("delivery")}
-                                        className="flex-1 border-white/20 text-slate-300"
-                                    >
-                                        Volver
-                                    </Button>
-                                    <Button
-                                        onClick={handleConfirm}
-                                        disabled={isSubmitting}
-                                        className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white"
-                                    >
-                                        {isSubmitting ? (
-                                            <Loader2 className="w-4 h-4 animate-spin" />
-                                        ) : (
-                                            <>
-                                                <Truck className="w-4 h-4 mr-2" />
-                                                Confirmar Pedido
-                                            </>
-                                        )}
-                                    </Button>
+                                <div className="flex flex-col gap-3">
+                                    <div className="flex gap-3">
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => setStep("delivery")}
+                                            className="flex-1 border-white/20 text-slate-300"
+                                        >
+                                            Volver
+                                        </Button>
+                                        <Button
+                                            onClick={handleConfirm}
+                                            disabled={isSubmitting}
+                                            className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold"
+                                        >
+                                            {isSubmitting ? (
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                            ) : (
+                                                <>
+                                                    <Truck className="w-4 h-4 mr-2" />
+                                                    Confirmar Pedido
+                                                </>
+                                            )}
+                                        </Button>
+                                    </div>
+
+                                    {/* Fallback WhatsApp button */}
+                                    {whatsappNumber && (
+                                        <a
+                                            href={`https://wa.me/${whatsappNumber.replace(/\D/g, '')}?text=${generateWhatsAppMessage()}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="w-full py-3 rounded-xl bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-500/30 flex items-center justify-center gap-2 text-sm font-bold transition-all"
+                                        >
+                                            <MessageCircle className="w-4 h-4" />
+                                            Confirmar vía WhatsApp
+                                        </a>
+                                    )}
                                 </div>
                             )}
                         </div>

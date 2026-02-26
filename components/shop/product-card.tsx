@@ -125,14 +125,9 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
                 /* Options Button (Variants and/or Extras) */
                 <button
                   onClick={(e) => {
-                    const shouldIntercept = onClickIntercept && hidePriceIfZero;
-                    if (shouldIntercept) {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onClickIntercept();
-                    } else {
-                      setIsModalOpen(true);
-                    }
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsModalOpen(true);
                   }}
                   className="px-4 py-2 rounded-full bg-white/90 hover:bg-white text-black text-xs font-bold uppercase tracking-wide shadow-lg transition-all active:scale-95"
                 >

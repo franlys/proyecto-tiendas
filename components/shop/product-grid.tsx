@@ -266,6 +266,7 @@ export function ProductGrid({
         onClose={() => setIsMealModalOpen(false)}
         onConfirm={handleMealPrepConfirm}
         shopName={shop?.name}
+        shopId={shop?.id || shop?.slug}
         whatsappNumber={shop?.contact?.whatsapp || shop?.contact?.phone}
         catalog={products}
         hidePriceIfZero={isMealPrep}

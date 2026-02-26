@@ -9,6 +9,8 @@
 // CONFIGURACIÓN DE PLATOS
 // ============================================
 
+import { SelectedExtra } from "./product-extra.types";
+
 /**
  * Componentes de un plato personalizado (mapea id_categoria -> nombre_producto)
  */
@@ -17,11 +19,19 @@ export interface MealPlateComponents {
 }
 
 /**
+ * Extras por componente (mapea id_categoria -> lista de extras seleccionados)
+ */
+export interface MealPlateComponentExtras {
+    [categoryId: string]: SelectedExtra[];
+}
+
+/**
  * Un plato individual dentro de un paquete
  */
 export interface MealPlate {
     id: string;
     components: MealPlateComponents;
+    componentExtras?: MealPlateComponentExtras;
     notes?: string;               // Notas por plato individual
     isPremiumProtein?: boolean;   // Si usa proteína premium
     premiumSurcharge?: number;    // Cargo extra
@@ -240,6 +250,19 @@ export function calculateMealPrepTotal(
     }, 0);
 
     const premiumTotal = plates.reduce((sum, plate) => sum + (plate.premiumSurcharge || 0), 0);
+
+    // Calcular cargos por extras
+    const extrasTotal = plates.reduce((sum, plate) => {
+        if (!plate.componentExtras) return sum;
+        let plateExtrasSum = 0;
+        Object.values(plate.componentExtras).forEach(extras => {
+            extras.forEach(extra => {
+                plateExtrasSum += (extra.price * extra.quantity);
+            });
+        });
+        return sum + plateExtrasSum;
+    }, 0);
+
     const deliverySurcharge = distanceMiles && distanceMiles > DEFAULT_DELIVERY_CONFIG.freeDistanceMiles
         ? DEFAULT_DELIVERY_CONFIG.surchargeAmount
         : 0;
@@ -250,7 +273,7 @@ export function calculateMealPrepTotal(
         premiumTotal,
         deliverySurcharge,
         trainingTotal,
-        total: basePrice + premiumTotal + deliverySurcharge + trainingTotal,
+        total: basePrice + premiumTotal + extrasTotal + deliverySurcharge + trainingTotal,
     };
 }
 
@@ -261,6 +284,7 @@ export function createEmptyPlate(id: string): MealPlate {
     return {
         id,
         components: {},
+        componentExtras: {},
     };
 }
 
@@ -287,7 +311,20 @@ export function isMealPackageComplete(plates: MealPlate[], requiredCategories: s
  * Formatea el resumen de un plato para mostrar
  */
 export function formatPlateDescription(plate: MealPlate): string {
-    const parts = Object.values(plate.components).filter(Boolean);
+    const parts: string[] = [];
+
+    // Agregar componentes con sus extras
+    Object.entries(plate.components).forEach(([catId, name]) => {
+        if (!name) return;
+        let componentDesc = name;
+        const extras = plate.componentExtras?.[catId];
+        if (extras && extras.length > 0) {
+            const extrasStr = extras.map(e => e.quantity > 1 ? `${e.name} x${e.quantity}` : e.name).join(", ");
+            componentDesc += ` (+ ${extrasStr})`;
+        }
+        parts.push(componentDesc);
+    });
+
     let desc = parts.join(" + ") || "Sin configurar";
     if (plate.notes) {
         desc += ` (${plate.notes})`;
