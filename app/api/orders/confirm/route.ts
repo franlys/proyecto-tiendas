@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getShopById } from "@/lib/services/shops.service";
+import { getShopById, getShopBySlug } from "@/lib/services/shops.service";
 import { createOrder, Order } from "@/lib/services/orders.service";
 import { sendTextMessage, isEvolutionConfigured, getInstanceName } from "@/lib/evolution";
 import { sendEmail, emailTemplates } from "@/lib/email";
@@ -42,29 +42,46 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // 2. Obtener información de la tienda
-        const shop = await getShopById(shopId);
+        // 2. Obtener información de la tienda (ID Real de Firestore)
+        let shop = await getShopById(shopId);
+        if (!shop) {
+            shop = await getShopBySlug(shopId);
+        }
+
         if (!shop) {
             return NextResponse.json({ error: "Tienda no encontrada" }, { status: 404 });
         }
 
         // 3. Crear el pedido internamente (genera ID secuencial)
+        // Mapear items al formato esperado por el dashboard administrativo (SalesOrderItem)
+        const mappedItems = items.map((item: any) => ({
+            productId: item.id || "manual",
+            productName: item.name || "Producto",
+            quantity: item.quantity || 1,
+            unitPrice: item.price || 0,
+            total: (item.price || 0) * (item.quantity || 1),
+            notes: item.notes || ""
+        }));
+
         const orderData: any = {
-            shopId,
+            shopId: shop.id, // Siempre usar el ID de Firestore, no el slug
             customerName,
             customerPhone,
-            items,
+            items: mappedItems,
+            subtotal: total, // Si no se desglosa IVA, subtotal = total
+            tax: 0,
             total,
             status: "pending",
             paymentStatus: "pending",
             deliveryType,
+            source: "web"
         };
 
         if (customerAddress) orderData.customerAddress = customerAddress;
         if (customerEmail) orderData.customerEmail = customerEmail;
         if (notes) orderData.notes = notes;
 
-        const order = await createOrder(shopId, shop.slug, orderData);
+        const order = await createOrder(shop.id, shop.slug, orderData);
 
         // 4. Notificar al Cliente vía WhatsApp (Evolution API)
         if (isEvolutionConfigured()) {
