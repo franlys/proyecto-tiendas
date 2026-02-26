@@ -373,7 +373,7 @@ export default function AdminSettingsPage() {
                       shopId={user?.shopId || "temp"}
                       label="Logo de la Tienda"
                       aspectRatio="square"
-                      maxSizeMB={2}
+                      maxSizeMB={10}
                     />
                     <FirebaseImageUpload
                       value={config.banner}
