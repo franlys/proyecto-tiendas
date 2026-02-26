@@ -274,48 +274,13 @@ export function AppointmentModal({
         number: result.booking.orderNumber || result.booking.referenceCode || result.booking.id.slice(-6).toUpperCase()
       });
 
-      // We still want to send the WhatsApp confirmation (Business to Customer)
-      // But we can do it automatically from the backend or let the user click.
-      // The user requested automation.
+      // WhatsApp manual open removed.
+      // Notifications are now handled by the server (Evolution API) if configured.
 
-      // Build WhatsApp message
-      const servicesList = services
-        .map((s) => `- ${s.name}`)
-        .join("\n");
-
-      // Add staff line if selected
-      const staffLine = multiStaffEnabled && selectedStaff
-        ? `\n👩‍💼 *Con:* ${selectedStaff.name}`
-        : "";
-
-      let message = `Hola ${shopName}, quiero agendar una cita:
-🆔 Ref: ${refCode}
-
-📅 *Fecha:* ${dateStr}
-🕐 *Hora:* ${selectedTime}${staffLine}
-
-💇‍♀️ *Servicios:*
-${servicesList}
-
-⏱️ *Duración estimada:* ${formatDuration(totalDuration)}
-💰 *Total aproximado:* $${totalPrice.toLocaleString()}
-${notes ? `\n📝 *Notas:* ${notes}` : ""}
-
-¡Gracias!`;
-
-      // Open WhatsApp (use ownerNotificationPhone if available)
-      const targetPhone = shop.ownerNotificationPhone || shopPhone;
-      const cleanPhone = formatPhoneForWhatsApp(targetPhone);
-      const encodedMessage = encodeURIComponent(message);
-      window.open(`https://wa.me/${cleanPhone}?text=${encodedMessage}`, "_blank");
-
-      // Clear cart and close
+      // Clear cart
       clearCart();
-      onClose();
-      setStep(1);
-      setSelectedDate(null);
-      setSelectedTime(null);
-      setNotes("");
+
+      // We don't close the modal here, so the user can see the bookingSuccess screen
     } catch (error) {
       console.error("Error creating appointment:", error);
       alert("Hubo un error al agendar la cita.");

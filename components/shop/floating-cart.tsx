@@ -58,179 +58,14 @@ export function FloatingCart() {
     if (shouldUseAppointmentFlow) {
       // Open appointment modal for beauty businesses with only services
       setIsAppointmentModalOpen(true);
-    } else if (shouldUseDetailedCheckout) {
-      // Open checkout drawer for meal prep businesses
-      setIsCheckoutDrawerOpen(true);
     } else {
-      // Direct WhatsApp for retail or mixed orders
-      handleWhatsAppClick();
+      // Open checkout drawer for ALL businesses with products
+      // This ensures orders are saved internally and notified via server
+      setIsCheckoutDrawerOpen(true);
     }
   };
 
-  const handleWhatsAppClick = async () => {
-    if (!shop?.contact.phone || !shop?.slug) return;
-
-    setIsSubmitting(true);
-
-    try {
-      // 1. Create Order in Firestore (Real Data for Admin)
-      const orderData = {
-        orderNumber: `ORD-${Date.now().toString().slice(-6)}`, // Temporary ID
-        customerName: "Cliente WhatsApp", // Default
-        customerPhone: "", // Phone is not known until they send msg
-        items: [
-          ...services.map((s) => ({
-            productId: s.id,
-            productName: s.name,
-            quantity: 1,
-            unitPrice: s.price,
-            total: s.price
-          })),
-          ...products.map((p) => {
-            const basePrice = p.promoPrice || p.price;
-            const extrasTotal = p.extrasTotal || 0;
-            const itemTotal = (basePrice + extrasTotal) * p.quantity;
-
-            // Build product name with variant and extras
-            let productName = p.name;
-            if (p.variantName) productName += ` (${p.variantName})`;
-            if (p.selectedExtras && p.selectedExtras.length > 0) {
-              const extrasStr = p.selectedExtras.map(e => e.quantity > 1 ? `${e.name} x${e.quantity}` : e.name).join(", ");
-              productName += ` + ${extrasStr}`;
-            }
-
-            return {
-              productId: p.id,
-              productName,
-              quantity: p.quantity,
-              unitPrice: basePrice + extrasTotal, // Include extras in unit price
-              total: itemTotal,
-              extras: p.selectedExtras || [] // Store extras detail
-            };
-          }),
-        ],
-        subtotal: totalPrice,
-        tax: 0,
-        total: totalPrice,
-        status: "draft", // Start as draft/initiating
-        paymentStatus: "pending",
-        isWholesale: false,
-        source: "whatsapp",
-        tableId: tableId || null,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
-
-      // Write to Firestore: shops/{slug}/orders
-      // Note: Admin listens to this collection
-      const docRef = await addDoc(collection(db, "shops", shop.slug, "orders"), orderData);
-
-      console.log("✅ Order created as draft:", docRef.id);
-
-      // Notification is now handled by the Webhook upon receiving the message
-      // preventing "ghost orders" notifications.
-
-      // 2. Legacy Local Storage (for history)
-      addOrder({
-        shopId: shop.slug,
-        shopName: shop.name,
-        items: [
-          ...services.map((s) => ({
-            id: s.id,
-            name: s.name,
-            price: s.price,
-            type: "service" as const,
-          })),
-          ...products.map((p) => ({
-            id: p.id,
-            name: p.name + (p.variantName ? ` (${p.variantName})` : ""),
-            price: (p.promoPrice || p.price) * p.quantity,
-            quantity: p.quantity,
-            type: "product" as const,
-          })),
-        ],
-        total: totalPrice,
-        tableId: tableId || undefined,
-        orderType: tableId ? "dine-in" : "takeout",
-      });
-
-      // 3. Build WhatsApp Message
-      let message = `Hola, quiero hacer un pedido en *${shop.name}*:\n`;
-      message += `🆔 Pedido: ${docRef.id}\n\n`; // Use full DOC ID for easier parsing
-
-      // Add Table Info if exists
-      if (tableId) {
-        message += `📍 *Mesa ${tableId}*\n\n`; // High visibility
-      }
-
-      // Services section (for mixed orders)
-      if (hasServices) {
-        message += `💇‍♀️ *Servicios:*\n`;
-        services.forEach((service) => {
-          message += `- ${service.name}: $${service.price.toLocaleString()}\n`;
-        });
-        if (totalDuration > 0) {
-          const hours = Math.floor(totalDuration / 60);
-          const mins = totalDuration % 60;
-          const durationStr = hours > 0
-            ? `${hours}h ${mins > 0 ? `${mins}min` : ''}`
-            : `${mins}min`;
-          message += `⏱️ Duración estimada: ${durationStr}\n`;
-        }
-        message += `\n`;
-      }
-
-      // Products section
-      if (hasProducts) {
-        message += `🛍️ *Productos:*\n`;
-        products.forEach((product) => {
-          const basePrice = product.promoPrice || product.price;
-          const extrasTotal = product.extrasTotal || 0;
-          const subtotal = (basePrice + extrasTotal) * product.quantity;
-          const variantLabel = product.variantName ? ` [${product.variantName}]` : "";
-
-          if (product.quantity > 1) {
-            message += `- ${product.name}${variantLabel} (x${product.quantity}): $${subtotal.toLocaleString()}\n`;
-          } else {
-            message += `- ${product.name}${variantLabel}: $${subtotal.toLocaleString()}\n`;
-          }
-
-          // Add extras detail
-          if (product.selectedExtras && product.selectedExtras.length > 0) {
-            product.selectedExtras.forEach((extra) => {
-              const extraLabel = extra.quantity > 1 ? `${extra.name} x${extra.quantity}` : extra.name;
-              message += `  ↳ + ${extraLabel} ($${(extra.price * extra.quantity).toLocaleString()})\n`;
-            });
-          }
-        });
-        message += `\n`;
-      }
-
-      message += `💰 *Total: $${totalPrice.toLocaleString()}*`;
-
-      // 4. Send Message to Business Phone (Customer -> Business)
-      // We prioritize the public contact phone for the initial interaction
-      const targetPhone = shop.contact.phone;
-      if (targetPhone) {
-        const cleanPhone = formatPhoneForWhatsApp(targetPhone);
-        const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
-
-        // Use location.href for better mobile Safari compatibility
-        window.location.href = url;
-      } else {
-        alert("No hay número de teléfono configurado para recibir pedidos.");
-      }
-
-      // 5. Clear cart
-      clearCart();
-
-    } catch (error) {
-      console.error("❌ Error creating order:", error);
-      alert("Hubo un error al procesar el pedido. Por favor intenta de nuevo.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  // WhatsApp logic removed - handled by CheckoutDrawer and Backend API
 
   // Don't render if cart is empty
   if (totalItems === 0) return null;
@@ -331,7 +166,7 @@ export function FloatingCart() {
               ) : shouldUseAppointmentFlow ? (
                 <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
               ) : (
-                <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
               )}
               <span className="hidden sm:inline">
                 {getButtonText()}
