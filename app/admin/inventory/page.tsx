@@ -770,7 +770,7 @@ function ShopSelector({ onSelect }: { onSelect: (shopId: string, businessType: s
         {shops.map((shop) => (
           <button
             key={shop.id}
-            onClick={() => onSelect(shop.slug, shop.businessType || "retail")}
+            onClick={() => onSelect(shop.id, shop.businessType || "retail")}
             className="flex items-center gap-4 p-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-cyan-500/50 rounded-xl transition-all text-left group"
           >
             {shop.logo ? (

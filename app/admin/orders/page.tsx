@@ -985,7 +985,7 @@ function ShopSelector({ selectedShopId, onSelect }: { selectedShopId: string; on
       >
         <option value="">Selecciona una tienda</option>
         {shops.map((shop) => (
-          <option key={shop.slug} value={shop.slug}>
+          <option key={shop.id} value={shop.id}>
             {shop.name}
           </option>
         ))}

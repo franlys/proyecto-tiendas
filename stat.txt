@@ -1,0 +1,10 @@
+﻿commit c8e01d269e91a21c23b6f1743863b800e14333d7
+Author: franlys <74217573+franlys@users.noreply.github.com>
+Date:   Thu Feb 26 11:13:37 2026 -0400
+
+    chore: remove manual WhatsApp redirections and fix order confirmation logic
+
+ .firebase/logs/vsce-debug.log         | 633 ++++++++++++++++++++++++++++++++++
+ components/shop/appointment-modal.tsx |  45 +--
+ components/shop/floating-cart.tsx     | 175 +---------
+ 3 files changed, 643 insertions(+), 210 deletions(-)

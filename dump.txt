@@ -1,0 +1,6 @@
+=== ALL SHOPS ===
+[SHOP] ID: shop-1771178165833 | Slug: miosotis-nails | Name: Miosotis-Nails | Type: nail_salon | OwnerId: undefined
+[SHOP] ID: shop-1771043821639 | Slug: sweet-cravings | Name:  Sweet Cravings | Type: pasteleria | OwnerId: undefined
+[SHOP] ID: shop-1770499271092 | Slug: surprise-gifts | Name: SURPRISE GIFTS | Type: floreria | OwnerId: undefined
+
+=== ALL USERS ===

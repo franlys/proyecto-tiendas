@@ -176,28 +176,7 @@ export function ProductGrid({
   };
 
   const handleMealPrepConfirm = (plates: MealPlate[], totalPrice: number, distance?: number) => {
-    // Resumen para el carrito
-    const platesSummary = plates.map((p, i) => {
-      const components = Object.entries(p.components)
-        .map(([catId, prodName]) => `${catId}: ${prodName}`)
-        .join(', ');
-      return `Plato ${i + 1}: ${components}${p.notes ? ` (Nota: ${p.notes})` : ''}`;
-    }).join(' | ');
-
-    // Crear un objeto de producto virtual para el carrito
-    const virtualProduct: Product = {
-      id: `meal-prep-custom-${Date.now()}`,
-      name: `Paquete de ${plates.length} Platos Personalizados`,
-      price: totalPrice,
-      category: "meal_prep_package",
-      stock: 999,
-      lowStockThreshold: 0,
-      description: "Paquete configurado a medida",
-      image: "",
-      featured: false
-    };
-
-    addProduct(virtualProduct, 1, undefined, undefined, platesSummary);
+    // The Modal handles the actual checkout API call now, so we just close it.
     setIsMealModalOpen(false);
   };
 

@@ -1085,12 +1085,11 @@ export function MealPrepModal({
                                     <p className="text-xs text-slate-400">Te contactaremos vía WhatsApp para confirmar los detalles.</p>
                                     <Button
                                         onClick={() => {
-                                            if (onConfirm) onConfirm(plates, pricing.total, distance);
                                             onClose();
                                         }}
                                         className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 rounded-xl"
                                     >
-                                        Cerrar y Ver Mi Carrito
+                                        Cerrar
                                     </Button>
                                 </div>
                             ) : (

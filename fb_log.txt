@@ -1,0 +1,269 @@
+﻿commit fcae728fb967639f511a4940e32725622128398f
+Author: franlys <74217573+franlys@users.noreply.github.com>
+Date:   Wed Feb 25 18:53:38 2026 -0400
+
+    fix: resolve auth type error and restore 'default' db id in firebase config
+
+diff --git a/lib/firebase.ts b/lib/firebase.ts
+index ffdd709..a29199f 100644
+--- a/lib/firebase.ts
++++ b/lib/firebase.ts
+@@ -55,7 +55,7 @@ try {
+     // Standard initialization is usually sufficient for most projects.
+     db = initializeFirestore(app, {
+         experimentalForceLongPolling: true,
+-    });
++    }, 'default');
+     console.log("Ô£à Firestore initialized with experimentalForceLongPolling");
+ } catch (error) {
+     console.warn("ÔÜá´©Å Failed to initialize Firestore with settings, falling back to standard getFirestore:", error);
+
+commit 3ba07c5f6713b312fa8f8133275e7969cc04e3ff
+Author: franlys <74217573+franlys@users.noreply.github.com>
+Date:   Wed Feb 25 18:14:50 2026 -0400
+
+    fix 107
+
+diff --git a/lib/firebase.ts b/lib/firebase.ts
+index 5e52864..ffdd709 100644
+--- a/lib/firebase.ts
++++ b/lib/firebase.ts
+@@ -1,5 +1,5 @@
+-import { initializeApp, getApps, getApp } from "firebase/app";
+-import { getAuth } from "firebase/auth";
++import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
++import { getAuth, Auth } from "firebase/auth";
+ import { getFirestore, initializeFirestore, Firestore } from "firebase/firestore";
+ import { getStorage } from "firebase/storage";
+ 
+@@ -23,8 +23,8 @@ if (!firebaseConfig.apiKey) {
+ }
+ 
+ // Initialize Firebase with safety wrappers
+-let app;
+-let auth;
++let app: FirebaseApp | undefined;
++let auth: Auth | undefined;
+ 
+ try {
+     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+@@ -35,8 +35,19 @@ try {
+     if (!app) {
+         app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+     }
++    if (app && !auth) {
++        auth = getAuth(app);
++    }
++}
++
++if (!app || !auth) {
++    throw new Error("Firebase app or auth could not be initialized");
+ }
+ 
++const finalApp = app as FirebaseApp;
++const finalAuth = auth as Auth;
++
++
+ // Initialize Firestore with robust fallback
+ let db: Firestore;
+ try {
+@@ -57,6 +68,7 @@ try {
+     }
+ }
+ 
+-const storage = getStorage(app);
++const storage = getStorage(finalApp);
++
++export { finalApp as app, finalAuth as auth, db, storage };
+ 
+-export { app, auth, db, storage };
+
+commit e1a85b7aaeb05684e8dfcf3deb34a1e9ec0cba62
+Author: franlys <74217573+franlys@users.noreply.github.com>
+Date:   Wed Feb 25 18:05:47 2026 -0400
+
+    fix 106
+
+diff --git a/lib/firebase.ts b/lib/firebase.ts
+index 160123f..5e52864 100644
+--- a/lib/firebase.ts
++++ b/lib/firebase.ts
+@@ -1,6 +1,6 @@
+ import { initializeApp, getApps, getApp } from "firebase/app";
+ import { getAuth } from "firebase/auth";
+-import { getFirestore, initializeFirestore } from "firebase/firestore";
++import { getFirestore, initializeFirestore, Firestore } from "firebase/firestore";
+ import { getStorage } from "firebase/storage";
+ 
+ const firebaseConfig = {
+@@ -22,14 +22,41 @@ if (!firebaseConfig.apiKey) {
+     console.log("Ô£à Firebase Config Loaded for Project:", firebaseConfig.projectId);
+ }
+ 
+-// Initialize Firebase
+-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+-const auth = getAuth(app);
+-// Use Long Polling to avoid WebSocket timeouts/blocks
+-// IMPORTANT: Specify 'default' database ID because the database was created as 'default' not '(default)'
+-const db = initializeFirestore(app, {
+-    experimentalForceLongPolling: true,
+-}, 'default');
++// Initialize Firebase with safety wrappers
++let app;
++let auth;
++
++try {
++    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
++    auth = getAuth(app);
++} catch (error) {
++    console.error("ÔØî CRITICAL: Failed to initialize Firebase App/Auth:", error);
++    // Fallback if app fails (this shouldn't happen unless keys are totally invalid)
++    if (!app) {
++        app = getApps().length ? getApp() : initializeApp(firebaseConfig);
++    }
++}
++
++// Initialize Firestore with robust fallback
++let db: Firestore;
++try {
++    // IMPORTANT: Specify 'default' database ID only if you explicitly created one named 'default'.
++    // Standard initialization is usually sufficient for most projects.
++    db = initializeFirestore(app, {
++        experimentalForceLongPolling: true,
++    });
++    console.log("Ô£à Firestore initialized with experimentalForceLongPolling");
++} catch (error) {
++    console.warn("ÔÜá´©Å Failed to initialize Firestore with settings, falling back to standard getFirestore:", error);
++    try {
++        db = getFirestore(app);
++        console.log("Ô£à Firestore initialized with standard getFirestore");
++    } catch (innerError) {
++        console.error("ÔØî CRITICAL: Failed to initialize Firestore even with fallback:", innerError);
++        db = getFirestore(app);
++    }
++}
++
+ const storage = getStorage(app);
+ 
+ export { app, auth, db, storage };
+
+commit 1ad0e280fc0a07a27d61dfcf6b80f6f73aefd117
+Author: franlys <74217573+franlys@users.noreply.github.com>
+Date:   Sat Feb 7 17:08:49 2026 -0400
+
+    Fix client Firebase to use explicit 'default' database ID
+    
+    The Firestore database was created as 'default' instead of '(default)'.
+    This fix mirrors what was done for the Admin SDK.
+    
+    Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
+
+diff --git a/lib/firebase.ts b/lib/firebase.ts
+index 1456a17..160123f 100644
+--- a/lib/firebase.ts
++++ b/lib/firebase.ts
+@@ -26,9 +26,10 @@ if (!firebaseConfig.apiKey) {
+ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+ const auth = getAuth(app);
+ // Use Long Polling to avoid WebSocket timeouts/blocks
++// IMPORTANT: Specify 'default' database ID because the database was created as 'default' not '(default)'
+ const db = initializeFirestore(app, {
+     experimentalForceLongPolling: true,
+-});
++}, 'default');
+ const storage = getStorage(app);
+ 
+ export { app, auth, db, storage };
+
+commit 0a6f4ff87623e6c0a8ee146cd32b7baa8557055c
+Author: franlys <74217573+franlys@users.noreply.github.com>
+Date:   Wed Feb 4 17:33:43 2026 -0400
+
+    Fix: Validation for Firebase Keys
+
+diff --git a/lib/firebase.ts b/lib/firebase.ts
+index d2a1f1e..1456a17 100644
+--- a/lib/firebase.ts
++++ b/lib/firebase.ts
+@@ -12,6 +12,16 @@ const firebaseConfig = {
+     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+ };
+ 
++// Debug / Validation
++if (!firebaseConfig.apiKey) {
++    console.error("ÔØî FIREBASE MISSING KEYS. Application will not work.");
++    if (typeof window !== "undefined") {
++        console.warn("ÔÜá´©Å Las variables de entorno de Firebase no est├ín cargadas. Revisa .env.local (local) o Vercel -> Settings -> Environment Variables (producci├│n).");
++    }
++} else {
++    console.log("Ô£à Firebase Config Loaded for Project:", firebaseConfig.projectId);
++}
++
+ // Initialize Firebase
+ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+ const auth = getAuth(app);
+
+commit 01780189f7724a11d142cefa72078ca5ff041202
+Author: franlys <74217573+franlys@users.noreply.github.com>
+Date:   Mon Feb 2 17:49:15 2026 -0400
+
+    Fix: firebase 2
+
+diff --git a/lib/firebase.ts b/lib/firebase.ts
+index f1e1b25..d2a1f1e 100644
+--- a/lib/firebase.ts
++++ b/lib/firebase.ts
+@@ -1,6 +1,6 @@
+ import { initializeApp, getApps, getApp } from "firebase/app";
+ import { getAuth } from "firebase/auth";
+-import { getFirestore } from "firebase/firestore";
++import { getFirestore, initializeFirestore } from "firebase/firestore";
+ import { getStorage } from "firebase/storage";
+ 
+ const firebaseConfig = {
+@@ -15,7 +15,10 @@ const firebaseConfig = {
+ // Initialize Firebase
+ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+ const auth = getAuth(app);
+-const db = getFirestore(app);
++// Use Long Polling to avoid WebSocket timeouts/blocks
++const db = initializeFirestore(app, {
++    experimentalForceLongPolling: true,
++});
+ const storage = getStorage(app);
+ 
+ export { app, auth, db, storage };
+
+commit cedf7b88b7810cf006c5fed3d25733b127c25f8d
+Author: franlys <74217573+franlys@users.noreply.github.com>
+Date:   Fri Jan 30 13:15:21 2026 -0400
+
+    Initial commit - Nexo Multi-Tenant Booking Platform
+
+diff --git a/lib/firebase.ts b/lib/firebase.ts
+new file mode 100644
+index 0000000..f1e1b25
+--- /dev/null
++++ b/lib/firebase.ts
+@@ -0,0 +1,21 @@
++import { initializeApp, getApps, getApp } from "firebase/app";
++import { getAuth } from "firebase/auth";
++import { getFirestore } from "firebase/firestore";
++import { getStorage } from "firebase/storage";
++
++const firebaseConfig = {
++    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
++    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
++    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
++    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
++    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
++    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
++};
++
++// Initialize Firebase
++const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
++const auth = getAuth(app);
++const db = getFirestore(app);
++const storage = getStorage(app);
++
++export { app, auth, db, storage };

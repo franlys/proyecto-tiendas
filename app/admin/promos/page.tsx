@@ -242,7 +242,7 @@ export default function PromoGeneratorPage() {
                       Selecciona una tienda
                     </option>
                     {shops.map((shop) => (
-                      <option key={shop.id} value={shop.slug} className="bg-background">
+                      <option key={shop.id} value={shop.id} className="bg-background">
                         {shop.name}
                       </option>
                     ))}

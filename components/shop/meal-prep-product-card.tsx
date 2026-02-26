@@ -47,23 +47,14 @@ export function MealPrepProductCard({
     const isCustomizable = product.isCustomizable !== false; // Default true
 
     const handleConfirm = (plates: MealPlate[], totalPrice: number, distance?: number) => {
-        // Create a detailed summary of the plates for the cart notes
-        const platesSummary = plates.map((p, i) => {
-            const components = Object.entries(p.components)
-                .map(([catId, prodName]) => `${catId}: ${prodName}`)
-                .join(', ');
-            return `Plato ${i + 1}: ${components}${p.notes ? ` (Nota: ${p.notes})` : ''}`;
-        }).join(' | ');
-
-        addProduct(product as any, 1, undefined, undefined, platesSummary);
-
         onOrder?.(plates, totalPrice, distance);
         setIsModalOpen(false);
     };
 
     const handleAddToCart = (e: React.MouseEvent) => {
         e.stopPropagation();
-        addProduct(product as any, 1);
+        // For non-customizable Meal Preps, we still open the modal to collect delivery info
+        setIsModalOpen(true);
     };
 
     return (

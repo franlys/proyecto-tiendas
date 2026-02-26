@@ -77,11 +77,10 @@ export default function ShopHomePage() {
         const { db } = await import("@/lib/firebase");
         const { collection, getDocs } = await import("firebase/firestore");
 
-        // Use slug for subcollection path (consistent with how inventory saves products)
-        const shopPath = shop.slug;
-
         // Fetch Services from BOTH collections and merge
         // Services can be in 'services' (legacy) or 'bookingServices' (new)
+        // ALways use the real document ID for the database path
+        const shopPath = shop.id;
         const servicesLegacyRef = collection(db, "shops", shopPath, "services");
         const servicesNewRef = collection(db, "shops", shopPath, "bookingServices");
 
@@ -110,7 +109,7 @@ export default function ShopHomePage() {
         // Fetch Training Packages
         try {
           // Training packages use the REAL ID for the collection path
-          const trainingRef = collection(db, "shops", shop.id, "training-packages");
+          const trainingRef = collection(db, "shops", shopPath, "training-packages");
           const trainingSnap = await getDocs(trainingRef);
 
           trainingSnap.docs.forEach(docSnap => {

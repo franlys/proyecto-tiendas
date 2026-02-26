@@ -977,7 +977,7 @@ function ShopSelector({ onSelect }: { onSelect: (shopId: string) => void }) {
                 {shops.map((shop) => (
                     <button
                         key={shop.id}
-                        onClick={() => onSelect(shop.slug)}
+                        onClick={() => onSelect(shop.id)}
                         className="flex items-center gap-4 p-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-primary/50 rounded-xl transition-all text-left group"
                     >
                         {shop.logo ? (

@@ -1,0 +1,13 @@
+=== CHECK MULTIPLE SUBCOLLECTIONS ===
+Shop: shop-1771856899800
+  orders: 0
+  products: 0
+  training-packages: 1
+Shop: shop-17704992271092
+  orders: 5
+  products: 0
+  training-packages: 0
+Shop: sculpt-love-method
+  orders: 0
+  products: 32
+  training-packages: 0
