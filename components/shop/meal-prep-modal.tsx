@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { X, ChefHat, Plus, Minus, MapPin, Truck, Check, MessageCircle } from "lucide-react";
+import { X, ChefHat, Plus, Minus, MapPin, Truck, Check, MessageCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import {
@@ -251,13 +251,26 @@ export function MealPrepModal({
         setError(null);
 
         try {
-            const items = plates.map((plate, index) => ({
-                id: `plate-${index}`,
-                name: `Plato ${index + 1}: ${formatPlateDescription(plate)}`,
-                quantity: 1,
-                price: plate.isCustom ? MEAL_PREP_PRICES.CUSTOM_PLATE : MEAL_PREP_PRICES.STANDARD_PLATE,
-                notes: plate.notes
-            }));
+            const items = plates.map((plate, index) => {
+                let plateExtrasSum = 0;
+                if (plate.componentExtras) {
+                    Object.values(plate.componentExtras).forEach(extras => {
+                        extras.forEach(extra => {
+                            plateExtrasSum += (extra.price * extra.quantity);
+                        });
+                    });
+                }
+
+                return {
+                    id: `plate-${index}`,
+                    name: `Plato ${index + 1}: ${formatPlateDescription(plate)}`,
+                    quantity: 1,
+                    price: (plate.isCustom ? MEAL_PREP_PRICES.CUSTOM_PLATE : MEAL_PREP_PRICES.STANDARD_PLATE) +
+                        (plate.premiumSurcharge || 0) +
+                        plateExtrasSum,
+                    notes: plate.notes
+                };
+            });
 
             if (selectedTrainingPlan) {
                 items.push({
@@ -288,7 +301,7 @@ export function MealPrepModal({
             if (!response.ok) throw new Error(result.error || "Error al procesar el pedido");
 
             setOrderSuccess({ id: result.orderId, number: result.orderNumber });
-            setStep("summary"); // Mostrar éxito en el resumen
+            setStep("summary");
 
         } catch (err: any) {
             console.error("Error order:", err);
@@ -1071,10 +1084,13 @@ export function MealPrepModal({
                                     </div>
                                     <p className="text-xs text-slate-400">Te contactaremos vía WhatsApp para confirmar los detalles.</p>
                                     <Button
-                                        onClick={onClose}
-                                        className="w-full bg-primary hover:bg-primary/90 text-white"
+                                        onClick={() => {
+                                            if (onConfirm) onConfirm(plates, pricing.total, distance);
+                                            onClose();
+                                        }}
+                                        className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 rounded-xl"
                                     >
-                                        Cerrar
+                                        Cerrar y Ver Mi Carrito
                                     </Button>
                                 </div>
                             ) : (
@@ -1088,9 +1104,9 @@ export function MealPrepModal({
                                             Volver
                                         </Button>
                                         <Button
-                                            onClick={handleConfirm}
+                                            onClick={() => handleConfirm()}
                                             disabled={isSubmitting}
-                                            className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold"
+                                            className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold h-12"
                                         >
                                             {isSubmitting ? (
                                                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -1102,18 +1118,10 @@ export function MealPrepModal({
                                             )}
                                         </Button>
                                     </div>
-
-                                    {/* Fallback WhatsApp button */}
                                     {whatsappNumber && (
-                                        <a
-                                            href={`https://wa.me/${whatsappNumber.replace(/\D/g, '')}?text=${generateWhatsAppMessage()}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="w-full py-3 rounded-xl bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-500/30 flex items-center justify-center gap-2 text-sm font-bold transition-all"
-                                        >
-                                            <MessageCircle className="w-4 h-4" />
-                                            Confirmar vía WhatsApp
-                                        </a>
+                                        <p className="text-[10px] text-center text-slate-400">
+                                            Al confirmar, recibirás un mensaje automático por WhatsApp con los detalles.
+                                        </p>
                                     )}
                                 </div>
                             )}
