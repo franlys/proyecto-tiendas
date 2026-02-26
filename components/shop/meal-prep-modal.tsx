@@ -133,14 +133,15 @@ export function MealPrepModal({
         return { ingredientCategories: cats, productsByCategory: grouped };
     }, [catalog]);
 
-    if (!isOpen) return null;
-
-    const currentPlate = plates[currentPlateIndex];
     // Calculate pricing summary
     const pricing = useMemo(() => {
         const calculatedDistance = deliveryType === "recogida" ? 0 : distance;
         return calculateMealPrepTotal(plates, selectedTrainingPlan, calculatedDistance);
     }, [plates, selectedTrainingPlan, distance, deliveryType]);
+
+    if (!isOpen) return null;
+
+    const currentPlate = plates[currentPlateIndex];
     const packageConfig = MEAL_PREP_PACKAGES.find(p => p.plateCount === selectedPackage);
 
     const updatePlateComponent = (field: string, value: string) => {
