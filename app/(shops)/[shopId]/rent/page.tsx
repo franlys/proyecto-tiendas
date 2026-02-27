@@ -41,9 +41,11 @@ function generateSimpleRentalNumber(): string {
 interface ShopData {
   id: string;
   name: string;
-  phone?: string;
-  whatsapp?: string;
-  address?: string;
+  contact?: {
+    phone?: string;
+    whatsapp?: string;
+    address?: string;
+  };
   logo?: string;
 }
 
@@ -238,11 +240,11 @@ export default function PublicRentPage() {
                 <p className="text-sm text-slate-400">Alquiler de vehículos</p>
               </div>
             </div>
-            {shop?.whatsapp && (
+            {(shop?.contact?.whatsapp || shop?.contact?.phone) && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => window.open(`https://wa.me/${shop.whatsapp}`, "_blank")}
+                onClick={() => window.open(`https://wa.me/${(shop.contact?.whatsapp || shop.contact?.phone || "").replace(/\D/g, "")}`, "_blank")}
               >
                 <Phone className="h-4 w-4 mr-2" />
                 Contactar
@@ -258,11 +260,10 @@ export default function PublicRentPage() {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedCategory("all")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                selectedCategory === "all"
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedCategory === "all"
                   ? "bg-cyan-500 text-white"
                   : "bg-slate-800 text-slate-300 hover:bg-slate-700"
-              }`}
+                }`}
             >
               Todos
             </button>
@@ -274,11 +275,10 @@ export default function PublicRentPage() {
                   <button
                     key={category}
                     onClick={() => setSelectedCategory(category)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      selectedCategory === category
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedCategory === category
                         ? "bg-cyan-500 text-white"
                         : "bg-slate-800 text-slate-300 hover:bg-slate-700"
-                    }`}
+                      }`}
                   >
                     {getCategoryLabel(category)} ({count})
                   </button>
@@ -301,9 +301,8 @@ export default function PublicRentPage() {
                 <div
                   key={vehicle.id}
                   onClick={() => handleSelectVehicle(vehicle)}
-                  className={`bg-slate-800 rounded-xl border cursor-pointer transition-all hover:border-cyan-500/50 ${
-                    selectedVehicle?.id === vehicle.id ? "ring-2 ring-cyan-500 border-cyan-500" : "border-slate-700"
-                  }`}
+                  className={`bg-slate-800 rounded-xl border cursor-pointer transition-all hover:border-cyan-500/50 ${selectedVehicle?.id === vehicle.id ? "ring-2 ring-cyan-500 border-cyan-500" : "border-slate-700"
+                    }`}
                 >
                   <div className="flex flex-col sm:flex-row">
                     {/* Imagen */}
@@ -419,9 +418,8 @@ export default function PublicRentPage() {
                                   e.stopPropagation();
                                   setCurrentImageIndex(idx);
                                 }}
-                                className={`w-2 h-2 rounded-full ${
-                                  idx === currentImageIndex ? "bg-white" : "bg-white/50"
-                                }`}
+                                className={`w-2 h-2 rounded-full ${idx === currentImageIndex ? "bg-white" : "bg-white/50"
+                                  }`}
                               />
                             ))}
                           </div>

@@ -1,0 +1,241 @@
+{
+  "miosotis-nails": {
+    "realIdPath": 0,
+    "docs": []
+  },
+  "sculpt-love-method": {
+    "realIdPath": 5,
+    "docs": [
+      {
+        "id": "w2oZiQW3TNA0kNOmT8TP",
+        "shopId": "shop-17704992271092",
+        "customerName": "Franlys Gonzalez",
+        "customerPhone": "8092328741",
+        "items": [
+          {
+            "productId": "plate-0",
+            "productName": "Plato 1: Ensalada Cesar + Salmon + Papas Hervidas + Frutas tropicales (Piña)",
+            "quantity": 1,
+            "unitPrice": 13,
+            "total": 13,
+            "notes": ""
+          },
+          {
+            "productId": "plate-1",
+            "productName": "Plato 2: Ensalada Cesar + Camarones + Papas Hervidas + Aguacate (Guacamole)",
+            "quantity": 1,
+            "unitPrice": 13,
+            "total": 13,
+            "notes": ""
+          },
+          {
+            "productId": "plate-2",
+            "productName": "Plato 3: Ensalada Cesar + Salmon + Yuca Hervida + Frutas Clasicas (Banano)",
+            "quantity": 1,
+            "unitPrice": 13,
+            "total": 13,
+            "notes": ""
+          }
+        ],
+        "subtotal": 39,
+        "tax": 0,
+        "total": 39,
+        "status": "pending",
+        "paymentStatus": "pending",
+        "deliveryType": "recogida",
+        "source": "web",
+        "customerAddress": "Recogida en local",
+        "orderNumber": "SLM-1001",
+        "createdAt": {
+          "_seconds": 1772136677,
+          "_nanoseconds": 998000000
+        },
+        "updatedAt": {
+          "_seconds": 1772136677,
+          "_nanoseconds": 998000000
+        }
+      },
+      {
+        "id": "ezBe6I2DaSG2i58LbYKC",
+        "orderNumber": "ORD-792292",
+        "customerName": "Cliente WhatsApp",
+        "customerPhone": "",
+        "items": [
+          {
+            "productId": "meal-prep-custom-1772117698418",
+            "productName": "Paquete de 3 Platos Personalizados",
+            "quantity": 1,
+            "unitPrice": 39,
+            "total": 39,
+            "extras": []
+          }
+        ],
+        "subtotal": 39,
+        "tax": 0,
+        "total": 39,
+        "status": "pending",
+        "paymentStatus": "pending",
+        "isWholesale": false,
+        "source": "whatsapp",
+        "tableId": null,
+        "createdAt": {
+          "_seconds": 1772117793,
+          "_nanoseconds": 859000000
+        },
+        "updatedAt": {
+          "_seconds": 1772117793,
+          "_nanoseconds": 859000000
+        },
+        "shopId": "shop-17704992271092"
+      },
+      {
+        "id": "8Ukx22vOBLKS6lNOefZt",
+        "customerName": "Franlys Gonzalez",
+        "customerPhone": "8092328741",
+        "total": 39,
+        "status": "pending",
+        "paymentStatus": "pending",
+        "deliveryType": "recogida",
+        "customerAddress": "Recogida en local",
+        "orderNumber": "SLM-1003",
+        "subtotal": 39,
+        "tax": 0,
+        "source": "web",
+        "createdAt": {
+          "_seconds": 1772081309,
+          "_nanoseconds": 131000000
+        },
+        "shopId": "shop-17704992271092",
+        "items": [
+          {
+            "productId": "plate-0",
+            "productName": "Plato 1: Ensalada Cesar + Camarones + Papas Hervidas + Aguacate (Guacamole)",
+            "quantity": 1,
+            "unitPrice": 13,
+            "total": 13,
+            "notes": "",
+            "id": "plate-0",
+            "name": "Plato 1: Ensalada Cesar + Camarones + Papas Hervidas + Aguacate (Guacamole)",
+            "price": 13
+          },
+          {
+            "productId": "plate-1",
+            "productName": "Plato 2: Ensalada Cesar + Camarones + Papas Hervidas + Frutas Clasicas (Pera)",
+            "quantity": 1,
+            "unitPrice": 13,
+            "total": 13,
+            "notes": "",
+            "id": "plate-1",
+            "name": "Plato 2: Ensalada Cesar + Camarones + Papas Hervidas + Frutas Clasicas (Pera)",
+            "price": 13
+          },
+          {
+            "productId": "plate-2",
+            "productName": "Plato 3: Ensalada Cesar + Costillas de Cerdo + Papas Rostizadas + Frutas tropicales (Piña)",
+            "quantity": 1,
+            "unitPrice": 13,
+            "total": 13,
+            "notes": "",
+            "id": "plate-2",
+            "name": "Plato 3: Ensalada Cesar + Costillas de Cerdo + Papas Rostizadas + Frutas tropicales (Piña)",
+            "price": 13
+          }
+        ],
+        "updatedAt": {
+          "_seconds": 1772081309,
+          "_nanoseconds": 131000000
+        }
+      },
+      {
+        "id": "aXcpXOpv6NvmwsrkBWFY",
+        "shopId": "shop-17704992271092",
+        "customerName": "Franlys Gonzalez",
+        "customerPhone": "8092328741",
+        "items": [
+          {
+            "productId": "plate-0",
+            "productName": "Plato 1: Ensalada Cesar + Camarones + Papas Hervidas + Frutas Clasicas (Pera)",
+            "quantity": 1,
+            "unitPrice": 13,
+            "total": 13,
+            "notes": ""
+          },
+          {
+            "productId": "plate-1",
+            "productName": "Plato 2: Ensalada Cesar + Camarones + Papas Hervidas + Aguacate (Guacamole)",
+            "quantity": 1,
+            "unitPrice": 13,
+            "total": 13,
+            "notes": ""
+          },
+          {
+            "productId": "plate-2",
+            "productName": "Plato 3: Ensalada Cesar + Costillas de Cerdo + Pure de Papas + Frutas tropicales (Piña)",
+            "quantity": 1,
+            "unitPrice": 13,
+            "total": 13,
+            "notes": ""
+          }
+        ],
+        "subtotal": 39,
+        "tax": 0,
+        "total": 39,
+        "status": "pending",
+        "paymentStatus": "pending",
+        "deliveryType": "recogida",
+        "source": "web",
+        "customerAddress": "Recogida en local",
+        "orderNumber": "SLM-1004",
+        "createdAt": {
+          "_seconds": 1772117691,
+          "_nanoseconds": 674000000
+        },
+        "updatedAt": {
+          "_seconds": 1772117691,
+          "_nanoseconds": 674000000
+        }
+      },
+      {
+        "id": "u6Kv69siCbnmeg2TtLxU",
+        "orderNumber": "ORD-601520",
+        "customerName": "Cliente WhatsApp",
+        "customerPhone": "",
+        "items": [
+          {
+            "productId": "meal-prep-custom-1772078034987",
+            "productName": "Paquete de 3 Platos Personalizados",
+            "quantity": 1,
+            "unitPrice": 39,
+            "total": 39,
+            "extras": []
+          }
+        ],
+        "subtotal": 39,
+        "tax": 0,
+        "total": 39,
+        "status": "pending",
+        "paymentStatus": "pending",
+        "isWholesale": false,
+        "source": "whatsapp",
+        "tableId": null,
+        "createdAt": {
+          "_seconds": 1772117602,
+          "_nanoseconds": 857000000
+        },
+        "updatedAt": {
+          "_seconds": 1772117602,
+          "_nanoseconds": 857000000
+        },
+        "shopId": "shop-17704992271092"
+      }
+    ]
+  },
+  "franlys-nails": {
+    "realIdPath": 0,
+    "docs": []
+  },
+  "bella-y-saludable": {
+    "realIdPath": 0,
+    "docs": []
+  }
+}

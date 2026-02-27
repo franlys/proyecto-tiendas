@@ -66,6 +66,23 @@ export function PhoneInput({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const phoneInputRef = useRef<HTMLInputElement>(null);
 
+  // Sync with external value changes (like async profile loading)
+  useEffect(() => {
+    const currentGeneratedFullPhone = formatFullPhone(selectedCountry.code, phone);
+    if (value !== undefined && value !== currentGeneratedFullPhone) {
+      const parsedValue = value ? parsePhoneNumber(value) : null;
+      if (parsedValue) {
+        setPhone(parsedValue.phone);
+        const country = getCountryByCode(parsedValue.countryCode);
+        if (country) {
+          setSelectedCountry(country);
+        }
+      } else if (value === "") {
+        setPhone("");
+      }
+    }
+  }, [value, selectedCountry.code, phone]);
+
   // Filtered countries based on search
   const filteredCountries = searchQuery
     ? searchCountries(searchQuery)

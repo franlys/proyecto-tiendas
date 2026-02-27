@@ -95,10 +95,40 @@ const DAY_LABELS: Record<string, string> = {
     sunday: "Domingo",
 };
 
+// Shop Selector for Super Admin
+function ShopSelector({ selectedShopId, onSelect }: { selectedShopId: string; onSelect: (id: string) => void }) {
+    const { shops, isLoading } = useShops();
+
+    if (isLoading) {
+        return <div className="text-slate-400">Cargando tiendas...</div>;
+    }
+
+    return (
+        <div className="flex items-center gap-3">
+            <Store className="w-5 h-5 text-slate-400" />
+            <select
+                value={selectedShopId}
+                onChange={(e) => onSelect(e.target.value)}
+                className="px-4 py-2 rounded-lg bg-slate-800 border border-white/10 text-white focus:outline-none focus:border-primary/50 [&>option]:bg-slate-800 [&>option]:text-white"
+            >
+                <option value="">Selecciona una tienda</option>
+                {shops.map((shop) => (
+                    <option key={shop.id} value={shop.id}>
+                        {shop.name}
+                    </option>
+                ))}
+            </select>
+        </div>
+    );
+}
+
 function ProfileContent() {
     const router = useRouter();
-    const { user, isLoading: authLoading } = useAuth();
+    const { user, isSuperAdmin, isLoading: authLoading } = useAuth();
     const { getShop, updateShop } = useShops();
+
+    const [selectedShopId, setSelectedShopId] = useState<string>("");
+    const shopId = isSuperAdmin ? selectedShopId : (user?.shopId || "");
 
     const [saving, setSaving] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
@@ -128,8 +158,8 @@ function ProfileContent() {
 
     // Load profile from Shop Data (Source of Truth)
     useEffect(() => {
-        if (user?.shopId) {
-            const shop = getShop(user.shopId);
+        if (shopId) {
+            const shop = getShop(shopId);
             if (shop) {
                 setProfile(prev => ({
                     ...prev,
@@ -156,36 +186,36 @@ function ProfileContent() {
                 }));
 
                 // Fetch Booking Config for closedDates
-                const shopId = user.shopId;
+                const currentShopId = shopId;
                 import("@/lib/services/booking.service").then(({ getBookingConfig }) => {
-                    getBookingConfig(shopId).then(config => {
+                    getBookingConfig(currentShopId).then(config => {
                         setProfile(prev => ({ ...prev, closedDates: config.closedDates || [] }));
                     });
                 });
             }
         }
-    }, [user?.shopId, getShop]);
+    }, [shopId, getShop]);
 
     // Redirect if not authenticated or not shop owner
     useEffect(() => {
-        if (!authLoading && (!user || !user.shopId)) {
+        if (!authLoading && (!user || (!user.shopId && !isSuperAdmin))) {
             router.push("/login");
         }
-    }, [authLoading, user, router]);
+    }, [authLoading, user, isSuperAdmin, router]);
 
     const handleSave = async () => {
-        if (!user?.shopId) return;
+        if (!shopId) return;
 
         setSaving(true);
         // localStorage removed to prevent sync issues
 
         try {
             // Get current shop to preserve other theme settings
-            const currentShop = getShop(user.shopId);
+            const currentShop = getShop(shopId);
             const currentTheme = currentShop?.theme || DEFAULT_THEME;
 
             // 1. Update main shop data (Profile + Theme + Schedule for display)
-            await updateShop(user.shopId, {
+            await updateShop(shopId, {
                 name: profile.name,
                 description: profile.description,
                 slogan: profile.slogan,
@@ -219,7 +249,7 @@ function ProfileContent() {
             });
 
             // 2. Update Booking Config (for slots generation)
-            await updateBookingConfig(user.shopId, {
+            await updateBookingConfig(shopId, {
                 schedule: profile.schedule,
                 closedDates: profile.closedDates,
             });
@@ -267,6 +297,34 @@ function ProfileContent() {
         );
     }
 
+    if (isSuperAdmin && !selectedShopId) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="glass-panel rounded-2xl p-8 max-w-md w-full mx-4">
+                    <div className="text-center mb-6">
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 flex items-center justify-center mx-auto mb-4">
+                            <Store className="w-8 h-8 text-white" />
+                        </div>
+                        <h1 className="text-2xl font-bold text-white mb-2">Perfiles de Tiendas</h1>
+                        <p className="text-slate-400">Como Super Admin, selecciona una tienda para configurar su perfil</p>
+                    </div>
+                    <ShopSelector selectedShopId={selectedShopId} onSelect={setSelectedShopId} />
+                </div>
+            </div>
+        );
+    }
+
+    if (!shopId) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="text-center text-slate-400">
+                    <Store className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>No hay tienda asignada a tu cuenta</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-background">
             {/* Header */}
@@ -283,14 +341,17 @@ function ProfileContent() {
                             <div>
                                 <h1 className="font-display text-2xl font-bold text-white flex items-center gap-2">
                                     <Store className="w-6 h-6 text-cyan-400" />
-                                    Mi Negocio
+                                    {isSuperAdmin ? "Configurar Perfil" : "Mi Negocio"}
                                 </h1>
                                 <p className="text-slate-400 text-sm">
-                                    Configura la información de tu tienda
+                                    Configura la información de la tienda
                                 </p>
                             </div>
                         </div>
-                        <nav className="flex items-center gap-2">
+                        <nav className="flex items-center gap-4">
+                            {isSuperAdmin && (
+                                <ShopSelector selectedShopId={selectedShopId} onSelect={setSelectedShopId} />
+                            )}
                             <Link href="/admin">
                                 <Button variant="ghost" size="sm">
                                     <LayoutDashboard className="w-4 h-4" />
