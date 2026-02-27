@@ -288,9 +288,15 @@ export function SalesOrdersProvider({ children, shopId }: SalesOrdersProviderPro
   );
 
   const getTodayOrders = useCallback(() => {
-    // Careful with timezone, but using simple string match for now
-    const today = new Date().toISOString().split("T")[0];
-    return orders.filter((o) => o.createdAt.startsWith(today));
+    const today = new Date();
+    return orders.filter((o) => {
+      const orderDate = new Date(o.createdAt);
+      return (
+        orderDate.getDate() === today.getDate() &&
+        orderDate.getMonth() === today.getMonth() &&
+        orderDate.getFullYear() === today.getFullYear()
+      );
+    });
   }, [orders]);
 
   const updateNotificationConfig = useCallback((config: Partial<NotificationConfig>) => {

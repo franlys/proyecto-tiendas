@@ -539,10 +539,19 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
   for (let i = 6; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
-    const dateStr = d.toISOString().split("T")[0];
     const days = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
-    const dayOrders = orders.filter(o => o.createdAt.startsWith(dateStr));
+    const dayOrders = orders.filter((o) => {
+      const orderDate = new Date(o.createdAt);
+      return (
+        orderDate.getDate() === d.getDate() &&
+        orderDate.getMonth() === d.getMonth() &&
+        orderDate.getFullYear() === d.getFullYear()
+      );
+    });
+
+    // Provide a generic string date just for potential console logging or keys
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
     chartData.push({
       date: dateStr,
