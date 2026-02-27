@@ -69,19 +69,26 @@ export function PhoneInput({
   // Sync with external value changes (like async profile loading)
   useEffect(() => {
     const currentGeneratedFullPhone = formatFullPhone(selectedCountry.code, phone);
+    console.log(`[PhoneInput] [${label || 'NoLabel'}] Sync check: value="${value}", currentGen="${currentGeneratedFullPhone}", phone="${phone}"`);
+
+    // Ignore syncing if value is strictly undefined, or if it matches what we already have.
+    // ALSO check if value is just the dialcode itself lacking a number, meaning empty.
     if (value !== undefined && value !== currentGeneratedFullPhone) {
+      console.log(`[PhoneInput] [${label || 'NoLabel'}] Attempting to apply external value:`, value);
+
       const parsedValue = value ? parsePhoneNumber(value) : null;
       if (parsedValue) {
+        console.log(`[PhoneInput] [${label || 'NoLabel'}] Parsed value:`, parsedValue);
         setPhone(parsedValue.phone);
         const country = getCountryByCode(parsedValue.countryCode);
         if (country) {
           setSelectedCountry(country);
         }
-      } else if (value === "") {
+      } else if (value === "" || value === selectedCountry.dialCode) {
         setPhone("");
       }
     }
-  }, [value, selectedCountry.code, phone]);
+  }, [value, selectedCountry.code, phone, label]);
 
   // Filtered countries based on search
   const filteredCountries = searchQuery

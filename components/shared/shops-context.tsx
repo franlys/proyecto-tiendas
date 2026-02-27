@@ -327,10 +327,25 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      await setDoc(doc(db, "shops", shop.id), data, { merge: true });
+      // Recursively clean up undefined values before sending to Firestore
+      const removeUndefined = (obj: any): any => {
+        if (obj === undefined) return undefined;
+        if (typeof obj !== 'object' || obj === null) return obj;
+        if (Array.isArray(obj)) return obj.map(removeUndefined);
+        return Object.fromEntries(
+          Object.entries(obj)
+            .map(([k, v]) => [k, removeUndefined(v)])
+            .filter(([_, v]) => v !== undefined)
+        );
+      };
+
+      const cleanData = removeUndefined(data);
+
+      await setDoc(doc(db, "shops", shop.id), cleanData, { merge: true });
       console.log("✅ [DEBUG] Shop updated in Firestore successfully");
     } catch (e) {
       console.error("❌ [DEBUG] Error writing to Firestore:", e);
+      throw e; // Rethrow to let the UI know it failed
     }
   }, [shops]);
 
