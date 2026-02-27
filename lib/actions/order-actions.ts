@@ -42,6 +42,39 @@ export async function updateOrderStatusAction(shopId: string, orderId: string, s
 
             // 3. Add Loyalty Stamps (if customer has phone)
             if (orderData.customerPhone) {
+                const normalizedPhone = orderData.customerPhone.replace(/\D/g, "");
+
+                // 3a. Ensure customer exists in the centralized customers collection
+                if (normalizedPhone) {
+                    try {
+                        const customerRef = db.collection("shops").doc(shopId).collection("customers").doc(normalizedPhone);
+                        const customerSnap = await customerRef.get();
+
+                        const customerUpdate = {
+                            phone: orderData.customerPhone,
+                            lastActive: new Date().toISOString(),
+                            updatedAt: new Date().toISOString(),
+                        };
+
+                        if (!customerSnap.exists) {
+                            await customerRef.set({
+                                ...customerUpdate,
+                                name: orderData.customerName || "Cliente",
+                                createdAt: new Date().toISOString(),
+                            });
+                        } else {
+                            // Only update name if we have a new one and the old one was generic
+                            const existingName = customerSnap.data()?.name;
+                            if (orderData.customerName && (!existingName || existingName === "Cliente")) {
+                                (customerUpdate as any).name = orderData.customerName;
+                            }
+                            await customerRef.update(customerUpdate);
+                        }
+                    } catch (customerError) {
+                        console.error("[Customer Sync] Error saving customer:", customerError);
+                    }
+                }
+
                 try {
                     const stampResult = await addStampsAdmin(
                         shopId,
