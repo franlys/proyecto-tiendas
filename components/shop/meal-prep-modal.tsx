@@ -825,11 +825,21 @@ export function MealPrepModal({
                                                         setIsGeocoding(true);
                                                         setError(null);
                                                         const coords = await geocodeAddress(address);
-                                                        if (coords && businessCoordinates) {
-                                                            const dist = calculateDistance(businessCoordinates, coords);
+
+                                                        // Fallback: If DB coordinates are missing but we have an address, geocode the business address
+                                                        let originCoords = businessCoordinates;
+                                                        if (!originCoords && businessAddress) {
+                                                            const fallbackCoords = await geocodeAddress(businessAddress);
+                                                            if (fallbackCoords) {
+                                                                originCoords = fallbackCoords;
+                                                            }
+                                                        }
+
+                                                        if (coords && originCoords) {
+                                                            const dist = calculateDistance(originCoords, coords);
                                                             setDistance(dist);
                                                             setDistanceInput(dist.toString());
-                                                        } else if (!businessCoordinates) {
+                                                        } else if (!originCoords) {
                                                             setError("Error: Ubicación del negocio no configurada.");
                                                         } else {
                                                             setError("No se pudo encontrar la dirección.");
@@ -863,11 +873,19 @@ export function MealPrepModal({
                                                 setIsLocating(true);
                                                 setError(null);
                                                 try {
-                                                    if (!businessCoordinates) {
+                                                    let originCoords = businessCoordinates;
+                                                    if (!originCoords && businessAddress) {
+                                                        const fallbackCoords = await geocodeAddress(businessAddress);
+                                                        if (fallbackCoords) {
+                                                            originCoords = fallbackCoords;
+                                                        }
+                                                    }
+
+                                                    if (!originCoords) {
                                                         throw new Error("La ubicación del negocio no está configurada.");
                                                     }
                                                     const coords = await getCurrentLocation();
-                                                    const dist = calculateDistance(businessCoordinates, coords);
+                                                    const dist = calculateDistance(originCoords, coords);
                                                     setDistance(dist);
                                                     setDistanceInput(dist.toString());
                                                 } catch (err: any) {
