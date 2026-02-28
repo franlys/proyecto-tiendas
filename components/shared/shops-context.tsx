@@ -223,6 +223,10 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
           background: data.background,
           backgroundAudio: data.backgroundAudio,
           social: data.social,
+          // Delivery/Location calculation fields
+          location: data.location,
+          locationDetails: data.locationDetails,
+          coordinates: data.coordinates,
           // Bank accounts (for payment info)
           bankAccounts: data.bankAccounts || [],
           // Payment configuration (Stripe Connect)
