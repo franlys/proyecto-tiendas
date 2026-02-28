@@ -26,6 +26,7 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui";
 import type { ProductCartItem } from "@/components/shared/cart-context";
 import { StripePayButton } from "@/components/shop/stripe-checkout-button";
+import { PayPalPayButton } from "@/components/shop/paypal-checkout-button";
 import type { Currency } from "@/lib/types/payment.types";
 
 interface CheckoutDrawerProps {
@@ -60,8 +61,11 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
     const [orderSuccess, setOrderSuccess] = useState<{ id: string, number: string } | null>(null);
     const [stripeError, setStripeError] = useState<string | null>(null);
 
-    // Check if shop has Stripe payments enabled
-    const paymentsEnabled = shop?.payments?.enabled && shop?.payments?.stripeAccountId;
+    // Check if shop has payments enabled (Stripe or PayPal)
+    const paymentProvider = shop?.payments?.provider;
+    const stripeEnabled = shop?.payments?.enabled && shop?.payments?.stripeAccountId && paymentProvider === "stripe";
+    const paypalEnabled = shop?.payments?.enabled && shop?.payments?.paypalEmail && paymentProvider === "paypal";
+    const paymentsEnabled = stripeEnabled || paypalEnabled;
     const currency = (shop?.payments?.currency || "USD") as Currency;
 
     // Generate a unique orderId for Stripe checkout (memoized to avoid regeneration)
@@ -496,8 +500,8 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
 
                             {/* Payment Options */}
                             <div className="space-y-3">
-                                {/* Stripe Payment Button - Primary when payments enabled */}
-                                {paymentsEnabled && (
+                                {/* Stripe Payment Button */}
+                                {stripeEnabled && (
                                     <StripePayButton
                                         shopId={shop?.id || shop?.slug || ""}
                                         orderId={orderId}
@@ -512,6 +516,30 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                         <CreditCard className="w-5 h-5" />
                                         Pagar con Tarjeta
                                     </StripePayButton>
+                                )}
+
+                                {/* PayPal Payment Button */}
+                                {paypalEnabled && !hasItems && (
+                                    <div className="p-4 bg-zinc-800 rounded-xl text-center text-slate-400 text-sm">
+                                        Agrega productos para pagar con PayPal
+                                    </div>
+                                )}
+                                {paypalEnabled && hasItems && (
+                                    <div className={cn(
+                                        "transition-opacity",
+                                        (!customerName || !customerPhone || !customerEmail || (deliveryType === "delivery" && !customerAddress))
+                                            ? "opacity-50 pointer-events-none"
+                                            : ""
+                                    )}>
+                                        <PayPalPayButton
+                                            shopId={shop?.id || shop?.slug || ""}
+                                            orderId={orderId}
+                                            items={stripeItems}
+                                            currency={currency}
+                                            disabled={!customerName || !customerPhone || !customerEmail || (deliveryType === "delivery" && !customerAddress)}
+                                            onError={(error) => setStripeError(error)}
+                                        />
+                                    </div>
                                 )}
 
                                 {/* Regular Confirm Order Button */}
