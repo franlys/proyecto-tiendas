@@ -131,29 +131,39 @@ export async function POST(request: NextRequest) {
         }
 
         // 6. Notificar al Dueño vía WhatsApp (Opcional pero recomendado)
-        if (isEvolutionConfigured() && shop.contact.phone) {
+        if (isEvolutionConfigured()) {
             const instanceName = getInstanceName(shop.slug);
-            const ownerPhone = formatPhoneForWhatsApp(shop.contact.phone);
+            const { getAllNotificationPhones } = await import("@/lib/handlers/whatsapp-order.handler");
 
-            let ownerMsg = `🔔 *¡NUEVO PEDIDO RECIBIDO!* 🔥\n\n`;
-            ownerMsg += `Número: *#${order.orderNumber}*\n`;
-            ownerMsg += `Cliente: ${customerName}\n`;
-            ownerMsg += `Teléfono: ${customerPhone}\n\n`;
-            ownerMsg += `📝 *Pedido:*\n`;
-            items.forEach(item => {
-                ownerMsg += `• ${item.name} ($${item.price.toLocaleString()})\n`;
-            });
-            ownerMsg += `\nTipo: *${deliveryType === "recogida" ? "Para Recoger" : "Dírecto a Domicilio"}*\n`;
-            if (customerAddress) {
-                ownerMsg += `📍 Direcc: ${customerAddress}\n`;
-            }
-            ownerMsg += `Total: *$${total.toLocaleString()}*\n\n`;
-            ownerMsg += `Revisa los detalles en tu panel de administración.`;
+            // Re-use logic to get all configured phones (owner + staff)
+            const notificationPhones = await getAllNotificationPhones(shop.id);
 
-            try {
-                await sendTextMessage(instanceName, ownerPhone, ownerMsg);
-            } catch (waError) {
-                console.error("Error enviando WhatsApp al dueño:", waError);
+            if (notificationPhones.length > 0) {
+                let ownerMsg = `🔔 *¡NUEVO PEDIDO WEB RECIBIDO!* 🔥\n\n`;
+                ownerMsg += `Número: *#${order.orderNumber}*\n`;
+                ownerMsg += `Cliente: ${customerName}\n`;
+                ownerMsg += `Teléfono: ${customerPhone}\n\n`;
+                ownerMsg += `📝 *Pedido:*\n`;
+                items.forEach(item => {
+                    ownerMsg += `• ${item.name} ($${item.price.toLocaleString()})\n`;
+                });
+                ownerMsg += `\nTipo: *${deliveryType === "recogida" ? "Para Recoger" : "Dírecto a Domicilio"}*\n`;
+                if (customerAddress) {
+                    ownerMsg += `📍 Direcc: ${customerAddress}\n`;
+                }
+                ownerMsg += `Total: *$${total.toLocaleString()}*\n\n`;
+                ownerMsg += `Revisa los detalles en tu panel de administración.`;
+
+                // Broadcast to all configured notification phones
+                for (const staff of notificationPhones) {
+                    try {
+                        await sendTextMessage(instanceName, staff.phone, ownerMsg);
+                    } catch (waError) {
+                        console.error(`Error enviando WhatsApp de nuevo pedido web a ${staff.phone}:`, waError);
+                    }
+                }
+            } else {
+                console.log(`[Web Order] No notification phones configured for shop ${shop.id}`);
             }
         }
 
