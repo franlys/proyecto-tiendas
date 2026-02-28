@@ -7,6 +7,57 @@ export type PaymentProvider = "stripe" | "none";
 
 export type PaymentMethod = "card" | "apple_pay" | "google_pay";
 
+/**
+ * Countries supported by Stripe Connect
+ * https://stripe.com/docs/connect/cross-border-payouts
+ */
+export type StripeCountry =
+    | "US"   // United States
+    | "DO"   // Dominican Republic
+    | "MX"   // Mexico
+    | "PR"   // Puerto Rico (US territory)
+    | "BR"   // Brazil
+    | "CL"   // Chile
+    | "CO"   // Colombia
+    | "PE"   // Peru
+    | "AR"   // Argentina
+    | "ES"   // Spain
+    | "GB"   // United Kingdom
+    | "CA";  // Canada
+
+export const STRIPE_COUNTRY_LABELS: Record<StripeCountry, string> = {
+    DO: "🇩🇴 República Dominicana",
+    US: "🇺🇸 Estados Unidos",
+    MX: "🇲🇽 México",
+    PR: "🇵🇷 Puerto Rico",
+    BR: "🇧🇷 Brasil",
+    CL: "🇨🇱 Chile",
+    CO: "🇨🇴 Colombia",
+    PE: "🇵🇪 Perú",
+    AR: "🇦🇷 Argentina",
+    ES: "🇪🇸 España",
+    GB: "🇬🇧 Reino Unido",
+    CA: "🇨🇦 Canadá",
+};
+
+/**
+ * Default currency for each country
+ */
+export const STRIPE_COUNTRY_DEFAULT_CURRENCY: Record<StripeCountry, Currency> = {
+    DO: "DOP",
+    US: "USD",
+    MX: "MXN",
+    PR: "USD",
+    BR: "USD", // BRL not in our Currency type yet
+    CL: "USD",
+    CO: "USD",
+    PE: "USD",
+    AR: "USD",
+    ES: "USD", // EUR not in our Currency type yet
+    GB: "USD", // GBP not in our Currency type yet
+    CA: "USD", // CAD not in our Currency type yet
+};
+
 export type PaymentStatus =
     | "pending"      // Payment not yet initiated
     | "processing"   // Payment being processed
@@ -26,6 +77,7 @@ export interface ShopPaymentConfig {
     provider: PaymentProvider;
     stripeAccountId?: string;          // Connected Stripe account ID (acct_xxx)
     stripeAccountStatus?: "pending" | "active" | "restricted";
+    stripeCountry?: StripeCountry;     // Country for the Stripe Connect account
     methods: PaymentMethod[];
     currency: Currency;
     // Stripe Connect onboarding

@@ -27,7 +27,10 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { shopId, email, shopName, returnUrl, refreshUrl } = body;
+        const { shopId, email, shopName, country, returnUrl, refreshUrl } = body;
+
+        // Validate country code (default to US for backwards compatibility)
+        const stripeCountry = country || "US";
 
         if (!shopId || !email || !returnUrl) {
             return NextResponse.json(
@@ -61,7 +64,7 @@ export async function POST(request: NextRequest) {
             const account = await createConnectAccount(
                 email,
                 shopName || shopData?.name || "Mi Tienda",
-                "US" // Default to US
+                stripeCountry // Use the selected country
             );
 
             if (!account) {
@@ -73,14 +76,24 @@ export async function POST(request: NextRequest) {
 
             stripeAccountId = account.id;
 
+            // Determine default currency based on country
+            const defaultCurrencies: Record<string, string> = {
+                DO: "DOP",
+                MX: "MXN",
+                US: "USD",
+                PR: "USD",
+            };
+            const defaultCurrency = defaultCurrencies[stripeCountry] || "USD";
+
             // Save to Firestore
             const paymentConfig: Partial<ShopPaymentConfig> = {
                 enabled: false, // Will be enabled after onboarding
                 provider: "stripe",
                 stripeAccountId,
                 stripeAccountStatus: "pending",
+                stripeCountry: stripeCountry as any, // Save the country
                 methods: ["card", "apple_pay", "google_pay"],
-                currency: "USD",
+                currency: defaultCurrency as any,
                 stripeOnboardingComplete: false,
                 stripeDetailsSubmitted: false,
                 stripeChargesEnabled: false,

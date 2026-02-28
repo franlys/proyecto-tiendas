@@ -19,8 +19,9 @@ import type {
     ShopPaymentConfig,
     PaymentMethod,
     Currency,
+    StripeCountry,
 } from "@/lib/types/payment.types";
-import { PAYMENT_METHOD_LABELS } from "@/lib/types/payment.types";
+import { PAYMENT_METHOD_LABELS, STRIPE_COUNTRY_LABELS, STRIPE_COUNTRY_DEFAULT_CURRENCY } from "@/lib/types/payment.types";
 
 interface PaymentSettingsProps {
     shopId: string;
@@ -43,6 +44,9 @@ export function PaymentSettings({
     const [error, setError] = useState<string | null>(null);
     const [config, setConfig] = useState<ShopPaymentConfig | null>(
         currentConfig || null
+    );
+    const [selectedCountry, setSelectedCountry] = useState<StripeCountry>(
+        currentConfig?.stripeCountry || "DO" // Default to Dominican Republic
     );
 
     // Check account status on mount
@@ -97,6 +101,7 @@ export function PaymentSettings({
                     shopId,
                     email: ownerEmail,
                     shopName,
+                    country: selectedCountry, // Send selected country
                     returnUrl,
                     refreshUrl,
                 }),
@@ -179,6 +184,27 @@ export function PaymentSettings({
                                 <Wallet className="w-4 h-4 text-green-400" />
                                 <span className="text-sm text-slate-300">Google Pay</span>
                             </div>
+                        </div>
+
+                        {/* Country Selector */}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-300 mb-2">
+                                País de tu negocio
+                            </label>
+                            <select
+                                value={selectedCountry}
+                                onChange={(e) => setSelectedCountry(e.target.value as StripeCountry)}
+                                className="w-full px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            >
+                                {(Object.keys(STRIPE_COUNTRY_LABELS) as StripeCountry[]).map((code) => (
+                                    <option key={code} value={code}>
+                                        {STRIPE_COUNTRY_LABELS[code]}
+                                    </option>
+                                ))}
+                            </select>
+                            <p className="text-xs text-slate-500 mt-1">
+                                Stripe te pedirá verificar tu identidad con documentos de este país
+                            </p>
                         </div>
 
                         {error && (
