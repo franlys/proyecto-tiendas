@@ -35,9 +35,9 @@ export async function POST(request: NextRequest) {
         } = body;
 
         // 1. Validaciones básicas
-        if (!shopId || !customerName || !customerPhone) {
+        if (!shopId || !customerName || !customerPhone || !customerEmail) {
             return NextResponse.json(
-                { error: "Faltan campos obligatorios: shopId, customerName, customerPhone" },
+                { error: "Faltan campos obligatorios: shopId, customerName, customerPhone, customerEmail" },
                 { status: 400 }
             );
         }
@@ -131,6 +131,27 @@ export async function POST(request: NextRequest) {
                 }
             } catch (emailError) {
                 console.error("Error enviando email al dueño:", emailError);
+            }
+        }
+
+        // 5.5. Notificar al Cliente vía Email
+        if (customerEmail) {
+            try {
+                const customerEmailContent = emailTemplates.orderConfirmation({
+                    clientName: customerName,
+                    orderNumber: order.orderNumber,
+                    items: items.map(i => ({ name: i.name, quantity: i.quantity || 1, price: i.price })),
+                    total: total,
+                    shopName: shop.name
+                });
+
+                await sendEmail({
+                    to: customerEmail,
+                    subject: `Confirmación de pedido #${order.orderNumber} en ${shop.name}`,
+                    html: customerEmailContent
+                });
+            } catch (customerEmailError) {
+                console.error("Error enviando email al cliente:", customerEmailError);
             }
         }
 

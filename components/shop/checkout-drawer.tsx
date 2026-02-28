@@ -116,8 +116,8 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
     };
 
     const handleSubmit = async () => {
-        if (!customerName || !customerPhone) {
-            alert("Por favor ingresa tu nombre y teléfono");
+        if (!customerName || !customerPhone || !customerEmail) {
+            alert("Por favor ingresa tu nombre, teléfono y correo electrónico");
             return;
         }
 
@@ -163,6 +163,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                     shopId: shop.id || shop.slug, // Ensure we have the ID
                     customerName,
                     customerPhone,
+                    customerEmail,
                     customerAddress: deliveryType === "delivery" ? customerAddress : "Recoger en tienda",
                     items: orderItems,
                     total: totalPrice,
@@ -355,15 +356,13 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                 placeholder="Tu teléfono (WhatsApp)"
                                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
                             />
-                            {paymentsEnabled && (
-                                <input
-                                    type="email"
-                                    value={customerEmail}
-                                    onChange={(e) => setCustomerEmail(e.target.value)}
-                                    placeholder="Tu email (para recibo de pago)"
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
-                                />
-                            )}
+                            <input
+                                type="email"
+                                value={customerEmail}
+                                onChange={(e) => setCustomerEmail(e.target.value)}
+                                placeholder="Tu email"
+                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                            />
                         </div>
                     </div>
 
@@ -506,7 +505,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                         customerEmail={customerEmail || undefined}
                                         customerName={customerName || undefined}
                                         currency={currency}
-                                        disabled={!hasItems || !customerName || !customerPhone || (deliveryType === "delivery" && !customerAddress)}
+                                        disabled={!hasItems || !customerName || !customerPhone || !customerEmail || (deliveryType === "delivery" && !customerAddress)}
                                         onError={(error) => setStripeError(error)}
                                         className="py-6 text-lg"
                                     >

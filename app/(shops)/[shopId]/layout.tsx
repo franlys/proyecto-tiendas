@@ -170,6 +170,12 @@ export async function generateMetadata({ params }: ShopLayoutProps) {
       title,
       description,
     },
+    manifest: `/api/manifest/${shopId}`,
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "black-translucent",
+      title: shop.name,
+    },
   };
 }
 

@@ -43,7 +43,7 @@ export async function sendEmail(
   if (process.env.RESEND_API_KEY) {
     try {
       const data = await resend.emails.send({
-        from: from || "Linko <no-reply@linko.app>",
+        from: from || "Prologix <Prologixcompany@gmail.com>",
         to: Array.isArray(to) ? to : [to],
         subject,
         html,
@@ -70,7 +70,7 @@ export async function sendEmail(
   if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
     try {
       const info = await gmailTransporter.sendMail({
-        from: from || process.env.EMAIL_FROM || process.env.EMAIL_USER,
+        from: from || process.env.EMAIL_FROM || process.env.EMAIL_USER || "Prologix <Prologixcompany@gmail.com>",
         to: Array.isArray(to) ? to.join(", ") : to,
         subject,
         html,

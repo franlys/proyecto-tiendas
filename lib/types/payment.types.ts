@@ -3,9 +3,9 @@
  * Supports Stripe Connect for multi-shop payments
  */
 
-export type PaymentProvider = "stripe" | "none";
+export type PaymentProvider = "stripe" | "paypal" | "none";
 
-export type PaymentMethod = "card" | "apple_pay" | "google_pay";
+export type PaymentMethod = "card" | "apple_pay" | "google_pay" | "paypal" | "venmo";
 
 /**
  * Countries supported by Stripe Connect
@@ -75,16 +75,21 @@ export type Currency = "USD" | "MXN" | "DOP";
 export interface ShopPaymentConfig {
     enabled: boolean;
     provider: PaymentProvider;
+    // Stripe Connect fields
     stripeAccountId?: string;          // Connected Stripe account ID (acct_xxx)
     stripeAccountStatus?: "pending" | "active" | "restricted";
     stripeCountry?: StripeCountry;     // Country for the Stripe Connect account
-    methods: PaymentMethod[];
-    currency: Currency;
-    // Stripe Connect onboarding
     stripeOnboardingComplete?: boolean;
     stripeDetailsSubmitted?: boolean;
     stripeChargesEnabled?: boolean;
     stripePayoutsEnabled?: boolean;
+    // PayPal fields
+    paypalMerchantId?: string;         // PayPal merchant ID
+    paypalEmail?: string;              // PayPal email for receiving payments
+    paypalOnboardingComplete?: boolean;
+    // Common fields
+    methods: PaymentMethod[];
+    currency: Currency;
     // Settings
     requirePaymentBeforeOrder?: boolean; // If false, allows "pay later" / cash on delivery
     applicationFeePercent?: number;       // Platform fee (optional)
@@ -240,6 +245,8 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
     card: "Tarjeta de Crédito/Débito",
     apple_pay: "Apple Pay",
     google_pay: "Google Pay",
+    paypal: "PayPal",
+    venmo: "Venmo",
 };
 
 /**

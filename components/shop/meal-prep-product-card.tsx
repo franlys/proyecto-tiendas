@@ -30,6 +30,8 @@ interface MealPrepProductCardProps {
     shopName?: string;
     whatsappNumber?: string;
     onOrder?: (plates: MealPlate[], totalPrice: number, distance?: number) => void;
+    businessCoordinates?: any;
+    businessAddress?: string;
 }
 
 export function MealPrepProductCard({
@@ -38,6 +40,8 @@ export function MealPrepProductCard({
     shopName,
     whatsappNumber,
     onOrder,
+    businessCoordinates,
+    businessAddress,
 }: MealPrepProductCardProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { addProduct } = useCart();
@@ -148,6 +152,8 @@ export function MealPrepProductCard({
                 whatsappNumber={whatsappNumber}
                 catalog={allProducts}
                 hidePriceIfZero={true}
+                businessCoordinates={businessCoordinates}
+                businessAddress={businessAddress}
             />
         </>
     );

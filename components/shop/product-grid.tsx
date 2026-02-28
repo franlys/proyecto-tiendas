@@ -316,6 +316,8 @@ export function ProductGrid({
                           allProducts={products}
                           shopName={shop.name}
                           whatsappNumber={shop.contact?.whatsapp || shop.contact?.phone}
+                          businessCoordinates={businessCoordinates}
+                          businessAddress={businessAddress}
                         />
                       ) : (
                         <ProductCard
