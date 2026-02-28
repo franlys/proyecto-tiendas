@@ -177,8 +177,8 @@ export async function generateMetadata({ params }: ShopLayoutProps) {
       title: shop.name,
     },
     icons: {
-      icon: shop.logo || "/icons/icon-192.png",
-      apple: shop.logo || "/icons/icon-192.png",
+      icon: shop.pwaIcon || shop.logo || "/icons/icon-192.png",
+      apple: shop.pwaIcon || shop.logo || "/icons/icon-192.png",
     },
   };
 }

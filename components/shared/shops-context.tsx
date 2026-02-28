@@ -78,6 +78,7 @@ export interface ManagedShop extends ShopConfig {
   paymentLink?: string; // For manual payments
   // Appearance (from agency panel)
   logo?: string;
+  pwaIcon?: string; // Icon for PWA installations
   banner?: string;
   slogan?: string;
   background?: ShopBackground;
@@ -218,6 +219,7 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
           stats: data.stats ? { ...defaultStats, ...data.stats } : defaultStats,
           // Appearance (from agency panel)
           logo: data.logo,
+          pwaIcon: data.pwaIcon,
           banner: data.banner,
           slogan: data.slogan,
           background: data.background,

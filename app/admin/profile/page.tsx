@@ -41,6 +41,7 @@ import { geocodeAddress } from "@/lib/utils/distance";
 
 interface ShopProfile {
     logo: string;
+    pwaIcon?: string;
     name: string;
     description: string;
     slogan: string;
@@ -137,6 +138,7 @@ function ProfileContent() {
 
     const [profile, setProfile] = useState<ShopProfile>({
         logo: "",
+        pwaIcon: "",
         name: "",
         description: "",
         slogan: "",
@@ -169,6 +171,7 @@ function ProfileContent() {
                     description: shop.description || "",
                     slogan: shop.slogan || "",
                     logo: shop.logo || "",
+                    pwaIcon: shop.pwaIcon || "",
                     phone: shop.contact?.phone || "",
                     whatsapp: (shop.contact as any)?.whatsapp || "", // Load WhatsApp
                     email: shop.contact?.email || "",
@@ -223,6 +226,7 @@ function ProfileContent() {
                 description: profile.description,
                 slogan: profile.slogan,
                 logo: profile.logo, // Save logo
+                pwaIcon: profile.pwaIcon, // Save PWA Icon
                 contact: {
                     phone: profile.phone,
                     whatsapp: profile.whatsapp, // Save WhatsApp
@@ -275,6 +279,17 @@ function ProfileContent() {
             const reader = new FileReader();
             reader.onloadend = () => {
                 setProfile(prev => ({ ...prev, logo: reader.result as string }));
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handlePwaIconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setProfile(prev => ({ ...prev, pwaIcon: reader.result as string }));
             };
             reader.readAsDataURL(file);
         }
@@ -485,6 +500,54 @@ function ProfileContent() {
                                             <p className="text-white font-medium">Sube tu logo</p>
                                             <p className="text-sm text-slate-400">
                                                 Recomendado: 200x200px, PNG o JPG
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* PWA Icon Upload */}
+                                <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
+                                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                        <Globe className="w-5 h-5 text-purple-400" />
+                                        Ícono de la App (PWA)
+                                    </h3>
+                                    <div className="flex items-center gap-6">
+                                        <div className="relative">
+                                            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center overflow-hidden">
+                                                {profile.pwaIcon ? (
+                                                    <img
+                                                        src={profile.pwaIcon}
+                                                        alt="PWA Icon"
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : profile.logo ? (
+                                                    <img
+                                                        src={profile.logo}
+                                                        alt="Fallback Icon"
+                                                        className="w-full h-full object-cover opacity-50"
+                                                    />
+                                                ) : (
+                                                    <span className="text-white text-3xl font-bold">
+                                                        {profile.name?.charAt(0) || "T"}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <label className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center cursor-pointer hover:bg-purple-400 transition-colors">
+                                                <Camera className="w-4 h-4 text-white" />
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handlePwaIconUpload}
+                                                    className="hidden"
+                                                />
+                                            </label>
+                                        </div>
+                                        <div>
+                                            <p className="text-white font-medium">Sube tu ícono para móviles</p>
+                                            <p className="text-sm text-slate-400 max-w-sm">
+                                                Este ícono se usa al guardar la página en la pantalla de inicio.
+                                                <br />
+                                                <b className="text-purple-300">Requerido: Debe ser totalmente CUADRADO (Ej: 512x512) y sin fondos transparentes.</b>
                                             </p>
                                         </div>
                                     </div>

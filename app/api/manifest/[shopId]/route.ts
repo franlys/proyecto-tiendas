@@ -26,9 +26,9 @@ export async function GET(
             shopName = shopData.name || shopName;
             shopDescription = shopData.description || shopDescription;
             themeColor = shopData.theme?.colors?.primary || themeColor;
-            if (shopData.logo) {
-                iconUrl = shopData.logo;
-                icon512Url = shopData.logo;
+            if (shopData.pwaIcon || shopData.logo) {
+                iconUrl = shopData.pwaIcon || shopData.logo;
+                icon512Url = shopData.pwaIcon || shopData.logo;
             }
         } else {
             const docRef = doc(db, "shops", shopId);
@@ -38,9 +38,9 @@ export async function GET(
                 shopName = shopData.name || shopName;
                 shopDescription = shopData.description || shopDescription;
                 themeColor = shopData.theme?.colors?.primary || themeColor;
-                if (shopData.logo) {
-                    iconUrl = shopData.logo;
-                    icon512Url = shopData.logo;
+                if (shopData.pwaIcon || shopData.logo) {
+                    iconUrl = shopData.pwaIcon || shopData.logo;
+                    icon512Url = shopData.pwaIcon || shopData.logo;
                 }
             }
         }

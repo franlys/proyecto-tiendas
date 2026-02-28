@@ -238,6 +238,7 @@ export interface ShopConfig {
   slug: string;
   description: string;
   logo?: string;
+  pwaIcon?: string; // App Icon specifically for PWA installations
   banner?: string; // Cover/header image
   slogan?: string; // Short tagline
   theme: ShopTheme;
