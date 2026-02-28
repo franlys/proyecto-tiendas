@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
     X,
     ShoppingBag,
@@ -17,6 +17,7 @@ import {
     ChevronDown,
     ChevronUp,
     Check,
+    CreditCard,
 } from "lucide-react";
 import { useCart, useShop, useOrders, useShopConfig } from "@/components/shared";
 import { cn, formatPhoneForWhatsApp } from "@/lib/utils";
@@ -24,6 +25,8 @@ import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui";
 import type { ProductCartItem } from "@/components/shared/cart-context";
+import { StripePayButton } from "@/components/shop/stripe-checkout-button";
+import type { Currency } from "@/lib/types/payment.types";
 
 interface CheckoutDrawerProps {
     isOpen: boolean;
@@ -47,6 +50,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
     // Checkout state
     const [customerName, setCustomerName] = useState("");
     const [customerPhone, setCustomerPhone] = useState("");
+    const [customerEmail, setCustomerEmail] = useState("");
     const [customerAddress, setCustomerAddress] = useState("");
     const [deliveryType, setDeliveryType] = useState<"pickup" | "delivery">("delivery");
     const [scheduledDate, setScheduledDate] = useState("");
@@ -54,6 +58,38 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
     const [orderNotes, setOrderNotes] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [orderSuccess, setOrderSuccess] = useState<{ id: string, number: string } | null>(null);
+    const [stripeError, setStripeError] = useState<string | null>(null);
+
+    // Check if shop has Stripe payments enabled
+    const paymentsEnabled = shop?.payments?.enabled && shop?.payments?.stripeAccountId;
+    const currency = (shop?.payments?.currency || "USD") as Currency;
+
+    // Generate a unique orderId for Stripe checkout (memoized to avoid regeneration)
+    const orderId = useMemo(() => `order-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, []);
+
+    // Map cart items to Stripe checkout format
+    const stripeItems = useMemo(() => {
+        return products.map((p) => {
+            const basePrice = p.promoPrice || p.price;
+            const extrasTotal = p.extrasTotal || 0;
+            let description = "";
+            if (p.variantName) description += p.variantName;
+            if (p.selectedExtras && p.selectedExtras.length > 0) {
+                const extrasStr = p.selectedExtras.map(e =>
+                    e.quantity > 1 ? `${e.name} x${e.quantity}` : e.name
+                ).join(", ");
+                if (description) description += " + ";
+                description += extrasStr;
+            }
+            return {
+                name: p.name,
+                description: description || undefined,
+                quantity: p.quantity,
+                unitPrice: basePrice + extrasTotal,
+                image: p.image,
+            };
+        });
+    }, [products]);
 
     // Item notes expanded state
     const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
@@ -172,7 +208,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
 
             {/* Drawer */}
             <div className={cn(
-                "relative w-full sm:max-w-lg max-h-[90vh] overflow-hidden",
+                "relative flex flex-col w-full sm:max-w-lg max-h-[90vh] sm:max-h-[85vh]",
                 "bg-slate-900 border border-white/10",
                 "rounded-t-3xl sm:rounded-2xl",
                 "animate-in slide-in-from-bottom duration-300"
@@ -201,7 +237,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                 </div>
 
                 {/* Content */}
-                <div className="overflow-y-auto max-h-[calc(90vh-180px)] p-4 space-y-6">
+                <div className="flex-1 overflow-y-auto p-4 space-y-6">
                     {/* Items */}
                     {hasItems && (
                         <div className="space-y-3">
@@ -319,6 +355,15 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                 placeholder="Tu teléfono (WhatsApp)"
                                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
                             />
+                            {paymentsEnabled && (
+                                <input
+                                    type="email"
+                                    value={customerEmail}
+                                    onChange={(e) => setCustomerEmail(e.target.value)}
+                                    placeholder="Tu email (para recibo de pago)"
+                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                                />
+                            )}
                         </div>
                     </div>
 
@@ -442,23 +487,58 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                     ${totalPrice.toLocaleString()}
                                 </span>
                             </div>
-                            <Button
-                                onClick={handleSubmit}
-                                disabled={isSubmitting || !hasItems}
-                                className="w-full py-6 text-lg bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-                            >
-                                {isSubmitting ? (
-                                    <>
-                                        <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                                        Procesando...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Truck className="w-5 h-5 mr-2" />
-                                        Confirmar Pedido
-                                    </>
+
+                            {/* Stripe Error Message */}
+                            {stripeError && (
+                                <div className="mb-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                                    {stripeError}
+                                </div>
+                            )}
+
+                            {/* Payment Options */}
+                            <div className="space-y-3">
+                                {/* Stripe Payment Button - Primary when payments enabled */}
+                                {paymentsEnabled && (
+                                    <StripePayButton
+                                        shopId={shop?.id || shop?.slug || ""}
+                                        orderId={orderId}
+                                        items={stripeItems}
+                                        customerEmail={customerEmail || undefined}
+                                        customerName={customerName || undefined}
+                                        currency={currency}
+                                        disabled={!hasItems || !customerName || !customerPhone || (deliveryType === "delivery" && !customerAddress)}
+                                        onError={(error) => setStripeError(error)}
+                                        className="py-6 text-lg"
+                                    >
+                                        <CreditCard className="w-5 h-5" />
+                                        Pagar con Tarjeta
+                                    </StripePayButton>
                                 )}
-                            </Button>
+
+                                {/* Regular Confirm Order Button */}
+                                <Button
+                                    onClick={handleSubmit}
+                                    disabled={isSubmitting || !hasItems}
+                                    className={cn(
+                                        "w-full py-6 text-lg",
+                                        paymentsEnabled
+                                            ? "bg-white/10 hover:bg-white/20 text-white border border-white/20"
+                                            : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                                    )}
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                                            Procesando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Truck className="w-5 h-5 mr-2" />
+                                            {paymentsEnabled ? "Pagar al Recibir" : "Confirmar Pedido"}
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
                         </>
                     )}
                 </div>

@@ -51,6 +51,7 @@ interface ShopProfile {
     city: string;
     coordinates?: Coordinates;
     ownerNotificationPhone?: string;
+    ownerNotificationEmail?: string;
     // Bank Accounts
     bankAccounts: ShopBankAccount[];
     // Social
@@ -145,6 +146,7 @@ function ProfileContent() {
         address: "",
         city: "",
         ownerNotificationPhone: "",
+        ownerNotificationEmail: "",
         bankAccounts: [],
         instagram: "",
         facebook: "",
@@ -174,6 +176,7 @@ function ProfileContent() {
                     city: shop.contact?.city || "",
                     coordinates: shop.coordinates,
                     ownerNotificationPhone: shop.ownerNotificationPhone || "",
+                    ownerNotificationEmail: shop.ownerNotificationEmail || "",
                     bankAccounts: shop.bankAccounts || [],
                     // Load Social Media
                     instagram: (shop as any).social?.instagram || "",
@@ -228,6 +231,7 @@ function ProfileContent() {
                     city: profile.city
                 },
                 ownerNotificationPhone: profile.ownerNotificationPhone,
+                ownerNotificationEmail: profile.ownerNotificationEmail,
                 bankAccounts: profile.bankAccounts,
                 // Save Social Media
                 social: {
@@ -564,14 +568,30 @@ function ProfileContent() {
                                         variant="dark"
                                     />
                                     <p className="text-xs text-slate-500 mt-1">
-                                        Este número recibirá alertas de nuevos pedidos y stock bajo. No será visible para los clientes.
+                                        Este número recibirá alertas de nuevos pedidos y stock bajo por WhatsApp. No será visible para los clientes.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                                        Email de Notificaciones (Privado)
+                                    </label>
+                                    <input
+                                        type="email"
+                                        value={profile.ownerNotificationEmail || ""}
+                                        onChange={(e) => setProfile(prev => ({ ...prev, ownerNotificationEmail: e.target.value }))}
+                                        placeholder="alertas@tudominio.com"
+                                        className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50"
+                                    />
+                                    <p className="text-xs text-slate-500 mt-1">
+                                        Email para recibir copias de los pedidos y notificaciones del sistema.
                                     </p>
                                 </div>
 
                                 <div>
                                     <label className="block text-sm font-medium text-slate-300 mb-2">
                                         <Mail className="w-4 h-4 inline mr-2" />
-                                        Email
+                                        Email Público
                                     </label>
                                     <input
                                         type="email"

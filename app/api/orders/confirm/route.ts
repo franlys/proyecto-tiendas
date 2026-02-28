@@ -110,7 +110,9 @@ export async function POST(request: NextRequest) {
         }
 
         // 5. Notificar al Dueño vía Email
-        if (shop.contact.email) {
+        const emailsToNotify = Array.from(new Set([shop.ownerNotificationEmail, shop.contact?.email].filter(Boolean)));
+
+        if (emailsToNotify.length > 0) {
             try {
                 const emailContent = emailTemplates.orderConfirmation({
                     clientName: customerName,
@@ -120,11 +122,13 @@ export async function POST(request: NextRequest) {
                     shopName: shop.name
                 });
 
-                await sendEmail({
-                    to: shop.contact.email,
-                    subject: `Nuevo pedido recibido: #${order.orderNumber}`,
-                    html: emailContent
-                });
+                for (const email of emailsToNotify) {
+                    await sendEmail({
+                        to: email as string,
+                        subject: `Nuevo pedido recibido: #${order.orderNumber}`,
+                        html: emailContent
+                    });
+                }
             } catch (emailError) {
                 console.error("Error enviando email al dueño:", emailError);
             }

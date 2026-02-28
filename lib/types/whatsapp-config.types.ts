@@ -44,6 +44,7 @@ export interface WhatsAppAutoReplyConfig {
 
     // Notificaciones de pedidos
     ownerNotificationPhone?: string;  // Teléfono personal del dueño para notificaciones
+    ownerNotificationEmail?: string;  // Email personal del dueño para notificaciones
     notifyOwnerOnOrder?: boolean;     // Enviar notificación WhatsApp al dueño
 
     // Múltiples teléfonos de staff para notificaciones
@@ -91,6 +92,7 @@ export interface ShopBasicInfo {
     logoUrl?: string;
     businessType?: string;
     ownerNotificationPhone?: string;
+    ownerNotificationEmail?: string;
     bankAccounts?: ShopBankAccount[];
     // Extended for NLP/Bot
     website?: string;

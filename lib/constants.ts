@@ -27,7 +27,9 @@ import type { BusinessType } from "@/lib/types/business.types";
 import { BUSINESS_TYPE_CONFIG as FULL_BUSINESS_CONFIG } from "@/lib/types/business.types";
 import type { ProductExtra } from "@/lib/types/product-extra.types";
 import type { MealPlate } from "@/lib/types/meal-prep.types";
+import type { ShopPaymentConfig } from "@/lib/types/payment.types";
 export type { BusinessType };
+export type { ShopPaymentConfig };
 export type { ProductExtra };
 export type { MealPlate };
 
@@ -251,6 +253,7 @@ export interface ShopConfig {
   social?: ShopSocialMedia;
   schedule?: ShopSchedule;
   ownerNotificationPhone?: string;
+  ownerNotificationEmail?: string;
   // Phase 14: Payment & Bank Info
   bankAccounts?: ShopBankAccount[];
   // Phase 13: Business Type & Wholesale
@@ -264,6 +267,8 @@ export interface ShopConfig {
   features?: FeatureId[];
   // Background audio/music
   backgroundAudio?: BackgroundAudio;
+  // Stripe Connect payments configuration
+  payments?: ShopPaymentConfig;
 }
 
 // ============================================

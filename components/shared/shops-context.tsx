@@ -34,6 +34,7 @@ import {
   type ShopCategory
 } from "@/lib/constants";
 import type { BusinessType } from "@/lib/types/business.types";
+import type { ShopPaymentConfig } from "@/lib/types/payment.types";
 
 // RE-EXPORT for consumers that import from here
 export { DEFAULT_FEATURES };
@@ -64,6 +65,7 @@ export interface ManagedShop extends ShopConfig {
   };
   // Contact
   ownerNotificationPhone?: string;
+  ownerNotificationEmail?: string;
   // Features
   enabledFeatures?: FeatureId[];
   features?: FeatureId[]; // Legacy compatibility
@@ -85,6 +87,8 @@ export interface ManagedShop extends ShopConfig {
     tiktok?: string;
     website?: string;
   };
+  // Payment configuration (Stripe Connect)
+  payments?: ShopPaymentConfig;
 }
 
 interface CreateShopData {
@@ -221,6 +225,8 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
           social: data.social,
           // Bank accounts (for payment info)
           bankAccounts: data.bankAccounts || [],
+          // Payment configuration (Stripe Connect)
+          payments: data.payments,
         } as ManagedShop);
       });
 

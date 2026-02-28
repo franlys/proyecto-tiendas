@@ -8,6 +8,7 @@ import { adminDb } from "@/lib/firebase-admin";
 import { sendTextMessage } from "@/lib/evolution";
 import { FieldValue } from "firebase-admin/firestore";
 import { sendOrderPushNotification } from "@/lib/services/push-notification.service";
+import { sendEmail, emailTemplates } from "@/lib/email";
 
 // Patrones para detectar pedidos
 const ORDER_PATTERNS = {
@@ -485,6 +486,39 @@ export async function processWhatsAppOrder(
     }
   } catch (error) {
     console.error("[WhatsApp Order] Error notifying staff:", error);
+  }
+
+  // 4.5. Enviar Notificación por Email al Dueño
+  try {
+    const db = adminDb();
+    if (db) {
+      const shopDoc = await db.collection("shops").doc(shopId).get();
+      if (shopDoc.exists) {
+        const shopData = shopDoc.data();
+        const emailsToNotify = Array.from(new Set([shopData?.ownerNotificationEmail, shopData?.contact?.email].filter(Boolean)));
+
+        if (emailsToNotify.length > 0) {
+          const emailContent = emailTemplates.orderConfirmation({
+            clientName: finalCustomerName,
+            orderNumber: savedOrder.orderNumber,
+            items: order.items.map(i => ({ name: i.name, quantity: i.quantity || 1, price: i.price })),
+            total: order.total,
+            shopName: order.shopName
+          });
+
+          for (const email of emailsToNotify) {
+            await sendEmail({
+              to: email as string,
+              subject: `Nuevo pedido WhatsApp: #${savedOrder.orderNumber}`,
+              html: emailContent
+            });
+          }
+          console.log(`[WhatsApp Order] Sent email notification to ${emailsToNotify.join(", ")}`);
+        }
+      }
+    }
+  } catch (error) {
+    console.error("[WhatsApp Order] Error sending email to owner:", error);
   }
 
   // 5. Crear notificación en el panel admin

@@ -40,6 +40,7 @@ import {
     MonitorPlay,
     Music,
     Volume2,
+    CreditCard,
 } from "lucide-react";
 import {
     AuthProvider,
@@ -56,6 +57,8 @@ import {
 import { Button, PhoneInput, type PhoneInputValue } from "@/components/ui";
 import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
 import { WhatsAppAutomationPanel } from "@/components/shared/whatsapp-automation";
+import { PaymentSettings } from "@/components/admin/payment-settings";
+import type { ShopPaymentConfig } from "@/lib/types/payment.types";
 import { BackgroundGallery, mapToBackgroundCategory } from "@/components/shared/background-gallery";
 import { cn } from "@/lib/utils";
 import { BUSINESS_TYPES } from "@/lib/types/business-types-v2";
@@ -189,7 +192,7 @@ function ShopDetailContent() {
     const { isSuperAdmin, isLoading: authLoading } = useAuth();
 
     const [shop, setShop] = useState<ManagedShop | undefined>(undefined);
-    const [activeTab, setActiveTab] = useState<"overview" | "config" | "appearance" | "features" | "staff" | "whatsapp" | "security">("overview");
+    const [activeTab, setActiveTab] = useState<"overview" | "config" | "appearance" | "features" | "staff" | "whatsapp" | "security" | "payments">("overview");
     const [loading, setLoading] = useState(true);
 
     // Form States
@@ -754,6 +757,20 @@ function ShopDetailContent() {
                             <div className="flex items-center gap-3">
                                 <Key className="w-4 h-4" />
                                 <span>Seguridad</span>
+                            </div>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("payments")}
+                            className={cn(
+                                "w-full text-left px-4 py-3 rounded-xl transition-all",
+                                activeTab === "payments"
+                                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                            )}
+                        >
+                            <div className="flex items-center gap-3">
+                                <CreditCard className="w-4 h-4" />
+                                <span>Pagos</span>
                             </div>
                         </button>
                     </div>
@@ -2170,6 +2187,26 @@ function ShopDetailContent() {
                                             Contraseña actualizada correctamente
                                         </p>
                                     )}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === "payments" && (
+                            <div className="space-y-6">
+                                <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
+                                    <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
+                                        <CreditCard className="w-5 h-5 text-indigo-400" />
+                                        Pagos en Línea - {shop.name}
+                                    </h3>
+                                    <PaymentSettings
+                                        shopId={shop.id}
+                                        shopName={shop.name}
+                                        ownerEmail={shop.contact?.email || shop.ownerNotificationEmail || ""}
+                                        currentConfig={shop.payments as ShopPaymentConfig | undefined}
+                                        onConfigChange={async (config: ShopPaymentConfig) => {
+                                            await updateShop(shop.id, { payments: config } as any);
+                                        }}
+                                    />
                                 </div>
                             </div>
                         )}

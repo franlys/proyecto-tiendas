@@ -8,6 +8,7 @@ import type {
   ShopBranding,
   ShopFeatureToggles,
 } from "@/lib/types/shop-customization.types";
+import type { ShopPaymentConfig } from "@/lib/types/payment.types";
 
 // Re-export para compatibilidad
 export type { BusinessType, BusinessCategory };
@@ -88,9 +89,14 @@ export interface FirestoreShop {
   links?: ShopLinks;
   branding?: ShopBranding;
 
-  // Credenciales del owner (temporal - migrar a users collection)
+  // Configuración de pagos (Stripe Connect)
+  payments?: ShopPaymentConfig;
+
+  // Credenciales y notificaciones del owner
   ownerUsername?: string;
   ownerPassword?: string;
+  ownerNotificationPhone?: string;
+  ownerNotificationEmail?: string;
 
   // Timestamps
   createdAt: Timestamp;
@@ -138,6 +144,8 @@ export interface UpdateShopInput {
   links?: Partial<ShopLinks>;
   branding?: Partial<ShopBranding>;
   featureToggles?: Partial<ShopFeatureToggles>;
+  // Configuración de pagos
+  payments?: Partial<ShopPaymentConfig>;
 }
 
 // Respuesta de API

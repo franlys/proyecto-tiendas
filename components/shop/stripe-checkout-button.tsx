@@ -174,7 +174,8 @@ export function StripePayButton({
     onError,
     disabled = false,
     children,
-}: Omit<StripeCheckoutButtonProps, "onSuccess" | "className"> & {
+    className = "",
+}: Omit<StripeCheckoutButtonProps, "onSuccess"> & {
     children?: React.ReactNode;
 }) {
     const [isLoading, setIsLoading] = useState(false);
@@ -227,7 +228,7 @@ export function StripePayButton({
         <button
             onClick={handleCheckout}
             disabled={disabled || isLoading}
-            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 disabled:from-zinc-600 disabled:to-zinc-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-indigo-500/20 disabled:shadow-none"
+            className={`w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 disabled:from-zinc-600 disabled:to-zinc-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-indigo-500/20 disabled:shadow-none ${className}`}
         >
             {isLoading ? (
                 <>
