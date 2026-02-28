@@ -45,6 +45,16 @@ export async function GET(
             }
         }
 
+        const getMimeType = (url: string) => {
+            const lowerUrl = url.toLowerCase();
+            if (lowerUrl.includes('.jpg') || lowerUrl.includes('.jpeg')) return 'image/jpeg';
+            if (lowerUrl.includes('.webp')) return 'image/webp';
+            if (lowerUrl.includes('.svg')) return 'image/svg+xml';
+            return 'image/png';
+        };
+
+        const mimeType = getMimeType(iconUrl);
+
         const manifest = {
             id: `/${shopId}`,
             name: shopName,
@@ -59,14 +69,14 @@ export async function GET(
                 {
                     src: iconUrl,
                     sizes: "192x192",
-                    type: "image/png",
-                    purpose: "any maskable"
+                    type: mimeType,
+                    purpose: "any"
                 },
                 {
                     src: icon512Url,
                     sizes: "512x512",
-                    type: "image/png",
-                    purpose: "any maskable"
+                    type: mimeType,
+                    purpose: "any"
                 }
             ],
             lang: "es",

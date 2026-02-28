@@ -176,6 +176,10 @@ export async function generateMetadata({ params }: ShopLayoutProps) {
       statusBarStyle: "black-translucent",
       title: shop.name,
     },
+    icons: {
+      icon: shop.logo || "/icons/icon-192.png",
+      apple: shop.logo || "/icons/icon-192.png",
+    },
   };
 }
 
