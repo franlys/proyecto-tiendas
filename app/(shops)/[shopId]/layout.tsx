@@ -51,6 +51,7 @@ async function getShopData(shopId: string): Promise<ShopConfig | null> {
         // Configuración visual
         banner: shopData.banner,
         logo: shopData.logo,
+        pwaIcon: shopData.pwaIcon,
         slogan: shopData.slogan,
         social: shopData.social,
         background: shopData.background,
@@ -85,6 +86,7 @@ async function getShopData(shopId: string): Promise<ShopConfig | null> {
         features: shopData.features || shopData.enabledFeatures,
         banner: shopData.banner,
         logo: shopData.logo,
+        pwaIcon: shopData.pwaIcon,
         slogan: shopData.slogan,
         social: shopData.social,
         background: shopData.background,
