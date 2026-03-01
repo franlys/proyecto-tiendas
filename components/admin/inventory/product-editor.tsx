@@ -24,7 +24,19 @@ interface ProductEditorProps {
     shopId: string; // Required for image uploads
     hideStock?: boolean; // For menu-only businesses (meal prep, etc.)
     allProducts?: Product[]; // For selecting components for predefined plates
+    businessType?: string; // Business type to determine which sections to show
 }
+
+// Food business types that should show Extras/Toppings section
+const FOOD_BUSINESS_TYPES = [
+    "restaurante",
+    "restaurant", // legacy
+    "cafeteria",
+    "bar",
+    "pasteleria",
+    "food_truck",
+    "meal_prep",
+];
 
 // Extended product with custom category support
 interface ExtendedProduct extends Omit<Product, 'category'> {
@@ -62,7 +74,9 @@ const EMPTY_PRODUCT: ExtendedProduct = {
     allowedComponentCategories: [],
 };
 
-export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideStock = false, allProducts = [] }: ProductEditorProps) {
+export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideStock = false, allProducts = [], businessType = "" }: ProductEditorProps) {
+    // Determine if this is a food business (should show Extras/Toppings)
+    const isFoodBusiness = FOOD_BUSINESS_TYPES.includes(businessType.toLowerCase());
     const [formData, setFormData] = useState<ExtendedProduct>(EMPTY_PRODUCT);
     const [hasVariants, setHasVariants] = useState(false);
     const [hasExtras, setHasExtras] = useState(false);
@@ -664,7 +678,8 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideSt
 
                                 <div className="h-px bg-zinc-800 my-6" />
 
-                                {/* Extras Section */}
+                                {/* Extras Section - Only for food businesses */}
+                                {isFoodBusiness && (
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
                                         <h3 className="text-lg font-semibold text-white">Extras / Toppings</h3>
@@ -776,6 +791,7 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideSt
                                         </div>
                                     )}
                                 </div>
+                                )}
 
                                 <div className="h-px bg-zinc-800 my-6" />
 

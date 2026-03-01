@@ -107,9 +107,15 @@ export function ProductList({ products, hasInventory, onEdit, onDelete, onUpdate
                                         </span>
                                     );
                                 })()}
-                                {hasInventory && (product.lowStockThreshold || 0) >= (product.stock || 0) && (
-                                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse">
-                                        Bajo Stock
+                                {/* Stock Status Badges */}
+                                {hasInventory && !product.infiniteStock && (product.stock || 0) === 0 && (
+                                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-600/30 text-red-300 border border-red-500/50">
+                                        ⚠️ Agotado
+                                    </span>
+                                )}
+                                {hasInventory && !product.infiniteStock && (product.stock || 0) > 0 && (product.lowStockThreshold || 0) >= (product.stock || 0) && (
+                                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse">
+                                        Stock Bajo ({product.stock})
                                     </span>
                                 )}
                                 {product.variants && product.variants.length > 0 && (
