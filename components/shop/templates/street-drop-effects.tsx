@@ -16,8 +16,8 @@ function usePrefersReducedMotion(): boolean {
 // Throttle function for smoother event handling - uses requestAnimationFrame
 function useThrottledCallback<T extends (...args: any[]) => void>(callback: T, delay: number = 16): T {
     const lastCall = useRef(0);
-    const rafId = useRef<number>();
-    const pendingArgs = useRef<Parameters<T>>();
+    const rafId = useRef<number | undefined>(undefined);
+    const pendingArgs = useRef<Parameters<T> | undefined>(undefined);
 
     useEffect(() => {
         return () => {
