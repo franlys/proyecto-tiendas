@@ -35,6 +35,7 @@ import {
 } from "@/lib/constants";
 import type { BusinessType } from "@/lib/types/business.types";
 import type { ShopPaymentConfig } from "@/lib/types/payment.types";
+import type { DropThemeConfig } from "@/lib/types/drop-theme.types";
 
 // RE-EXPORT for consumers that import from here
 export { DEFAULT_FEATURES };
@@ -90,6 +91,8 @@ export interface ManagedShop extends ShopConfig {
   };
   // Payment configuration (Stripe Connect)
   payments?: ShopPaymentConfig;
+  // Drop Theme (for premium streetwear templates)
+  dropTheme?: DropThemeConfig;
 }
 
 interface CreateShopData {
@@ -234,6 +237,8 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
           bankAccounts: data.bankAccounts || [],
           // Payment configuration (Stripe Connect)
           payments: data.payments,
+          // Drop Theme (for premium streetwear templates)
+          dropTheme: data.dropTheme,
         } as ManagedShop);
       });
 

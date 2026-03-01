@@ -78,6 +78,24 @@ export interface DropTheme {
     updatedAt: string;
 }
 
+/**
+ * Simplified Drop Theme Configuration for Shop Settings
+ * Used in admin profile page for quick configuration
+ */
+export interface DropThemeConfig {
+    preset: DropThemePreset;
+    slogan: string;
+    primaryColor: string;
+    tickerPhrases: string[];
+    animations: {
+        stickerSlap: boolean;
+        stencilReveal: boolean;
+        customCursor: boolean;
+        parallax: boolean;
+        productGlitch: boolean;
+    };
+}
+
 // ============================================
 // PRESET DEFINITIONS
 // ============================================
