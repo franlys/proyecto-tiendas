@@ -232,6 +232,19 @@ export interface ShopBankAccount {
 import { Coordinates } from "./utils/distance";
 export type { Coordinates };
 
+export interface ShopStory {
+  title: string;
+  content: string;
+  image?: string;
+}
+
+export interface ShopCelebrity {
+  id: string;
+  name: string;
+  imageUrl: string;
+  role?: string;
+}
+
 export interface ShopConfig {
   id: string;
   name: string;
@@ -258,6 +271,9 @@ export interface ShopConfig {
   ownerNotificationEmail?: string;
   // Phase 14: Payment & Bank Info
   bankAccounts?: ShopBankAccount[];
+  // Phase 15: Street Drop Customization
+  story?: ShopStory;
+  celebrities?: ShopCelebrity[];
   // Phase 13: Business Type & Wholesale
   businessType?: BusinessType;
   businessTypes?: string[]; // Multi-type support
@@ -327,6 +343,16 @@ export const MOCK_SHOPS: Record<string, ShopConfig> = {
     contact: { phone: "1234567890" },
     businessType: "retail",
     features: ["inventory", "orders"],
+    story: {
+      title: "THE STREET HUSTLE",
+      content: "Nacimos en el concreto. 'ALL FOR THE LOVE' no es solo ropa, es un movimiento de los que sudan la calle todos los días buscando superarse sin olvidar sus raíces.",
+      image: "https://images.unsplash.com/photo-1577907573030-cf227914e9f7?w=800&q=80"
+    },
+    celebrities: [
+      { id: "celeb-1", name: "Rauw Alejandro", imageUrl: "https://images.unsplash.com/photo-1520635360276-f30bb03ee0df?w=800&q=80", role: "Artista Urbano" },
+      { id: "celeb-2", name: "Eladio Carrión", imageUrl: "https://images.unsplash.com/photo-1542385150-1490bd011b43?w=800&q=80", role: "Trapero" },
+      { id: "celeb-3", name: "Myke Towers", imageUrl: "https://images.unsplash.com/photo-1511425023943-30ed8636b00b?w=800&q=80", role: "Compositor" }
+    ]
   },
   "sculpt-love-method": {
     id: "sculpt-love-method",

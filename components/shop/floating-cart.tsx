@@ -54,6 +54,9 @@ export function FloatingCart() {
   // Determine if we should use detailed checkout (for meal prep, etc.)
   const shouldUseDetailedCheckout = DETAILED_CHECKOUT_TYPES.includes(config.businessType || "") && hasProducts;
 
+  // Phase 15: Thematic UI
+  const isStreetDrop = shop?.templateType === "street-drop-v1" || shop?.slug === "gingxerstudio";
+
   const handleClick = () => {
     if (shouldUseAppointmentFlow) {
       // Open appointment modal for beauty businesses with only services
@@ -85,6 +88,8 @@ export function FloatingCart() {
 
   // Get button text based on business type and selection
   const getButtonText = () => {
+    if (isStreetDrop) return 'SECURE THE DROP';
+
     if (shouldUseAppointmentFlow) {
       return 'Agendar Cita';
     }
@@ -107,8 +112,10 @@ export function FloatingCart() {
           "fixed bottom-4 left-2 right-2 z-50",
           "sm:left-4 sm:right-4",
           "md:left-auto md:right-6 md:max-w-md",
-          "glass-panel rounded-2xl p-3 sm:p-4",
-          "animate-in slide-in-from-bottom-4 duration-300"
+          "animate-in slide-in-from-bottom-4 duration-300",
+          isStreetDrop
+            ? "glass-panel bg-black/95 border-2 border-red-500 rounded-none drop-shadow-[5px_5px_0px_rgba(255,0,51,1)] p-3 sm:p-4"
+            : "glass-panel rounded-2xl p-3 sm:p-4"
         )}
       >
         <div className="flex items-center justify-between gap-2 sm:gap-4">
@@ -157,7 +164,9 @@ export function FloatingCart() {
                 "shadow-lg hover:shadow-xl",
                 shouldUseAppointmentFlow
                   ? "bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-500/90"
-                  : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700",
+                  : isStreetDrop
+                    ? "bg-red-600 hover:bg-black border border-red-600 hover:text-red-500 !rounded-none"
+                    : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700",
                 isSubmitting && "opacity-70 cursor-not-allowed"
               )}
             >
@@ -165,10 +174,12 @@ export function FloatingCart() {
                 <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
               ) : shouldUseAppointmentFlow ? (
                 <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
+              ) : isStreetDrop ? (
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7" /><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4" /><path d="M2 7h20" /><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7" /></svg>
               ) : (
                 <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
               )}
-              <span className="hidden sm:inline">
+              <span className={cn("hidden sm:inline", isStreetDrop && "uppercase tracking-widest font-black")}>
                 {getButtonText()}
               </span>
             </button>

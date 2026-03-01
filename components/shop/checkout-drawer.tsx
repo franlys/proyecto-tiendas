@@ -61,6 +61,9 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
     const [orderSuccess, setOrderSuccess] = useState<{ id: string, number: string } | null>(null);
     const [stripeError, setStripeError] = useState<string | null>(null);
 
+    // Phase 15: Thematic UI
+    const isStreetDrop = shop?.templateType === "street-drop-v1" || shop?.slug === "gingxerstudio";
+
     // Check if shop has payments enabled (Stripe or PayPal)
     const paymentProvider = shop?.payments?.provider;
     const stripeEnabled = shop?.payments?.enabled && shop?.payments?.stripeAccountId && paymentProvider === "stripe";
@@ -547,21 +550,26 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                     onClick={handleSubmit}
                                     disabled={isSubmitting || !hasItems}
                                     className={cn(
-                                        "w-full py-6 text-lg",
-                                        paymentsEnabled
-                                            ? "bg-white/10 hover:bg-white/20 text-white border border-white/20"
-                                            : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                                        "w-full py-6 text-lg transition-all duration-300",
+                                        isStreetDrop
+                                            ? "bg-red-600 hover:bg-black border-2 border-red-600 hover:text-red-500 rounded-none drop-shadow-[5px_5px_0px_rgba(255,0,51,0.5)] font-black uppercase tracking-widest"
+                                            : paymentsEnabled
+                                                ? "bg-white/10 hover:bg-white/20 text-white border border-white/20"
+                                                : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700",
+                                        isSubmitting && "opacity-50"
                                     )}
                                 >
                                     {isSubmitting ? (
                                         <>
                                             <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                                            Procesando...
+                                            {isStreetDrop ? "PROCESSING..." : "Procesando..."}
                                         </>
                                     ) : (
                                         <>
-                                            <Truck className="w-5 h-5 mr-2" />
-                                            {paymentsEnabled ? "Pagar al Recibir" : "Confirmar Pedido"}
+                                            <Truck className="w-5 h-5 mr-3" />
+                                            {isStreetDrop
+                                                ? "SECURE THE DROP"
+                                                : paymentsEnabled ? "Pagar al Recibir" : "Confirmar Pedido"}
                                         </>
                                     )}
                                 </Button>

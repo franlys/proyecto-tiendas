@@ -37,7 +37,7 @@ import { Button, PhoneInput, type PhoneInputValue } from "@/components/ui";
 
 import { BankAccountsManager } from "@/components/admin/bank-accounts-manager";
 import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
-import { ShopBankAccount, DEFAULT_THEME, Coordinates } from "@/lib/constants";
+import { ShopBankAccount, DEFAULT_THEME, Coordinates, ShopStory, ShopCelebrity } from "@/lib/constants";
 import { geocodeAddress } from "@/lib/utils/distance";
 
 interface ShopProfile {
@@ -76,6 +76,9 @@ interface ShopProfile {
     accentColor: string;
     // Advanced Schedule
     closedDates: string[];
+    // Built-in Drop Configuration
+    story?: ShopStory;
+    celebrities?: ShopCelebrity[];
 }
 
 const DEFAULT_SCHEDULE = {
@@ -132,10 +135,11 @@ function ProfileContent() {
 
     const [selectedShopId, setSelectedShopId] = useState<string>("");
     const shopId = isSuperAdmin ? selectedShopId : (user?.shopId || "");
+    const activeShop = getShop(shopId);
 
     const [saving, setSaving] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
-    const [activeTab, setActiveTab] = useState<"general" | "contact" | "schedule" | "social" | "theme" | "payment">("general");
+    const [activeTab, setActiveTab] = useState<"general" | "contact" | "schedule" | "social" | "theme" | "payment" | "street-drop">("general");
 
     const [profile, setProfile] = useState<ShopProfile>({
         logo: "",
@@ -159,6 +163,8 @@ function ProfileContent() {
         primaryColor: "#06B6D4",
         accentColor: "#D4AF37",
         closedDates: [],
+        story: { title: "", content: "", image: "" },
+        celebrities: [],
     });
 
     // Load profile from Shop Data (Source of Truth)
@@ -190,6 +196,9 @@ function ProfileContent() {
                     schedule: (shop.schedule || DEFAULT_SCHEDULE) as any,
                     primaryColor: shop.theme?.primaryColor || "#06B6D4",
                     accentColor: shop.theme?.accentColor || "#D4AF37",
+                    // Load Drop Config
+                    story: shop.story || { title: "", content: "", image: "" },
+                    celebrities: shop.celebrities || [],
                 }));
 
                 // Fetch Booking Config for closedDates
@@ -255,6 +264,9 @@ function ProfileContent() {
                 schedule: profile.schedule,
                 // Save coordinates
                 coordinates: profile.coordinates,
+                // Save Drop Storytelling Config
+                story: profile.story,
+                celebrities: profile.celebrities,
             });
 
             // 2. Update Booking Config (for slots generation)
@@ -437,6 +449,22 @@ function ProfileContent() {
                                 <span>Métodos de Pago</span>
                             </div>
                         </button>
+
+                        {/* Conditional Tab for Street Drop Special Features */}
+                        {(activeShop?.templateType === "street-drop-v1" || activeShop?.slug === "gingxerstudio") && (
+                            <button
+                                onClick={() => setActiveTab("street-drop")}
+                                className={`w-full text-left px-4 py-3 rounded-xl transition-all mt-4 border ${activeTab === "street-drop"
+                                    ? "bg-red-500/10 text-red-400 border-red-500/40"
+                                    : "border-red-500/10 text-slate-400 hover:bg-red-500/5 hover:text-red-400"
+                                    }`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 22h20L12 2z" /><path d="M12 16v.01" /></svg>
+                                    <span className="font-bold uppercase tracking-wider">The Drop Config</span>
+                                </div>
+                            </button>
+                        )}
                     </div>
 
                     {/* Content Area */}
@@ -955,6 +983,139 @@ function ProfileContent() {
                                     accounts={profile.bankAccounts}
                                     onChange={(accounts) => setProfile(prev => ({ ...prev, bankAccounts: accounts }))}
                                 />
+                            </div>
+                        )}
+
+                        {/* Street Drop Tab */}
+                        {activeTab === "street-drop" && (
+                            <div className="space-y-6">
+                                {/* Storytelling Section */}
+                                <div className="p-6 rounded-2xl bg-white/5 border border-red-500/20 space-y-4">
+                                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-red-400 uppercase tracking-wider">
+                                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" /><path d="M18 14h-8" /><path d="M15 18h-5" /><path d="M10 6h8v4h-8V6Z" /></svg>
+                                        Brand Story (The Hustle)
+                                    </h3>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-2">Título de la Historia</label>
+                                        <input
+                                            type="text"
+                                            value={profile.story?.title || ""}
+                                            onChange={(e) => setProfile(prev => ({ ...prev, story: { ...prev.story!, title: e.target.value } }))}
+                                            placeholder="Ej: THE STREET HUSTLE"
+                                            className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 text-white placeholder-slate-500 focus:border-red-500/50"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-2">Contenido de la Historia</label>
+                                        <textarea
+                                            value={profile.story?.content || ""}
+                                            onChange={(e) => setProfile(prev => ({ ...prev, story: { ...prev.story!, content: e.target.value } }))}
+                                            placeholder="Nacimos en el concreto..."
+                                            rows={4}
+                                            className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 text-white placeholder-slate-500 resize-none focus:border-red-500/50"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-2">Imagen de Portada de la Historia</label>
+                                        <FirebaseImageUpload
+                                            value={profile.story?.image || ""}
+                                            onChange={(url) => setProfile(prev => ({ ...prev, story: { ...prev.story!, image: url } }))}
+                                            folder="shops/stories"
+                                            shopId={shopId || "temp"}
+                                            label="Sube o pega la URL de la imagen"
+                                            aspectRatio="video"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Celebrities Section */}
+                                <div className="p-6 rounded-2xl bg-white/5 border border-red-500/20 space-y-4">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3 className="text-lg font-bold flex items-center gap-2 text-red-400 uppercase tracking-wider">
+                                            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                                            Wall of Fame (Famosos)
+                                        </h3>
+                                        <Button
+                                            onClick={() => setProfile(prev => ({
+                                                ...prev,
+                                                celebrities: [...(prev.celebrities || []), { id: Date.now().toString(), name: "", imageUrl: "", role: "" }]
+                                            }))}
+                                            size="sm"
+                                            className="bg-red-500 hover:bg-red-600 text-white"
+                                        >
+                                            + Agregar Famoso
+                                        </Button>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        {profile.celebrities?.map((celeb, index) => (
+                                            <div key={celeb.id} className="p-4 rounded-xl bg-black/40 border border-white/5 relative group">
+                                                <button
+                                                    onClick={() => setProfile(prev => ({
+                                                        ...prev,
+                                                        celebrities: prev.celebrities?.filter((_, i) => i !== index)
+                                                    }))}
+                                                    className="absolute top-2 right-2 p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+
+                                                <div className="grid md:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-slate-400 mb-1">Nombre</label>
+                                                        <input
+                                                            type="text"
+                                                            value={celeb.name}
+                                                            onChange={(e) => {
+                                                                const newArr = [...(profile.celebrities || [])];
+                                                                newArr[index].name = e.target.value;
+                                                                setProfile(prev => ({ ...prev, celebrities: newArr }));
+                                                            }}
+                                                            placeholder="Ej: Rauw Alejandro"
+                                                            className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-slate-400 mb-1">Rol / Ocupación</label>
+                                                        <input
+                                                            type="text"
+                                                            value={celeb.role || ""}
+                                                            onChange={(e) => {
+                                                                const newArr = [...(profile.celebrities || [])];
+                                                                newArr[index].role = e.target.value;
+                                                                setProfile(prev => ({ ...prev, celebrities: newArr }));
+                                                            }}
+                                                            placeholder="Ej: Artista Urbano"
+                                                            className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm"
+                                                        />
+                                                    </div>
+                                                    <div className="md:col-span-2">
+                                                        <label className="block text-xs font-medium text-slate-400 mb-1">Foto URL</label>
+                                                        <input
+                                                            type="text"
+                                                            value={celeb.imageUrl}
+                                                            onChange={(e) => {
+                                                                const newArr = [...(profile.celebrities || [])];
+                                                                newArr[index].imageUrl = e.target.value;
+                                                                setProfile(prev => ({ ...prev, celebrities: newArr }));
+                                                            }}
+                                                            placeholder="https://..."
+                                                            className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {(!profile.celebrities || profile.celebrities.length === 0) && (
+                                            <div className="text-center py-8 text-slate-500 text-sm">
+                                                No hay famosos agregados aún.
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         )}
 

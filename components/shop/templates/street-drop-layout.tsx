@@ -179,6 +179,46 @@ export function StreetDropLayout({ shop, products, services, loadingData }: Stre
 
                 <LoveTagGraffiti />
 
+                {/* STORYTELLING BLOCK */}
+                {shop.story && (
+                    <div className="relative z-10 w-full max-w-7xl mx-auto px-4 py-20 md:py-32">
+                        <div className="grid md:grid-cols-2 gap-12 items-center">
+                            {shop.story.image && (
+                                <motion.div
+                                    initial={{ opacity: 0, x: -50 }}
+                                    whileInView={{ opacity: 1, x: 0 }}
+                                    viewport={{ once: true, margin: "-100px" }}
+                                    className="relative aspect-square md:aspect-video border-4 border-black drop-shadow-[15px_15px_0px_rgba(255,0,51,1)] overflow-hidden bg-black"
+                                >
+                                    <div className="absolute inset-0 bg-red-500/10 mix-blend-overlay z-10 pointer-events-none" />
+                                    <img
+                                        src={shop.story.image}
+                                        alt={shop.story.title || "Street Drop Story"}
+                                        className="w-full h-full object-cover grayscale contrast-125 hover:grayscale-0 transition-all duration-700"
+                                    />
+                                </motion.div>
+                            )}
+                            <motion.div
+                                initial={{ opacity: 0, x: 50 }}
+                                whileInView={{ opacity: 1, x: 0 }}
+                                viewport={{ once: true, margin: "-100px" }}
+                                className="space-y-6"
+                            >
+                                {shop.story.title && (
+                                    <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white drop-shadow-[5px_5px_0px_rgba(255,0,51,0.5)]">
+                                        {shop.story.title}
+                                    </h2>
+                                )}
+                                {shop.story.content && (
+                                    <p className="text-lg md:text-xl text-slate-300 font-mono leading-relaxed border-l-4 border-[#FF0033] pl-6 whitespace-pre-wrap">
+                                        {shop.story.content}
+                                    </p>
+                                )}
+                            </motion.div>
+                        </div>
+                    </div>
+                )}
+
                 <IndustrialTicker parallaxX={tickerOffset} />
 
                 {/* 5. VHS Glitch Styles */}
@@ -295,9 +335,54 @@ export function StreetDropLayout({ shop, products, services, loadingData }: Stre
                             </div>
 
                             {/* Product Grid Area with its own relative positioning so it doesn't parallax crazily */}
-                            <motion.div style={{ y: 0 }} className="relative drop-shadow-[15px_15px_0px_rgba(0,0,0,1)]">
+                            <motion.div style={{ y: 0 }} className="relative drop-shadow-[15px_15px_0px_rgba(0,0,0,1)] z-10">
                                 <ProductGrid products={products} />
                             </motion.div>
+
+                            {/* HALL OF FAME BLOCK (Celebrities) */}
+                            {shop.celebrities && shop.celebrities.length > 0 && (
+                                <div className="relative z-10 mt-32 border-t-8 border-black pt-16">
+                                    <div className="text-center mb-16">
+                                        <h2 className="text-5xl md:text-8xl font-black uppercase tracking-tighter text-transparent [-webkit-text-stroke:2px_#FF0033] mb-4 hover:text-[#FF0033] transition-colors duration-500">
+                                            WALL OF FAME
+                                        </h2>
+                                        <p className="font-mono text-slate-400 uppercase tracking-widest text-sm md:text-base">
+                                            The chosen ones repping the drop.
+                                        </p>
+                                    </div>
+                                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 px-4">
+                                        {shop.celebrities.map((celeb, idx) => (
+                                            <motion.div
+                                                key={celeb.id || idx}
+                                                initial={{ opacity: 0, y: 50 }}
+                                                whileInView={{ opacity: 1, y: 0 }}
+                                                viewport={{ once: true, margin: "-50px" }}
+                                                transition={{ delay: idx * 0.1 }}
+                                                className="group relative cursor-crosshair"
+                                            >
+                                                <div className="aspect-[3/4] overflow-hidden border-2 border-white/10 bg-black relative">
+                                                    <div className="absolute inset-0 bg-[#FF0033] mix-blend-color opacity-0 group-hover:opacity-40 transition-opacity duration-300 z-10 pointer-events-none" />
+                                                    <img
+                                                        src={celeb.imageUrl}
+                                                        alt={celeb.name}
+                                                        className="w-full h-full object-cover grayscale contrast-125 group-hover:scale-105 transition-transform duration-700"
+                                                    />
+
+                                                    {/* Glitch Overlay Effect on Hover */}
+                                                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 pointer-events-none mix-blend-screen scale-105"
+                                                        style={{ backgroundImage: `url(${celeb.imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'hue-rotate(90deg) saturate(200%)', clipPath: 'polygon(0 40%, 100% 40%, 100% 45%, 0 45%)' }}>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-4 border-l-4 border-[#FF0033] pl-3">
+                                                    <h3 className="font-black text-white text-xl uppercase tracking-wider">{celeb.name}</h3>
+                                                    {celeb.role && <p className="font-mono text-[#FF0033] text-sm uppercase">{celeb.role}</p>}
+                                                </div>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
                         </div>
                     )}
                 </div>
