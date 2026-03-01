@@ -382,9 +382,9 @@ export function StreetCursor() {
             const isClickable =
                 target.tagName === "BUTTON" ||
                 target.tagName === "A" ||
-                target.closest("button") ||
-                target.closest("a") ||
-                target.closest("[role='button']") ||
+                !!target.closest("button") ||
+                !!target.closest("a") ||
+                !!target.closest("[role='button']") ||
                 getComputedStyle(target).cursor === "pointer";
             setIsPointer(isClickable);
         };
