@@ -212,9 +212,9 @@ const CosmicProductCard = memo(function CosmicProductCard({
             >
                 {/* Product image */}
                 <div className="relative aspect-square overflow-hidden">
-                    {product.images?.[0] ? (
+                    {product.image ? (
                         <Image
-                            src={product.images[0]}
+                            src={product.image}
                             alt={product.name}
                             fill
                             className="object-cover transition-transform duration-700 group-hover:scale-110"
