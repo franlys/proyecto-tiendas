@@ -503,7 +503,7 @@ export function ScrollReveal({
                 transition: {
                     opacity: { duration: 0.3 },
                     x: {
-                        type: "spring",
+                        type: "spring" as const,
                         stiffness: 500,
                         damping: 10,
                     },
