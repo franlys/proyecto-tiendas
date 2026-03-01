@@ -67,6 +67,7 @@ import { BusinessType } from "@/lib/types/business.types";
 import { BusinessTypeSelector, BusinessTypeMultiSelector, FeatureBadges } from "@/components/admin/business-type-selector";
 import { useCombinedBusinessFeatures } from "@/lib/hooks/use-business-features";
 import { getBusinessType, normalizeBusinessType } from "@/lib/types/business-types-v2";
+import { type DropThemePreset, DROP_THEME_PRESETS, type DropThemeConfig } from "@/lib/types/drop-theme.types";
 
 // Mapeo de categorías para mostrar labels correctos
 const CATEGORY_OPTIONS: { value: string; label: string }[] = [
@@ -236,6 +237,21 @@ function ShopDetailContent() {
     const [audioUrl, setAudioUrl] = useState("");
     const [audioVolume, setAudioVolume] = useState(30);
     const [audioLoop, setAudioLoop] = useState(true);
+
+    // Drop Theme Configuration (for street-drop-v1 template)
+    const [dropTheme, setDropTheme] = useState<DropThemeConfig>({
+        preset: "street-classic",
+        slogan: "ALL FOR THE LOVE",
+        primaryColor: "#FF0033",
+        tickerPhrases: ["ALL FOR THE LOVE", "STREET", "RAW", "HUSTLE"],
+        animations: {
+            stickerSlap: true,
+            stencilReveal: true,
+            customCursor: true,
+            parallax: true,
+            productGlitch: true,
+        },
+    });
 
     // Security State
     const [newPassword, setNewPassword] = useState("");
@@ -592,6 +608,10 @@ function ShopDetailContent() {
                 setSlogan(foundShop.slogan || "");
                 setDescription(foundShop.description || "");
                 setTemplateType((foundShop.templateType as any) || "standard");
+                // Load Drop Theme config
+                if ((foundShop as any).dropTheme) {
+                    setDropTheme((foundShop as any).dropTheme);
+                }
                 setPrimaryColor(foundShop.theme?.primaryColor || "#22D3EE");
                 setAccentColor(foundShop.theme?.accentColor || "#3B82F6");
                 setEmail(foundShop.contact?.email || "");
@@ -1077,12 +1097,115 @@ function ShopDetailContent() {
                                         </button>
                                     </div>
 
-                                    {templateType === "street-drop-v1" && (
-                                        <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-300">
-                                            <strong>Street Drop:</strong> Guarda los cambios y ve a <strong>/admin/profile</strong> → selecciona esta tienda → tab "The Drop Config" para configurar la historia y famosos.
-                                        </div>
-                                    )}
                                 </div>
+
+                                {/* Drop Theme Configuration - Only for street-drop-v1 */}
+                                {templateType === "street-drop-v1" && (
+                                    <div className="p-6 rounded-2xl bg-gradient-to-br from-red-500/10 to-pink-500/5 border border-red-500/30 space-y-6">
+                                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-white uppercase tracking-wider">
+                                            <svg className="w-5 h-5 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 22h20L12 2z" /><path d="M12 16v.01" /></svg>
+                                            The Drop Config
+                                        </h3>
+
+                                        {/* Theme Preset Selector */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-red-300 mb-3">Preset del Tema</label>
+                                            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                                {(Object.entries(DROP_THEME_PRESETS) as [DropThemePreset, any][]).map(([key, preset]) => (
+                                                    <button
+                                                        key={key}
+                                                        type="button"
+                                                        onClick={() => setDropTheme(prev => ({
+                                                            ...prev,
+                                                            preset: key as DropThemePreset,
+                                                            primaryColor: preset.colors?.primary || prev.primaryColor,
+                                                        }))}
+                                                        className={`p-3 rounded-xl border-2 transition-all text-center ${
+                                                            dropTheme.preset === key
+                                                                ? "border-red-500 bg-red-500/20 scale-105"
+                                                                : "border-white/10 bg-black/30 hover:border-white/30"
+                                                        }`}
+                                                    >
+                                                        <div
+                                                            className="w-full h-8 rounded-lg mb-2"
+                                                            style={{ backgroundColor: preset.colors?.primary || "#FF0033" }}
+                                                        />
+                                                        <span className="text-xs text-white font-medium">{preset.name}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Main Slogan */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-red-300 mb-2">⚡ Slogan Principal</label>
+                                            <input
+                                                type="text"
+                                                value={dropTheme.slogan}
+                                                onChange={(e) => setDropTheme(prev => ({ ...prev, slogan: e.target.value }))}
+                                                placeholder="ALL FOR THE LOVE"
+                                                className="w-full px-4 py-3 rounded-xl bg-black/40 border border-red-500/30 text-white text-xl font-black uppercase tracking-widest text-center focus:border-red-500 focus:outline-none"
+                                            />
+                                            <p className="text-xs text-slate-500 mt-1 text-center">Este texto aparecerá en la animación de entrada y el ticker</p>
+                                        </div>
+
+                                        {/* Animations Toggle */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-red-300 mb-3">🎬 Efectos y Animaciones</label>
+                                            <div className="grid md:grid-cols-2 gap-3">
+                                                {[
+                                                    { key: "stickerSlap", label: "Sticker Slap", desc: "Click para pegar stickers" },
+                                                    { key: "stencilReveal", label: "Stencil Reveal", desc: "Texto revelado con linterna" },
+                                                    { key: "customCursor", label: "Cursor Custom", desc: "Cursor personalizado urbano" },
+                                                    { key: "parallax", label: "Parallax", desc: "Efecto de profundidad al scroll" },
+                                                    { key: "productGlitch", label: "Product Glitch", desc: "Efecto VHS en productos" },
+                                                ].map((item) => (
+                                                    <label key={item.key} className="flex items-center gap-4 p-3 rounded-xl bg-black/30 border border-white/5 cursor-pointer hover:border-red-500/30 transition-colors">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={dropTheme.animations[item.key as keyof typeof dropTheme.animations] ?? true}
+                                                            onChange={(e) => setDropTheme(prev => ({
+                                                                ...prev,
+                                                                animations: {
+                                                                    ...prev.animations,
+                                                                    [item.key]: e.target.checked
+                                                                }
+                                                            }))}
+                                                            className="w-5 h-5 rounded border-red-500/50 bg-black/30 text-red-500 focus:ring-red-500"
+                                                        />
+                                                        <div>
+                                                            <span className="text-white font-medium text-sm">{item.label}</span>
+                                                            <p className="text-xs text-slate-500">{item.desc}</p>
+                                                        </div>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Ticker Phrases */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-red-300 mb-2">📢 Frases del Ticker</label>
+                                            <p className="text-xs text-slate-400 mb-2">Frases que rotarán en la banda del ticker (separadas por coma)</p>
+                                            <input
+                                                type="text"
+                                                value={dropTheme.tickerPhrases?.join(", ") || ""}
+                                                onChange={(e) => setDropTheme(prev => ({
+                                                    ...prev,
+                                                    tickerPhrases: e.target.value.split(",").map(s => s.trim()).filter(Boolean)
+                                                }))}
+                                                placeholder="ALL FOR THE LOVE, STREET, RAW, HUSTLE"
+                                                className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 text-white font-mono text-sm focus:border-red-500/50 focus:outline-none"
+                                            />
+                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                {dropTheme.tickerPhrases?.map((phrase, i) => (
+                                                    <span key={i} className="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 text-sm font-bold uppercase">
+                                                        {phrase}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Logo y Banner */}
                                 <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-6">
@@ -1717,6 +1840,8 @@ function ShopDetailContent() {
                                                 slogan,
                                                 description,
                                                 templateType,
+                                                // Save Drop Theme for street-drop templates
+                                                dropTheme: templateType === "street-drop-v1" ? dropTheme : undefined,
                                                 theme: {
                                                     ...shop.theme,
                                                     primaryColor,
