@@ -255,7 +255,7 @@ export interface ShopConfig {
   banner?: string; // Cover/header image
   slogan?: string; // Short tagline
   theme: ShopTheme;
-  templateType?: "standard" | "premium-drop-v1" | "street-drop-v1"; // Custom storefront layout
+  templateType?: "standard" | "premium-drop-v1" | "street-drop-v1" | "cosmic-drop-v1"; // Custom storefront layout
   background?: ShopBackground; // Background configuration
   contact: {
     phone?: string;
