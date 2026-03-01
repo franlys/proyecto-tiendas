@@ -74,6 +74,8 @@ interface ShopProfile {
     // Theme
     primaryColor: string;
     accentColor: string;
+    // Template
+    templateType: "standard" | "premium-drop-v1" | "street-drop-v1";
     // Advanced Schedule
     closedDates: string[];
     // Built-in Drop Configuration
@@ -162,6 +164,7 @@ function ProfileContent() {
         schedule: DEFAULT_SCHEDULE,
         primaryColor: "#06B6D4",
         accentColor: "#D4AF37",
+        templateType: "standard",
         closedDates: [],
         story: { title: "", content: "", image: "" },
         celebrities: [],
@@ -196,6 +199,8 @@ function ProfileContent() {
                     schedule: (shop.schedule || DEFAULT_SCHEDULE) as any,
                     primaryColor: shop.theme?.primaryColor || "#06B6D4",
                     accentColor: shop.theme?.accentColor || "#D4AF37",
+                    // Load Template Type
+                    templateType: (shop.templateType as any) || "standard",
                     // Load Drop Config
                     story: shop.story || { title: "", content: "", image: "" },
                     celebrities: shop.celebrities || [],
@@ -264,6 +269,8 @@ function ProfileContent() {
                 schedule: profile.schedule,
                 // Save coordinates
                 coordinates: profile.coordinates,
+                // Save Template Type
+                templateType: profile.templateType,
                 // Save Drop Storytelling Config
                 story: profile.story,
                 celebrities: profile.celebrities,
@@ -451,7 +458,7 @@ function ProfileContent() {
                         </button>
 
                         {/* Conditional Tab for Street Drop Special Features */}
-                        {(activeShop?.templateType === "street-drop-v1" || activeShop?.slug === "gingxerstudio") && (
+                        {(activeShop?.templateType === "street-drop-v1" || profile.templateType === "street-drop-v1" || activeShop?.slug === "gingxerstudio") && (
                             <button
                                 onClick={() => setActiveTab("street-drop")}
                                 className={`w-full text-left px-4 py-3 rounded-xl transition-all mt-4 border ${activeTab === "street-drop"
@@ -892,6 +899,87 @@ function ProfileContent() {
 
                         {/* Theme Tab */}
                         {activeTab === "theme" && (
+                            <div className="space-y-6">
+                                {/* Template Selector */}
+                                <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+                                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                        <LayoutDashboard className="w-5 h-5 text-purple-400" />
+                                        Plantilla de Tienda
+                                    </h3>
+                                    <p className="text-sm text-slate-400 mb-4">
+                                        Selecciona el estilo visual de tu tienda
+                                    </p>
+
+                                    <div className="grid md:grid-cols-3 gap-4">
+                                        {/* Standard Template */}
+                                        <button
+                                            onClick={() => setProfile(prev => ({ ...prev, templateType: "standard" }))}
+                                            className={`p-4 rounded-xl border-2 transition-all text-left ${
+                                                profile.templateType === "standard"
+                                                    ? "border-cyan-500 bg-cyan-500/10"
+                                                    : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                                            }`}
+                                        >
+                                            <div className="w-full h-20 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/20 mb-3 flex items-center justify-center">
+                                                <Store className="w-8 h-8 text-cyan-400" />
+                                            </div>
+                                            <h4 className="text-white font-medium">Standard</h4>
+                                            <p className="text-xs text-slate-400 mt-1">
+                                                Diseño limpio y profesional para cualquier negocio
+                                            </p>
+                                        </button>
+
+                                        {/* Premium Drop Template */}
+                                        <button
+                                            onClick={() => setProfile(prev => ({ ...prev, templateType: "premium-drop-v1" }))}
+                                            className={`p-4 rounded-xl border-2 transition-all text-left ${
+                                                profile.templateType === "premium-drop-v1"
+                                                    ? "border-amber-500 bg-amber-500/10"
+                                                    : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                                            }`}
+                                        >
+                                            <div className="w-full h-20 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 mb-3 flex items-center justify-center">
+                                                <svg className="w-8 h-8 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                                </svg>
+                                            </div>
+                                            <h4 className="text-white font-medium">Premium Drop</h4>
+                                            <p className="text-xs text-slate-400 mt-1">
+                                                Estilo premium con animaciones elegantes
+                                            </p>
+                                        </button>
+
+                                        {/* Street Drop Template */}
+                                        <button
+                                            onClick={() => setProfile(prev => ({ ...prev, templateType: "street-drop-v1" }))}
+                                            className={`p-4 rounded-xl border-2 transition-all text-left ${
+                                                profile.templateType === "street-drop-v1"
+                                                    ? "border-red-500 bg-red-500/10"
+                                                    : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                                            }`}
+                                        >
+                                            <div className="w-full h-20 rounded-lg bg-gradient-to-br from-red-500/20 to-pink-500/20 mb-3 flex items-center justify-center relative overflow-hidden">
+                                                <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "repeating-linear-gradient(90deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px)" }} />
+                                                <svg className="w-8 h-8 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <path d="M12 2L2 22h20L12 2z" />
+                                                    <path d="M12 16v.01" />
+                                                </svg>
+                                            </div>
+                                            <h4 className="text-white font-medium">Street Drop</h4>
+                                            <p className="text-xs text-slate-400 mt-1">
+                                                Estilo urbano con graffiti, VHS glitch y parallax
+                                            </p>
+                                        </button>
+                                    </div>
+
+                                    {profile.templateType === "street-drop-v1" && (
+                                        <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-300">
+                                            <strong>Tip:</strong> Configura la historia y famosos en el tab "The Drop Config" que aparece abajo.
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Colors Section */}
                             <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-6">
                                 <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                                     <Palette className="w-5 h-5 text-yellow-400" />
@@ -964,6 +1052,7 @@ function ProfileContent() {
                                         </div>
                                     </div>
                                 </div>
+                            </div>
                             </div>
                         )}
 
