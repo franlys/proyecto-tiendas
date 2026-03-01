@@ -201,7 +201,7 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
   return (
     <ThemeProvider shop={shop}>
       <OrdersProvider>
-        <CartProvider shopId={shop.id}>
+        <CartProvider shopId={shop.id} templateType={shop.templateType}>
           <ShopLayoutClient shop={shop}>
             {shop.templateType === "premium-drop-v1" || shop.templateType === "street-drop-v1" ? (
               // Premium templates handle their own layout completely

@@ -88,7 +88,7 @@ interface CartProviderProps {
   children: ReactNode;
 }
 
-export function CartProvider({ children, shopId }: CartProviderProps & { shopId?: string }) {
+export function CartProvider({ children, shopId, templateType }: CartProviderProps & { shopId?: string; templateType?: string }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [tableId, setTableId] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<CartNotification[]>([]);
@@ -345,29 +345,65 @@ export function CartProvider({ children, shopId }: CartProviderProps & { shopId?
     >
       {children}
       {/* Cart Notifications UI */}
-      <CartNotifications notifications={notifications} />
+      <CartNotifications notifications={notifications} templateType={templateType} />
     </CartContext.Provider>
   );
 }
 
-// Cart Notifications Component
-function CartNotifications({ notifications }: { notifications: CartNotification[] }) {
+// Cart Notifications Component - Adapts to shop template
+// Note: This component receives templateType as prop from CartProvider
+function CartNotifications({
+  notifications,
+  templateType
+}: {
+  notifications: CartNotification[];
+  templateType?: string;
+}) {
   if (notifications.length === 0) return null;
+
+  // Determine styles based on template
+  const isStreetDrop = templateType === "street-drop-v1";
+  const isPremiumDrop = templateType === "premium-drop-v1";
+
+  const getNotificationStyles = () => {
+    if (isStreetDrop) {
+      return "bg-black border-2 border-[#FF0033] text-white rounded-none shadow-[4px_4px_0px_rgba(255,0,51,1)]";
+    }
+    if (isPremiumDrop) {
+      return "bg-black/95 border border-amber-500/50 text-white rounded-lg shadow-lg shadow-amber-500/20";
+    }
+    // Standard - uses glass effect with primary color accent
+    return "glass-panel text-white rounded-xl shadow-lg border border-white/10";
+  };
+
+  const getIconColor = (type: "add" | "remove" | "update") => {
+    if (isStreetDrop) {
+      return type === "add" ? "text-[#FF0033]" : "text-white";
+    }
+    if (isPremiumDrop) {
+      return type === "add" ? "text-amber-400" : "text-red-400";
+    }
+    return type === "add" ? "text-primary" : "text-red-400";
+  };
 
   return (
     <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none">
       {notifications.map((notification) => (
         <div
           key={notification.id}
-          className="bg-black/90 text-white px-4 py-3 rounded-lg shadow-lg border border-white/10 animate-in slide-in-from-right-5 fade-in duration-300 flex items-center gap-3 max-w-sm"
+          className={`px-4 py-3 animate-in slide-in-from-right-5 fade-in duration-300 flex items-center gap-3 max-w-sm ${getNotificationStyles()}`}
         >
           {notification.type === "add" && (
-            <span className="text-green-400 text-lg">✓</span>
+            <span className={`text-lg font-bold ${getIconColor("add")}`}>
+              {isStreetDrop ? "+" : "✓"}
+            </span>
           )}
           {notification.type === "remove" && (
-            <span className="text-red-400 text-lg">✕</span>
+            <span className={`text-lg ${getIconColor("remove")}`}>✕</span>
           )}
-          <span className="text-sm font-medium">{notification.message}</span>
+          <span className={`text-sm font-medium ${isStreetDrop ? "uppercase tracking-wider" : ""}`}>
+            {notification.message}
+          </span>
         </div>
       ))}
     </div>
