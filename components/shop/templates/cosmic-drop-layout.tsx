@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, memo } from "react";
 import Image from "next/image";
 import { Loader2, ShoppingBag, Star, Sparkles } from "lucide-react";
 import { motion, useScroll, useTransform, useSpring, AnimatePresence, useInView } from "framer-motion";
-import type { ShopConfig, Product, Service } from "@/lib/types";
+import type { ShopConfig, Product, Service } from "@/lib/constants";
 import { ProductGrid } from "@/components/shop";
 import {
     Starfield,
