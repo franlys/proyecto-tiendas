@@ -206,6 +206,7 @@ function ShopDetailContent() {
     const [logo, setLogo] = useState("");
     const [banner, setBanner] = useState("");
     const [slogan, setSlogan] = useState("");
+    const [templateType, setTemplateType] = useState<"standard" | "premium-drop-v1" | "street-drop-v1">("standard");
     const [description, setDescription] = useState("");
     const [primaryColor, setPrimaryColor] = useState("#22D3EE");
     const [accentColor, setAccentColor] = useState("#3B82F6");
@@ -589,6 +590,7 @@ function ShopDetailContent() {
                 setBanner(foundShop.banner || "");
                 setSlogan(foundShop.slogan || "");
                 setDescription(foundShop.description || "");
+                setTemplateType((foundShop.templateType as any) || "standard");
                 setPrimaryColor(foundShop.theme?.primaryColor || "#22D3EE");
                 setAccentColor(foundShop.theme?.accentColor || "#3B82F6");
                 setEmail(foundShop.contact?.email || "");
@@ -1002,6 +1004,85 @@ function ShopDetailContent() {
 
                         {activeTab === "appearance" && (
                             <div className="space-y-6">
+                                {/* Template Selector */}
+                                <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+                                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                        <LayoutDashboard className="w-5 h-5 text-purple-400" />
+                                        Plantilla de Tienda
+                                    </h3>
+                                    <p className="text-sm text-slate-400 mb-4">
+                                        Selecciona el estilo visual de la tienda
+                                    </p>
+
+                                    <div className="grid md:grid-cols-3 gap-4">
+                                        {/* Standard Template */}
+                                        <button
+                                            onClick={() => setTemplateType("standard")}
+                                            className={`p-4 rounded-xl border-2 transition-all text-left ${
+                                                templateType === "standard"
+                                                    ? "border-cyan-500 bg-cyan-500/10"
+                                                    : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                                            }`}
+                                        >
+                                            <div className="w-full h-16 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/20 mb-3 flex items-center justify-center">
+                                                <Store className="w-6 h-6 text-cyan-400" />
+                                            </div>
+                                            <h4 className="text-white font-medium text-sm">Standard</h4>
+                                            <p className="text-xs text-slate-400 mt-1">
+                                                Diseño limpio y profesional
+                                            </p>
+                                        </button>
+
+                                        {/* Premium Drop Template */}
+                                        <button
+                                            onClick={() => setTemplateType("premium-drop-v1")}
+                                            className={`p-4 rounded-xl border-2 transition-all text-left ${
+                                                templateType === "premium-drop-v1"
+                                                    ? "border-amber-500 bg-amber-500/10"
+                                                    : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                                            }`}
+                                        >
+                                            <div className="w-full h-16 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 mb-3 flex items-center justify-center">
+                                                <svg className="w-6 h-6 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                                </svg>
+                                            </div>
+                                            <h4 className="text-white font-medium text-sm">Premium Drop</h4>
+                                            <p className="text-xs text-slate-400 mt-1">
+                                                Estilo premium con animaciones
+                                            </p>
+                                        </button>
+
+                                        {/* Street Drop Template */}
+                                        <button
+                                            onClick={() => setTemplateType("street-drop-v1")}
+                                            className={`p-4 rounded-xl border-2 transition-all text-left ${
+                                                templateType === "street-drop-v1"
+                                                    ? "border-red-500 bg-red-500/10"
+                                                    : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                                            }`}
+                                        >
+                                            <div className="w-full h-16 rounded-lg bg-gradient-to-br from-red-500/20 to-pink-500/20 mb-3 flex items-center justify-center relative overflow-hidden">
+                                                <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(255,255,255,0.1) 8px, rgba(255,255,255,0.1) 16px)" }} />
+                                                <svg className="w-6 h-6 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <path d="M12 2L2 22h20L12 2z" />
+                                                    <path d="M12 16v.01" />
+                                                </svg>
+                                            </div>
+                                            <h4 className="text-white font-medium text-sm">Street Drop</h4>
+                                            <p className="text-xs text-slate-400 mt-1">
+                                                Urbano con graffiti y VHS glitch
+                                            </p>
+                                        </button>
+                                    </div>
+
+                                    {templateType === "street-drop-v1" && (
+                                        <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-300">
+                                            <strong>Street Drop:</strong> Guarda los cambios y ve a <strong>/admin/profile</strong> → selecciona esta tienda → tab "The Drop Config" para configurar la historia y famosos.
+                                        </div>
+                                    )}
+                                </div>
+
                                 {/* Logo y Banner */}
                                 <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-6">
                                     <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
@@ -1634,6 +1715,7 @@ function ShopDetailContent() {
                                                 banner,
                                                 slogan,
                                                 description,
+                                                templateType,
                                                 theme: {
                                                     ...shop.theme,
                                                     primaryColor,
@@ -1675,6 +1757,7 @@ function ShopDetailContent() {
                                                 banner,
                                                 slogan,
                                                 description,
+                                                templateType,
                                                 theme: { ...prev.theme, primaryColor, accentColor },
                                                 background: {
                                                     type: backgroundType,
