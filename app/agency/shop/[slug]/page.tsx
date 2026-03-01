@@ -191,7 +191,7 @@ function ShopDetailContent() {
     const params = useParams();
     const router = useRouter();
     const { shops, getShop, updateShop, updateShopCredentials, toggleFeature, registerPayment } = useShops();
-    const { isSuperAdmin, isLoading: authLoading } = useAuth();
+    const { user, isSuperAdmin, isLoading: authLoading } = useAuth();
 
     const [shop, setShop] = useState<ManagedShop | undefined>(undefined);
     const [activeTab, setActiveTab] = useState<"overview" | "config" | "appearance" | "features" | "staff" | "whatsapp" | "security" | "payments">("overview");
@@ -577,9 +577,12 @@ function ShopDetailContent() {
             return;
         }
 
-        // Only redirect to login if auth is definitely loaded and user is not super admin
-        if (!isSuperAdmin) {
-            console.log("🔧 [SHOP-CONFIG] Not super admin, redirecting to login");
+        // Allow access if: Super Admin OR shop owner accessing their own shop
+        const isShopOwner = user?.shopId === params.slug ||
+                           shops.find(s => s.slug === params.slug)?.id === user?.shopId;
+
+        if (!isSuperAdmin && !isShopOwner) {
+            console.log("🔧 [SHOP-CONFIG] Not authorized, redirecting to login");
             router.push("/login");
             return;
         }
@@ -641,7 +644,7 @@ function ShopDetailContent() {
                 router.push("/agency");
             }
         }
-    }, [shops, params.slug, isSuperAdmin, authLoading, getShop, router]);
+    }, [shops, params.slug, isSuperAdmin, authLoading, getShop, router, user?.shopId]);
 
     if (loading || !shop) {
         return (
