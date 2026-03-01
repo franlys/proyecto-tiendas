@@ -42,7 +42,7 @@ const GROUPED_TYPES = Object.entries(BUSINESS_TYPE_CONFIG).reduce((acc, [key, co
 const LEGACY_TYPES = ["beauty", "retail", "repair", "restaurant", "rentcar", "technology"];
 
 export default function BusinessTypesPage() {
-    const { user, isSuperAdmin } = useAuth();
+    const { user, isSuperAdmin, isLoading: authLoading } = useAuth();
     const [shops, setShops] = useState<ShopData[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState<string | null>(null);
@@ -119,12 +119,20 @@ export default function BusinessTypesPage() {
 
     const getTypeConfig = (type: BusinessType) => BUSINESS_TYPE_CONFIG[type] || BUSINESS_TYPE_CONFIG.otro;
 
+    // Wait for auth to load before checking access
+    if (authLoading) {
+        return (
+            <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
+            </div>
+        );
+    }
+
     if (!isSuperAdmin) {
         return (
             <div className="p-8 text-center">
                 <h1 className="text-2xl font-bold text-red-500">Acceso Denegado</h1>
                 <p className="text-slate-400 mt-2">Solo Super Admin puede acceder a esta página</p>
-                <p className="text-xs text-slate-500 mt-4">Debug: role={user?.role}, isSuperAdmin={String(isSuperAdmin)}</p>
             </div>
         );
     }
