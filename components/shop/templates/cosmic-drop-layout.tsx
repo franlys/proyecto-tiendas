@@ -3,9 +3,8 @@
 import { useState, useEffect, useRef, useCallback, memo } from "react";
 import Image from "next/image";
 import { Loader2, ShoppingBag, Star, Sparkles } from "lucide-react";
-import { motion, useScroll, useTransform, useSpring, AnimatePresence, useInView } from "framer-motion";
+import { motion, AnimatePresence, useInView } from "framer-motion";
 import type { ShopConfig, Product, Service } from "@/lib/constants";
-import { ProductGrid } from "@/components/shop";
 import {
     Starfield,
     Nebula,
@@ -340,32 +339,26 @@ export function CosmicDropLayout({
 
     // Get drop theme config
     const dropTheme = shop.dropTheme || {
-        preset: "cosmic-galaxy",
+        preset: "cosmic-galaxy" as const,
         slogan: "BEYOND THE STARS",
         primaryColor: "#8B5CF6",
         secondaryColor: "#06B6D4",
         tickerPhrases: ["BEYOND THE STARS", "INFINITE", "COSMIC", "UNIVERSE"],
         animations: {
+            stickerSlap: false,
+            stencilReveal: true,
+            customCursor: true,
+            parallax: true,
+            productGlitch: false,
             starfield: true,
             nebula: true,
             shootingStars: true,
             cosmicDust: true,
-            customCursor: true,
-            parallax: true,
         },
     };
 
     const primaryColor = dropTheme.primaryColor || "#8B5CF6";
     const secondaryColor = dropTheme.secondaryColor || "#06B6D4";
-
-    // Parallax effect
-    const { scrollYProgress } = useScroll({
-        target: containerRef,
-        offset: ["start start", "end end"],
-    });
-
-    const parallaxY = useTransform(scrollYProgress, [0, 1], [0, -200]);
-    const springY = useSpring(parallaxY, { stiffness: 100, damping: 30 });
 
     return (
         <div
