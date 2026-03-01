@@ -39,6 +39,7 @@ import { BankAccountsManager } from "@/components/admin/bank-accounts-manager";
 import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
 import { ShopBankAccount, DEFAULT_THEME, Coordinates, ShopStory, ShopCelebrity } from "@/lib/constants";
 import { geocodeAddress } from "@/lib/utils/distance";
+import { type DropThemePreset, DROP_THEME_PRESETS } from "@/lib/types/drop-theme.types";
 
 interface ShopProfile {
     logo: string;
@@ -81,6 +82,20 @@ interface ShopProfile {
     // Built-in Drop Configuration
     story?: ShopStory;
     celebrities?: ShopCelebrity[];
+    // Drop Theme Configuration
+    dropTheme?: {
+        preset: DropThemePreset;
+        slogan: string;
+        primaryColor: string;
+        tickerPhrases: string[];
+        animations: {
+            stickerSlap: boolean;
+            stencilReveal: boolean;
+            customCursor: boolean;
+            parallax: boolean;
+            productGlitch: boolean;
+        };
+    };
 }
 
 const DEFAULT_SCHEDULE = {
@@ -168,6 +183,19 @@ function ProfileContent() {
         closedDates: [],
         story: { title: "", content: "", image: "" },
         celebrities: [],
+        dropTheme: {
+            preset: "street-classic",
+            slogan: "ALL FOR THE LOVE",
+            primaryColor: "#FF0033",
+            tickerPhrases: ["ALL FOR THE LOVE", "STREET", "RAW", "HUSTLE"],
+            animations: {
+                stickerSlap: true,
+                stencilReveal: true,
+                customCursor: true,
+                parallax: true,
+                productGlitch: true,
+            },
+        },
     });
 
     // Load profile from Shop Data (Source of Truth)
@@ -204,6 +232,20 @@ function ProfileContent() {
                     // Load Drop Config
                     story: shop.story || { title: "", content: "", image: "" },
                     celebrities: shop.celebrities || [],
+                    // Load Drop Theme Config
+                    dropTheme: (shop as any).dropTheme || {
+                        preset: "street-classic",
+                        slogan: "ALL FOR THE LOVE",
+                        primaryColor: "#FF0033",
+                        tickerPhrases: ["ALL FOR THE LOVE", "STREET", "RAW", "HUSTLE"],
+                        animations: {
+                            stickerSlap: true,
+                            stencilReveal: true,
+                            customCursor: true,
+                            parallax: true,
+                            productGlitch: true,
+                        },
+                    },
                 }));
 
                 // Fetch Booking Config for closedDates
@@ -274,6 +316,8 @@ function ProfileContent() {
                 // Save Drop Storytelling Config
                 story: profile.story,
                 celebrities: profile.celebrities,
+                // Save Drop Theme Config
+                dropTheme: profile.dropTheme,
             });
 
             // 2. Update Booking Config (for slots generation)
@@ -1078,6 +1122,125 @@ function ProfileContent() {
                         {/* Street Drop Tab */}
                         {activeTab === "street-drop" && (
                             <div className="space-y-6">
+                                {/* Theme Preset Selector */}
+                                <div className="p-6 rounded-2xl bg-gradient-to-br from-red-500/10 to-pink-500/5 border border-red-500/30 space-y-4">
+                                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-white uppercase tracking-wider">
+                                        <Palette className="w-5 h-5 text-red-400" />
+                                        Drop Theme Preset
+                                    </h3>
+
+                                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                        {(Object.entries(DROP_THEME_PRESETS) as [DropThemePreset, any][]).map(([key, preset]) => (
+                                            <button
+                                                key={key}
+                                                onClick={() => setProfile(prev => ({
+                                                    ...prev,
+                                                    dropTheme: {
+                                                        ...prev.dropTheme!,
+                                                        preset: key,
+                                                        primaryColor: preset.colors?.primary || prev.dropTheme!.primaryColor,
+                                                    }
+                                                }))}
+                                                className={`p-3 rounded-xl border-2 transition-all text-center ${
+                                                    profile.dropTheme?.preset === key
+                                                        ? "border-red-500 bg-red-500/20 scale-105"
+                                                        : "border-white/10 bg-black/30 hover:border-white/30"
+                                                }`}
+                                            >
+                                                <div
+                                                    className="w-full h-8 rounded-lg mb-2"
+                                                    style={{ backgroundColor: preset.colors?.primary || "#FF0033" }}
+                                                />
+                                                <span className="text-xs text-white font-medium">{preset.name}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Main Slogan */}
+                                <div className="p-6 rounded-2xl bg-white/5 border border-red-500/20 space-y-4">
+                                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-red-400 uppercase tracking-wider">
+                                        ⚡ Slogan Principal
+                                    </h3>
+                                    <input
+                                        type="text"
+                                        value={profile.dropTheme?.slogan || "ALL FOR THE LOVE"}
+                                        onChange={(e) => setProfile(prev => ({
+                                            ...prev,
+                                            dropTheme: { ...prev.dropTheme!, slogan: e.target.value }
+                                        }))}
+                                        placeholder="ALL FOR THE LOVE"
+                                        className="w-full px-4 py-3 rounded-xl bg-black/40 border border-red-500/30 text-white text-xl font-black uppercase tracking-widest text-center focus:border-red-500"
+                                    />
+                                    <p className="text-xs text-slate-500 text-center">Este texto aparecerá en la animación de entrada y el ticker</p>
+                                </div>
+
+                                {/* Animations Toggle */}
+                                <div className="p-6 rounded-2xl bg-white/5 border border-red-500/20 space-y-4">
+                                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-red-400 uppercase tracking-wider">
+                                        🎬 Efectos y Animaciones
+                                    </h3>
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        {[
+                                            { key: "stickerSlap", label: "Sticker Slap", desc: "Click para pegar stickers" },
+                                            { key: "stencilReveal", label: "Stencil Reveal", desc: "Texto revelado con linterna" },
+                                            { key: "customCursor", label: "Cursor Custom", desc: "Cursor personalizado urbano" },
+                                            { key: "parallax", label: "Parallax", desc: "Efecto de profundidad al scroll" },
+                                            { key: "productGlitch", label: "Product Glitch", desc: "Efecto VHS en productos" },
+                                        ].map((item) => (
+                                            <label key={item.key} className="flex items-center gap-4 p-4 rounded-xl bg-black/30 border border-white/5 cursor-pointer hover:border-red-500/30 transition-colors">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={profile.dropTheme?.animations?.[item.key as keyof typeof profile.dropTheme.animations] ?? true}
+                                                    onChange={(e) => setProfile(prev => ({
+                                                        ...prev,
+                                                        dropTheme: {
+                                                            ...prev.dropTheme!,
+                                                            animations: {
+                                                                ...prev.dropTheme!.animations,
+                                                                [item.key]: e.target.checked
+                                                            }
+                                                        }
+                                                    }))}
+                                                    className="w-5 h-5 rounded border-red-500/50 bg-black/30 text-red-500 focus:ring-red-500"
+                                                />
+                                                <div>
+                                                    <span className="text-white font-medium">{item.label}</span>
+                                                    <p className="text-xs text-slate-500">{item.desc}</p>
+                                                </div>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Ticker Phrases */}
+                                <div className="p-6 rounded-2xl bg-white/5 border border-red-500/20 space-y-4">
+                                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-red-400 uppercase tracking-wider">
+                                        📢 Frases del Ticker
+                                    </h3>
+                                    <p className="text-sm text-slate-400">Frases que rotarán en la banda del ticker (separadas por coma)</p>
+                                    <input
+                                        type="text"
+                                        value={profile.dropTheme?.tickerPhrases?.join(", ") || ""}
+                                        onChange={(e) => setProfile(prev => ({
+                                            ...prev,
+                                            dropTheme: {
+                                                ...prev.dropTheme!,
+                                                tickerPhrases: e.target.value.split(",").map(s => s.trim()).filter(Boolean)
+                                            }
+                                        }))}
+                                        placeholder="ALL FOR THE LOVE, STREET, RAW, HUSTLE"
+                                        className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 text-white font-mono text-sm focus:border-red-500/50"
+                                    />
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        {profile.dropTheme?.tickerPhrases?.map((phrase, i) => (
+                                            <span key={i} className="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 text-sm font-bold uppercase">
+                                                {phrase}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+
                                 {/* Storytelling Section */}
                                 <div className="p-6 rounded-2xl bg-white/5 border border-red-500/20 space-y-4">
                                     <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-red-400 uppercase tracking-wider">
