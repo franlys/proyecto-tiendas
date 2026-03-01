@@ -178,17 +178,11 @@ const CosmicProductCard = memo(function CosmicProductCard({
     const ref = useRef<HTMLDivElement>(null);
     const isInView = useInView(ref, { once: true, margin: "-100px" });
     const [isHovered, setIsHovered] = useState(false);
-    const { addItem } = useCart();
+    const { addProduct } = useCart();
 
     const handleAddToCart = useCallback(() => {
-        addItem({
-            id: product.id,
-            name: product.name,
-            price: product.price,
-            quantity: 1,
-            image: product.images?.[0],
-        });
-    }, [addItem, product]);
+        addProduct(product, 1);
+    }, [addProduct, product]);
 
     return (
         <motion.div
