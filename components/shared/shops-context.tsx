@@ -188,8 +188,9 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
           name: data.name || "",
           slug: data.slug || docSnapshot.id,
           description: data.description || "",
-          // Theme
+          // Theme & Template
           theme: data.theme || DEFAULT_THEME,
+          templateType: data.templateType || "standard",
           // Contact
           contact: data.contact || { phone: "" },
           ownerNotificationPhone: data.ownerNotificationPhone,

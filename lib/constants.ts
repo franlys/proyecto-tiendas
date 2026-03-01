@@ -242,6 +242,7 @@ export interface ShopConfig {
   banner?: string; // Cover/header image
   slogan?: string; // Short tagline
   theme: ShopTheme;
+  templateType?: "standard" | "premium-drop-v1" | "street-drop-v1"; // Custom storefront layout
   background?: ShopBackground; // Background configuration
   contact: {
     phone?: string;
@@ -310,6 +311,44 @@ export const DEFAULT_THEME: ShopTheme = {
 
 // Example Shop Configurations (Hardcoded for Phase 1)
 export const MOCK_SHOPS: Record<string, ShopConfig> = {
+  "gingxerstudio": {
+    id: "gingxerstudio",
+    name: "Gingxer Studio",
+    slug: "gingxerstudio",
+    description: "ALL FOR THE LOVE",
+    templateType: "street-drop-v1",
+    theme: {
+      id: "gingxer-theme",
+      name: "Street Noir",
+      primaryColor: "#FF0033", // Vibrant Red
+      accentColor: "#FFFFFF",
+      style: "premium-dark",
+    },
+    contact: { phone: "1234567890" },
+    businessType: "retail",
+    features: ["inventory", "orders"],
+  },
+  "sculpt-love-method": {
+    id: "sculpt-love-method",
+    name: "Sculpt Love Method",
+    slug: "sculpt-love-method",
+    description: "Método de fitness y bienestar",
+    theme: {
+      id: "lola-theme",
+      name: "Elegance Rose",
+      primaryColor: "#F43F5E",
+      accentColor: "#D4AF37",
+      style: "premium-dark",
+      backgroundImage: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80",
+    },
+    contact: {
+      phone: "+34 600 123 456",
+      email: "info@estetica-lola.com",
+      address: "Calle Mayor 15, Madrid",
+    },
+    businessType: "beauty",
+    features: ["inventory", "orders", "loyalty", "whatsappIntegration"],
+  },
   "estetica-lola": {
     id: "demo-0",
     name: "Estética Lola",
