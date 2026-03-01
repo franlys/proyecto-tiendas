@@ -23,7 +23,7 @@ export const Starfield = memo(function Starfield({
     depth = 1000,
 }: StarfieldProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const animationRef = useRef<number>();
+    const animationRef = useRef<number | undefined>(undefined);
     const starsRef = useRef<Array<{ x: number; y: number; z: number; size: number; brightness: number }>>([]);
 
     useEffect(() => {
