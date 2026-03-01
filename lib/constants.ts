@@ -28,8 +28,10 @@ import { BUSINESS_TYPE_CONFIG as FULL_BUSINESS_CONFIG } from "@/lib/types/busine
 import type { ProductExtra } from "@/lib/types/product-extra.types";
 import type { MealPlate } from "@/lib/types/meal-prep.types";
 import type { ShopPaymentConfig } from "@/lib/types/payment.types";
+import type { DropThemeConfig } from "@/lib/types/drop-theme.types";
 export type { BusinessType };
 export type { ShopPaymentConfig };
+export type { DropThemeConfig };
 export type { ProductExtra };
 export type { MealPlate };
 
@@ -256,6 +258,7 @@ export interface ShopConfig {
   slogan?: string; // Short tagline
   theme: ShopTheme;
   templateType?: "standard" | "premium-drop-v1" | "street-drop-v1" | "cosmic-drop-v1"; // Custom storefront layout
+  dropTheme?: DropThemeConfig; // Drop theme configuration for premium templates
   background?: ShopBackground; // Background configuration
   contact: {
     phone?: string;
