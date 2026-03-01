@@ -35,3 +35,16 @@ export {
     ProductCardWrapper,
     ScrollReveal,
 } from "./templates/street-interactions";
+// Cosmic Drop Templates
+export { CosmicDropLayout } from "./templates/cosmic-drop-layout";
+export {
+    Starfield,
+    Nebula,
+    ShootingStars,
+    CosmicDust,
+    CosmicCursor,
+    GalaxyWarp,
+    Constellation,
+    Aurora,
+    CosmicPlanet,
+} from "./templates/cosmic-drop-effects";

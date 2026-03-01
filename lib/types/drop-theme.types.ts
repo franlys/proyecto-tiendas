@@ -11,6 +11,7 @@ export type DropThemePreset =
     | "neon-nights"         // Dark + Neon Pink/Cyan - Cyberpunk
     | "earth-tones"         // Brown/Tan/Forest - Nature inspired
     | "arctic-white"        // White + Ice Blue - Clean minimalist
+    | "cosmic-galaxy"       // Deep space + Purple/Blue - Stars & Nebula
     | "custom";             // Full custom colors
 
 export interface DropThemeColors {
@@ -86,6 +87,7 @@ export interface DropThemeConfig {
     preset: DropThemePreset;
     slogan: string;
     primaryColor: string;
+    secondaryColor?: string;
     tickerPhrases: string[];
     animations: {
         stickerSlap: boolean;
@@ -93,6 +95,19 @@ export interface DropThemeConfig {
         customCursor: boolean;
         parallax: boolean;
         productGlitch: boolean;
+        // Cosmic-specific animations
+        starfield?: boolean;
+        nebula?: boolean;
+        shootingStars?: boolean;
+        cosmicDust?: boolean;
+    };
+    // Background customization
+    background?: {
+        type: "solid" | "gradient" | "animated" | "video" | "particles";
+        value?: string;           // Color, gradient CSS, or URL
+        particleColor?: string;   // For particle backgrounds
+        particleCount?: number;   // Number of particles
+        animationSpeed?: number;  // 0.1 to 2.0
     };
 }
 
@@ -244,6 +259,35 @@ export const DROP_THEME_PRESETS: Record<Exclude<DropThemePreset, "custom">, Part
         },
         tickerEnabled: true,
         tickerPhrases: ["FRESH", "CLEAN", "PURE"],
+    },
+
+    "cosmic-galaxy": {
+        name: "Cosmic Galaxy",
+        colors: {
+            primary: "#8B5CF6",       // Violet
+            secondary: "#06B6D4",     // Cyan
+            background: "#030014",    // Deep space black
+            surface: "#0a0520",       // Dark purple tint
+            text: "#ffffff",
+            textMuted: "#a78bfa",     // Light violet
+        },
+        animations: {
+            entryEffect: "fade",
+            stickerSlap: false,
+            stencilReveal: true,
+            customCursor: true,
+            sprayPaint: false,
+            parallax: true,
+            productHoverEffect: "glow",
+            addToCartEffect: "confetti",
+        },
+        typography: {
+            headingFont: "'Orbitron', 'Rajdhani', sans-serif",
+            bodyFont: "'Inter', sans-serif",
+            sloganStyle: "neon",
+        },
+        tickerEnabled: true,
+        tickerPhrases: ["BEYOND THE STARS", "INFINITE", "COSMIC", "UNIVERSE"],
     },
 };
 

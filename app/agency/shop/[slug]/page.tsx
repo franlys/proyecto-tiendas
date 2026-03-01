@@ -1038,7 +1038,7 @@ function ShopDetailContent() {
                                         Selecciona el estilo visual de la tienda
                                     </p>
 
-                                    <div className="grid md:grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         {/* Standard Template */}
                                         <button
                                             onClick={() => setTemplateType("standard")}
@@ -1096,6 +1096,28 @@ function ShopDetailContent() {
                                             <h4 className="text-white font-medium text-sm">Street Drop</h4>
                                             <p className="text-xs text-slate-400 mt-1">
                                                 Urbano con graffiti y VHS glitch
+                                            </p>
+                                        </button>
+
+                                        {/* Cosmic Drop Template */}
+                                        <button
+                                            onClick={() => setTemplateType("cosmic-drop-v1")}
+                                            className={`p-4 rounded-xl border-2 transition-all text-left ${
+                                                templateType === "cosmic-drop-v1"
+                                                    ? "border-violet-500 bg-violet-500/10"
+                                                    : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                                            }`}
+                                        >
+                                            <div className="w-full h-16 rounded-lg bg-gradient-to-br from-violet-500/20 to-cyan-500/20 mb-3 flex items-center justify-center relative overflow-hidden">
+                                                <div className="absolute inset-0 opacity-40" style={{ background: "radial-gradient(circle at 30% 30%, rgba(139,92,246,0.3) 0%, transparent 50%), radial-gradient(circle at 70% 70%, rgba(6,182,212,0.3) 0%, transparent 50%)" }} />
+                                                <svg className="w-6 h-6 text-violet-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <circle cx="12" cy="12" r="3" />
+                                                    <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41" />
+                                                </svg>
+                                            </div>
+                                            <h4 className="text-white font-medium text-sm">Cosmic Galaxy</h4>
+                                            <p className="text-xs text-slate-400 mt-1">
+                                                Estrellas, nebulosas y galaxias
                                             </p>
                                         </button>
                                     </div>
@@ -1202,6 +1224,124 @@ function ShopDetailContent() {
                                             <div className="flex flex-wrap gap-2 mt-2">
                                                 {dropTheme.tickerPhrases?.map((phrase, i) => (
                                                     <span key={i} className="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 text-sm font-bold uppercase">
+                                                        {phrase}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Cosmic Drop Theme Configuration - Only for cosmic-drop-v1 */}
+                                {templateType === "cosmic-drop-v1" && (
+                                    <div className="p-6 rounded-2xl bg-gradient-to-br from-violet-500/10 to-cyan-500/5 border border-violet-500/30 space-y-6">
+                                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-white uppercase tracking-wider">
+                                            <svg className="w-5 h-5 text-violet-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3" /><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41" /></svg>
+                                            Cosmic Config
+                                        </h3>
+
+                                        {/* Main Slogan */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-violet-300 mb-2">🌟 Slogan Principal</label>
+                                            <input
+                                                type="text"
+                                                value={dropTheme.slogan}
+                                                onChange={(e) => setDropTheme(prev => ({ ...prev, slogan: e.target.value }))}
+                                                placeholder="BEYOND THE STARS"
+                                                className="w-full px-4 py-3 rounded-xl bg-black/40 border border-violet-500/30 text-white text-xl font-black uppercase tracking-widest text-center focus:border-violet-500 focus:outline-none"
+                                            />
+                                            <p className="text-xs text-slate-500 mt-1 text-center">Este texto aparecerá en la hero section</p>
+                                        </div>
+
+                                        {/* Color Customization */}
+                                        <div className="grid md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-violet-300 mb-2">💜 Color Primario</label>
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        type="color"
+                                                        value={dropTheme.primaryColor || "#8B5CF6"}
+                                                        onChange={(e) => setDropTheme(prev => ({ ...prev, primaryColor: e.target.value }))}
+                                                        className="w-12 h-12 rounded-lg cursor-pointer border-2 border-white/10"
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        value={dropTheme.primaryColor || "#8B5CF6"}
+                                                        onChange={(e) => setDropTheme(prev => ({ ...prev, primaryColor: e.target.value }))}
+                                                        className="flex-1 px-4 py-2 rounded-xl bg-black/40 border border-white/10 text-white font-mono text-sm"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-cyan-300 mb-2">💎 Color Secundario</label>
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        type="color"
+                                                        value={dropTheme.secondaryColor || "#06B6D4"}
+                                                        onChange={(e) => setDropTheme(prev => ({ ...prev, secondaryColor: e.target.value }))}
+                                                        className="w-12 h-12 rounded-lg cursor-pointer border-2 border-white/10"
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        value={dropTheme.secondaryColor || "#06B6D4"}
+                                                        onChange={(e) => setDropTheme(prev => ({ ...prev, secondaryColor: e.target.value }))}
+                                                        className="flex-1 px-4 py-2 rounded-xl bg-black/40 border border-white/10 text-white font-mono text-sm"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Cosmic Animations Toggle */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-violet-300 mb-3">🎬 Efectos Cósmicos</label>
+                                            <div className="grid md:grid-cols-2 gap-3">
+                                                {[
+                                                    { key: "starfield", label: "Campo de Estrellas", desc: "Fondo 3D con estrellas en movimiento" },
+                                                    { key: "nebula", label: "Nebulosa", desc: "Nubes de gas cósmico animadas" },
+                                                    { key: "shootingStars", label: "Estrellas Fugaces", desc: "Meteoros que cruzan la pantalla" },
+                                                    { key: "cosmicDust", label: "Polvo Cósmico", desc: "Partículas flotantes brillantes" },
+                                                    { key: "customCursor", label: "Cursor Galaxia", desc: "Cursor con estela cósmica" },
+                                                    { key: "parallax", label: "Parallax", desc: "Efecto de profundidad al scroll" },
+                                                ].map((item) => (
+                                                    <label key={item.key} className="flex items-center gap-4 p-3 rounded-xl bg-black/30 border border-white/5 cursor-pointer hover:border-violet-500/30 transition-colors">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={dropTheme.animations?.[item.key as keyof typeof dropTheme.animations] ?? true}
+                                                            onChange={(e) => setDropTheme(prev => ({
+                                                                ...prev,
+                                                                animations: {
+                                                                    ...prev.animations,
+                                                                    [item.key]: e.target.checked
+                                                                }
+                                                            }))}
+                                                            className="w-5 h-5 rounded border-violet-500/50 bg-black/30 text-violet-500 focus:ring-violet-500"
+                                                        />
+                                                        <div>
+                                                            <span className="text-white font-medium text-sm">{item.label}</span>
+                                                            <p className="text-xs text-slate-500">{item.desc}</p>
+                                                        </div>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Ticker Phrases */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-violet-300 mb-2">🚀 Frases del Ticker</label>
+                                            <p className="text-xs text-slate-400 mb-2">Frases que rotarán en la banda inferior (separadas por coma)</p>
+                                            <input
+                                                type="text"
+                                                value={dropTheme.tickerPhrases?.join(", ") || ""}
+                                                onChange={(e) => setDropTheme(prev => ({
+                                                    ...prev,
+                                                    tickerPhrases: e.target.value.split(",").map(s => s.trim()).filter(Boolean)
+                                                }))}
+                                                placeholder="BEYOND THE STARS, INFINITE, COSMIC, UNIVERSE"
+                                                className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 text-white font-mono text-sm focus:border-violet-500/50 focus:outline-none"
+                                            />
+                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                {dropTheme.tickerPhrases?.map((phrase, i) => (
+                                                    <span key={i} className="px-3 py-1 rounded-lg bg-violet-500/20 text-violet-400 text-sm font-bold uppercase">
                                                         {phrase}
                                                     </span>
                                                 ))}
@@ -1843,8 +1983,8 @@ function ShopDetailContent() {
                                                 slogan,
                                                 description,
                                                 templateType,
-                                                // Save Drop Theme for street-drop templates
-                                                dropTheme: templateType === "street-drop-v1" ? dropTheme : undefined,
+                                                // Save Drop Theme for street-drop and cosmic-drop templates
+                                                dropTheme: (templateType === "street-drop-v1" || templateType === "cosmic-drop-v1") ? dropTheme : undefined,
                                                 theme: {
                                                     ...shop.theme,
                                                     primaryColor,

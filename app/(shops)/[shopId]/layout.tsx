@@ -203,8 +203,8 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
       <OrdersProvider>
         <CartProvider shopId={shop.id} templateType={shop.templateType}>
           <ShopLayoutClient shop={shop}>
-            {shop.templateType === "premium-drop-v1" || shop.templateType === "street-drop-v1" ? (
-              // Premium templates handle their own layout completely
+            {shop.templateType === "premium-drop-v1" || shop.templateType === "street-drop-v1" || shop.templateType === "cosmic-drop-v1" ? (
+              // Premium/Special templates handle their own layout completely
               <>
                 <main className="min-h-screen relative overflow-hidden bg-[#1a1a1a]">
                   <Suspense fallback={
