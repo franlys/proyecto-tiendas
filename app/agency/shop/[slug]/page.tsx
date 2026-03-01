@@ -41,6 +41,7 @@ import {
     Music,
     Volume2,
     CreditCard,
+    LayoutDashboard,
 } from "lucide-react";
 import {
     AuthProvider,
