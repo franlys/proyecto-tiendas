@@ -205,15 +205,27 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
           <ShopLayoutClient shop={shop}>
             {shop.templateType === "premium-drop-v1" || shop.templateType === "street-drop-v1" ? (
               // Premium templates handle their own layout completely
-              <main className="min-h-screen relative overflow-hidden bg-[#1a1a1a]">
-                <Suspense fallback={
-                  <div className="flex justify-center py-20 bg-black min-h-screen items-center">
-                    <Loader2 className="w-10 h-10 text-white animate-spin" />
-                  </div>
-                }>
-                  {children}
-                </Suspense>
-              </main>
+              <>
+                <main className="min-h-screen relative overflow-hidden bg-[#1a1a1a]">
+                  <Suspense fallback={
+                    <div className="flex justify-center py-20 bg-black min-h-screen items-center">
+                      <Loader2 className="w-10 h-10 text-white animate-spin" />
+                    </div>
+                  }>
+                    {children}
+                  </Suspense>
+                </main>
+                {/* Floating Cart for Premium Templates */}
+                <FloatingCart />
+                {/* Background Audio (if configured) */}
+                {shop.backgroundAudio?.enabled && shop.backgroundAudio?.url && (
+                  <BackgroundAudio
+                    audioUrl={shop.backgroundAudio.url}
+                    volume={shop.backgroundAudio.volume}
+                    loop={shop.backgroundAudio.loop}
+                  />
+                )}
+              </>
             ) : (
               // Standard Template Layout Wrapper
               <div className="min-h-screen pb-24 relative">
