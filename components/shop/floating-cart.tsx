@@ -109,7 +109,7 @@ export function FloatingCart() {
     <>
       <div
         className={cn(
-          "fixed bottom-4 left-2 right-2 z-50",
+          "fixed bottom-4 left-2 right-2 z-[70]",
           "sm:left-4 sm:right-4",
           "md:left-auto md:right-6 md:max-w-md",
           "animate-in slide-in-from-bottom-4 duration-300",

@@ -61,18 +61,19 @@ export function StickerSlapEffect() {
     }, [handleClick]);
 
     return (
-        <div className="fixed inset-0 pointer-events-none z-[60]">
+        <div className="fixed inset-0 pointer-events-none z-[40]">
             <AnimatePresence>
                 {stickers.map((sticker) => (
                     <motion.div
                         key={sticker.id}
-                        initial={{ scale: 0, opacity: 0, rotate: sticker.rotation - 20 }}
+                        initial={{ scale: 0, opacity: 0, rotate: sticker.rotation - 15 }}
                         animate={{ scale: sticker.scale, opacity: 1, rotate: sticker.rotation }}
-                        exit={{ scale: 0, opacity: 0, rotate: sticker.rotation + 20 }}
+                        exit={{ scale: 0.5, opacity: 0, rotate: sticker.rotation + 10 }}
                         transition={{
                             type: "spring",
-                            stiffness: 500,
-                            damping: 25,
+                            stiffness: 300,
+                            damping: 20,
+                            mass: 0.8,
                         }}
                         className="absolute -translate-x-1/2 -translate-y-1/2"
                         style={{
@@ -117,9 +118,9 @@ export function StencilMaskReveal({ text = "ALL FOR THE LOVE", className = "" }:
     const maskX = useMotionValue(0);
     const maskY = useMotionValue(0);
 
-    // Smooth lerp effect for more natural feel
-    const smoothX = useSpring(maskX, { damping: 25, stiffness: 150 });
-    const smoothY = useSpring(maskY, { damping: 25, stiffness: 150 });
+    // Smooth lerp effect for more natural feel - more fluid motion
+    const smoothX = useSpring(maskX, { damping: 30, stiffness: 200, mass: 0.5 });
+    const smoothY = useSpring(maskY, { damping: 30, stiffness: 200, mass: 0.5 });
 
     const containerRef = useRef<HTMLDivElement>(null);
     const [isHovering, setIsHovering] = useState(false);
@@ -358,8 +359,9 @@ export function XRayImage({ src, alt, className = "" }: XRayImageProps) {
 export function StreetCursor() {
     const cursorX = useMotionValue(-100);
     const cursorY = useMotionValue(-100);
-    const springX = useSpring(cursorX, { damping: 25, stiffness: 200 });
-    const springY = useSpring(cursorY, { damping: 25, stiffness: 200 });
+    // More fluid cursor following with less lag
+    const springX = useSpring(cursorX, { damping: 35, stiffness: 400, mass: 0.3 });
+    const springY = useSpring(cursorY, { damping: 35, stiffness: 400, mass: 0.3 });
 
     const [isPointer, setIsPointer] = useState(false);
     const [isVisible, setIsVisible] = useState(false);

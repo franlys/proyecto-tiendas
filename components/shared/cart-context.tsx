@@ -43,6 +43,13 @@ export interface ProductCartItem {
 
 export type CartItem = ServiceCartItem | ProductCartItem;
 
+// Notification for cart feedback
+export interface CartNotification {
+  id: number;
+  message: string;
+  type: "add" | "remove" | "update";
+}
+
 interface CartContextValue {
   items: CartItem[];
   services: ServiceCartItem[];
@@ -70,6 +77,9 @@ interface CartContextValue {
   // Phase 26: Restaurant Table Management
   tableId: string | null;
   setTableId: (id: string | null) => void;
+
+  // Cart notifications for visual feedback
+  notifications: CartNotification[];
 }
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
@@ -81,6 +91,18 @@ interface CartProviderProps {
 export function CartProvider({ children, shopId }: CartProviderProps & { shopId?: string }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [tableId, setTableId] = useState<string | null>(null);
+  const [notifications, setNotifications] = useState<CartNotification[]>([]);
+  const notificationIdRef = { current: 0 };
+
+  // Add notification helper
+  const addNotification = useCallback((message: string, type: "add" | "remove" | "update") => {
+    const id = notificationIdRef.current++;
+    setNotifications(prev => [...prev.slice(-3), { id, message, type }]);
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    }, 3000);
+  }, []);
 
   // Load from local storage on mount or when shopId changes
   useEffect(() => {
@@ -144,6 +166,10 @@ export function CartProvider({ children, shopId }: CartProviderProps & { shopId?
 
   // Add product to cart (with quantity, variant, extras, and notes)
   const addProduct = useCallback((product: Product, quantity: number = 1, variant?: ProductVariant, extras?: SelectedExtra[], notes?: string) => {
+    // Trigger notification
+    const itemName = variant ? `${product.name} (${variant.name})` : product.name;
+    addNotification(`${itemName} añadido al carrito`, "add");
+
     setItems((prev) => {
       const extrasKey = getExtrasKey(extras);
 
@@ -189,7 +215,7 @@ export function CartProvider({ children, shopId }: CartProviderProps & { shopId?
       };
       return [...prev, productItem];
     });
-  }, []);
+  }, [addNotification]);
 
   // Update item notes for customization
   const updateItemNotes = useCallback((productId: string, notes: string, variantId?: string) => {
@@ -314,10 +340,37 @@ export function CartProvider({ children, shopId }: CartProviderProps & { shopId?
         totalDuration,
         tableId,
         setTableId,
+        notifications,
       }}
     >
       {children}
+      {/* Cart Notifications UI */}
+      <CartNotifications notifications={notifications} />
     </CartContext.Provider>
+  );
+}
+
+// Cart Notifications Component
+function CartNotifications({ notifications }: { notifications: CartNotification[] }) {
+  if (notifications.length === 0) return null;
+
+  return (
+    <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none">
+      {notifications.map((notification) => (
+        <div
+          key={notification.id}
+          className="bg-black/90 text-white px-4 py-3 rounded-lg shadow-lg border border-white/10 animate-in slide-in-from-right-5 fade-in duration-300 flex items-center gap-3 max-w-sm"
+        >
+          {notification.type === "add" && (
+            <span className="text-green-400 text-lg">✓</span>
+          )}
+          {notification.type === "remove" && (
+            <span className="text-red-400 text-lg">✕</span>
+          )}
+          <span className="text-sm font-medium">{notification.message}</span>
+        </div>
+      ))}
+    </div>
   );
 }
 
