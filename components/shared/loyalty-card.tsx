@@ -56,7 +56,12 @@ export function LoyaltyCard({
   const loadConfig = async () => {
     if (!shop?.slug) return;
     const cfg = await getLoyaltyConfig(shop.slug);
-    setConfig(cfg);
+    // Only set config if enabled, otherwise keep null
+    if (cfg && cfg.enabled !== false) {
+      setConfig(cfg);
+    } else {
+      setConfig(null);
+    }
   };
 
   const loadCustomerData = async (phoneNumber: string) => {
@@ -114,6 +119,11 @@ export function LoyaltyCard({
       setTimeout(() => setLastAdded(null), 600);
     }
   };
+
+  // Don't render if config is not loaded or disabled (unless in demo mode)
+  if (!demoMode && !config) {
+    return null;
+  }
 
   // Phone input view
   if (showPhoneInput && !demoMode) {

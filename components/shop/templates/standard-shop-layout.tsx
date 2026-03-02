@@ -49,8 +49,10 @@ export function StandardShopLayout({ shop, products, services, loadingData }: St
     const hasProducts = products.length > 0;
 
     // Show sections based on combined features AND available data
-    const showServices = (combinedFeatures.hasServices || combinedFeatures.hasBookings) && (hasServices || isServiceBusiness);
-    const showProducts = (combinedFeatures.hasCatalog || combinedFeatures.hasOrders) && (hasProducts || isProductBusiness);
+    // IMPORTANT: Only show sections if there is ACTUAL data loaded, not just business type
+    // This prevents showing empty tabs when the business type supports it but has no content
+    const showServices = (combinedFeatures.hasServices || combinedFeatures.hasBookings) && hasServices;
+    const showProducts = (combinedFeatures.hasCatalog || combinedFeatures.hasOrders) && hasProducts;
 
     // 3. UI State
     const [activeTab, setActiveTab] = useState<TabType>(() => {

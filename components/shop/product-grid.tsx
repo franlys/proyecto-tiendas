@@ -127,6 +127,9 @@ export function ProductGrid({
   const categories = Object.keys(productsByCategory);
   const scrollRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  // Detect if single category - use vertical grid layout instead of horizontal carousel
+  const isSingleCategory = categories.length === 1;
+
   const scroll = (category: string, direction: 'left' | 'right') => {
     const container = scrollRefs.current[category];
     if (container) {
@@ -283,54 +286,88 @@ export function ProductGrid({
                     Armar Paquete
                   </button>
                 )}
-                {/* Navigation Arrows */}
-                <button
-                  onClick={() => scroll(category, 'left')}
-                  className="p-2 rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all hidden md:flex"
-                  aria-label="Anterior"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => scroll(category, 'right')}
-                  className="p-2 rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all hidden md:flex"
-                  aria-label="Siguiente"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
+                {/* Navigation Arrows - Only show for multiple categories (horizontal carousel) */}
+                {!isSingleCategory && (
+                  <>
+                    <button
+                      onClick={() => scroll(category, 'left')}
+                      className="p-2 rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all hidden md:flex"
+                      aria-label="Anterior"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => scroll(category, 'right')}
+                      className="p-2 rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all hidden md:flex"
+                      aria-label="Siguiente"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
-            {/* Horizontal Product Carousel */}
-            <div
-              ref={(el) => { scrollRefs.current[category] = el; }}
-              className="flex gap-4 overflow-x-auto pb-6 hide-scrollbar snap-x-mandatory -mx-2 px-2"
-            >
-              {productsByCategory[category]?.map((product) => (
-                <div key={product.id} className="min-w-[280px] sm:min-w-[320px] md:min-w-[340px] snap-start">
-                  <StaggerContainer staggerDelay={0.05} className="w-full">
-                    <StaggerItem>
-                      {isMealPrep && (product as any).plateCount && shop ? (
-                        <MealPrepProductCard
-                          product={product as any}
-                          allProducts={products}
-                          shopName={shop.name}
-                          whatsappNumber={shop.contact?.whatsapp || shop.contact?.phone}
-                          businessCoordinates={businessCoordinates}
-                          businessAddress={businessAddress}
-                        />
-                      ) : (
-                        <ProductCard
-                          product={product}
-                          hidePriceIfZero={isMealPrep}
-                          onClickIntercept={() => setIsMealModalOpen(true)}
-                        />
-                      )}
-                    </StaggerItem>
-                  </StaggerContainer>
-                </div>
-              ))}
-            </div>
+            {/* Product Layout - Vertical grid for single category, horizontal carousel for multiple */}
+            {isSingleCategory ? (
+              // Vertical Grid Layout for single category
+              <StaggerContainer
+                staggerDelay={0.05}
+                className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
+              >
+                {productsByCategory[category]?.map((product) => (
+                  <StaggerItem key={product.id}>
+                    {isMealPrep && (product as any).plateCount && shop ? (
+                      <MealPrepProductCard
+                        product={product as any}
+                        allProducts={products}
+                        shopName={shop.name}
+                        whatsappNumber={shop.contact?.whatsapp || shop.contact?.phone}
+                        businessCoordinates={businessCoordinates}
+                        businessAddress={businessAddress}
+                      />
+                    ) : (
+                      <ProductCard
+                        product={product}
+                        hidePriceIfZero={isMealPrep}
+                        onClickIntercept={() => setIsMealModalOpen(true)}
+                      />
+                    )}
+                  </StaggerItem>
+                ))}
+              </StaggerContainer>
+            ) : (
+              // Horizontal Carousel for multiple categories
+              <div
+                ref={(el) => { scrollRefs.current[category] = el; }}
+                className="flex gap-4 overflow-x-auto pb-6 hide-scrollbar snap-x-mandatory -mx-2 px-2"
+              >
+                {productsByCategory[category]?.map((product) => (
+                  <div key={product.id} className="min-w-[280px] sm:min-w-[320px] md:min-w-[340px] snap-start">
+                    <StaggerContainer staggerDelay={0.05} className="w-full">
+                      <StaggerItem>
+                        {isMealPrep && (product as any).plateCount && shop ? (
+                          <MealPrepProductCard
+                            product={product as any}
+                            allProducts={products}
+                            shopName={shop.name}
+                            whatsappNumber={shop.contact?.whatsapp || shop.contact?.phone}
+                            businessCoordinates={businessCoordinates}
+                            businessAddress={businessAddress}
+                          />
+                        ) : (
+                          <ProductCard
+                            product={product}
+                            hidePriceIfZero={isMealPrep}
+                            onClickIntercept={() => setIsMealModalOpen(true)}
+                          />
+                        )}
+                      </StaggerItem>
+                    </StaggerContainer>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
       })}

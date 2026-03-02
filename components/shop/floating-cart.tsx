@@ -114,10 +114,12 @@ export function FloatingCart() {
     <>
       <div
         className={cn(
-          "fixed bottom-4 left-2 right-2 z-[70]",
+          "fixed bottom-4 left-2 right-2 z-[100]",
           "sm:left-4 sm:right-4",
           "md:left-auto md:right-6 md:max-w-md",
           "animate-in slide-in-from-bottom-4 duration-300",
+          // Limit max height when expanded to prevent blocking content
+          isCartExpanded && "max-h-[70vh] overflow-hidden",
           isStreetDrop
             ? "glass-panel bg-black/95 border-2 border-red-500 rounded-none drop-shadow-[5px_5px_0px_rgba(255,0,51,1)] p-3 sm:p-4"
             : "glass-panel rounded-2xl p-3 sm:p-4"
@@ -233,7 +235,7 @@ export function FloatingCart() {
               className="overflow-hidden"
             >
               <div className={cn(
-                "mt-4 pt-4 border-t max-h-[40vh] overflow-y-auto space-y-3",
+                "mt-4 pt-4 border-t max-h-[35vh] overflow-y-auto space-y-3 overscroll-contain",
                 isStreetDrop ? "border-red-500/30" : "border-white/10"
               )}>
                 {/* Products with images and controls */}

@@ -154,9 +154,9 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
                       onClick={handleSimpleRemove}
                       className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
                     >
-                      <Minus className="w-3 h-3 sm:w-4 sm:h-4 text-background" />
+                      <Minus className="w-3 h-3 sm:w-4 sm:h-4 text-slate-900" />
                     </button>
-                    <span className="w-5 sm:w-8 text-center font-semibold text-background text-xs sm:text-base">
+                    <span className="w-5 sm:w-8 text-center font-semibold text-slate-900 text-xs sm:text-base">
                       {simpleQuantity}
                     </span>
                     <button
@@ -165,7 +165,7 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
                       className={cn(
                         "w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-colors",
                         simpleQuantity >= effectiveStock
-                          ? "bg-slate-200 text-slate-400"
+                          ? "bg-slate-300 text-slate-600"
                           : "bg-primary hover:bg-primary/90 text-white"
                       )}
                     >
@@ -177,7 +177,7 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
                     onClick={(e) => handleSimpleAdd(e)}
                     className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/90 hover:bg-white hover:scale-110 flex items-center justify-center transition-all shadow-lg"
                   >
-                    <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-background" />
+                    <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-slate-900" />
                   </button>
                 )
               )}
