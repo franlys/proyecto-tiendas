@@ -171,9 +171,12 @@ export function StreetDropLayout({ shop, products, services, loadingData }: Stre
             {/* Global Grain Noise overlay */}
             <div className="fixed inset-0 pointer-events-none z-50 opacity-[0.06] mix-blend-overlay" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
 
-            {/* Parallax Background: Brick wall */}
+            {/* Parallax Background: Uses shop background or banner, fallback to default */}
             <motion.div
-                style={{ y: bgY, backgroundImage: 'url("https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&q=80")' }}
+                style={{
+                    y: bgY,
+                    backgroundImage: `url("${shop.background?.image || shop.banner || 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&q=80'}")`
+                }}
                 className="fixed inset-[-10%] w-[120%] h-[120vh] bg-cover bg-center bg-no-repeat opacity-20 pointer-events-none z-0 grayscale"
             />
 
