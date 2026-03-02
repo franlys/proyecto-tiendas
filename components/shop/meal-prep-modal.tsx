@@ -77,6 +77,7 @@ export function MealPrepModal({
     const [address, setAddress] = useState("");
     const [customerName, setCustomerName] = useState("");
     const [customerPhone, setCustomerPhone] = useState("");
+    const [customerEmail, setCustomerEmail] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [orderSuccess, setOrderSuccess] = useState<{ id: string, number: string } | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -97,6 +98,11 @@ export function MealPrepModal({
             setCustomerNotes("");
             setDeliveryType("entrega");
             setAddressDetails("");
+            setCustomerName("");
+            setCustomerPhone("");
+            setCustomerEmail("");
+            setOrderSuccess(null);
+            setError(null);
         }
     }, [isOpen]);
 
@@ -236,8 +242,8 @@ export function MealPrepModal({
     };
 
     const handleConfirm = async () => {
-        if (!customerName || !customerPhone) {
-            setError("Por favor completa tu nombre y teléfono en el paso anterior");
+        if (!customerName || !customerPhone || !customerEmail) {
+            setError("Por favor completa todos los campos de contacto");
             setStep("info");
             return;
         }
@@ -289,6 +295,7 @@ export function MealPrepModal({
                     shopId,
                     customerName,
                     customerPhone,
+                    customerEmail,
                     customerAddress: deliveryType === "recogida" ? "Recogida en local" : `${address}${addressDetails ? `, ${addressDetails}` : ""}`,
                     deliveryType,
                     items,
@@ -985,6 +992,16 @@ export function MealPrepModal({
                                     />
                                 </div>
                                 <div className="space-y-2">
+                                    <label className="text-sm font-medium text-slate-300">Correo Electrónico</label>
+                                    <input
+                                        type="email"
+                                        value={customerEmail}
+                                        onChange={(e) => setCustomerEmail(e.target.value)}
+                                        placeholder="Ej: correo@ejemplo.com"
+                                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-green-500"
+                                    />
+                                </div>
+                                <div className="space-y-2">
                                     <label className="text-sm font-medium text-slate-300">WhatsApp (10 dígitos)</label>
                                     <input
                                         type="tel"
@@ -1006,7 +1023,7 @@ export function MealPrepModal({
                                 </Button>
                                 <Button
                                     onClick={() => setStep("summary")}
-                                    disabled={!customerName || customerPhone.length < 10}
+                                    disabled={!customerName || !customerEmail || customerPhone.length < 10}
                                     className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white"
                                 >
                                     Ver Resumen

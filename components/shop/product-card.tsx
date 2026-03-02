@@ -43,15 +43,26 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
     ? product.variants!.some(v => (Number(v.stock) || 0) > 0)
     : false;
 
-  // Product is only out of stock if business follows inventory AND (no main stock AND (no variants OR no variant has stock))
-  // SPECIAL: If hidePriceIfZero is active or infiniteStock is true, it's likely a menu component, so never show "Agotado"
-  const isOutOfStock = hasInventory &&
+  // Check if this product has explicit stock management (stock is defined and not infinite)
+  // This allows products to have stock validation even if the business type doesn't "require" inventory
+  const productHasExplicitStock = product.stock !== undefined && product.stock !== null && !product.infiniteStock;
+
+  // Use inventory validation if: business type requires it OR product has explicit stock set
+  const shouldValidateStock = hasInventory || productHasExplicitStock;
+
+  // Product is only out of stock if:
+  // 1. Stock validation is active (business requires inventory OR product has explicit stock)
+  // 2. AND main stock is 0
+  // 3. AND (no variants OR no variant has stock)
+  // 4. AND not a menu item (hidePriceIfZero)
+  // 5. AND not marked as infinite stock
+  const isOutOfStock = shouldValidateStock &&
     stockNumber === 0 &&
     (!hasVariants || !hasAnyVariantStock) &&
     !hidePriceIfZero &&
     !product.infiniteStock;
 
-  const effectiveStock = hasInventory ? stockNumber : 999999;
+  const effectiveStock = shouldValidateStock ? stockNumber : 999999;
 
   const hasPromo = !!product.promoPrice;
 
@@ -224,6 +235,10 @@ function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: P
   const shop = useShop();
   const { hasInventory } = useCombinedBusinessFeatures(shop?.businessTypes || [shop?.businessType || "otro"]);
 
+  // Check if product has explicit stock management
+  const productHasExplicitStock = product.stock !== undefined && product.stock !== null && !product.infiniteStock;
+  const shouldValidateStock = hasInventory || productHasExplicitStock;
+
   // Calculate total price
   const basePrice = selectedVariant?.price || product.promoPrice || product.price;
   const extrasTotal = selectedExtras.reduce((sum, e) => sum + (e.price * e.quantity), 0);
@@ -290,8 +305,11 @@ function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: P
               <div className="grid grid-cols-2 gap-2">
                 {product.variants!.map(variant => {
                   const isSelected = selectedVariant?.id === variant.id;
-                  const stock = variant.stock || 0;
-                  const isOutOfStock = hasInventory && stock === 0 && !product.infiniteStock;
+                  const stock = Number(variant.stock) || 0;
+                  // Variant has explicit stock if stock field exists
+                  const variantHasExplicitStock = variant.stock !== undefined && variant.stock !== null;
+                  const shouldValidateVariantStock = shouldValidateStock || variantHasExplicitStock;
+                  const isOutOfStock = shouldValidateVariantStock && stock === 0 && !product.infiniteStock;
 
                   return (
                     <button
@@ -339,24 +357,41 @@ function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: P
           )}
 
           {/* Quantity Selector */}
-          <div className="flex items-center justify-between pt-2 border-t border-zinc-800">
-            <span className="text-sm text-zinc-400">Cantidad:</span>
-            <div className="flex items-center gap-3 bg-zinc-800 rounded-lg p-1">
-              <button
-                onClick={() => quantity > 1 && setQuantity(q => q - 1)}
-                className="w-8 h-8 flex items-center justify-center rounded bg-zinc-700 text-white hover:bg-zinc-600"
-              >
-                <Minus className="w-4 h-4" />
-              </button>
-              <span className="w-8 text-center text-white font-bold">{quantity}</span>
-              <button
-                onClick={() => setQuantity(q => q + 1)}
-                className="w-8 h-8 flex items-center justify-center rounded bg-zinc-700 text-white hover:bg-zinc-600"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
+          {(() => {
+            // Calculate max quantity based on selected variant or main product stock
+            const stockValue = selectedVariant
+              ? Number(selectedVariant.stock) || 0
+              : Number(product.stock) || 0;
+            const maxQuantity = shouldValidateStock && !product.infiniteStock ? stockValue : 999;
+            const canIncrement = quantity < maxQuantity;
+
+            return (
+              <div className="flex items-center justify-between pt-2 border-t border-zinc-800">
+                <span className="text-sm text-zinc-400">Cantidad:</span>
+                <div className="flex items-center gap-3 bg-zinc-800 rounded-lg p-1">
+                  <button
+                    onClick={() => quantity > 1 && setQuantity(q => q - 1)}
+                    className="w-8 h-8 flex items-center justify-center rounded bg-zinc-700 text-white hover:bg-zinc-600"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="w-8 text-center text-white font-bold">{quantity}</span>
+                  <button
+                    onClick={() => canIncrement && setQuantity(q => q + 1)}
+                    disabled={!canIncrement}
+                    className={cn(
+                      "w-8 h-8 flex items-center justify-center rounded",
+                      canIncrement
+                        ? "bg-zinc-700 text-white hover:bg-zinc-600"
+                        : "bg-zinc-800 text-zinc-500 cursor-not-allowed"
+                    )}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Footer with Total and Add Button */}

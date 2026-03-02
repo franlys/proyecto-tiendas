@@ -272,3 +272,129 @@ export const PAYMENT_STATUS_COLORS: Record<PaymentStatus, string> = {
     cancelled: "bg-zinc-500/20 text-zinc-400",
     refunded: "bg-purple-500/20 text-purple-400",
 };
+
+// ============================================
+// MANUAL PAYMENT SYSTEM (Bank Transfer, Mobile Payment, etc.)
+// ============================================
+
+// Manual payment method types
+export type ManualPaymentMethodType =
+    | "bank_transfer"      // Transferencia bancaria
+    | "mobile_payment"     // Pago móvil (Venezuela, etc.)
+    | "cash"               // Efectivo
+    | "crypto"             // Criptomonedas
+    | "zelle"              // Zelle
+    | "paypal_manual"      // PayPal sin integración (solo email)
+    | "other";             // Otro
+
+// A single manual payment method configuration
+export interface ManualPaymentMethod {
+    id: string;
+    type: ManualPaymentMethodType;
+    name: string;              // e.g., "Banco de Venezuela", "Binance Pay"
+    isActive: boolean;
+    // Bank transfer specific
+    bankName?: string;
+    accountNumber?: string;
+    accountType?: "corriente" | "ahorro";
+    accountHolder?: string;
+    identificationNumber?: string;  // Cédula/RIF
+    // Mobile payment specific
+    phoneNumber?: string;
+    // Crypto specific
+    walletAddress?: string;
+    network?: string;          // e.g., "BEP20", "TRC20"
+    // Zelle/PayPal
+    email?: string;
+    // General
+    instructions?: string;     // Custom instructions for this method
+    icon?: string;             // Custom icon URL
+}
+
+// Shop's manual payment configuration
+export interface ShopManualPaymentConfig {
+    enabled: boolean;
+    paymentMethods: ManualPaymentMethod[];
+    defaultCurrency: string;   // e.g., "USD", "VES", "COP"
+    acceptedCurrencies?: string[];
+    paymentInstructions?: string;  // General instructions shown to customer
+    requiresReceipt: boolean;      // If true, customer must upload receipt
+    autoApprove: boolean;          // If false, owner must manually approve
+}
+
+// A payment receipt submitted by customer
+export interface PaymentReceipt {
+    id: string;
+    orderId: string;
+    shopId: string;
+    customerId?: string;
+    customerName: string;
+    customerPhone: string;
+    customerEmail?: string;
+    // Payment details
+    paymentMethodId: string;
+    paymentMethodName: string;
+    paymentMethodType: ManualPaymentMethodType;
+    amount: number;
+    currency: string;
+    // Receipt image
+    receiptUrl: string;          // Firebase Storage URL
+    receiptFileName?: string;
+    // Reference/confirmation number (optional)
+    referenceNumber?: string;
+    // Status
+    status: "pending" | "approved" | "rejected";
+    rejectionReason?: string;
+    // Timestamps
+    submittedAt: Date;
+    reviewedAt?: Date;
+    reviewedBy?: string;
+    // Notes
+    customerNote?: string;
+    ownerNote?: string;
+}
+
+// Labels for manual payment method types
+export const MANUAL_PAYMENT_METHOD_LABELS: Record<ManualPaymentMethodType, string> = {
+    bank_transfer: "Transferencia Bancaria",
+    mobile_payment: "Pago Móvil",
+    cash: "Efectivo",
+    crypto: "Criptomonedas",
+    zelle: "Zelle",
+    paypal_manual: "PayPal",
+    other: "Otro",
+};
+
+// Icons for manual payment method types
+export const MANUAL_PAYMENT_METHOD_ICONS: Record<ManualPaymentMethodType, string> = {
+    bank_transfer: "🏦",
+    mobile_payment: "📱",
+    cash: "💵",
+    crypto: "₿",
+    zelle: "💸",
+    paypal_manual: "🅿️",
+    other: "💳",
+};
+
+// Default manual payment config
+export const DEFAULT_MANUAL_PAYMENT_CONFIG: ShopManualPaymentConfig = {
+    enabled: false,
+    paymentMethods: [],
+    defaultCurrency: "USD",
+    acceptedCurrencies: ["USD"],
+    requiresReceipt: true,
+    autoApprove: false,
+};
+
+// Receipt status labels
+export const RECEIPT_STATUS_LABELS: Record<PaymentReceipt["status"], string> = {
+    pending: "Pendiente de Validación",
+    approved: "Aprobado",
+    rejected: "Rechazado",
+};
+
+export const RECEIPT_STATUS_COLORS: Record<PaymentReceipt["status"], string> = {
+    pending: "bg-amber-500/20 text-amber-400",
+    approved: "bg-green-500/20 text-green-400",
+    rejected: "bg-red-500/20 text-red-400",
+};

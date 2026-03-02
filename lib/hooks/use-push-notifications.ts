@@ -54,10 +54,18 @@ export function usePushNotifications(shopId?: string | null): UsePushNotificatio
                 return;
             }
 
+            // Safely check for Notification API (not available in all browsers/webviews)
+            let hasNotification = false;
+            try {
+                hasNotification = typeof Notification !== "undefined" && "Notification" in window;
+            } catch {
+                hasNotification = false;
+            }
+
             const supported =
                 "serviceWorker" in navigator &&
                 "PushManager" in window &&
-                "Notification" in window;
+                hasNotification;
 
             setState((prev) => ({
                 ...prev,
@@ -129,6 +137,16 @@ export function usePushNotifications(shopId?: string | null): UsePushNotificatio
         setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
         try {
+            // Check if Notification API is available
+            if (typeof Notification === "undefined") {
+                setState((prev) => ({
+                    ...prev,
+                    isLoading: false,
+                    error: "Notificaciones no soportadas en este navegador",
+                }));
+                return false;
+            }
+
             // First, ask for notification permission
             const permission = await Notification.requestPermission();
             if (permission !== "granted") {

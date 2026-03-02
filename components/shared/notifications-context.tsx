@@ -107,9 +107,14 @@ export function NotificationsProvider({
     useEffect(() => {
         if (typeof window === "undefined") return;
 
-        // Check notification permission
-        if ("Notification" in window) {
-            setHasNotificationPermission(Notification.permission === "granted");
+        // Safely check notification permission
+        try {
+            if (typeof Notification !== "undefined" && "permission" in Notification) {
+                setHasNotificationPermission(Notification.permission === "granted");
+            }
+        } catch {
+            // Notification API not available
+            setHasNotificationPermission(false);
         }
     }, []);
 
@@ -125,33 +130,43 @@ export function NotificationsProvider({
     useEffect(() => {
         if (typeof window === "undefined") return;
 
-        if (Notification.permission === "granted" && !isSubscribed && !isPushLoading) {
-            console.log("[Notifications] Permission granted but not subscribed, auto-subscribing...");
-            subscribe().catch(err => console.error("[Notifications] Auto-subscribe failed:", err));
+        try {
+            if (typeof Notification !== "undefined" && Notification.permission === "granted" && !isSubscribed && !isPushLoading) {
+                console.log("[Notifications] Permission granted but not subscribed, auto-subscribing...");
+                subscribe().catch(err => console.error("[Notifications] Auto-subscribe failed:", err));
+            }
+        } catch {
+            // Notification API not available
         }
     }, [isSubscribed, isPushLoading, subscribe]);
 
     // Request notification permission & subscribe to push
     const requestNotificationPermission = useCallback(async () => {
-        if (typeof window === "undefined" || !("Notification" in window)) {
-            return false;
-        }
+        if (typeof window === "undefined") return false;
 
-        if (Notification.permission === "granted") {
-            setHasNotificationPermission(true);
-            return true;
-        }
-
-        if (Notification.permission !== "denied") {
-            const permission = await Notification.requestPermission();
-            const granted = permission === "granted";
-            setHasNotificationPermission(granted);
-
-            if (granted) {
-                await subscribe();
+        try {
+            if (typeof Notification === "undefined") {
+                return false;
             }
 
-            return granted;
+            if (Notification.permission === "granted") {
+                setHasNotificationPermission(true);
+                return true;
+            }
+
+            if (Notification.permission !== "denied") {
+                const permission = await Notification.requestPermission();
+                const granted = permission === "granted";
+                setHasNotificationPermission(granted);
+
+                if (granted) {
+                    await subscribe();
+                }
+
+                return granted;
+            }
+        } catch {
+            // Notification API not available
         }
 
         return false;
@@ -160,6 +175,7 @@ export function NotificationsProvider({
     // Show browser notification
     const showBrowserNotification = useCallback((notification: AppNotification) => {
         if (!hasNotificationPermission) return;
+        if (typeof Notification === "undefined") return;
 
         try {
             const browserNotification = new Notification(notification.title, {
