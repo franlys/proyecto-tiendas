@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { Suspense } from "react";
 import { ThemeProvider, CartProvider, OrdersProvider } from "@/components/shared";
-import { FloatingCart, ShopLayoutClient } from "@/components/shop";
+import { FloatingCart, ShopLayoutClient, StreetCart } from "@/components/shop";
 import { BackgroundAudio } from "@/components/shop/background-audio";
 import { Loader2 } from "lucide-react";
 import { MOCK_SHOPS, DEFAULT_THEME, type ShopConfig } from "@/lib/constants";
@@ -57,6 +57,7 @@ async function getShopData(shopId: string): Promise<ShopConfig | null> {
         background: shopData.background,
         backgroundAudio: shopData.backgroundAudio,
         templateType: shopData.templateType,
+        dropTheme: shopData.dropTheme,
       } as ShopConfig;
     }
 
@@ -93,6 +94,7 @@ async function getShopData(shopId: string): Promise<ShopConfig | null> {
         background: shopData.background,
         backgroundAudio: shopData.backgroundAudio,
         templateType: shopData.templateType,
+        dropTheme: shopData.dropTheme,
       } as ShopConfig;
     }
   } catch (error) {
@@ -125,6 +127,7 @@ async function getShopData(shopId: string): Promise<ShopConfig | null> {
           theme: shop.theme || DEFAULT_THEME,
           contact: shop.contact || {},
           templateType: shop.templateType,
+          dropTheme: shop.dropTheme,
           businessType: shop.businessType || (shop.category === "beauty" ? "beauty" : shop.category === "repair" ? "repair" : "retail"),
           wholesaleEnabled: shop.wholesaleEnabled || false,
         };
@@ -215,8 +218,13 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
                     {children}
                   </Suspense>
                 </main>
-                {/* Floating Cart for Premium Templates */}
-                <FloatingCart />
+                {/* Template-specific Carts:
+                    - cosmic-drop-v1: Uses CosmicCart (rendered inside CosmicDropLayout)
+                    - street-drop-v1: Uses StreetCart
+                    - premium-drop-v1: Uses FloatingCart
+                */}
+                {shop.templateType === "street-drop-v1" && <StreetCart />}
+                {shop.templateType === "premium-drop-v1" && <FloatingCart />}
                 {/* Background Audio (if configured) */}
                 {shop.backgroundAudio?.enabled && shop.backgroundAudio?.url && (
                   <BackgroundAudio

@@ -106,7 +106,9 @@
       "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" add lib/hooks/use-business-features.ts app/\\\\\\(shops\\\\\\)/[shopId]/page.tsx)",
       "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nfeat: add combined features support for multi-type businesses\n\n- Add getCombinedFeatures\\(\\) to merge features from multiple business types\n- Add useCombinedBusinessFeatures\\(\\) hook for React components\n- Update shop public page to use combined features for visibility logic\n- Enables businesses like \"Meal Prep + Gym\" to show both booking and ordering\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(node_modules/.bin/tsc:*)",
-      "Bash(where:*)"
+      "Bash(where:*)",
+      "Bash(cmd.exe /c \"npm run build\")",
+      "Bash(cmd.exe /c \"cd C:\\\\Users\\\\elmae\\\\proyecto-tiendas && npm run build\")"
     ]
   }
 }

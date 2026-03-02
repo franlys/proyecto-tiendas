@@ -1,11 +1,30 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback, memo } from "react";
+import { useEffect, useRef, useState, useCallback, memo, useMemo } from "react";
 import { motion, useMotionValue, useSpring, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 // ============================================
-// WEBGL STARFIELD - THREE.JS IMPLEMENTATION
+// MOBILE DETECTION HOOK
+// ============================================
+
+function useIsMobile() {
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+        };
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+        return () => window.removeEventListener("resize", checkMobile);
+    }, []);
+
+    return isMobile;
+}
+
+// ============================================
+// WEBGL STARFIELD - OPTIMIZED FOR MOBILE
 // Deep space 3D starfield with parallax
 // ============================================
 
@@ -25,6 +44,10 @@ export const Starfield = memo(function Starfield({
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const animationRef = useRef<number | undefined>(undefined);
     const starsRef = useRef<Array<{ x: number; y: number; z: number; size: number; brightness: number }>>([]);
+    const isMobile = useIsMobile();
+
+    // Reduce stars on mobile for performance
+    const actualStarCount = isMobile ? Math.min(starCount, 400) : starCount;
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -41,8 +64,8 @@ export const Starfield = memo(function Starfield({
         setSize();
         window.addEventListener("resize", setSize);
 
-        // Initialize stars
-        starsRef.current = Array.from({ length: starCount }, () => ({
+        // Initialize stars - use reduced count on mobile
+        starsRef.current = Array.from({ length: actualStarCount }, () => ({
             x: (Math.random() - 0.5) * canvas.width * 2,
             y: (Math.random() - 0.5) * canvas.height * 2,
             z: Math.random() * depth,
@@ -90,22 +113,32 @@ export const Starfield = memo(function Starfield({
                 if (x >= 0 && x <= canvas.width && y >= 0 && y <= canvas.height) {
                     const alpha = (1 - star.z / depth) * star.brightness;
 
-                    // Star glow
-                    const gradient = ctx.createRadialGradient(x, y, 0, x, y, size * 2);
-                    gradient.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`);
-                    gradient.addColorStop(0.5, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha * 0.5})`);
-                    gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+                    // Mobile: Simple circles (no gradients for performance)
+                    // Desktop: Full glow effect with gradients
+                    if (isMobile) {
+                        // Simple star rendering for mobile
+                        ctx.beginPath();
+                        ctx.arc(x, y, size, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+                        ctx.fill();
+                    } else {
+                        // Star glow with gradient (desktop only)
+                        const gradient = ctx.createRadialGradient(x, y, 0, x, y, size * 2);
+                        gradient.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`);
+                        gradient.addColorStop(0.5, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha * 0.5})`);
+                        gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
 
-                    ctx.beginPath();
-                    ctx.arc(x, y, size * 2, 0, Math.PI * 2);
-                    ctx.fillStyle = gradient;
-                    ctx.fill();
+                        ctx.beginPath();
+                        ctx.arc(x, y, size * 2, 0, Math.PI * 2);
+                        ctx.fillStyle = gradient;
+                        ctx.fill();
 
-                    // Core
-                    ctx.beginPath();
-                    ctx.arc(x, y, size * 0.5, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-                    ctx.fill();
+                        // Core
+                        ctx.beginPath();
+                        ctx.arc(x, y, size * 0.5, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                        ctx.fill();
+                    }
                 }
             });
 
@@ -120,7 +153,7 @@ export const Starfield = memo(function Starfield({
                 cancelAnimationFrame(animationRef.current);
             }
         };
-    }, [starCount, starColor, speed, depth]);
+    }, [actualStarCount, starColor, speed, depth, isMobile]);
 
     return (
         <canvas
@@ -223,6 +256,10 @@ export const ShootingStars = memo(function ShootingStars({
 }) {
     const [stars, setStars] = useState<ShootingStar[]>([]);
     const idRef = useRef(0);
+    const isMobile = useIsMobile();
+
+    // Reduce frequency on mobile (less shooting stars)
+    const actualFrequency = isMobile ? frequency * 2 : frequency;
 
     useEffect(() => {
         const createStar = () => {
@@ -243,9 +280,9 @@ export const ShootingStars = memo(function ShootingStars({
             }, star.duration * 1000 + 500);
         };
 
-        const interval = setInterval(createStar, frequency);
+        const interval = setInterval(createStar, actualFrequency);
         return () => clearInterval(interval);
-    }, [frequency]);
+    }, [actualFrequency]);
 
     return (
         <div className="fixed inset-0 pointer-events-none z-[2] overflow-hidden">
@@ -295,8 +332,13 @@ export const CosmicDust = memo(function CosmicDust({
     particleCount = 50,
     colors = ["#8B5CF6", "#06B6D4", "#ffffff"],
 }: CosmicDustProps) {
+    const isMobile = useIsMobile();
+
+    // Reduce particles on mobile
+    const actualCount = isMobile ? Math.min(particleCount, 15) : particleCount;
+
     const particles = useRef(
-        Array.from({ length: particleCount }, (_, i) => ({
+        Array.from({ length: actualCount }, (_, i) => ({
             id: i,
             x: Math.random() * 100,
             y: Math.random() * 100,
@@ -340,7 +382,7 @@ export const CosmicDust = memo(function CosmicDust({
 });
 
 // ============================================
-// COSMIC CURSOR - Galaxy trail effect
+// COSMIC CURSOR - Galaxy trail effect (Desktop only)
 // ============================================
 
 export function CosmicCursor() {
@@ -351,8 +393,12 @@ export function CosmicCursor() {
 
     const [trail, setTrail] = useState<Array<{ id: number; x: number; y: number }>>([]);
     const idRef = useRef(0);
+    const isMobile = useIsMobile();
 
     useEffect(() => {
+        // Disable cursor effects on mobile
+        if (isMobile) return;
+
         const handleMouseMove = (e: MouseEvent) => {
             cursorX.set(e.clientX);
             cursorY.set(e.clientY);
@@ -364,15 +410,20 @@ export function CosmicCursor() {
 
         window.addEventListener("mousemove", handleMouseMove);
         return () => window.removeEventListener("mousemove", handleMouseMove);
-    }, [cursorX, cursorY]);
+    }, [cursorX, cursorY, isMobile]);
 
     // Clean up old trail particles
     useEffect(() => {
+        if (isMobile) return;
+
         const interval = setInterval(() => {
             setTrail(prev => prev.slice(-10));
         }, 100);
         return () => clearInterval(interval);
-    }, []);
+    }, [isMobile]);
+
+    // Don't render cursor on mobile
+    if (isMobile) return null;
 
     return (
         <>

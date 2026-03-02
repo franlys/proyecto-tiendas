@@ -148,6 +148,7 @@ export default function ShopHomePage() {
   // 2. Render appropriate template based on settings
   // Pass the loaded catalog to the respective layout component
   const templateRoot = () => {
+    console.log("🎨 [TEMPLATE] Current templateType:", shop?.templateType, "| Shop:", shop?.name);
     switch (shop?.templateType) {
       case "premium-drop-v1":
         return (

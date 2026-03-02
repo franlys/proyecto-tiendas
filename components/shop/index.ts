@@ -37,6 +37,7 @@ export {
 } from "./templates/street-interactions";
 // Cosmic Drop Templates
 export { CosmicDropLayout } from "./templates/cosmic-drop-layout";
+export { CosmicCart } from "./templates/cosmic-cart";
 export {
     Starfield,
     Nebula,

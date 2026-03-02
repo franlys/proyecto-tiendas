@@ -16,6 +16,7 @@ import {
     Aurora,
     CosmicPlanet,
 } from "./cosmic-drop-effects";
+import { CosmicCart } from "./cosmic-cart";
 import { useCart } from "@/components/shared";
 import { cn } from "@/lib/utils";
 
@@ -454,6 +455,12 @@ export function CosmicDropLayout({
             {dropTheme.tickerPhrases && dropTheme.tickerPhrases.length > 0 && (
                 <CosmicTicker phrases={dropTheme.tickerPhrases} />
             )}
+
+            {/* Cosmic Cart */}
+            <CosmicCart
+                primaryColor={primaryColor}
+                secondaryColor={secondaryColor}
+            />
 
             {/* Global styles */}
             <style dangerouslySetInnerHTML={{ __html: `
