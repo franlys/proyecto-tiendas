@@ -43,12 +43,14 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
     ? product.variants!.some(v => (Number(v.stock) || 0) > 0)
     : false;
 
-  // Check if this product has explicit stock management (stock is defined and not infinite)
-  // This allows products to have stock validation even if the business type doesn't "require" inventory
-  const productHasExplicitStock = product.stock !== undefined && product.stock !== null && !product.infiniteStock;
+  // Check if this product has INTENTIONAL stock management:
+  // - Stock must be defined AND greater than 0 (stock: 0 by default doesn't count as intentional)
+  // - OR stock was explicitly set to 0 after having stock (we can't detect this, so we rely on hasInventory)
+  // This prevents restaurants from accidentally showing "Agotado" when stock defaults to 0
+  const productHasIntentionalStock = typeof product.stock === "number" && product.stock > 0 && !product.infiniteStock;
 
-  // Use inventory validation if: business type requires it OR product has explicit stock set
-  const shouldValidateStock = hasInventory || productHasExplicitStock;
+  // Use inventory validation if: business type requires it OR product has intentional stock > 0
+  const shouldValidateStock = hasInventory || productHasIntentionalStock;
 
   // Product is only out of stock if:
   // 1. Stock validation is active (business requires inventory OR product has explicit stock)
@@ -235,9 +237,9 @@ function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: P
   const shop = useShop();
   const { hasInventory } = useCombinedBusinessFeatures(shop?.businessTypes || [shop?.businessType || "otro"]);
 
-  // Check if product has explicit stock management
-  const productHasExplicitStock = product.stock !== undefined && product.stock !== null && !product.infiniteStock;
-  const shouldValidateStock = hasInventory || productHasExplicitStock;
+  // Check if product has intentional stock management (stock > 0 means it was set intentionally)
+  const productHasIntentionalStock = typeof product.stock === "number" && product.stock > 0 && !product.infiniteStock;
+  const shouldValidateStock = hasInventory || productHasIntentionalStock;
 
   // Calculate total price
   const basePrice = selectedVariant?.price || product.promoPrice || product.price;
