@@ -389,7 +389,7 @@ export function StandardShopLayout({ shop, products, services, loadingData }: St
                             </h2>
                             <p className="text-slate-400 mb-6">
                                 {activeTab === "servicios"
-                                    ? `Selecciona los ${combinedFeatures.labels?.services.toLowerCase() || "servicios"} que deseas y haz clic en el botón de WhatsApp para agendar.`
+                                    ? `Selecciona los ${combinedFeatures.labels?.services.toLowerCase() || "servicios"} que deseas y agenda tu cita directamente.`
                                     : `Puedes combinar ${combinedFeatures.labels?.services.toLowerCase() || "servicios"} y ${combinedFeatures.labels?.products.toLowerCase() || "productos"} en un solo pedido.`}
                             </p>
                             <div className="flex items-center justify-center gap-2 text-gold">
