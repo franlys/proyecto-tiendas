@@ -332,9 +332,12 @@ export function StreetCart() {
                     isOpen={showPaymentModal}
                     onClose={() => setShowPaymentModal(false)}
                     orderId={orderId}
-                    orderTotal={totalPrice}
+                    totalAmount={totalPrice}
                     shopId={shop?.id || ""}
-                    config={paymentConfig || DEFAULT_MANUAL_PAYMENT_CONFIG}
+                    paymentConfig={paymentConfig || DEFAULT_MANUAL_PAYMENT_CONFIG}
+                    customerName={customerName}
+                    customerPhone={customerPhone}
+                    customerEmail={customerEmail}
                     onPaymentSubmitted={handlePaymentSubmitted}
                 />
             )}
