@@ -36,8 +36,8 @@ function useReducedMotion() {
 }
 
 // Simplified spring for mobile
-const FAST_TRANSITION = { type: "tween", duration: 0.15, ease: "easeOut" };
-const SPRING_TRANSITION = { type: "spring", stiffness: 400, damping: 30 };
+const FAST_TRANSITION = { type: "tween", duration: 0.15, ease: "easeOut" } as const;
+const SPRING_TRANSITION = { type: "spring", stiffness: 400, damping: 30 } as const;
 
 // Static stars with CSS animation (no JS animation loop)
 function StaticStarfield({ color = "#8B5CF6" }: { color?: string }) {
