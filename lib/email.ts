@@ -329,6 +329,92 @@ export const emailTemplates = {
       </p>
     `);
   },
+
+  /**
+   * Payment receipt notification for shop owner
+   */
+  paymentReceiptNotification: (data: {
+    shopName: string;
+    customerName: string;
+    customerPhone: string;
+    customerEmail?: string;
+    amount: number;
+    currency: string;
+    paymentMethod: string;
+    receiptUrl: string;
+    referenceNumber?: string;
+    orderId?: string;
+  }) => {
+    return generateEmailTemplate(`
+      <h2 style="margin: 0 0 16px; color: #0f172a; font-size: 20px;">
+        🔔 ¡Nuevo Comprobante de Pago Recibido!
+      </h2>
+
+      <p style="margin: 0 0 24px;">
+        Un cliente ha enviado un comprobante de pago que requiere tu validación.
+      </p>
+
+      <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin-bottom: 24px; border-radius: 0 8px 8px 0;">
+        <strong style="color: #92400e;">⚠️ Acción Requerida:</strong>
+        <p style="margin: 8px 0 0; color: #92400e; font-size: 14px;">
+          Revisa el comprobante y valida el pago en tu panel de administración.
+        </p>
+      </div>
+
+      <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Cliente</td>
+            <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #0f172a;">${data.customerName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Teléfono</td>
+            <td style="padding: 8px 0; text-align: right; color: #0f172a;">${data.customerPhone}</td>
+          </tr>
+          ${data.customerEmail ? `
+          <tr>
+            <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Email</td>
+            <td style="padding: 8px 0; text-align: right; color: #0f172a;">${data.customerEmail}</td>
+          </tr>
+          ` : ""}
+          <tr>
+            <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Método de Pago</td>
+            <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #0f172a;">${data.paymentMethod}</td>
+          </tr>
+          ${data.referenceNumber ? `
+          <tr>
+            <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Referencia</td>
+            <td style="padding: 8px 0; text-align: right; font-family: monospace; color: #0f172a;">${data.referenceNumber}</td>
+          </tr>
+          ` : ""}
+          <tr>
+            <td style="padding: 12px 0; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0;">Monto</td>
+            <td style="padding: 12px 0; text-align: right; font-weight: 700; font-size: 18px; color: #06b6d4; border-top: 1px solid #e2e8f0;">
+              $${data.amount.toLocaleString()} ${data.currency}
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <p style="margin: 0 0 12px; color: #64748b; font-size: 13px;">📷 Comprobante adjunto:</p>
+        <a href="${data.receiptUrl}" target="_blank" style="display: block;">
+          <img src="${data.receiptUrl}" alt="Comprobante de pago" style="max-width: 100%; border-radius: 8px; border: 1px solid #e2e8f0;">
+        </a>
+      </div>
+
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://linko.app"}/admin/orders${data.orderId ? `?orderId=${data.orderId}` : ""}"
+           style="display: inline-block; background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600;">
+          Validar Pago
+        </a>
+      </div>
+
+      <p style="margin: 0; color: #64748b; font-size: 13px; text-align: center;">
+        O accede a tu panel de administración para gestionar los pagos pendientes.
+      </p>
+    `, { name: data.shopName });
+  },
 };
 
 export default { sendEmail, generateEmailTemplate, emailTemplates };

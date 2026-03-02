@@ -18,16 +18,24 @@ import {
     ChevronUp,
     Check,
     CreditCard,
+    Upload,
+    Banknote,
+    Copy,
+    CheckCircle,
+    Image as ImageIcon,
 } from "lucide-react";
 import { useCart, useShop, useOrders, useShopConfig } from "@/components/shared";
 import { cn, formatPhoneForWhatsApp } from "@/lib/utils";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, doc, getDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "@/lib/firebase";
 import { Button } from "@/components/ui";
 import type { ProductCartItem } from "@/components/shared/cart-context";
 import { StripePayButton } from "@/components/shop/stripe-checkout-button";
 import { PayPalPayButton } from "@/components/shop/paypal-checkout-button";
-import type { Currency } from "@/lib/types/payment.types";
+import type { Currency, ShopManualPaymentConfig, ManualPaymentMethod } from "@/lib/types/payment.types";
+import { MANUAL_PAYMENT_METHOD_ICONS } from "@/lib/types/payment.types";
 
 interface CheckoutDrawerProps {
     isOpen: boolean;
@@ -61,8 +69,38 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
     const [orderSuccess, setOrderSuccess] = useState<{ id: string, number: string } | null>(null);
     const [stripeError, setStripeError] = useState<string | null>(null);
 
+    // Payment timing state
+    const [paymentTiming, setPaymentTiming] = useState<"pay_now" | "pay_on_delivery">("pay_on_delivery");
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<ManualPaymentMethod | null>(null);
+    const [manualPaymentConfig, setManualPaymentConfig] = useState<ShopManualPaymentConfig | null>(null);
+    const [receiptFile, setReceiptFile] = useState<File | null>(null);
+    const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+    const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
+    const [copiedField, setCopiedField] = useState<string | null>(null);
+
     // Phase 15: Thematic UI
     const isStreetDrop = shop?.templateType === "street-drop-v1" || shop?.slug === "gingxerstudio";
+
+    // Load manual payment configuration
+    useEffect(() => {
+        async function loadManualPaymentConfig() {
+            if (!shop?.id && !shop?.slug) return;
+            const shopId = shop.id || shop.slug;
+            try {
+                const configRef = doc(db, "shops", shopId, "settings", "payments");
+                const configSnap = await getDoc(configRef);
+                if (configSnap.exists()) {
+                    const config = configSnap.data() as ShopManualPaymentConfig;
+                    if (config.enabled && config.paymentMethods?.length > 0) {
+                        setManualPaymentConfig(config);
+                    }
+                }
+            } catch (err) {
+                console.error("Error loading manual payment config:", err);
+            }
+        }
+        loadManualPaymentConfig();
+    }, [shop?.id, shop?.slug]);
 
     // Check if shop has payments enabled (Stripe or PayPal)
     const paymentProvider = shop?.payments?.provider;
@@ -122,6 +160,46 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
         return `${item.id}-${item.variantId || ""}-${idx}`;
     };
 
+    // Copy to clipboard helper
+    const copyToClipboard = async (text: string, fieldName: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopiedField(fieldName);
+            setTimeout(() => setCopiedField(null), 2000);
+        } catch (err) {
+            console.error("Error copying to clipboard:", err);
+        }
+    };
+
+    // Handle receipt file selection
+    const handleReceiptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            // Validate file type
+            if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
+                alert("Por favor sube una imagen o PDF del comprobante");
+                return;
+            }
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert("El archivo no puede ser mayor a 5MB");
+                return;
+            }
+            setReceiptFile(file);
+            // Create preview for images
+            if (file.type.startsWith("image/")) {
+                const reader = new FileReader();
+                reader.onload = (e) => setReceiptPreview(e.target?.result as string);
+                reader.readAsDataURL(file);
+            } else {
+                setReceiptPreview(null);
+            }
+        }
+    };
+
+    // Get active payment methods
+    const activePaymentMethods = manualPaymentConfig?.paymentMethods?.filter(m => m.isActive) || [];
+
     const handleSubmit = async () => {
         if (!customerName || !customerPhone || !customerEmail) {
             alert("Por favor ingresa tu nombre, teléfono y correo electrónico");
@@ -133,16 +211,34 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
             return;
         }
 
+        // Validate receipt if paying now
+        if (paymentTiming === "pay_now" && !receiptFile && manualPaymentConfig?.requiresReceipt) {
+            alert("Por favor sube el comprobante de pago");
+            return;
+        }
+
         if (!shop?.contact.phone || !shop?.slug) return;
 
         setIsSubmitting(true);
 
         try {
+            let receiptUrl = "";
+
+            // Upload receipt if provided
+            if (receiptFile && paymentTiming === "pay_now") {
+                setIsUploadingReceipt(true);
+                const shopId = shop.id || shop.slug;
+                const fileName = `receipts/${shopId}/${Date.now()}-${receiptFile.name}`;
+                const storageRef = ref(storage, fileName);
+                await uploadBytes(storageRef, receiptFile);
+                receiptUrl = await getDownloadURL(storageRef);
+                setIsUploadingReceipt(false);
+            }
+
             // Build order items with notes
             const orderItems = products.map((p) => {
                 const basePrice = p.promoPrice || p.price;
                 const extrasTotal = p.extrasTotal || 0;
-                const itemTotal = (basePrice + extrasTotal) * p.quantity;
 
                 let productName = p.name;
                 if (p.variantName) productName += ` (${p.variantName})`;
@@ -155,7 +251,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
 
                 return {
                     id: p.id,
-                    variantId: p.variantId, // Include variant ID for stock decrement
+                    variantId: p.variantId,
                     name: productName,
                     quantity: p.quantity,
                     price: basePrice + extrasTotal,
@@ -163,12 +259,25 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                 };
             });
 
+            // Build payment info
+            const paymentInfo = paymentTiming === "pay_now" && selectedPaymentMethod ? {
+                paymentTiming,
+                paymentMethodId: selectedPaymentMethod.id,
+                paymentMethodName: selectedPaymentMethod.name,
+                paymentMethodType: selectedPaymentMethod.type,
+                receiptUrl,
+                status: "pending_verification"
+            } : {
+                paymentTiming: "pay_on_delivery",
+                status: "pending"
+            };
+
             // Call internal API
             const response = await fetch("/api/orders/confirm", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    shopId: shop.id || shop.slug, // Ensure we have the ID
+                    shopId: shop.id || shop.slug,
                     customerName,
                     customerPhone,
                     customerEmail,
@@ -180,7 +289,8 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                         scheduledDate,
                         scheduledTime,
                         orderNotes
-                    })
+                    }),
+                    paymentInfo
                 })
             });
 
@@ -192,7 +302,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
             // Set success state
             setOrderSuccess({ id: result.orderId, number: result.orderNumber });
 
-            // Clear cart 
+            // Clear cart
             clearCart();
 
         } catch (error: any) {
@@ -200,6 +310,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
             alert(error.message || "Error al procesar el pedido. Intenta de nuevo.");
         } finally {
             setIsSubmitting(false);
+            setIsUploadingReceipt(false);
         }
     };
 
@@ -466,6 +577,280 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                             rows={3}
                         />
                     </div>
+
+                    {/* Payment Timing Selection - Only show if manual payments enabled */}
+                    {activePaymentMethods.length > 0 && (
+                        <div className="space-y-3">
+                            <h3 className="text-sm font-medium text-slate-400">
+                                ¿Cuándo deseas pagar?
+                            </h3>
+                            <div className="grid grid-cols-2 gap-3">
+                                <button
+                                    onClick={() => {
+                                        setPaymentTiming("pay_now");
+                                        if (!selectedPaymentMethod && activePaymentMethods.length > 0) {
+                                            setSelectedPaymentMethod(activePaymentMethods[0]);
+                                        }
+                                    }}
+                                    className={cn(
+                                        "flex flex-col items-center gap-2 p-4 rounded-xl border transition-all",
+                                        paymentTiming === "pay_now"
+                                            ? "bg-green-500/20 border-green-500 text-white"
+                                            : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                                    )}
+                                >
+                                    <CreditCard className="w-6 h-6" />
+                                    <span className="text-sm font-medium">Pagar Ahora</span>
+                                    <span className="text-xs opacity-70">Transferencia</span>
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setPaymentTiming("pay_on_delivery");
+                                        setSelectedPaymentMethod(null);
+                                        setReceiptFile(null);
+                                        setReceiptPreview(null);
+                                    }}
+                                    className={cn(
+                                        "flex flex-col items-center gap-2 p-4 rounded-xl border transition-all",
+                                        paymentTiming === "pay_on_delivery"
+                                            ? "bg-primary/20 border-primary text-white"
+                                            : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                                    )}
+                                >
+                                    <Banknote className="w-6 h-6" />
+                                    <span className="text-sm font-medium">Pagar al Recibir</span>
+                                    <span className="text-xs opacity-70">Efectivo/Tarjeta</span>
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Payment Method Selection - Only show if paying now */}
+                    {paymentTiming === "pay_now" && activePaymentMethods.length > 0 && (
+                        <div className="space-y-4">
+                            {/* Method selector if multiple */}
+                            {activePaymentMethods.length > 1 && (
+                                <div className="space-y-3">
+                                    <h3 className="text-sm font-medium text-slate-400">
+                                        Método de pago
+                                    </h3>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {activePaymentMethods.map((method) => (
+                                            <button
+                                                key={method.id}
+                                                onClick={() => setSelectedPaymentMethod(method)}
+                                                className={cn(
+                                                    "flex items-center gap-2 p-3 rounded-xl border transition-all text-left",
+                                                    selectedPaymentMethod?.id === method.id
+                                                        ? "bg-green-500/20 border-green-500 text-white"
+                                                        : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                                                )}
+                                            >
+                                                <span className="text-xl">{MANUAL_PAYMENT_METHOD_ICONS[method.type]}</span>
+                                                <span className="text-sm font-medium truncate">{method.name}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Payment Info Display */}
+                            {selectedPaymentMethod && (
+                                <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 space-y-3">
+                                    <div className="flex items-center gap-2 text-green-400 font-medium">
+                                        <span className="text-xl">{MANUAL_PAYMENT_METHOD_ICONS[selectedPaymentMethod.type]}</span>
+                                        <span>{selectedPaymentMethod.name}</span>
+                                    </div>
+
+                                    {/* Bank Transfer Info */}
+                                    {selectedPaymentMethod.type === "bank_transfer" && (
+                                        <div className="space-y-2 text-sm">
+                                            {selectedPaymentMethod.bankName && (
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-slate-400">Banco:</span>
+                                                    <span className="text-white font-medium">{selectedPaymentMethod.bankName}</span>
+                                                </div>
+                                            )}
+                                            {selectedPaymentMethod.accountNumber && (
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-slate-400">Cuenta:</span>
+                                                    <button
+                                                        onClick={() => copyToClipboard(selectedPaymentMethod.accountNumber!, "account")}
+                                                        className="flex items-center gap-2 text-white font-medium hover:text-green-400 transition-colors"
+                                                    >
+                                                        {selectedPaymentMethod.accountNumber}
+                                                        {copiedField === "account" ? (
+                                                            <CheckCircle className="w-4 h-4 text-green-400" />
+                                                        ) : (
+                                                            <Copy className="w-4 h-4" />
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            )}
+                                            {selectedPaymentMethod.accountType && (
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-slate-400">Tipo:</span>
+                                                    <span className="text-white font-medium capitalize">{selectedPaymentMethod.accountType}</span>
+                                                </div>
+                                            )}
+                                            {selectedPaymentMethod.accountHolder && (
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-slate-400">Titular:</span>
+                                                    <span className="text-white font-medium">{selectedPaymentMethod.accountHolder}</span>
+                                                </div>
+                                            )}
+                                            {selectedPaymentMethod.identificationNumber && (
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-slate-400">Cédula/RIF:</span>
+                                                    <button
+                                                        onClick={() => copyToClipboard(selectedPaymentMethod.identificationNumber!, "id")}
+                                                        className="flex items-center gap-2 text-white font-medium hover:text-green-400 transition-colors"
+                                                    >
+                                                        {selectedPaymentMethod.identificationNumber}
+                                                        {copiedField === "id" ? (
+                                                            <CheckCircle className="w-4 h-4 text-green-400" />
+                                                        ) : (
+                                                            <Copy className="w-4 h-4" />
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Zelle/PayPal Info */}
+                                    {(selectedPaymentMethod.type === "zelle" || selectedPaymentMethod.type === "paypal_manual") && selectedPaymentMethod.email && (
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-slate-400">Email:</span>
+                                            <button
+                                                onClick={() => copyToClipboard(selectedPaymentMethod.email!, "email")}
+                                                className="flex items-center gap-2 text-white font-medium hover:text-green-400 transition-colors"
+                                            >
+                                                {selectedPaymentMethod.email}
+                                                {copiedField === "email" ? (
+                                                    <CheckCircle className="w-4 h-4 text-green-400" />
+                                                ) : (
+                                                    <Copy className="w-4 h-4" />
+                                                )}
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* Mobile Payment Info */}
+                                    {selectedPaymentMethod.type === "mobile_payment" && selectedPaymentMethod.phoneNumber && (
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-slate-400">Teléfono:</span>
+                                            <button
+                                                onClick={() => copyToClipboard(selectedPaymentMethod.phoneNumber!, "phone")}
+                                                className="flex items-center gap-2 text-white font-medium hover:text-green-400 transition-colors"
+                                            >
+                                                {selectedPaymentMethod.phoneNumber}
+                                                {copiedField === "phone" ? (
+                                                    <CheckCircle className="w-4 h-4 text-green-400" />
+                                                ) : (
+                                                    <Copy className="w-4 h-4" />
+                                                )}
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* Crypto Info */}
+                                    {selectedPaymentMethod.type === "crypto" && selectedPaymentMethod.walletAddress && (
+                                        <div className="space-y-2 text-sm">
+                                            {selectedPaymentMethod.network && (
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-slate-400">Red:</span>
+                                                    <span className="text-white font-medium">{selectedPaymentMethod.network}</span>
+                                                </div>
+                                            )}
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-slate-400">Wallet:</span>
+                                                <button
+                                                    onClick={() => copyToClipboard(selectedPaymentMethod.walletAddress!, "wallet")}
+                                                    className="flex items-center gap-2 text-white font-medium hover:text-green-400 transition-colors text-xs"
+                                                >
+                                                    {selectedPaymentMethod.walletAddress.slice(0, 10)}...{selectedPaymentMethod.walletAddress.slice(-6)}
+                                                    {copiedField === "wallet" ? (
+                                                        <CheckCircle className="w-4 h-4 text-green-400" />
+                                                    ) : (
+                                                        <Copy className="w-4 h-4" />
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Custom Instructions */}
+                                    {selectedPaymentMethod.instructions && (
+                                        <div className="pt-2 border-t border-green-500/20">
+                                            <p className="text-xs text-slate-400">{selectedPaymentMethod.instructions}</p>
+                                        </div>
+                                    )}
+
+                                    {/* Amount to pay */}
+                                    <div className="pt-3 border-t border-green-500/20 flex items-center justify-between">
+                                        <span className="text-green-400 font-medium">Monto a pagar:</span>
+                                        <span className="text-2xl font-bold text-white">${totalPrice.toLocaleString()}</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Receipt Upload */}
+                            {selectedPaymentMethod && (
+                                <div className="space-y-3">
+                                    <h3 className="text-sm font-medium text-slate-400">
+                                        Comprobante de pago {manualPaymentConfig?.requiresReceipt ? "*" : "(opcional)"}
+                                    </h3>
+                                    <label className={cn(
+                                        "flex flex-col items-center justify-center gap-3 p-6 rounded-xl border-2 border-dashed transition-all cursor-pointer",
+                                        receiptFile
+                                            ? "border-green-500 bg-green-500/10"
+                                            : "border-white/20 hover:border-white/40 bg-white/5"
+                                    )}>
+                                        {receiptPreview ? (
+                                            <img
+                                                src={receiptPreview}
+                                                alt="Comprobante"
+                                                className="max-h-32 rounded-lg object-contain"
+                                            />
+                                        ) : receiptFile ? (
+                                            <div className="flex items-center gap-2 text-green-400">
+                                                <FileText className="w-8 h-8" />
+                                                <span className="text-sm">{receiptFile.name}</span>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <Upload className="w-8 h-8 text-slate-400" />
+                                                <span className="text-sm text-slate-400 text-center">
+                                                    Toca para subir tu comprobante
+                                                </span>
+                                                <span className="text-xs text-slate-500">
+                                                    Imagen o PDF (máx 5MB)
+                                                </span>
+                                            </>
+                                        )}
+                                        <input
+                                            type="file"
+                                            accept="image/*,.pdf"
+                                            onChange={handleReceiptChange}
+                                            className="hidden"
+                                        />
+                                    </label>
+                                    {receiptFile && (
+                                        <button
+                                            onClick={() => {
+                                                setReceiptFile(null);
+                                                setReceiptPreview(null);
+                                            }}
+                                            className="text-sm text-red-400 hover:text-red-300 transition-colors"
+                                        >
+                                            Eliminar comprobante
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Footer with total and CTA */}

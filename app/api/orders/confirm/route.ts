@@ -5,6 +5,15 @@ import { sendTextMessage, isEvolutionConfigured, getInstanceName } from "@/lib/e
 import { sendEmail, emailTemplates } from "@/lib/email";
 import { formatPhoneForWhatsApp } from "@/lib/utils";
 
+interface PaymentInfo {
+    paymentTiming: "pay_now" | "pay_on_delivery";
+    paymentMethodId?: string;
+    paymentMethodName?: string;
+    paymentMethodType?: string;
+    receiptUrl?: string;
+    status: "pending" | "pending_verification" | "verified" | "rejected";
+}
+
 interface ConfirmOrderRequest {
     shopId: string;
     customerName: string;
@@ -16,6 +25,7 @@ interface ConfirmOrderRequest {
     notes?: string;
     type?: "order" | "training";
     deliveryType?: "entrega" | "recogida";
+    paymentInfo?: PaymentInfo;
 }
 
 export async function POST(request: NextRequest) {
@@ -31,7 +41,8 @@ export async function POST(request: NextRequest) {
             total,
             notes,
             type = "order",
-            deliveryType = "entrega"
+            deliveryType = "entrega",
+            paymentInfo
         } = body;
 
         // 1. Validaciones básicas
@@ -81,6 +92,7 @@ export async function POST(request: NextRequest) {
         if (customerAddress) orderData.customerAddress = customerAddress;
         if (customerEmail) orderData.customerEmail = customerEmail;
         if (notes) orderData.notes = notes;
+        if (paymentInfo) orderData.paymentInfo = paymentInfo;
 
         const order = await createOrder(shop.id, shop.slug, orderData);
 
@@ -100,8 +112,17 @@ export async function POST(request: NextRequest) {
                 clientMsg += `📍 Dirección: ${customerAddress}\n`;
             }
             clientMsg += `💰 Total: *$${total.toLocaleString()}*\n`;
-            clientMsg += `📝 Estado: *Pendiente de revisión*\n\n`;
-            clientMsg += `Te notificaremos pronto sobre los siguientes pasos. ¡Gracias por tu confianza!`;
+
+            // Add payment info to client message
+            if (paymentInfo?.paymentTiming === "pay_now") {
+                clientMsg += `💳 Pago: *Transferencia enviada*\n`;
+                clientMsg += `📝 Estado: *Verificando comprobante*\n\n`;
+                clientMsg += `Estamos revisando tu comprobante de pago. Te confirmaremos pronto.`;
+            } else {
+                clientMsg += `💵 Pago: *Al momento de la entrega*\n`;
+                clientMsg += `📝 Estado: *Pendiente de revisión*\n\n`;
+                clientMsg += `Te notificaremos pronto sobre los siguientes pasos. ¡Gracias por tu confianza!`;
+            }
 
             try {
                 await sendTextMessage(instanceName, cleanPhone, clientMsg);
@@ -135,7 +156,34 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // 5.5. Notificar al Cliente vía Email
+        // 5.5. If payment receipt uploaded, send payment notification email to owner
+        if (paymentInfo?.paymentTiming === "pay_now" && paymentInfo.receiptUrl && emailsToNotify.length > 0) {
+            try {
+                const paymentEmailContent = emailTemplates.paymentReceiptNotification({
+                    shopName: shop.name,
+                    customerName,
+                    customerPhone,
+                    customerEmail,
+                    amount: total,
+                    currency: "MXN",
+                    paymentMethod: paymentInfo.paymentMethodName || "Transferencia",
+                    receiptUrl: paymentInfo.receiptUrl,
+                    orderId: order.id
+                });
+
+                for (const email of emailsToNotify) {
+                    await sendEmail({
+                        to: email as string,
+                        subject: `🔔 Nuevo comprobante de pago - Pedido #${order.orderNumber}`,
+                        html: paymentEmailContent
+                    });
+                }
+            } catch (paymentEmailError) {
+                console.error("Error enviando email de comprobante de pago:", paymentEmailError);
+            }
+        }
+
+        // 5.6. Notificar al Cliente vía Email
         if (customerEmail) {
             try {
                 const customerEmailContent = emailTemplates.orderConfirmation({
@@ -178,6 +226,21 @@ export async function POST(request: NextRequest) {
                     ownerMsg += `📍 Direcc: ${customerAddress}\n`;
                 }
                 ownerMsg += `Total: *$${total.toLocaleString()}*\n\n`;
+
+                // Add payment info
+                if (paymentInfo) {
+                    if (paymentInfo.paymentTiming === "pay_now") {
+                        ownerMsg += `💳 *PAGO ANTICIPADO*\n`;
+                        ownerMsg += `Método: ${paymentInfo.paymentMethodName || "Transferencia"}\n`;
+                        if (paymentInfo.receiptUrl) {
+                            ownerMsg += `📎 *Comprobante adjunto* - Ver en panel admin\n`;
+                        }
+                        ownerMsg += `Estado: ⏳ Pendiente de verificación\n\n`;
+                    } else {
+                        ownerMsg += `💵 Pago: *Al entregar*\n\n`;
+                    }
+                }
+
                 ownerMsg += `Revisa los detalles en tu panel de administración.`;
 
                 // Broadcast to all configured notification phones
