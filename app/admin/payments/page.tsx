@@ -97,7 +97,7 @@ export default function PaymentReceiptsPage() {
                 status,
                 rejectionReason: rejectionReason || null,
                 reviewedAt: serverTimestamp(),
-                reviewedBy: user.uid,
+                reviewedBy: user.id,
             });
 
             // Also update the order payment status
