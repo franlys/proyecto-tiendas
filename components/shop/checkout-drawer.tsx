@@ -155,6 +155,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
 
                 return {
                     id: p.id,
+                    variantId: p.variantId, // Include variant ID for stock decrement
                     name: productName,
                     quantity: p.quantity,
                     price: basePrice + extrasTotal,

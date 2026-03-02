@@ -56,6 +56,7 @@ export async function POST(request: NextRequest) {
         // Mapear items al formato esperado por el dashboard administrativo (SalesOrderItem)
         const mappedItems = items.map((item: any) => ({
             productId: item.id || "manual",
+            variantId: item.variantId, // Include variant ID for stock decrement
             productName: item.name || "Producto",
             quantity: item.quantity || 1,
             unitPrice: item.price || 0,

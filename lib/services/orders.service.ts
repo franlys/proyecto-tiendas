@@ -4,9 +4,11 @@ import {
     doc,
     getDoc,
     setDoc,
+    updateDoc,
     runTransaction,
     serverTimestamp,
     Timestamp,
+    increment,
 } from "firebase/firestore";
 
 export interface OrderItem {
@@ -69,6 +71,70 @@ export async function generateOrderNumber(shopId: string, shopSlug: string): Pro
 }
 
 /**
+ * Decrementa el stock de los productos de un pedido
+ * @param shopId - ID de la tienda
+ * @param items - Array de items con productId y quantity
+ */
+export async function decrementStockForOrder(
+    shopId: string,
+    items: Array<{ productId: string; quantity: number; variantId?: string }>
+): Promise<void> {
+    for (const item of items) {
+        // Skip if productId is "manual" (productos agregados manualmente)
+        if (!item.productId || item.productId === "manual") continue;
+
+        try {
+            const productRef = doc(db, "shops", shopId, "products", item.productId);
+            const productSnap = await getDoc(productRef);
+
+            if (!productSnap.exists()) {
+                console.warn(`[Stock] Product ${item.productId} not found for shop ${shopId}`);
+                continue;
+            }
+
+            const productData = productSnap.data();
+
+            // Skip if product has infinite stock
+            if (productData.infiniteStock === true) {
+                console.log(`[Stock] Product ${item.productId} has infinite stock, skipping decrement`);
+                continue;
+            }
+
+            // If variant is specified, update variant stock
+            if (item.variantId && productData.variants) {
+                const variants = productData.variants as Array<{ id: string; stock?: number }>;
+                const variantIndex = variants.findIndex(v => v.id === item.variantId);
+
+                if (variantIndex !== -1 && typeof variants[variantIndex].stock === 'number') {
+                    const newVariantStock = Math.max(0, (variants[variantIndex].stock || 0) - item.quantity);
+                    variants[variantIndex].stock = newVariantStock;
+
+                    await updateDoc(productRef, {
+                        variants,
+                        updatedAt: serverTimestamp()
+                    });
+
+                    console.log(`[Stock] Decremented variant ${item.variantId} stock by ${item.quantity}, new stock: ${newVariantStock}`);
+                }
+            } else if (typeof productData.stock === 'number') {
+                // Update main product stock
+                const newStock = Math.max(0, productData.stock - item.quantity);
+
+                await updateDoc(productRef, {
+                    stock: newStock,
+                    updatedAt: serverTimestamp()
+                });
+
+                console.log(`[Stock] Decremented product ${item.productId} stock by ${item.quantity}, new stock: ${newStock}`);
+            }
+        } catch (err) {
+            console.error(`[Stock] Error decrementing stock for product ${item.productId}:`, err);
+            // Don't throw - we don't want to fail the order because of stock update failure
+        }
+    }
+}
+
+/**
  * Crea un nuevo pedido en Firestore
  */
 export async function createOrder(shopId: string, shopSlug: string, orderData: Omit<Order, "id" | "orderNumber" | "createdAt" | "updatedAt">): Promise<Order> {
@@ -83,6 +149,17 @@ export async function createOrder(shopId: string, shopSlug: string, orderData: O
     };
 
     await setDoc(orderRef, newOrderData);
+
+    // Decrement stock for each item in the order
+    if (orderData.items && orderData.items.length > 0) {
+        const stockItems = orderData.items.map((item: any) => ({
+            productId: item.productId || item.id,
+            quantity: item.quantity || 1,
+            variantId: item.variantId
+        }));
+
+        await decrementStockForOrder(shopId, stockItems);
+    }
 
     return {
         id: orderRef.id,
