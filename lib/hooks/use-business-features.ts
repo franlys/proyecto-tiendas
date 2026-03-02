@@ -259,18 +259,17 @@ export function getCombinedFeatures(businessTypes: string[]): CombinedBusinessFe
     });
 
     // Combinar todos los features con OR (si cualquier tipo lo tiene, se habilita)
+    // IMPORTANT: We trust the business.types.ts configuration for each business type
+    // Each type already has inventory:true/false set correctly in its config
     const combined: BusinessFeatures = {
         hasCatalog: typeConfigs.some(t => t.features.hasCatalog),
         hasServices: typeConfigs.some(t => t.features.hasServices),
         hasBookings: typeConfigs.some(t => t.features.hasBookings),
         hasOrders: typeConfigs.some(t => t.features.hasOrders),
-        hasInventory: typeConfigs.some(t => t.features.hasInventory) &&
-            !typeConfigs.some(t => [
-                'meal_prep', 'entrenador_personal', 'restaurante',
-                'gimnasio', 'cafeteria', 'bar', 'food_truck',
-                'pasteleria', 'estudio_yoga', 'otro'
-            ].includes(t.id)) &&
-            !typeConfigs.some(t => t.features.config.category === 'food' || (t.features.config.category as string) === 'fitness'),
+        // Simply use the config value - no manual overrides needed
+        // Types like restaurante, meal_prep already have inventory:false in their config
+        // Types like tienda_ropa, farmacia have inventory:true in their config
+        hasInventory: typeConfigs.some(t => t.features.hasInventory),
         hasWholesale: typeConfigs.some(t => t.features.hasWholesale),
         hasRepairs: typeConfigs.some(t => t.features.hasRepairs),
         hasRentals: typeConfigs.some(t => t.features.hasRentals),
