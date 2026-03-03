@@ -65,15 +65,22 @@ export async function POST(request: NextRequest) {
 
         // 3. Crear el pedido internamente (genera ID secuencial)
         // Mapear items al formato esperado por el dashboard administrativo (SalesOrderItem)
-        const mappedItems = items.map((item: any) => ({
-            productId: item.id || "manual",
-            variantId: item.variantId, // Include variant ID for stock decrement
-            productName: item.name || "Producto",
-            quantity: item.quantity || 1,
-            unitPrice: item.price || 0,
-            total: (item.price || 0) * (item.quantity || 1),
-            notes: item.notes || ""
-        }));
+        // Note: Only include fields that have values to avoid Firestore undefined errors
+        const mappedItems = items.map((item: any) => {
+            const mappedItem: Record<string, any> = {
+                productId: item.id || "manual",
+                productName: item.name || "Producto",
+                quantity: item.quantity || 1,
+                unitPrice: item.price || 0,
+                total: (item.price || 0) * (item.quantity || 1),
+                notes: item.notes || ""
+            };
+            // Only add variantId if it exists (Firestore doesn't accept undefined)
+            if (item.variantId) {
+                mappedItem.variantId = item.variantId;
+            }
+            return mappedItem;
+        });
 
         const orderData: any = {
             shopId: shop.id, // Siempre usar el ID de Firestore, no el slug

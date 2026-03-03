@@ -135,14 +135,33 @@ export async function decrementStockForOrder(
 }
 
 /**
+ * Recursively removes undefined values from an object (Firestore doesn't accept undefined)
+ */
+function removeUndefined<T extends Record<string, any>>(obj: T): T {
+    if (obj === null || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) {
+        return obj.map(item => removeUndefined(item)) as unknown as T;
+    }
+    return Object.fromEntries(
+        Object.entries(obj)
+            .filter(([_, value]) => value !== undefined)
+            .map(([key, value]) => [key, typeof value === 'object' ? removeUndefined(value) : value])
+    ) as T;
+}
+
+/**
  * Crea un nuevo pedido en Firestore
  */
 export async function createOrder(shopId: string, shopSlug: string, orderData: Omit<Order, "id" | "orderNumber" | "createdAt" | "updatedAt">): Promise<Order> {
     const orderNumber = await generateOrderNumber(shopId, shopSlug);
 
     const orderRef = doc(collection(db, "shops", shopId, "orders"));
+
+    // Clean orderData to remove any undefined values (Firestore doesn't accept undefined)
+    const cleanedOrderData = removeUndefined(orderData);
+
     const newOrderData = {
-        ...orderData,
+        ...cleanedOrderData,
         orderNumber,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
