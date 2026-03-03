@@ -5,25 +5,38 @@ import {
     CreditCard,
     CheckCircle,
     AlertTriangle,
-    ExternalLink,
     Loader2,
-    Apple,
-    Wallet,
-    DollarSign,
-    RefreshCw,
     Shield,
-    Zap,
     Mail,
+    Plus,
+    Trash2,
+    QrCode,
+    Link2,
+    Building2,
+    Smartphone,
+    Bitcoin,
+    DollarSign,
+    Eye,
+    EyeOff,
+    Copy,
+    Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui";
+import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
 import type {
     ShopPaymentConfig,
-    PaymentMethod,
     Currency,
-    PaymentProvider,
-    StripeCountry,
+    ManualPaymentMethod,
+    ManualPaymentMethodType,
+    ShopManualPaymentConfig,
 } from "@/lib/types/payment.types";
-import { PAYMENT_METHOD_LABELS, STRIPE_COUNTRY_LABELS } from "@/lib/types/payment.types";
+import {
+    MANUAL_PAYMENT_METHOD_LABELS,
+    MANUAL_PAYMENT_METHOD_ICONS,
+    DEFAULT_MANUAL_PAYMENT_CONFIG,
+} from "@/lib/types/payment.types";
+import { doc, setDoc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 interface PaymentSettingsProps {
     shopId: string;
@@ -33,6 +46,16 @@ interface PaymentSettingsProps {
     onConfigChange?: (config: ShopPaymentConfig) => void;
 }
 
+// Payment method type options for the selector
+const PAYMENT_METHOD_OPTIONS: { type: ManualPaymentMethodType; label: string; icon: React.ReactNode; description: string }[] = [
+    { type: "bank_transfer", label: "Cuenta Bancaria", icon: <Building2 className="w-5 h-5" />, description: "Transferencias y depósitos" },
+    { type: "mobile_payment", label: "Pago Móvil", icon: <Smartphone className="w-5 h-5" />, description: "Pagos por teléfono" },
+    { type: "zelle", label: "Zelle", icon: <DollarSign className="w-5 h-5" />, description: "Zelle / Venmo" },
+    { type: "crypto", label: "Criptomonedas", icon: <Bitcoin className="w-5 h-5" />, description: "Bitcoin, USDT, etc." },
+    { type: "paypal_manual", label: "PayPal Manual", icon: <Mail className="w-5 h-5" />, description: "Email de PayPal" },
+    { type: "other", label: "Otro", icon: <CreditCard className="w-5 h-5" />, description: "Método personalizado" },
+];
+
 export function PaymentSettings({
     shopId,
     shopName,
@@ -40,635 +63,710 @@ export function PaymentSettings({
     currentConfig,
     onConfigChange,
 }: PaymentSettingsProps) {
-    const [isLoading, setIsLoading] = useState(false);
-    const [isConnecting, setIsConnecting] = useState(false);
-    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
-    const [config, setConfig] = useState<ShopPaymentConfig | null>(
-        currentConfig || null
-    );
 
-    // PayPal specific state
-    const [paypalEmail, setPaypalEmail] = useState(currentConfig?.paypalEmail || ownerEmail);
+    // Manual payment config
+    const [manualConfig, setManualConfig] = useState<ShopManualPaymentConfig>(DEFAULT_MANUAL_PAYMENT_CONFIG);
 
-    // Stripe specific state
-    const [selectedCountry, setSelectedCountry] = useState<StripeCountry>(
-        currentConfig?.stripeCountry || "US"
-    );
+    // QR code state
+    const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
+    const [paymentLinkUrl, setPaymentLinkUrl] = useState<string>("");
 
-    // Provider selection (only shown when not configured)
-    const [selectedProvider, setSelectedProvider] = useState<PaymentProvider>(
-        currentConfig?.provider || "paypal"
-    );
+    // Add method modal
+    const [showAddMethod, setShowAddMethod] = useState(false);
+    const [selectedMethodType, setSelectedMethodType] = useState<ManualPaymentMethodType | null>(null);
+    const [editingMethod, setEditingMethod] = useState<ManualPaymentMethod | null>(null);
 
-    // Check if already configured
-    const isPayPalConfigured = config?.provider === "paypal" && config?.paypalEmail;
-    const isStripeConfigured = config?.provider === "stripe" && config?.stripeAccountId;
-    const isConfigured = isPayPalConfigured || isStripeConfigured;
+    // Method form fields
+    const [methodName, setMethodName] = useState("");
+    const [bankName, setBankName] = useState("");
+    const [accountNumber, setAccountNumber] = useState("");
+    const [accountType, setAccountType] = useState<"corriente" | "ahorro">("corriente");
+    const [accountHolder, setAccountHolder] = useState("");
+    const [identificationNumber, setIdentificationNumber] = useState("");
+    const [phoneNumber, setPhoneNumber] = useState("");
+    const [email, setEmail] = useState("");
+    const [walletAddress, setWalletAddress] = useState("");
+    const [network, setNetwork] = useState("");
+    const [instructions, setInstructions] = useState("");
+    const [methodQrUrl, setMethodQrUrl] = useState("");
 
-    // Stripe status check
+    // Load existing config
     useEffect(() => {
-        if (config?.stripeAccountId && config?.provider === "stripe") {
-            refreshStripeStatus();
-        }
-    }, []);
+        loadConfig();
+    }, [shopId]);
 
-    const refreshStripeStatus = async () => {
-        setIsRefreshing(true);
+    const loadConfig = async () => {
+        setIsLoading(true);
         try {
-            const response = await fetch(`/api/stripe/connect?shopId=${shopId}`);
-            const data = await response.json();
+            const configRef = doc(db, "shops", shopId, "settings", "payments");
+            const configSnap = await getDoc(configRef);
 
-            if (data.connected) {
-                const updatedConfig: ShopPaymentConfig = {
-                    ...config!,
-                    enabled: data.chargesEnabled,
-                    stripeOnboardingComplete: data.onboardingComplete,
-                    stripeDetailsSubmitted: data.detailsSubmitted,
-                    stripeChargesEnabled: data.chargesEnabled,
-                    stripePayoutsEnabled: data.payoutsEnabled,
-                    stripeAccountStatus: data.status,
-                };
-                setConfig(updatedConfig);
-                onConfigChange?.(updatedConfig);
+            if (configSnap.exists()) {
+                const data = configSnap.data() as ShopManualPaymentConfig;
+                setManualConfig(data);
+
+                // Load QR and link if stored
+                if ((data as any).qrCodeUrl) setQrCodeUrl((data as any).qrCodeUrl);
+                if ((data as any).paymentLinkUrl) setPaymentLinkUrl((data as any).paymentLinkUrl);
             }
         } catch (err) {
-            console.error("Error refreshing status:", err);
-        } finally {
-            setIsRefreshing(false);
-        }
-    };
-
-    // Configure PayPal (simple - just save the email)
-    const configurePayPal = async () => {
-        if (!paypalEmail || !paypalEmail.includes("@")) {
-            setError("Por favor ingresa un email de PayPal válido");
-            return;
-        }
-
-        setIsLoading(true);
-        setError(null);
-
-        try {
-            const newConfig: ShopPaymentConfig = {
-                enabled: true,
-                provider: "paypal",
-                paypalEmail: paypalEmail,
-                paypalOnboardingComplete: true,
-                methods: ["paypal", "card"],
-                currency: "USD",
-            };
-
-            setConfig(newConfig);
-            onConfigChange?.(newConfig);
-            setSuccessMessage("PayPal configurado correctamente");
-
-            setTimeout(() => setSuccessMessage(null), 3000);
-        } catch (err) {
-            setError("Error al configurar PayPal");
-            console.error(err);
+            console.error("Error loading payment config:", err);
+            setError("Error al cargar la configuración");
         } finally {
             setIsLoading(false);
         }
     };
 
-    // Start Stripe onboarding
-    const startStripeOnboarding = async () => {
-        setIsConnecting(true);
+    const saveConfig = async (newConfig: ShopManualPaymentConfig) => {
+        setIsSaving(true);
         setError(null);
-
         try {
-            const returnUrl = `${window.location.origin}/agency/shop/${shopId}?tab=config&stripe=success`;
-            const refreshUrl = `${window.location.origin}/agency/shop/${shopId}?tab=config&stripe=refresh`;
-
-            const response = await fetch("/api/stripe/connect", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    shopId,
-                    email: ownerEmail,
-                    shopName,
-                    country: selectedCountry,
-                    returnUrl,
-                    refreshUrl,
-                }),
+            const configRef = doc(db, "shops", shopId, "settings", "payments");
+            await setDoc(configRef, {
+                ...newConfig,
+                qrCodeUrl,
+                paymentLinkUrl,
+                updatedAt: new Date().toISOString(),
             });
 
-            const data = await response.json();
-
-            if (data.error) {
-                setError(data.error);
-                return;
-            }
-
-            if (data.url) {
-                window.location.href = data.url;
-            }
+            setManualConfig(newConfig);
+            setSuccessMessage("Configuración guardada");
+            setTimeout(() => setSuccessMessage(null), 3000);
         } catch (err) {
-            setError("Error al conectar con Stripe");
-            console.error(err);
+            console.error("Error saving config:", err);
+            setError("Error al guardar la configuración");
         } finally {
-            setIsConnecting(false);
+            setIsSaving(false);
         }
     };
 
-    const togglePaymentsEnabled = () => {
-        if (!config) return;
-        const updatedConfig = { ...config, enabled: !config.enabled };
-        setConfig(updatedConfig);
-        onConfigChange?.(updatedConfig);
+    const resetMethodForm = () => {
+        setMethodName("");
+        setBankName("");
+        setAccountNumber("");
+        setAccountType("corriente");
+        setAccountHolder("");
+        setIdentificationNumber("");
+        setPhoneNumber("");
+        setEmail("");
+        setWalletAddress("");
+        setNetwork("");
+        setInstructions("");
+        setMethodQrUrl("");
+        setSelectedMethodType(null);
+        setEditingMethod(null);
     };
 
-    const setCurrency = (currency: Currency) => {
-        if (!config) return;
-        const updatedConfig = { ...config, currency };
-        setConfig(updatedConfig);
-        onConfigChange?.(updatedConfig);
+    const handleAddMethod = () => {
+        if (!selectedMethodType || !methodName) {
+            setError("Por favor completa los campos requeridos");
+            return;
+        }
+
+        const newMethod: ManualPaymentMethod = {
+            id: editingMethod?.id || `method-${Date.now()}`,
+            type: selectedMethodType,
+            name: methodName,
+            isActive: true,
+            bankName: bankName || undefined,
+            accountNumber: accountNumber || undefined,
+            accountType: accountType || undefined,
+            accountHolder: accountHolder || undefined,
+            identificationNumber: identificationNumber || undefined,
+            phoneNumber: phoneNumber || undefined,
+            email: email || undefined,
+            walletAddress: walletAddress || undefined,
+            network: network || undefined,
+            instructions: instructions || undefined,
+            icon: methodQrUrl || undefined,
+        };
+
+        let updatedMethods: ManualPaymentMethod[];
+
+        if (editingMethod) {
+            // Update existing
+            updatedMethods = manualConfig.paymentMethods.map(m =>
+                m.id === editingMethod.id ? newMethod : m
+            );
+        } else {
+            // Add new
+            updatedMethods = [...manualConfig.paymentMethods, newMethod];
+        }
+
+        const updatedConfig: ShopManualPaymentConfig = {
+            ...manualConfig,
+            enabled: true,
+            paymentMethods: updatedMethods,
+        };
+
+        saveConfig(updatedConfig);
+        setShowAddMethod(false);
+        resetMethodForm();
     };
 
-    const resetConfig = () => {
-        setConfig(null);
-        onConfigChange?.({
-            enabled: false,
-            provider: "none",
-            methods: [],
-            currency: "USD",
-        });
+    const handleEditMethod = (method: ManualPaymentMethod) => {
+        setEditingMethod(method);
+        setSelectedMethodType(method.type);
+        setMethodName(method.name);
+        setBankName(method.bankName || "");
+        setAccountNumber(method.accountNumber || "");
+        setAccountType(method.accountType || "corriente");
+        setAccountHolder(method.accountHolder || "");
+        setIdentificationNumber(method.identificationNumber || "");
+        setPhoneNumber(method.phoneNumber || "");
+        setEmail(method.email || "");
+        setWalletAddress(method.walletAddress || "");
+        setNetwork(method.network || "");
+        setInstructions(method.instructions || "");
+        setMethodQrUrl(method.icon || "");
+        setShowAddMethod(true);
     };
 
-    // =====================
-    // NOT CONFIGURED STATE
-    // =====================
-    if (!isConfigured) {
+    const handleDeleteMethod = (methodId: string) => {
+        const updatedMethods = manualConfig.paymentMethods.filter(m => m.id !== methodId);
+        const updatedConfig: ShopManualPaymentConfig = {
+            ...manualConfig,
+            paymentMethods: updatedMethods,
+            enabled: updatedMethods.length > 0,
+        };
+        saveConfig(updatedConfig);
+    };
+
+    const handleToggleMethod = (methodId: string) => {
+        const updatedMethods = manualConfig.paymentMethods.map(m =>
+            m.id === methodId ? { ...m, isActive: !m.isActive } : m
+        );
+        const updatedConfig: ShopManualPaymentConfig = {
+            ...manualConfig,
+            paymentMethods: updatedMethods,
+        };
+        saveConfig(updatedConfig);
+    };
+
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        setSuccessMessage("Copiado al portapapeles");
+        setTimeout(() => setSuccessMessage(null), 2000);
+    };
+
+    if (isLoading) {
         return (
-            <div className="space-y-6">
-                <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20">
-                    <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                            <CreditCard className="w-6 h-6 text-blue-400" />
-                        </div>
-                        <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-white mb-2">
-                                Acepta Pagos en Línea
-                            </h3>
-                            <p className="text-slate-400 text-sm mb-4">
-                                Configura un método de pago para que tus clientes puedan pagar directamente.
-                            </p>
-
-                            {/* Provider Selection */}
-                            <div className="grid grid-cols-2 gap-3 mb-6">
-                                <button
-                                    onClick={() => setSelectedProvider("paypal")}
-                                    className={`p-4 rounded-xl border-2 transition-all text-left ${
-                                        selectedProvider === "paypal"
-                                            ? "border-blue-500 bg-blue-500/10"
-                                            : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-                                    }`}
-                                >
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <div className="w-10 h-10 rounded-lg bg-[#003087] flex items-center justify-center">
-                                            <span className="text-white font-bold text-sm">PP</span>
-                                        </div>
-                                        <div>
-                                            <h4 className="text-white font-medium">PayPal</h4>
-                                            <span className="text-xs text-green-400">Recomendado</span>
-                                        </div>
-                                    </div>
-                                    <p className="text-xs text-slate-400">
-                                        Solo necesitas tu email de PayPal. Funciona globalmente.
-                                    </p>
-                                </button>
-
-                                <button
-                                    onClick={() => setSelectedProvider("stripe")}
-                                    className={`p-4 rounded-xl border-2 transition-all text-left ${
-                                        selectedProvider === "stripe"
-                                            ? "border-purple-500 bg-purple-500/10"
-                                            : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-                                    }`}
-                                >
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <div className="w-10 h-10 rounded-lg bg-[#635BFF] flex items-center justify-center">
-                                            <span className="text-white font-bold text-sm">S</span>
-                                        </div>
-                                        <div>
-                                            <h4 className="text-white font-medium">Stripe</h4>
-                                            <span className="text-xs text-slate-400">Avanzado</span>
-                                        </div>
-                                    </div>
-                                    <p className="text-xs text-slate-400">
-                                        Requiere verificación. Solo países soportados.
-                                    </p>
-                                </button>
-                            </div>
-
-                            {error && (
-                                <div className="flex items-center gap-2 p-3 mb-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
-                                    <AlertTriangle className="w-4 h-4" />
-                                    {error}
-                                </div>
-                            )}
-
-                            {/* PayPal Configuration */}
-                            {selectedProvider === "paypal" && (
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-300 mb-2">
-                                            <Mail className="w-4 h-4 inline mr-2" />
-                                            Email de PayPal
-                                        </label>
-                                        <input
-                                            type="email"
-                                            value={paypalEmail}
-                                            onChange={(e) => setPaypalEmail(e.target.value)}
-                                            placeholder="tu-email@paypal.com"
-                                            className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                        <p className="text-xs text-slate-500 mt-1">
-                                            Los pagos se enviarán a esta cuenta de PayPal
-                                        </p>
-                                    </div>
-
-                                    <Button
-                                        onClick={configurePayPal}
-                                        disabled={isLoading || !paypalEmail}
-                                        className="w-full bg-[#003087] hover:bg-[#002060]"
-                                    >
-                                        {isLoading ? (
-                                            <>
-                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                                Configurando...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <CheckCircle className="w-4 h-4 mr-2" />
-                                                Activar PayPal
-                                            </>
-                                        )}
-                                    </Button>
-                                </div>
-                            )}
-
-                            {/* Stripe Configuration */}
-                            {selectedProvider === "stripe" && (
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-300 mb-2">
-                                            País del negocio
-                                        </label>
-                                        <select
-                                            value={selectedCountry}
-                                            onChange={(e) => setSelectedCountry(e.target.value as StripeCountry)}
-                                            className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                        >
-                                            {(Object.keys(STRIPE_COUNTRY_LABELS) as StripeCountry[]).map((code) => (
-                                                <option key={code} value={code}>
-                                                    {STRIPE_COUNTRY_LABELS[code]}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <p className="text-xs text-amber-400 mt-1">
-                                            <AlertTriangle className="w-3 h-3 inline mr-1" />
-                                            Stripe requiere verificación de identidad del país seleccionado
-                                        </p>
-                                    </div>
-
-                                    <Button
-                                        onClick={startStripeOnboarding}
-                                        disabled={isConnecting}
-                                        className="w-full bg-[#635BFF] hover:bg-[#5046E5]"
-                                    >
-                                        {isConnecting ? (
-                                            <>
-                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                                Conectando...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Zap className="w-4 h-4 mr-2" />
-                                                Conectar Stripe
-                                            </>
-                                        )}
-                                    </Button>
-                                </div>
-                            )}
-
-                            <p className="text-xs text-slate-500 mt-4 text-center">
-                                <Shield className="w-3 h-3 inline mr-1" />
-                                Proceso seguro. No almacenamos datos de tarjetas.
-                            </p>
-                        </div>
-                    </div>
-                </div>
+            <div className="flex items-center justify-center p-8">
+                <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" />
             </div>
         );
     }
 
-    // =====================
-    // PAYPAL CONFIGURED
-    // =====================
-    if (isPayPalConfigured) {
+    // Method form modal
+    if (showAddMethod) {
         return (
             <div className="space-y-6">
-                {/* Success Message */}
-                {successMessage && (
-                    <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm">
-                        <CheckCircle className="w-4 h-4" />
-                        {successMessage}
-                    </div>
-                )}
-
-                {/* Status Card */}
-                <div className="p-6 rounded-2xl bg-green-500/10 border border-green-500/20">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-[#003087] flex items-center justify-center">
-                                <span className="text-white font-bold">PP</span>
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-semibold text-white">
-                                    PayPal Configurado
-                                </h3>
-                                <p className="text-sm text-slate-400">
-                                    {config.paypalEmail}
-                                </p>
-                            </div>
-                        </div>
-
-                        <a
-                            href="https://www.paypal.com/businessmanage/account/aboutBusiness"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-sm text-slate-300 transition-colors"
-                        >
-                            Dashboard
-                            <ExternalLink className="w-3 h-3" />
-                        </a>
-                    </div>
+                <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-white">
+                        {editingMethod ? "Editar Método de Pago" : "Agregar Método de Pago"}
+                    </h3>
+                    <button
+                        onClick={() => { setShowAddMethod(false); resetMethodForm(); }}
+                        className="text-slate-400 hover:text-white"
+                    >
+                        ✕
+                    </button>
                 </div>
 
-                {/* Enable/Disable Toggle */}
-                <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h4 className="text-white font-medium">Pagos en Línea</h4>
-                            <p className="text-sm text-slate-400">
-                                {config.enabled
-                                    ? "Los clientes pueden pagar con PayPal"
-                                    : "Los pagos están desactivados"}
-                            </p>
-                        </div>
-                        <button
-                            onClick={togglePaymentsEnabled}
-                            className={`relative w-14 h-7 rounded-full transition-colors ${
-                                config.enabled ? "bg-green-500" : "bg-zinc-700"
-                            }`}
-                        >
-                            <div
-                                className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${
-                                    config.enabled ? "left-8" : "left-1"
-                                }`}
-                            />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Currency */}
-                <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                    <h4 className="text-white font-medium flex items-center gap-2">
-                        <DollarSign className="w-4 h-4" />
-                        Moneda
-                    </h4>
-
-                    <div className="flex gap-2">
-                        {(["USD", "MXN", "DOP"] as Currency[]).map((currency) => (
+                {/* Method Type Selection */}
+                {!selectedMethodType && (
+                    <div className="grid grid-cols-2 gap-3">
+                        {PAYMENT_METHOD_OPTIONS.map((option) => (
                             <button
-                                key={currency}
-                                onClick={() => setCurrency(currency)}
-                                className={`px-4 py-2 rounded-lg border transition-all ${
-                                    config.currency === currency
-                                        ? "bg-blue-500/20 border-blue-500 text-blue-400"
-                                        : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-600"
-                                }`}
+                                key={option.type}
+                                onClick={() => setSelectedMethodType(option.type)}
+                                className="p-4 rounded-xl border-2 border-zinc-700 bg-zinc-800/50 hover:border-cyan-500/50 transition-all text-left"
                             >
-                                {currency}
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center text-cyan-400">
+                                        {option.icon}
+                                    </div>
+                                    <div>
+                                        <h4 className="text-white font-medium">{option.label}</h4>
+                                        <p className="text-xs text-slate-400">{option.description}</p>
+                                    </div>
+                                </div>
                             </button>
                         ))}
                     </div>
-                </div>
+                )}
 
-                {/* Change Provider */}
-                <div className="pt-4 border-t border-zinc-800">
-                    <button
-                        onClick={resetConfig}
-                        className="text-sm text-slate-500 hover:text-slate-400 transition-colors"
-                    >
-                        Cambiar proveedor de pagos
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    // =====================
-    // STRIPE CONFIGURED (Pending or Active)
-    // =====================
-    if (isStripeConfigured) {
-        // Pending verification
-        if (!config.stripeChargesEnabled) {
-            return (
-                <div className="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/20">
-                    <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-                            <AlertTriangle className="w-6 h-6 text-amber-400" />
-                        </div>
-                        <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-white mb-2">
-                                Completa la Configuración de Stripe
-                            </h3>
-                            <p className="text-slate-400 text-sm mb-4">
-                                Tu cuenta está conectada pero necesitas completar la verificación.
-                            </p>
-
-                            <div className="space-y-2 mb-4">
-                                <div className="flex items-center gap-2">
-                                    {config.stripeDetailsSubmitted ? (
-                                        <CheckCircle className="w-4 h-4 text-green-400" />
-                                    ) : (
-                                        <div className="w-4 h-4 rounded-full border-2 border-amber-400" />
-                                    )}
-                                    <span className="text-sm text-slate-300">Información enviada</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    {config.stripeChargesEnabled ? (
-                                        <CheckCircle className="w-4 h-4 text-green-400" />
-                                    ) : (
-                                        <div className="w-4 h-4 rounded-full border-2 border-amber-400" />
-                                    )}
-                                    <span className="text-sm text-slate-300">Pagos habilitados</span>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-3">
-                                <Button
-                                    onClick={startStripeOnboarding}
-                                    disabled={isConnecting}
-                                    className="bg-amber-500 hover:bg-amber-400"
-                                >
-                                    {isConnecting ? (
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                    ) : (
-                                        <ExternalLink className="w-4 h-4 mr-2" />
-                                    )}
-                                    Completar Verificación
-                                </Button>
-
-                                <Button
-                                    onClick={refreshStripeStatus}
-                                    disabled={isRefreshing}
-                                    variant="outline"
-                                    className="border-amber-500/30 text-amber-400"
-                                >
-                                    {isRefreshing ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                        <RefreshCw className="w-4 h-4" />
-                                    )}
-                                </Button>
-                            </div>
-
-                            <div className="mt-4 pt-4 border-t border-amber-500/20">
-                                <button
-                                    onClick={resetConfig}
-                                    className="text-sm text-slate-500 hover:text-slate-400"
-                                >
-                                    Usar PayPal en su lugar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        // Fully connected
-        return (
-            <div className="space-y-6">
-                <div className="p-6 rounded-2xl bg-green-500/10 border border-green-500/20">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-[#635BFF] flex items-center justify-center">
-                                <span className="text-white font-bold">S</span>
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-semibold text-white">Stripe Conectado</h3>
-                                <p className="text-sm text-slate-400">Tu cuenta está lista para recibir pagos</p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            <Button
-                                onClick={refreshStripeStatus}
-                                disabled={isRefreshing}
-                                variant="ghost"
-                                size="sm"
+                {/* Method Form */}
+                {selectedMethodType && (
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2 p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
+                            <span className="text-2xl">{MANUAL_PAYMENT_METHOD_ICONS[selectedMethodType]}</span>
+                            <span className="text-cyan-400 font-medium">{MANUAL_PAYMENT_METHOD_LABELS[selectedMethodType]}</span>
+                            <button
+                                onClick={() => setSelectedMethodType(null)}
+                                className="ml-auto text-slate-400 hover:text-white text-sm"
                             >
-                                {isRefreshing ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                    <RefreshCw className="w-4 h-4" />
-                                )}
-                            </Button>
-
-                            <a
-                                href="https://dashboard.stripe.com"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-sm text-slate-300 transition-colors"
-                            >
-                                Dashboard
-                                <ExternalLink className="w-3 h-3" />
-                            </a>
+                                Cambiar
+                            </button>
                         </div>
-                    </div>
-                </div>
 
-                {/* Enable/Disable Toggle */}
-                <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                    <div className="flex items-center justify-between">
+                        {/* Common: Name */}
                         <div>
-                            <h4 className="text-white font-medium">Pagos en Línea</h4>
-                            <p className="text-sm text-slate-400">
-                                {config.enabled
-                                    ? "Los clientes pueden pagar en línea"
-                                    : "Los clientes solo pueden pagar en persona"}
+                            <label className="block text-sm font-medium text-slate-300 mb-2">
+                                Nombre del método *
+                            </label>
+                            <input
+                                type="text"
+                                value={methodName}
+                                onChange={(e) => setMethodName(e.target.value)}
+                                placeholder="Ej: Banco Popular, Binance Pay"
+                                className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                            />
+                        </div>
+
+                        {/* Bank Transfer Fields */}
+                        {selectedMethodType === "bank_transfer" && (
+                            <>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                                            Banco
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={bankName}
+                                            onChange={(e) => setBankName(e.target.value)}
+                                            placeholder="Ej: Banreservas"
+                                            className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:ring-2 focus:ring-cyan-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                                            Tipo de cuenta
+                                        </label>
+                                        <select
+                                            value={accountType}
+                                            onChange={(e) => setAccountType(e.target.value as "corriente" | "ahorro")}
+                                            className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:ring-2 focus:ring-cyan-500"
+                                        >
+                                            <option value="corriente">Corriente</option>
+                                            <option value="ahorro">Ahorro</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                                        Número de cuenta
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={accountNumber}
+                                        onChange={(e) => setAccountNumber(e.target.value)}
+                                        placeholder="Ej: 1234567890"
+                                        className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:ring-2 focus:ring-cyan-500"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                                            Titular de la cuenta
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={accountHolder}
+                                            onChange={(e) => setAccountHolder(e.target.value)}
+                                            placeholder="Nombre completo"
+                                            className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:ring-2 focus:ring-cyan-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                                            Cédula / RNC
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={identificationNumber}
+                                            onChange={(e) => setIdentificationNumber(e.target.value)}
+                                            placeholder="Ej: 001-1234567-8"
+                                            className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:ring-2 focus:ring-cyan-500"
+                                        />
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {/* Mobile Payment / Zelle */}
+                        {(selectedMethodType === "mobile_payment" || selectedMethodType === "zelle") && (
+                            <>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                                        Teléfono
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={phoneNumber}
+                                        onChange={(e) => setPhoneNumber(e.target.value)}
+                                        placeholder="Ej: +1 809 123 4567"
+                                        className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:ring-2 focus:ring-cyan-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                                        Email (opcional)
+                                    </label>
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        placeholder="correo@ejemplo.com"
+                                        className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:ring-2 focus:ring-cyan-500"
+                                    />
+                                </div>
+                            </>
+                        )}
+
+                        {/* PayPal Manual */}
+                        {selectedMethodType === "paypal_manual" && (
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    Email de PayPal
+                                </label>
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="tu-email@paypal.com"
+                                    className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:ring-2 focus:ring-cyan-500"
+                                />
+                            </div>
+                        )}
+
+                        {/* Crypto */}
+                        {selectedMethodType === "crypto" && (
+                            <>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                                        Red / Network
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={network}
+                                        onChange={(e) => setNetwork(e.target.value)}
+                                        placeholder="Ej: BEP20, TRC20, ERC20"
+                                        className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:ring-2 focus:ring-cyan-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                                        Dirección de wallet
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={walletAddress}
+                                        onChange={(e) => setWalletAddress(e.target.value)}
+                                        placeholder="0x..."
+                                        className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 font-mono text-sm focus:ring-2 focus:ring-cyan-500"
+                                    />
+                                </div>
+                            </>
+                        )}
+
+                        {/* QR Code upload */}
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-2">
+                                <QrCode className="w-4 h-4 inline mr-2" />
+                                Código QR (opcional)
+                            </label>
+                            <FirebaseImageUpload
+                                value={methodQrUrl}
+                                onChange={setMethodQrUrl}
+                                folder="shops/payment-qr"
+                                shopId={shopId}
+                                aspectRatio="square"
+                                maxSizeMB={5}
+                                accept="image"
+                            />
+                            <p className="text-xs text-slate-500 mt-1">
+                                Sube un QR para que los clientes puedan escanearlo
                             </p>
                         </div>
-                        <button
-                            onClick={togglePaymentsEnabled}
-                            className={`relative w-14 h-7 rounded-full transition-colors ${
-                                config.enabled ? "bg-green-500" : "bg-zinc-700"
-                            }`}
-                        >
-                            <div
-                                className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${
-                                    config.enabled ? "left-8" : "left-1"
-                                }`}
+
+                        {/* Instructions */}
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-2">
+                                Instrucciones adicionales (opcional)
+                            </label>
+                            <textarea
+                                value={instructions}
+                                onChange={(e) => setInstructions(e.target.value)}
+                                placeholder="Ej: Enviar captura de pantalla al WhatsApp..."
+                                rows={3}
+                                className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:ring-2 focus:ring-cyan-500 resize-none"
                             />
-                        </button>
+                        </div>
+
+                        {error && (
+                            <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+                                <AlertTriangle className="w-4 h-4" />
+                                {error}
+                            </div>
+                        )}
+
+                        <div className="flex gap-3">
+                            <Button
+                                onClick={handleAddMethod}
+                                disabled={isSaving || !methodName}
+                                className="flex-1 bg-cyan-500 hover:bg-cyan-400"
+                            >
+                                {isSaving ? (
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                ) : (
+                                    <CheckCircle className="w-4 h-4 mr-2" />
+                                )}
+                                {editingMethod ? "Guardar Cambios" : "Agregar Método"}
+                            </Button>
+                            <Button
+                                onClick={() => { setShowAddMethod(false); resetMethodForm(); }}
+                                variant="outline"
+                                className="border-zinc-700"
+                            >
+                                Cancelar
+                            </Button>
+                        </div>
                     </div>
-                </div>
-
-                {config.enabled && (
-                    <>
-                        {/* Payment Methods */}
-                        <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                            <h4 className="text-white font-medium">Métodos de Pago</h4>
-                            <div className="flex flex-wrap gap-2">
-                                <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-500/20 border border-indigo-500 rounded-lg text-indigo-400">
-                                    <CreditCard className="w-4 h-4" />
-                                    <span className="text-sm">Tarjetas</span>
-                                </div>
-                                <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-500/20 border border-indigo-500 rounded-lg text-indigo-400">
-                                    <Apple className="w-4 h-4" />
-                                    <span className="text-sm">Apple Pay</span>
-                                </div>
-                                <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-500/20 border border-indigo-500 rounded-lg text-indigo-400">
-                                    <Wallet className="w-4 h-4" />
-                                    <span className="text-sm">Google Pay</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Currency */}
-                        <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-                            <h4 className="text-white font-medium flex items-center gap-2">
-                                <DollarSign className="w-4 h-4" />
-                                Moneda
-                            </h4>
-
-                            <div className="flex gap-2">
-                                {(["USD", "MXN", "DOP"] as Currency[]).map((currency) => (
-                                    <button
-                                        key={currency}
-                                        onClick={() => setCurrency(currency)}
-                                        className={`px-4 py-2 rounded-lg border transition-all ${
-                                            config.currency === currency
-                                                ? "bg-indigo-500/20 border-indigo-500 text-indigo-400"
-                                                : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-600"
-                                        }`}
-                                    >
-                                        {currency}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    </>
                 )}
             </div>
         );
     }
 
-    return null;
+    // Main view
+    return (
+        <div className="space-y-6">
+            {/* Success/Error Messages */}
+            {successMessage && (
+                <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm">
+                    <CheckCircle className="w-4 h-4" />
+                    {successMessage}
+                </div>
+            )}
+            {error && (
+                <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+                    <AlertTriangle className="w-4 h-4" />
+                    {error}
+                </div>
+            )}
+
+            {/* Manual Payment Methods Section */}
+            <div className="p-6 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/20">
+                <div className="flex items-start gap-4 mb-6">
+                    <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center flex-shrink-0">
+                        <CreditCard className="w-6 h-6 text-cyan-400" />
+                    </div>
+                    <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-white mb-1">
+                            Métodos de Pago - {shopName}
+                        </h3>
+                        <p className="text-slate-400 text-sm">
+                            Configura cuentas bancarias, QR de pago, y enlaces para que tus clientes puedan pagarte.
+                        </p>
+                    </div>
+                </div>
+
+                {/* QR Code and Payment Link Quick Setup */}
+                <div className="grid md:grid-cols-2 gap-4 mb-6">
+                    {/* QR Code */}
+                    <div className="p-4 rounded-xl bg-black/20 border border-white/10">
+                        <div className="flex items-center gap-2 mb-3">
+                            <QrCode className="w-5 h-5 text-cyan-400" />
+                            <h4 className="text-white font-medium">QR de Pago General</h4>
+                        </div>
+                        <FirebaseImageUpload
+                            value={qrCodeUrl}
+                            onChange={(url) => {
+                                setQrCodeUrl(url);
+                                saveConfig({ ...manualConfig, qrCodeUrl: url } as any);
+                            }}
+                            folder="shops/payment-qr"
+                            shopId={shopId}
+                            aspectRatio="square"
+                            maxSizeMB={5}
+                            accept="image"
+                        />
+                        <p className="text-xs text-slate-500 mt-2">
+                            QR principal que se mostrará a los clientes
+                        </p>
+                    </div>
+
+                    {/* Payment Link */}
+                    <div className="p-4 rounded-xl bg-black/20 border border-white/10">
+                        <div className="flex items-center gap-2 mb-3">
+                            <Link2 className="w-5 h-5 text-cyan-400" />
+                            <h4 className="text-white font-medium">Enlace de Pago</h4>
+                        </div>
+                        <input
+                            type="url"
+                            value={paymentLinkUrl}
+                            onChange={(e) => setPaymentLinkUrl(e.target.value)}
+                            onBlur={() => saveConfig({ ...manualConfig, paymentLinkUrl } as any)}
+                            placeholder="https://paypal.me/tunegocio"
+                            className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:ring-2 focus:ring-cyan-500"
+                        />
+                        <p className="text-xs text-slate-500 mt-2">
+                            Link de PayPal.me, Binance Pay, etc.
+                        </p>
+                    </div>
+                </div>
+
+                {/* Configured Methods List */}
+                {manualConfig.paymentMethods.length > 0 && (
+                    <div className="space-y-3 mb-6">
+                        <h4 className="text-white font-medium flex items-center gap-2">
+                            <Building2 className="w-4 h-4" />
+                            Cuentas Configuradas
+                        </h4>
+                        {manualConfig.paymentMethods.map((method) => (
+                            <div
+                                key={method.id}
+                                className={`p-4 rounded-xl border transition-all ${
+                                    method.isActive
+                                        ? "bg-green-500/10 border-green-500/30"
+                                        : "bg-zinc-800/50 border-zinc-700 opacity-60"
+                                }`}
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-2xl">{MANUAL_PAYMENT_METHOD_ICONS[method.type]}</span>
+                                        <div>
+                                            <p className="text-white font-medium">{method.name}</p>
+                                            <p className="text-sm text-slate-400">
+                                                {method.bankName && `${method.bankName} • `}
+                                                {method.accountNumber && `****${method.accountNumber.slice(-4)}`}
+                                                {method.email && method.email}
+                                                {method.phoneNumber && method.phoneNumber}
+                                                {method.walletAddress && `${method.walletAddress.slice(0, 8)}...`}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => handleToggleMethod(method.id)}
+                                            className={`p-2 rounded-lg transition-colors ${
+                                                method.isActive
+                                                    ? "bg-green-500/20 text-green-400"
+                                                    : "bg-zinc-700 text-zinc-400"
+                                            }`}
+                                            title={method.isActive ? "Desactivar" : "Activar"}
+                                        >
+                                            {method.isActive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                                        </button>
+                                        <button
+                                            onClick={() => handleEditMethod(method)}
+                                            className="p-2 rounded-lg bg-zinc-700 text-slate-300 hover:bg-zinc-600 transition-colors"
+                                            title="Editar"
+                                        >
+                                            <CreditCard className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteMethod(method.id)}
+                                            className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+                                            title="Eliminar"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                                {method.icon && (
+                                    <div className="mt-3 flex justify-center">
+                                        <img src={method.icon} alt="QR" className="h-24 w-24 rounded-lg" />
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* Add Method Button */}
+                <Button
+                    onClick={() => setShowAddMethod(true)}
+                    className="w-full bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 text-cyan-400"
+                >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Agregar Método de Pago
+                </Button>
+
+                {/* Settings */}
+                <div className="mt-6 pt-6 border-t border-white/10 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h4 className="text-white font-medium">Requerir Comprobante</h4>
+                            <p className="text-sm text-slate-400">
+                                Los clientes deben subir foto del comprobante
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => saveConfig({ ...manualConfig, requiresReceipt: !manualConfig.requiresReceipt })}
+                            className={`relative w-14 h-7 rounded-full transition-colors ${
+                                manualConfig.requiresReceipt ? "bg-cyan-500" : "bg-zinc-700"
+                            }`}
+                        >
+                            <div
+                                className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${
+                                    manualConfig.requiresReceipt ? "left-8" : "left-1"
+                                }`}
+                            />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Coming Soon: Stripe & PayPal */}
+            <div className="p-6 rounded-2xl bg-zinc-800/50 border border-zinc-700">
+                <div className="flex items-center gap-3 mb-4">
+                    <Clock className="w-5 h-5 text-amber-400" />
+                    <h3 className="text-lg font-semibold text-white">Próximamente</h3>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 opacity-50">
+                    <div className="p-4 rounded-xl border border-zinc-700 bg-zinc-800/50">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="w-10 h-10 rounded-lg bg-[#003087] flex items-center justify-center">
+                                <span className="text-white font-bold text-sm">PP</span>
+                            </div>
+                            <div>
+                                <h4 className="text-white font-medium">PayPal</h4>
+                                <span className="text-xs text-amber-400">En desarrollo</span>
+                            </div>
+                        </div>
+                        <p className="text-xs text-slate-500">
+                            Integración directa con PayPal para cobros automáticos.
+                        </p>
+                    </div>
+
+                    <div className="p-4 rounded-xl border border-zinc-700 bg-zinc-800/50">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="w-10 h-10 rounded-lg bg-[#635BFF] flex items-center justify-center">
+                                <span className="text-white font-bold text-sm">S</span>
+                            </div>
+                            <div>
+                                <h4 className="text-white font-medium">Stripe</h4>
+                                <span className="text-xs text-amber-400">En desarrollo</span>
+                            </div>
+                        </div>
+                        <p className="text-xs text-slate-500">
+                            Acepta tarjetas de crédito, Apple Pay y Google Pay.
+                        </p>
+                    </div>
+                </div>
+
+                <p className="text-xs text-slate-500 mt-4 text-center">
+                    <Shield className="w-3 h-3 inline mr-1" />
+                    Estas integraciones estarán disponibles pronto para cobros automáticos.
+                </p>
+            </div>
+        </div>
+    );
 }
