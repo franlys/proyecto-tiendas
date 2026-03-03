@@ -569,6 +569,7 @@ function ShopDetailContent() {
             isSuperAdmin,
             shopsCount: shops.length,
             slug: params.slug,
+            userShopId: user?.shopId,
         });
 
         // Wait for auth to finish loading before making any decisions
@@ -577,19 +578,24 @@ function ShopDetailContent() {
             return;
         }
 
+        // Wait for shops to be loaded before checking authorization
+        // This is critical because isShopOwner check uses shops.find()
+        if (shops.length === 0) {
+            console.log("🔧 [SHOP-CONFIG] Waiting for shops to load...");
+            return;
+        }
+
         // Allow access if: Super Admin OR shop owner accessing their own shop
         const isShopOwner = user?.shopId === params.slug ||
                            shops.find(s => s.slug === params.slug)?.id === user?.shopId;
 
         if (!isSuperAdmin && !isShopOwner) {
-            console.log("🔧 [SHOP-CONFIG] Not authorized, redirecting to login");
+            console.log("🔧 [SHOP-CONFIG] Not authorized, redirecting to login", {
+                userShopId: user?.shopId,
+                paramSlug: params.slug,
+                shopFoundById: shops.find(s => s.slug === params.slug)?.id,
+            });
             router.push("/login");
-            return;
-        }
-
-        // Wait for shops to be loaded before checking if shop exists
-        if (shops.length === 0) {
-            console.log("🔧 [SHOP-CONFIG] Waiting for shops to load...");
             return;
         }
 
