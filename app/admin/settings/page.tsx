@@ -36,7 +36,6 @@ import {
   COLOR_PRESETS,
   DEMO_VIDEOS,
   DEMO_IMAGES,
-  MediaUploader,
   useShops,
   useAuth,
   type BackgroundType,
@@ -638,11 +637,14 @@ export default function AdminSettingsPage() {
                           <Upload className="w-4 h-4 inline mr-1" />
                           Sube tu propia imagen
                         </label>
-                        <MediaUploader
-                          type="image"
-                          preset="background"
-                          currentUrl={config.backgroundUrl}
-                          onUploadComplete={(url) => updateConfig({ backgroundUrl: url })}
+                        <FirebaseImageUpload
+                          value={config.backgroundUrl.startsWith("blob:") ? "" : config.backgroundUrl}
+                          onChange={(url) => updateConfig({ backgroundUrl: url })}
+                          folder="shops/backgrounds"
+                          shopId={user?.shopId || "temp"}
+                          aspectRatio="video"
+                          maxSizeMB={10}
+                          accept="image"
                         />
                       </div>
 
@@ -719,11 +721,14 @@ export default function AdminSettingsPage() {
                           <Upload className="w-4 h-4 inline mr-1" />
                           Sube tu propio video
                         </label>
-                        <MediaUploader
-                          type="video"
-                          preset="background"
-                          currentUrl={config.backgroundUrl}
-                          onUploadComplete={(url) => updateConfig({ backgroundUrl: url })}
+                        <FirebaseImageUpload
+                          value={config.backgroundUrl.startsWith("blob:") ? "" : config.backgroundUrl}
+                          onChange={(url) => updateConfig({ backgroundUrl: url })}
+                          folder="shops/backgrounds"
+                          shopId={user?.shopId || "temp"}
+                          aspectRatio="video"
+                          maxSizeMB={50}
+                          accept="video"
                         />
                       </div>
 
