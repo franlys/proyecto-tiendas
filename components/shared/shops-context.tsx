@@ -197,6 +197,7 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
           // Contact
           contact: data.contact || { phone: "" },
           ownerNotificationPhone: data.ownerNotificationPhone,
+          ownerNotificationEmail: data.ownerNotificationEmail || data.contact?.email,
           // Business type
           businessType: data.businessType || data.category || "retail",
           businessTypes: data.businessTypes || (data.businessType ? [data.businessType] : [data.category || "retail"]),

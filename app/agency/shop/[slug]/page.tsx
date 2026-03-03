@@ -203,6 +203,7 @@ function ShopDetailContent() {
     const [businessType, setBusinessType] = useState("otro");
     const [businessTypes, setBusinessTypes] = useState<string[]>([]); // Multi-type support
     const [phone, setPhone] = useState("");
+    const [notificationEmail, setNotificationEmail] = useState("");
 
     // Visual Customization States
     const [logo, setLogo] = useState("");
@@ -255,6 +256,9 @@ function ShopDetailContent() {
 
     // Security State
     const [newPassword, setNewPassword] = useState("");
+
+    // Subscription State
+    const [monthlyPrice, setMonthlyPrice] = useState(0);
 
     // Save States
     const [saving, setSaving] = useState(false);
@@ -611,6 +615,9 @@ function ShopDetailContent() {
                 const rawTypes = foundShop.businessTypes || (foundShop.businessType ? [foundShop.businessType] : []);
                 setBusinessTypes(rawTypes.map(normalizeBusinessType));
                 setPhone(foundShop.contact?.phone || "");
+                setNotificationEmail(foundShop.ownerNotificationEmail || foundShop.contact?.email || "");
+                // Load subscription data
+                setMonthlyPrice(foundShop.monthlyPrice || 0);
                 // Load visual customization data
                 setLogo(foundShop.logo || "");
                 setBanner(foundShop.banner || "");
@@ -848,10 +855,11 @@ function ShopDetailContent() {
                                             <div className="flex items-center gap-2 mb-2">
                                                 <input
                                                     type="number"
-                                                    defaultValue={shop.monthlyPrice || 0}
+                                                    value={monthlyPrice}
+                                                    onChange={(e) => setMonthlyPrice(parseFloat(e.target.value) || 0)}
                                                     className="w-full bg-transparent border-b border-white/10 focus:border-cyan-500 outline-none text-white font-semibold"
                                                     onBlur={(e) => {
-                                                        const val = parseFloat(e.target.value);
+                                                        const val = parseFloat(e.target.value) || 0;
                                                         if (val !== shop.monthlyPrice) {
                                                             updateShop(shop.id, { monthlyPrice: val });
                                                         }
@@ -983,6 +991,23 @@ function ShopDetailContent() {
                                         </div>
                                     </div>
 
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-2">Correo para Notificaciones</label>
+                                        <p className="text-xs text-slate-500 mb-2">Recibirás notificaciones de pedidos, citas y pagos en este correo</p>
+                                        <div className="flex gap-2">
+                                            <div className="px-3 py-3 bg-black/20 border border-white/10 rounded-xl text-slate-400">
+                                                <Mail className="w-5 h-5" />
+                                            </div>
+                                            <input
+                                                type="email"
+                                                value={notificationEmail}
+                                                onChange={(e) => setNotificationEmail(e.target.value)}
+                                                placeholder="correo@ejemplo.com"
+                                                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white"
+                                            />
+                                        </div>
+                                    </div>
+
                                     <div className="pt-4 flex justify-end gap-3">
                                         {saveSuccess && (
                                             <span className="flex items-center gap-2 text-green-400 text-sm">
@@ -1000,7 +1025,8 @@ function ShopDetailContent() {
                                                     category,
                                                     businessType: primaryType as BusinessType,
                                                     businessTypes: businessTypes,
-                                                    contact: { ...shop.contact, phone }
+                                                    contact: { ...shop.contact, phone, email: notificationEmail },
+                                                    ownerNotificationEmail: notificationEmail
                                                 });
                                                 // Actualizar el shop local
                                                 setShop(prev => prev ? {
@@ -1009,7 +1035,8 @@ function ShopDetailContent() {
                                                     category,
                                                     businessType: primaryType as BusinessType,
                                                     businessTypes: businessTypes,
-                                                    contact: { ...prev.contact, phone }
+                                                    contact: { ...prev.contact, phone, email: notificationEmail },
+                                                    ownerNotificationEmail: notificationEmail
                                                 } : prev);
                                                 setTimeout(() => {
                                                     setSaving(false);
