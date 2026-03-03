@@ -95,6 +95,7 @@ export async function getShopBasicInfo(shopId: string): Promise<ShopBasicInfo | 
             slug: data.slug || doc.id,
             phone: data.contact?.phone || "",
             logoUrl: data.logo,
+            logo: data.logo, // Alias for compatibility
             businessType: data.businessType || data.category || "retail",
             ownerNotificationPhone: data.ownerNotificationPhone,
             bankAccounts: data.bankAccounts || [], // Fetch bank accounts
@@ -105,6 +106,10 @@ export async function getShopBasicInfo(shopId: string): Promise<ShopBasicInfo | 
                 address: data.contact?.address,
                 city: data.contact?.city,
             },
+            // Theme for email branding
+            theme: data.theme ? {
+                primaryColor: data.theme.primaryColor,
+            } : undefined,
         };
     } catch (error) {
         console.error(`Error getting shop info for ${shopId}:`, error);

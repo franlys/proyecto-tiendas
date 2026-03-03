@@ -195,6 +195,8 @@ async function notifyOwnerOfNewBooking(shopId: string, booking: CreateBookingInp
           date: booking.date,
           time: booking.time,
           shopName: shopInfo.name || shopId,
+          shopLogo: shopInfo.logo,
+          shopPrimaryColor: shopInfo.theme?.primaryColor,
         });
 
         await sendEmail({

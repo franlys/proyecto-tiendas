@@ -503,7 +503,9 @@ export async function processWhatsAppOrder(
             orderNumber: savedOrder.orderNumber,
             items: order.items.map(i => ({ name: i.name, quantity: i.quantity || 1, price: i.price })),
             total: order.total,
-            shopName: order.shopName
+            shopName: shopData?.name || order.shopName,
+            shopLogo: shopData?.logo,
+            shopPrimaryColor: shopData?.theme?.primaryColor
           });
 
           for (const email of emailsToNotify) {

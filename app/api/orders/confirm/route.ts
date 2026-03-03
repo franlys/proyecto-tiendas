@@ -141,7 +141,11 @@ export async function POST(request: NextRequest) {
                     orderNumber: order.orderNumber,
                     items: items.map(i => ({ name: i.name, quantity: i.quantity || 1, price: i.price })),
                     total: total,
-                    shopName: shop.name
+                    shopName: shop.name,
+                    shopLogo: shop.logo,
+                    shopPrimaryColor: shop.theme?.primaryColor,
+                    deliveryType: deliveryType === "recogida" ? "Recoger en tienda" : "Entrega a domicilio",
+                    paymentStatus: paymentInfo?.paymentTiming === "pay_now" ? "Comprobante enviado" : "Pendiente"
                 });
 
                 for (const email of emailsToNotify) {
@@ -161,6 +165,8 @@ export async function POST(request: NextRequest) {
             try {
                 const paymentEmailContent = emailTemplates.paymentReceiptNotification({
                     shopName: shop.name,
+                    shopLogo: shop.logo,
+                    shopPrimaryColor: shop.theme?.primaryColor,
                     customerName,
                     customerPhone,
                     customerEmail,
@@ -168,7 +174,8 @@ export async function POST(request: NextRequest) {
                     currency: "MXN",
                     paymentMethod: paymentInfo.paymentMethodName || "Transferencia",
                     receiptUrl: paymentInfo.receiptUrl,
-                    orderId: order.id
+                    orderId: order.id,
+                    orderNumber: order.orderNumber
                 });
 
                 for (const email of emailsToNotify) {
@@ -191,7 +198,11 @@ export async function POST(request: NextRequest) {
                     orderNumber: order.orderNumber,
                     items: items.map(i => ({ name: i.name, quantity: i.quantity || 1, price: i.price })),
                     total: total,
-                    shopName: shop.name
+                    shopName: shop.name,
+                    shopLogo: shop.logo,
+                    shopPrimaryColor: shop.theme?.primaryColor,
+                    deliveryType: deliveryType === "recogida" ? "Recoger en tienda" : "Entrega a domicilio",
+                    paymentStatus: paymentInfo?.paymentTiming === "pay_now" ? "Comprobante enviado" : "Pendiente"
                 });
 
                 await sendEmail({

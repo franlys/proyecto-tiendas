@@ -93,13 +93,14 @@ export async function sendEmail(
 
 /**
  * Generate branded HTML email template
+ * Uses the shop's branding (name, logo, colors) for personalized emails
  */
 export function generateEmailTemplate(
   content: string,
   branding?: BrandingConfig
 ): string {
   const {
-    name = "Linko",
+    name = "Tu Tienda",
     logo = "",
     primaryColor = "#06b6d4", // cyan-500
     secondaryColor = "#0f172a", // slate-900
@@ -116,10 +117,10 @@ export function generateEmailTemplate(
 <body style="margin: 0; padding: 0; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; background-color: #f1f5f9;">
   <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
 
-    <!-- Header -->
+    <!-- Header with Shop Branding -->
     <div style="background: linear-gradient(135deg, ${primaryColor}, ${secondaryColor}); padding: 32px; text-align: center;">
       ${logo
-      ? `<img src="${logo}" alt="${name}" style="max-height: 60px; margin-bottom: 8px;">`
+      ? `<img src="${logo}" alt="${name}" style="max-height: 80px; max-width: 200px; margin-bottom: 8px; border-radius: 8px;">`
       : `<h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">${name}</h1>`
     }
     </div>
@@ -129,7 +130,7 @@ export function generateEmailTemplate(
       ${content}
     </div>
 
-    <!-- Footer -->
+    <!-- Footer with Shop Name -->
     <div style="background-color: #f8fafc; padding: 24px; text-align: center; border-top: 1px solid #e2e8f0;">
       <p style="margin: 0; color: #94a3b8; font-size: 12px;">
         Enviado por <strong>${name}</strong>
@@ -147,6 +148,7 @@ export function generateEmailTemplate(
 
 /**
  * Pre-built email templates for common notifications
+ * All templates now accept shop branding for personalization
  */
 export const emailTemplates = {
   /**
@@ -159,7 +161,15 @@ export const emailTemplates = {
     time: string;
     shopName: string;
     shopAddress?: string;
+    shopLogo?: string;
+    shopPrimaryColor?: string;
   }) => {
+    const branding: BrandingConfig = {
+      name: data.shopName,
+      logo: data.shopLogo,
+      primaryColor: data.shopPrimaryColor || "#06b6d4",
+    };
+
     return generateEmailTemplate(`
       <h2 style="margin: 0 0 16px; color: #0f172a; font-size: 20px;">
         ¡Cita Confirmada!
@@ -170,7 +180,7 @@ export const emailTemplates = {
       </p>
 
       <p style="margin: 0 0 24px;">
-        Tu cita ha sido confirmada exitosamente.
+        Tu cita en <strong>${data.shopName}</strong> ha sido confirmada exitosamente.
       </p>
 
       <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
@@ -185,7 +195,7 @@ export const emailTemplates = {
           </tr>
           <tr>
             <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Hora</td>
-            <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #06b6d4;">${data.time}</td>
+            <td style="padding: 8px 0; text-align: right; font-weight: 600; color: ${data.shopPrimaryColor || "#06b6d4"};">${data.time}</td>
           </tr>
           <tr>
             <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Lugar</td>
@@ -203,11 +213,11 @@ export const emailTemplates = {
       <p style="margin: 0; color: #64748b; font-size: 13px;">
         Si necesitas cancelar o reprogramar tu cita, contáctanos con anticipación.
       </p>
-    `);
+    `, branding);
   },
 
   /**
-   * Order confirmation email
+   * Order confirmation email - Now with full shop branding
    */
   orderConfirmation: (data: {
     clientName: string;
@@ -215,7 +225,17 @@ export const emailTemplates = {
     items: Array<{ name: string; quantity: number; price: number }>;
     total: number;
     shopName: string;
+    shopLogo?: string;
+    shopPrimaryColor?: string;
+    deliveryType?: string;
+    paymentStatus?: string;
   }) => {
+    const branding: BrandingConfig = {
+      name: data.shopName,
+      logo: data.shopLogo,
+      primaryColor: data.shopPrimaryColor || "#06b6d4",
+    };
+
     const itemsHtml = data.items
       .map(
         (item) => `
@@ -224,7 +244,7 @@ export const emailTemplates = {
             ${item.name} x${item.quantity}
           </td>
           <td style="padding: 12px 0; border-bottom: 1px solid #e2e8f0; text-align: right;">
-            $${item.price.toFixed(2)}
+            $${item.price.toLocaleString()}
           </td>
         </tr>
       `
@@ -252,16 +272,159 @@ export const emailTemplates = {
         ${itemsHtml}
         <tr>
           <td style="padding: 16px 0; font-weight: 700; font-size: 16px;">Total</td>
-          <td style="padding: 16px 0; text-align: right; font-weight: 700; font-size: 16px; color: #06b6d4;">
-            $${data.total.toFixed(2)}
+          <td style="padding: 16px 0; text-align: right; font-weight: 700; font-size: 16px; color: ${data.shopPrimaryColor || "#06b6d4"};">
+            $${data.total.toLocaleString()}
           </td>
         </tr>
       </table>
 
+      ${data.deliveryType ? `
+      <div style="background: #f0fdf4; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+        <p style="margin: 0; color: #166534; font-size: 13px;">
+          📦 Tipo de entrega: <strong>${data.deliveryType === "pickup" || data.deliveryType === "recogida" ? "Recoger en tienda" : "Envío a domicilio"}</strong>
+        </p>
+      </div>
+      ` : ""}
+
+      ${data.paymentStatus ? `
+      <div style="background: ${data.paymentStatus === "pending_verification" ? "#fef3c7" : "#f0fdf4"}; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+        <p style="margin: 0; color: ${data.paymentStatus === "pending_verification" ? "#92400e" : "#166534"}; font-size: 13px;">
+          💳 Estado del pago: <strong>${
+            data.paymentStatus === "pending_verification" ? "Verificando comprobante" :
+            data.paymentStatus === "pending" ? "Pendiente de pago" :
+            data.paymentStatus === "verified" ? "Pago verificado" : data.paymentStatus
+          }</strong>
+        </p>
+      </div>
+      ` : ""}
+
       <p style="margin: 0; color: #64748b; font-size: 13px;">
-        Te notificaremos cuando tu pedido esté listo.
+        Te notificaremos cuando tu pedido esté listo. ¡Gracias por tu confianza!
       </p>
-    `);
+    `, branding);
+  },
+
+  /**
+   * New order notification for shop owner
+   */
+  newOrderNotification: (data: {
+    shopName: string;
+    shopLogo?: string;
+    shopPrimaryColor?: string;
+    orderNumber: string;
+    customerName: string;
+    customerPhone: string;
+    customerEmail?: string;
+    items: Array<{ name: string; quantity: number; price: number }>;
+    total: number;
+    deliveryType?: string;
+    customerAddress?: string;
+    paymentInfo?: {
+      paymentTiming: string;
+      paymentMethodName?: string;
+      receiptUrl?: string;
+    };
+  }) => {
+    const branding: BrandingConfig = {
+      name: data.shopName,
+      logo: data.shopLogo,
+      primaryColor: data.shopPrimaryColor || "#06b6d4",
+    };
+
+    const itemsHtml = data.items
+      .map(
+        (item) => `
+        <tr>
+          <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-size: 14px;">
+            ${item.name} x${item.quantity}
+          </td>
+          <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; text-align: right; font-size: 14px;">
+            $${item.price.toLocaleString()}
+          </td>
+        </tr>
+      `
+      )
+      .join("");
+
+    return generateEmailTemplate(`
+      <h2 style="margin: 0 0 16px; color: #0f172a; font-size: 20px;">
+        🔔 ¡Nuevo Pedido Recibido!
+      </h2>
+
+      <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin-bottom: 24px; border-radius: 0 8px 8px 0;">
+        <strong style="color: #92400e;">Pedido #${data.orderNumber}</strong>
+        <p style="margin: 8px 0 0; color: #92400e; font-size: 14px;">
+          Revisa los detalles y procesa el pedido.
+        </p>
+      </div>
+
+      <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+        <h3 style="margin: 0 0 12px; color: #0f172a; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
+          Datos del Cliente
+        </h3>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Nombre</td>
+            <td style="padding: 6px 0; text-align: right; font-weight: 600; color: #0f172a;">${data.customerName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Teléfono</td>
+            <td style="padding: 6px 0; text-align: right; color: #0f172a;">${data.customerPhone}</td>
+          </tr>
+          ${data.customerEmail ? `
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Email</td>
+            <td style="padding: 6px 0; text-align: right; color: #0f172a;">${data.customerEmail}</td>
+          </tr>
+          ` : ""}
+          ${data.customerAddress ? `
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Dirección</td>
+            <td style="padding: 6px 0; text-align: right; color: #0f172a;">${data.customerAddress}</td>
+          </tr>
+          ` : ""}
+        </table>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <h3 style="margin: 0 0 12px; color: #0f172a; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
+          Productos
+        </h3>
+        <table style="width: 100%; border-collapse: collapse;">
+          ${itemsHtml}
+          <tr>
+            <td style="padding: 12px 0; font-weight: 700; font-size: 16px;">Total</td>
+            <td style="padding: 12px 0; text-align: right; font-weight: 700; font-size: 18px; color: ${data.shopPrimaryColor || "#06b6d4"};">
+              $${data.total.toLocaleString()}
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      ${data.deliveryType ? `
+      <div style="background: #f0fdf4; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+        <p style="margin: 0; color: #166534; font-size: 13px;">
+          📦 <strong>${data.deliveryType === "pickup" || data.deliveryType === "recogida" ? "Para recoger en tienda" : "Envío a domicilio"}</strong>
+        </p>
+      </div>
+      ` : ""}
+
+      ${data.paymentInfo ? `
+      <div style="background: ${data.paymentInfo.paymentTiming === "pay_now" ? "#dbeafe" : "#f1f5f9"}; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+        <p style="margin: 0; color: ${data.paymentInfo.paymentTiming === "pay_now" ? "#1e40af" : "#475569"}; font-size: 13px;">
+          💳 <strong>${data.paymentInfo.paymentTiming === "pay_now" ? `Pago anticipado - ${data.paymentInfo.paymentMethodName || "Transferencia"}` : "Pago al recibir"}</strong>
+          ${data.paymentInfo.receiptUrl ? " (Comprobante adjunto)" : ""}
+        </p>
+      </div>
+      ` : ""}
+
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://linko.app"}/admin/orders"
+           style="display: inline-block; background: linear-gradient(135deg, ${data.shopPrimaryColor || "#06b6d4"}, #0f172a); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600;">
+          Ver Pedido
+        </a>
+      </div>
+    `, branding);
   },
 
   /**
@@ -270,7 +433,7 @@ export const emailTemplates = {
   welcomeShopOwner: (data: { name: string; shopName: string }) => {
     return generateEmailTemplate(`
       <h2 style="margin: 0 0 16px; color: #0f172a; font-size: 20px;">
-        ¡Bienvenido a Linko!
+        ¡Bienvenido!
       </h2>
 
       <p style="margin: 0 0 16px;">
@@ -292,7 +455,7 @@ export const emailTemplates = {
       <p style="margin: 0; color: #64748b; font-size: 13px;">
         Si tienes alguna pregunta, nuestro equipo de soporte está aquí para ayudarte.
       </p>
-    `);
+    `, { name: data.shopName });
   },
 
   /**
@@ -335,6 +498,8 @@ export const emailTemplates = {
    */
   paymentReceiptNotification: (data: {
     shopName: string;
+    shopLogo?: string;
+    shopPrimaryColor?: string;
     customerName: string;
     customerPhone: string;
     customerEmail?: string;
@@ -344,14 +509,21 @@ export const emailTemplates = {
     receiptUrl: string;
     referenceNumber?: string;
     orderId?: string;
+    orderNumber?: string;
   }) => {
+    const branding: BrandingConfig = {
+      name: data.shopName,
+      logo: data.shopLogo,
+      primaryColor: data.shopPrimaryColor || "#06b6d4",
+    };
+
     return generateEmailTemplate(`
       <h2 style="margin: 0 0 16px; color: #0f172a; font-size: 20px;">
-        🔔 ¡Nuevo Comprobante de Pago Recibido!
+        🔔 ¡Nuevo Comprobante de Pago!
       </h2>
 
       <p style="margin: 0 0 24px;">
-        Un cliente ha enviado un comprobante de pago que requiere tu validación.
+        ${data.orderNumber ? `Pedido <strong>#${data.orderNumber}</strong> - ` : ""}Un cliente ha enviado un comprobante de pago que requiere validación.
       </p>
 
       <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin-bottom: 24px; border-radius: 0 8px 8px 0;">
@@ -389,7 +561,7 @@ export const emailTemplates = {
           ` : ""}
           <tr>
             <td style="padding: 12px 0; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0;">Monto</td>
-            <td style="padding: 12px 0; text-align: right; font-weight: 700; font-size: 18px; color: #06b6d4; border-top: 1px solid #e2e8f0;">
+            <td style="padding: 12px 0; text-align: right; font-weight: 700; font-size: 18px; color: ${data.shopPrimaryColor || "#06b6d4"}; border-top: 1px solid #e2e8f0;">
               $${data.amount.toLocaleString()} ${data.currency}
             </td>
           </tr>
@@ -413,7 +585,7 @@ export const emailTemplates = {
       <p style="margin: 0; color: #64748b; font-size: 13px; text-align: center;">
         O accede a tu panel de administración para gestionar los pagos pendientes.
       </p>
-    `, { name: data.shopName });
+    `, branding);
   },
 };
 

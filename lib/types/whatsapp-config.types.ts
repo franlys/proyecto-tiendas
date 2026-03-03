@@ -90,6 +90,7 @@ export interface ShopBasicInfo {
     slug: string;
     phone: string;
     logoUrl?: string;
+    logo?: string; // Alias for logoUrl (for compatibility)
     businessType?: string;
     ownerNotificationPhone?: string;
     ownerNotificationEmail?: string;
@@ -102,5 +103,9 @@ export interface ShopBasicInfo {
         address?: string; // For "Ubicacion"
         city?: string;
         googleMapsUrl?: string;
+    };
+    // Theme for email branding
+    theme?: {
+        primaryColor?: string;
     };
 }
