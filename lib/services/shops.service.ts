@@ -62,6 +62,11 @@ function docToShop(id: string, data: FirestoreShop): Shop {
     wholesaleEnabled: data.wholesaleEnabled,
     ownerUsername: data.ownerUsername,
     ownerPassword: data.ownerPassword,
+    ownerNotificationEmail: data.ownerNotificationEmail,
+    ownerNotificationPhone: data.ownerNotificationPhone,
+    logo: data.logo,
+    banner: data.banner,
+    slogan: data.slogan,
     createdAt: data.createdAt instanceof Timestamp
       ? data.createdAt.toDate().toISOString()
       : new Date().toISOString(),

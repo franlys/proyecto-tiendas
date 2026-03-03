@@ -98,6 +98,11 @@ export interface FirestoreShop {
   ownerNotificationPhone?: string;
   ownerNotificationEmail?: string;
 
+  // Appearance (direct fields from agency panel)
+  logo?: string;
+  banner?: string;
+  slogan?: string;
+
   // Timestamps
   createdAt: Timestamp;
   updatedAt: Timestamp;
