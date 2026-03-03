@@ -8,6 +8,9 @@ import { Loader2 } from "lucide-react";
 import { MOCK_SHOPS, DEFAULT_THEME, type ShopConfig } from "@/lib/constants";
 import { normalizeBusinessType, getBusinessType } from "@/lib/types/business-types-v2";
 
+// Force dynamic rendering to prevent caching and ensure fresh data on each request
+export const dynamic = 'force-dynamic';
+
 interface ShopLayoutProps {
   children: React.ReactNode;
   params: Promise<{ shopId: string }>;
