@@ -4,6 +4,7 @@ import { createOrder, Order } from "@/lib/services/orders.service";
 import { sendTextMessage, isEvolutionConfigured, getInstanceName } from "@/lib/evolution";
 import { sendEmail, emailTemplates } from "@/lib/email";
 import { formatPhoneForWhatsApp } from "@/lib/utils";
+import { adminDb } from "@/lib/firebase-admin";
 
 interface PaymentInfo {
     paymentTiming: "pay_now" | "pay_on_delivery";
@@ -102,6 +103,33 @@ export async function POST(request: NextRequest) {
         if (paymentInfo) orderData.paymentInfo = paymentInfo;
 
         const order = await createOrder(shop.id, shop.slug, orderData);
+
+        // 3.5 Create in-app notification for admin panel
+        try {
+            const db = adminDb();
+            if (db) {
+                await db.collection("shops").doc(shop.id).collection("notifications").add({
+                    type: "new_order",
+                    title: "Nuevo Pedido Web",
+                    message: `Pedido #${order.orderNumber} de ${customerName} - $${total.toLocaleString()}`,
+                    read: false,
+                    createdAt: new Date().toISOString(),
+                    data: {
+                        orderId: order.id,
+                        orderNumber: order.orderNumber,
+                        customerName,
+                        customerPhone,
+                        total,
+                        deliveryType,
+                        source: "web"
+                    }
+                });
+                console.log(`[Orders] In-app notification created for order #${order.orderNumber}`);
+            }
+        } catch (notifError) {
+            console.error("Error creating in-app notification:", notifError);
+            // Don't fail the order if notification creation fails
+        }
 
         // 4. Notificar al Cliente vía WhatsApp (Evolution API)
         if (isEvolutionConfigured()) {
