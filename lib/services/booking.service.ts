@@ -16,6 +16,7 @@ import {
   limit,
 } from "firebase/firestore";
 import { sendTextMessage, getInstanceName } from "@/lib/evolution";
+import { cleanForFirestore } from "@/lib/utils/firestore-helpers";
 import type {
   Booking,
   BookingConfig,
@@ -82,7 +83,9 @@ export async function updateBookingConfig(
   config: Partial<BookingConfig>
 ): Promise<void> {
   const docRef = doc(db, getConfigDoc(shopId));
-  await setDoc(docRef, { ...config, updatedAt: serverTimestamp() }, { merge: true });
+  // Clean undefined values before saving to Firestore
+  const cleanConfig = cleanForFirestore(config);
+  await setDoc(docRef, { ...cleanConfig, updatedAt: serverTimestamp() }, { merge: true });
 }
 
 // ==================== BOOKINGS CRUD ====================
@@ -159,8 +162,10 @@ export async function updateBooking(
   data: Partial<Booking>
 ): Promise<void> {
   const docRef = doc(db, getBookingsCollection(shopId), bookingId);
+  // Clean undefined values before saving to Firestore
+  const cleanData = cleanForFirestore(data);
   await updateDoc(docRef, {
-    ...data,
+    ...cleanData,
     updatedAt: serverTimestamp(),
   });
 }

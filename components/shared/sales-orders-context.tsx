@@ -28,6 +28,22 @@ import { localToken } from "@/lib/utils/safe-storage";
 import { SalesOrder, OrderStatus, SalesOrderItem } from "@/lib/types/order.types";
 export type { SalesOrder, OrderStatus, SalesOrderItem };
 
+// Helper to deeply clean undefined values from objects (Firestore doesn't accept undefined)
+function cleanForFirestore(obj: any): any {
+  if (obj === null || obj === undefined) return null;
+  if (Array.isArray(obj)) {
+    return obj.map(item => cleanForFirestore(item));
+  }
+  if (typeof obj === 'object') {
+    return Object.fromEntries(
+      Object.entries(obj)
+        .filter(([_, v]) => v !== undefined)
+        .map(([k, v]) => [k, cleanForFirestore(v)])
+    );
+  }
+  return obj;
+}
+
 export const ORDER_STATUS_CONFIG: Record<OrderStatus, {
   label: string;
   color: string;
@@ -260,8 +276,10 @@ export function SalesOrdersProvider({ children, shopId }: SalesOrdersProviderPro
 
   const updateOrder = useCallback(async (id: string, updates: Partial<SalesOrder>) => {
     try {
+      // Clean undefined values before saving to Firestore
+      const cleanUpdates = cleanForFirestore(updates);
       await updateDoc(doc(db, "shops", shopId, "orders", id), {
-        ...updates,
+        ...cleanUpdates,
         updatedAt: serverTimestamp(),
       });
     } catch (error) {
