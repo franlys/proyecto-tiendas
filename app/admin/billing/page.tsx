@@ -167,9 +167,9 @@ function BillingContent() {
                     <span className="text-sm">Precio mensual</span>
                   </div>
                   <p className="text-2xl font-bold text-white">
-                    RD$ {shop.monthlyPrice || 0}{" "}
+                    {shop.currency === "USD" ? "$" : shop.currency === "MXN" ? "MX$" : "RD$"} {shop.monthlyPrice || 0}{" "}
                     <span className="text-sm text-slate-400 font-normal">
-                      DOP/mes
+                      {shop.currency || "DOP"}/mes
                     </span>
                   </p>
                 </div>

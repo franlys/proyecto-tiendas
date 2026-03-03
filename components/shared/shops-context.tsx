@@ -56,6 +56,7 @@ export interface ManagedShop extends ShopConfig {
   subscriptionStatus: SubscriptionStatus;
   nextPaymentDate: string;
   monthlyPrice?: number;
+  currency?: "USD" | "MXN" | "DOP"; // Shop currency for prices
   invoiceReminders?: boolean;
   // Stats
   stats: {
@@ -214,6 +215,7 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
           subscriptionStatus: data.subscriptionStatus ?? data.subscription?.status ?? "trial",
           nextPaymentDate: data.nextPaymentDate ?? data.subscription?.nextPaymentDate ?? new Date().toISOString(),
           monthlyPrice: data.monthlyPrice ?? data.subscription?.monthlyPrice ?? 0,
+          currency: data.currency ?? "DOP", // Default to DOP (Dominican Peso)
           paymentLink: data.paymentLink,
           // Features
           enabledFeatures: data.enabledFeatures ?? data.features ?? [],

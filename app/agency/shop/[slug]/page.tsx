@@ -259,6 +259,7 @@ function ShopDetailContent() {
 
     // Subscription State
     const [monthlyPrice, setMonthlyPrice] = useState(0);
+    const [currency, setCurrency] = useState<"USD" | "MXN" | "DOP">("DOP");
 
     // Save States
     const [saving, setSaving] = useState(false);
@@ -618,6 +619,7 @@ function ShopDetailContent() {
                 setNotificationEmail(foundShop.ownerNotificationEmail || foundShop.contact?.email || "");
                 // Load subscription data
                 setMonthlyPrice(foundShop.monthlyPrice || 0);
+                setCurrency(foundShop.currency || "DOP");
                 // Load visual customization data
                 setLogo(foundShop.logo || "");
                 setBanner(foundShop.banner || "");
@@ -851,13 +853,13 @@ function ShopDetailContent() {
                                             </Button>
                                         </div>
                                         <div className="p-4 rounded-xl bg-black/20">
-                                            <p className="text-sm text-slate-400 mb-1">Plan Mensual (DOP)</p>
-                                            <div className="flex items-center gap-2 mb-2">
+                                            <p className="text-sm text-slate-400 mb-1">Plan Mensual</p>
+                                            <div className="flex items-center gap-2 mb-3">
                                                 <input
                                                     type="number"
                                                     value={monthlyPrice}
                                                     onChange={(e) => setMonthlyPrice(parseFloat(e.target.value) || 0)}
-                                                    className="w-full bg-transparent border-b border-white/10 focus:border-cyan-500 outline-none text-white font-semibold"
+                                                    className="flex-1 bg-transparent border-b border-white/10 focus:border-cyan-500 outline-none text-white font-semibold"
                                                     onBlur={(e) => {
                                                         const val = parseFloat(e.target.value) || 0;
                                                         if (val !== shop.monthlyPrice) {
@@ -865,6 +867,19 @@ function ShopDetailContent() {
                                                         }
                                                     }}
                                                 />
+                                                <select
+                                                    value={currency}
+                                                    onChange={(e) => {
+                                                        const newCurrency = e.target.value as "USD" | "MXN" | "DOP";
+                                                        setCurrency(newCurrency);
+                                                        updateShop(shop.id, { currency: newCurrency });
+                                                    }}
+                                                    className="px-2 py-1 bg-black/30 border border-white/10 rounded-lg text-white text-sm"
+                                                >
+                                                    <option value="DOP">RD$ (Pesos)</option>
+                                                    <option value="USD">$ (Dólares)</option>
+                                                    <option value="MXN">MX$ (Pesos MX)</option>
+                                                </select>
                                             </div>
                                             <label className="flex items-center gap-2 cursor-pointer group">
                                                 <div className="relative">
