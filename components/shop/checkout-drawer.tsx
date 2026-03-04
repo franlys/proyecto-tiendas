@@ -578,56 +578,64 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                         />
                     </div>
 
-                    {/* Payment Timing Selection - Only show if manual payments enabled */}
-                    {activePaymentMethods.length > 0 && (
-                        <div className="space-y-3">
-                            <h3 className="text-sm font-medium text-slate-400">
-                                ¿Cuándo deseas pagar?
-                            </h3>
-                            <div className="grid grid-cols-2 gap-3">
-                                <button
-                                    onClick={() => {
-                                        setPaymentTiming("pay_now");
-                                        if (!selectedPaymentMethod && activePaymentMethods.length > 0) {
-                                            setSelectedPaymentMethod(activePaymentMethods[0]);
-                                        }
-                                    }}
-                                    className={cn(
-                                        "flex flex-col items-center gap-2 p-4 rounded-xl border transition-all",
-                                        paymentTiming === "pay_now"
-                                            ? "bg-green-500/20 border-green-500 text-white"
-                                            : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
-                                    )}
-                                >
-                                    <CreditCard className="w-6 h-6" />
-                                    <span className="text-sm font-medium">Pagar Ahora</span>
-                                    <span className="text-xs opacity-70">Transferencia</span>
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setPaymentTiming("pay_on_delivery");
-                                        setSelectedPaymentMethod(null);
-                                        setReceiptFile(null);
-                                        setReceiptPreview(null);
-                                    }}
-                                    className={cn(
-                                        "flex flex-col items-center gap-2 p-4 rounded-xl border transition-all",
-                                        paymentTiming === "pay_on_delivery"
-                                            ? "bg-primary/20 border-primary text-white"
-                                            : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
-                                    )}
-                                >
-                                    <Banknote className="w-6 h-6" />
-                                    <span className="text-sm font-medium">Pagar al Recibir</span>
-                                    <span className="text-xs opacity-70">Efectivo/Tarjeta</span>
-                                </button>
-                            </div>
+                    {/* Payment Timing Selection - ALWAYS SHOW */}
+                    <div className="space-y-3">
+                        <h3 className="text-sm font-medium text-slate-400">
+                            ¿Cuándo deseas pagar?
+                        </h3>
+                        <div className="grid grid-cols-2 gap-3">
+                            <button
+                                onClick={() => {
+                                    setPaymentTiming("pay_now");
+                                    if (!selectedPaymentMethod && activePaymentMethods.length > 0) {
+                                        setSelectedPaymentMethod(activePaymentMethods[0]);
+                                    }
+                                }}
+                                className={cn(
+                                    "flex flex-col items-center gap-2 p-4 rounded-xl border transition-all",
+                                    paymentTiming === "pay_now"
+                                        ? "bg-green-500/20 border-green-500 text-white"
+                                        : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                                )}
+                            >
+                                <CreditCard className="w-6 h-6" />
+                                <span className="text-sm font-medium">Pagar Ahora</span>
+                                <span className="text-xs opacity-70">Transferencia</span>
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setPaymentTiming("pay_on_delivery");
+                                    setSelectedPaymentMethod(null);
+                                    setReceiptFile(null);
+                                    setReceiptPreview(null);
+                                }}
+                                className={cn(
+                                    "flex flex-col items-center gap-2 p-4 rounded-xl border transition-all",
+                                    paymentTiming === "pay_on_delivery"
+                                        ? "bg-primary/20 border-primary text-white"
+                                        : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                                )}
+                            >
+                                <Banknote className="w-6 h-6" />
+                                <span className="text-sm font-medium">Pagar al Recibir</span>
+                                <span className="text-xs opacity-70">Efectivo/Tarjeta</span>
+                            </button>
                         </div>
-                    )}
+                    </div>
 
                     {/* Payment Method Selection - Only show if paying now */}
-                    {paymentTiming === "pay_now" && activePaymentMethods.length > 0 && (
+                    {paymentTiming === "pay_now" && (
                         <div className="space-y-4">
+                            {/* Generic Message if NO active payment methods are configured but user clicked Pay Now */}
+                            {activePaymentMethods.length === 0 && (
+                                <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-center space-y-2">
+                                    <CreditCard className="w-6 h-6 text-green-400 mx-auto" />
+                                    <p className="text-green-400 font-medium">Pago Anticipado</p>
+                                    <p className="text-sm text-slate-300">
+                                        Te enviaremos los datos de transferencia, Zelle o Pago Móvil por WhatsApp al confirmar tu pedido.
+                                    </p>
+                                </div>
+                            )}
                             {/* Method selector if multiple */}
                             {activePaymentMethods.length > 1 && (
                                 <div className="space-y-3">

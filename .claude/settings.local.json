@@ -108,7 +108,18 @@
       "Bash(node_modules/.bin/tsc:*)",
       "Bash(where:*)",
       "Bash(cmd.exe /c \"npm run build\")",
-      "Bash(cmd.exe /c \"cd C:\\\\Users\\\\elmae\\\\proyecto-tiendas && npm run build\")"
+      "Bash(cmd.exe /c \"cd C:\\\\Users\\\\elmae\\\\proyecto-tiendas && npm run build\")",
+      "Bash(npx tsx:*)",
+      "Bash(npm exec:*)",
+      "Bash(echo:*)",
+      "Bash(\"/c/Program Files/nodejs/node.exe\" -v)",
+      "Bash(export PATH=\"$PATH:/c/Users/elmae/AppData/Roaming/npm\")",
+      "Bash(node --version:*)",
+      "WebFetch(domain:shopsy.mx)",
+      "Bash(cmd.exe:*)",
+      "mcp__claude_ai_Vercel__get_access_to_vercel_url",
+      "Bash(pnpm run build:*)",
+      "Bash(powershell.exe -Command \"cd ''c:\\\\Users\\\\elmae\\\\proyecto-tiendas''; npm run build 2>&1 | Select-Object -First 100\")"
     ]
   }
 }

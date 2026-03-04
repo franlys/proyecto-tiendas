@@ -60,80 +60,87 @@ export default function ShopHomePage() {
       }
 
       // 2. Fetch Real Data from Firestore
-      // IMPORTANT: Products/Services are stored using SLUG as the path (shops/{slug}/products)
-      // because that's how the inventory system saves them
+      // IMPORTANT: Historically, products/services might have been saved under shop.slug OR shop.id
+      // We check both paths and merge the results to guarantee we find the data.
       try {
         const { db } = await import("@/lib/firebase");
         const { collection, getDocs } = await import("firebase/firestore");
 
-        // Fetch Services from BOTH collections and merge
-        // Services can be in 'services' (legacy) or 'bookingServices' (new)
-        // ALways use the real document ID for the database path
-        const shopPath = shop.id;
-        const servicesLegacyRef = collection(db, "shops", shopPath, "services");
-        const servicesNewRef = collection(db, "shops", shopPath, "bookingServices");
+        const shopPathId = shop.id;
+        const shopPathSlug = shop.slug;
+        const pathsToTry = shopPathId === shopPathSlug ? [shopPathId] : [shopPathId, shopPathSlug];
 
-        const [legacySnap, newSnap] = await Promise.all([
-          getDocs(servicesLegacyRef),
-          getDocs(servicesNewRef),
-        ]);
-
-        // Merge services, avoiding duplicates by ID
         const seenIds = new Set<string>();
         const servicesData: Service[] = [];
+        let productsData: Product[] = [];
 
-        const addService = (doc: any) => {
-          if (seenIds.has(doc.id)) return;
-          seenIds.add(doc.id);
-          const data = doc.data();
-          // Only include active services
-          if (data.isActive !== false) {
-            servicesData.push({ id: doc.id, ...data } as Service);
-          }
-        };
+        for (const path of pathsToTry) {
+          // Fetch Services from BOTH collections and merge
+          const servicesLegacyRef = collection(db, "shops", path, "services");
+          const servicesNewRef = collection(db, "shops", path, "bookingServices");
 
-        legacySnap.docs.forEach(addService);
-        newSnap.docs.forEach(addService);
+          const [legacySnap, newSnap] = await Promise.all([
+            getDocs(servicesLegacyRef),
+            getDocs(servicesNewRef),
+          ]);
 
-        // Fetch Training Packages
-        try {
-          // Training packages use the REAL ID for the collection path
-          const trainingRef = collection(db, "shops", shopPath, "training-packages");
-          const trainingSnap = await getDocs(trainingRef);
-
-          trainingSnap.docs.forEach(docSnap => {
-            const data = docSnap.data() as TrainingPackage;
+          const addService = (doc: any) => {
+            if (seenIds.has(doc.id)) return;
+            seenIds.add(doc.id);
+            const data = doc.data();
+            // Only include active services
             if (data.isActive !== false) {
-              // Map TrainingPackage to Service
-              servicesData.push({
-                id: docSnap.id,
-                name: data.name,
-                description: `${data.description || ""}${data.description ? ". " : ""}${FREQUENCY_LABELS[data.sessionsPerWeek]} / ${BILLING_CYCLE_LABELS[data.billingCycle]}`,
-                price: data.price,
-                duration: data.sessionDuration,
-                category: "entrenamiento",
-                image: data.image || "https://images.unsplash.com/photo-1517836357463-d25dfeac0050?w=400&h=400&fit=crop", // GYM default fallback
-              } as Service);
+              servicesData.push({ id: doc.id, ...data } as Service);
             }
+          };
+
+          legacySnap.docs.forEach(addService);
+          newSnap.docs.forEach(addService);
+
+          // Fetch Training Packages
+          try {
+            const trainingRef = collection(db, "shops", path, "training-packages");
+            const trainingSnap = await getDocs(trainingRef);
+
+            trainingSnap.docs.forEach(docSnap => {
+              if (seenIds.has(docSnap.id)) return;
+              seenIds.add(docSnap.id);
+
+              const data = docSnap.data() as TrainingPackage;
+              if (data.isActive !== false) {
+                servicesData.push({
+                  id: docSnap.id,
+                  name: data.name,
+                  description: `${data.description || ""}${data.description ? ". " : ""}${FREQUENCY_LABELS[data.sessionsPerWeek]} / ${BILLING_CYCLE_LABELS[data.billingCycle]}`,
+                  price: data.price,
+                  duration: data.sessionDuration,
+                  category: "entrenamiento",
+                  image: data.image || "https://images.unsplash.com/photo-1517836357463-d25dfeac0050?w=400&h=400&fit=crop",
+                } as Service);
+              }
+            });
+          } catch (err) {
+            console.error("Error loading training packages:", err);
+          }
+
+          // Fetch Products
+          const productsRef = collection(db, "shops", path, "products");
+          const productsSnap = await getDocs(productsRef);
+
+          productsSnap.docs.forEach(doc => {
+            if (seenIds.has(doc.id)) return;
+            seenIds.add(doc.id);
+            productsData.push({ id: doc.id, ...doc.data() } as Product);
           });
-        } catch (err) {
-          console.error("Error loading training packages:", err);
         }
 
         setServices(servicesData);
-
-        // Fetch Products
-        const productsRef = collection(db, "shops", shopPath, "products");
-        const productsSnap = await getDocs(productsRef);
-        const productsData = productsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
         setProducts(productsData);
 
         console.log("✅ [DEBUG] Real Data Fetched:", {
-          shopPath,
+          pathsTried: pathsToTry,
           servicesCount: servicesData.length,
           productsCount: productsData.length,
-          servicesFromLegacy: legacySnap.size,
-          servicesFromNew: newSnap.size,
         });
 
       } catch (error) {

@@ -81,8 +81,10 @@ export function StandardShopLayout({ shop, products, services, loadingData }: St
     }, [services]);
     const categories = Object.keys(servicesByCategory) as ServiceCategory[];
 
-    // Logic for Loyalty Card - Only show if explicitly enabled in features
-    const showLoyalty = shop?.features?.includes("loyalty");
+    // Logic for Loyalty Card - Only show if explicitly enabled in enabledFeatures
+    // Check both enabledFeatures (new) and features (legacy) for backwards compatibility
+    const showLoyalty = shop?.enabledFeatures?.includes("loyalty") ||
+        (shop?.features?.includes("loyalty") && shop?.enabledFeatures === undefined);
 
     return (
         <div className="relative">
@@ -273,23 +275,7 @@ export function StandardShopLayout({ shop, products, services, loadingData }: St
 
             {/* Loyalty Card Section - ONLY SHOW IF ENABLED */}
             {showLoyalty && (
-                <SectionObserver id="loyalty" threshold={0.3} className="py-12 border-t border-white/10">
-                    <div className="container mx-auto px-4">
-                        <ScrollReveal>
-                            <div className="text-center mb-8">
-                                <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-2">
-                                    Tu Tarjeta de <span className="text-gradient-gold">Fidelidad</span>
-                                </h2>
-                                <p className="text-slate-400">
-                                    Acumula sellos y obtén recompensas exclusivas
-                                </p>
-                            </div>
-                        </ScrollReveal>
-                        <ScrollReveal delay={0.2}>
-                            <LoyaltyCard />
-                        </ScrollReveal>
-                    </div>
-                </SectionObserver>
+                <LoyaltyCard standalone />
             )}
 
             {/* Services Catalog */}
