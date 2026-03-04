@@ -12,6 +12,7 @@ import {
     type ManagedShop
 } from "@/components/shared";
 import { ServiceCard, ProductGrid } from "@/components/shop";
+import { AppointmentModal } from "@/components/shop/appointment-modal";
 import { Sparkles, MapPin, Phone, Clock, Calendar, ShoppingBag, Loader2, Instagram, Facebook, Globe, MessageCircle, ChefHat } from "lucide-react";
 import {
     CATEGORY_LABELS,
@@ -78,6 +79,7 @@ export function StandardShopLayout({ shop, products, services, loadingData }: St
     }, [loadingData, activeTab, products.length, services.length, searchParams]);
 
     const [isMealModalOpen, setIsMealModalOpen] = useState(false);
+    const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
 
     // 4. Table Logic
     const queryTable = searchParams.get("table");
@@ -113,6 +115,16 @@ export function StandardShopLayout({ shop, products, services, loadingData }: St
                         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse ml-2" />
                     </div>
                 </div>
+            )}
+
+            {/* Appointment Modal */}
+            {shop && shop.contact?.phone && (
+                <AppointmentModal
+                    isOpen={isAppointmentModalOpen}
+                    onClose={() => setIsAppointmentModalOpen(false)}
+                    shopName={shop.name}
+                    shopPhone={shop.contact.phone}
+                />
             )}
 
             {/* Hero Section - Background handled by BackgroundEffects component globally */}
@@ -228,13 +240,13 @@ export function StandardShopLayout({ shop, products, services, loadingData }: St
                             <div className="mt-8 flex flex-wrap justify-center gap-4">
                                 {/* Book Appointment - Only if has services that are NOT training (unless gym) */}
                                 {isServiceBusiness && hasServices && services.some(s => s.category !== "entrenamiento" || shop?.businessType === "gimnasio") && (
-                                    <Link
-                                        href={`/${shop?.slug || shop?.id}/book`}
+                                    <button
+                                        onClick={() => setIsAppointmentModalOpen(true)}
                                         className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-400 text-white font-semibold rounded-full shadow-lg shadow-primary/25 transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/30"
                                     >
                                         <Calendar className="w-5 h-5" />
                                         {combinedFeatures.labels?.cta || "Reservar Cita"}
-                                    </Link>
+                                    </button>
                                 )}
 
                                 {/* Meal Prep Constructor Button - For Meal Prep shops or shops with Meal Prep category */}
