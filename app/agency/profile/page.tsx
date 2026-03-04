@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { AuthProvider, useAuth, AgencyProvider, useAgency } from "@/components/shared";
+import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
 import { cn } from "@/lib/utils";
 
 function AgencyProfileForm() {
@@ -30,6 +31,7 @@ function AgencyProfileForm() {
     whatsapp: "",
     email: "",
     logoInitial: "",
+    logoUrl: "",
   });
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -43,6 +45,7 @@ function AgencyProfileForm() {
         whatsapp: config.whatsapp,
         email: config.email,
         logoInitial: config.logoInitial,
+        logoUrl: config.logoUrl || "",
       });
     }
   }, [isLoaded, config]);
@@ -88,6 +91,7 @@ function AgencyProfileForm() {
       whatsapp: "5215512345678",
       email: "soporte@tuagencia.com",
       logoInitial: "T",
+      logoUrl: "",
     });
   };
 
@@ -190,10 +194,29 @@ function AgencyProfileForm() {
                   </p>
                 </div>
 
+                {/* Logo Image */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Logotipo de la Agencia
+                  </label>
+                  <FirebaseImageUpload
+                    value={formData.logoUrl}
+                    onChange={(url) => handleChange("logoUrl", url)}
+                    folder="agency-assets"
+                    shopId="superadmin"
+                    label=""
+                    aspectRatio="square"
+                    maxSizeMB={5}
+                  />
+                  <p className="text-xs text-slate-500 mt-2">
+                    Recomendado: Imagen cuadrada (1:1), fondo transparente, formato PNG.
+                  </p>
+                </div>
+
                 {/* Logo Initial */}
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Inicial del Logo
+                    Inicial del Logo (Fallo seguro)
                   </label>
                   <div className="flex items-center gap-4">
                     <input
@@ -205,12 +228,16 @@ function AgencyProfileForm() {
                       maxLength={1}
                       className="w-16 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-center text-xl font-bold placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
                     />
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
-                      <span className="text-white text-xl font-bold">
-                        {formData.logoInitial || "A"}
-                      </span>
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center overflow-hidden">
+                      {formData.logoUrl ? (
+                        <img src={formData.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-white text-xl font-bold">
+                          {formData.logoInitial || "A"}
+                        </span>
+                      )}
                     </div>
-                    <span className="text-slate-500 text-sm">Vista previa</span>
+                    <span className="text-slate-500 text-sm">Usado si no hay imagen</span>
                   </div>
                 </div>
 
@@ -291,10 +318,14 @@ function AgencyProfileForm() {
               <div className="glass-panel rounded-2xl p-6 border border-cyan-500/20 bg-gradient-to-br from-cyan-500/5 to-transparent">
                 {/* Header */}
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
-                    <span className="text-white text-xl font-bold">
-                      {formData.logoInitial || "A"}
-                    </span>
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center overflow-hidden">
+                    {formData.logoUrl ? (
+                      <img src={formData.logoUrl} alt="Agency Logo" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-white text-xl font-bold">
+                        {formData.logoInitial || "A"}
+                      </span>
+                    )}
                   </div>
                   <div>
                     <p className="text-xs text-cyan-400 font-medium uppercase tracking-wider">

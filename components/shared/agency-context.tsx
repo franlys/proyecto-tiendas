@@ -17,6 +17,7 @@ export interface AgencyConfig {
   whatsapp: string;
   email: string;
   logoInitial: string; // Single letter for the logo
+  logoUrl?: string; // Opt-in image URL for the logo
 }
 
 interface AgencyContextType {
@@ -35,6 +36,7 @@ const DEFAULT_AGENCY: AgencyConfig = {
   whatsapp: "5215512345678",
   email: "soporte@linko.app",
   logoInitial: "L",
+  logoUrl: "",
 };
 
 const AgencyContext = createContext<AgencyContextType | undefined>(undefined);
