@@ -92,6 +92,55 @@ export default function MealPrepSettingsPage() {
         }
     };
 
+    // Load Defaults
+    const loadDefaults = () => {
+        // Paquetes Base
+        const defaultPackages: MealPrepPackage[] = [
+            { id: uuidv4(), name: "Paquete de 3 platos", mealsPerWeek: 3, daysPerWeek: 1, price: 13, isActive: true },
+            { id: uuidv4(), name: "Paquete de 4 platos", mealsPerWeek: 4, daysPerWeek: 1, price: 13, isActive: true },
+            { id: uuidv4(), name: "Paquete de 5 platos", mealsPerWeek: 5, daysPerWeek: 1, price: 13, isActive: true },
+            { id: uuidv4(), name: "Paquete de 6 platos", mealsPerWeek: 6, daysPerWeek: 1, price: 13, isActive: true },
+        ];
+
+        // Categorías Comunes
+        const proteinsId = uuidv4();
+        const carbsId = uuidv4();
+        const veggiesId = uuidv4();
+        const premiumProteinsId = uuidv4();
+
+        const defaultCategories: MealPrepDynamicCategory[] = [
+            { id: proteinsId, name: "Proteínas", isPremium: false, isRequired: true, selectionLimit: 1 },
+            { id: carbsId, name: "Carbohidratos", isPremium: false, isRequired: false, selectionLimit: 1 },
+            { id: veggiesId, name: "Vegetales", isPremium: false, isRequired: false, selectionLimit: 1 },
+            { id: premiumProteinsId, name: "Proteínas Premium", isPremium: true, isRequired: false, selectionLimit: 1 },
+        ];
+
+        // Extras (Proteínas Premium Base)
+        const defaultExtras: MealPrepExtraItem[] = [
+            { id: uuidv4(), categoryId: premiumProteinsId, name: "Res Premium", price: 1, isActive: true },
+            { id: uuidv4(), categoryId: premiumProteinsId, name: "Camarones", price: 5, isActive: true },
+            { id: uuidv4(), categoryId: premiumProteinsId, name: "Salmón", price: 7, isActive: true },
+            { id: uuidv4(), categoryId: premiumProteinsId, name: "Churrasco", price: 6, isActive: true },
+            { id: uuidv4(), categoryId: premiumProteinsId, name: "Filete Mignon", price: 7, isActive: true },
+            { id: uuidv4(), categoryId: premiumProteinsId, name: "Steak / Filete", price: 5, isActive: true },
+        ];
+
+        // Reglas Base (Ejemplo: Si eliges proteina normal, no puedes elegir proteina premium)
+        const defaultRules: MealPrepRule[] = [
+            { id: uuidv4(), type: "exclude", sourceCategoryId: proteinsId, targetCategoryId: premiumProteinsId }
+        ];
+
+        setPackages(defaultPackages);
+        setCategories(defaultCategories);
+        setExtras(defaultExtras);
+        setRules(defaultRules);
+
+        // Save automatically after loading defaults
+        setTimeout(() => {
+            alert("Ajustes iniciales cargados. No olvides presionar 'Guardar Cambios' para aplicarlos en tu tienda en vivo.");
+        }, 300);
+    };
+
     // ======================
     // PACKAGES LOGIC
     // ======================
@@ -211,20 +260,34 @@ export default function MealPrepSettingsPage() {
                     </p>
                 </div>
 
-                <Button
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="bg-primary hover:bg-primary/90 text-white min-w-[140px]"
-                >
-                    {isSaving ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : isSaved ? (
-                        <Check className="w-5 h-5 mr-2" />
-                    ) : (
-                        <Save className="w-5 h-5 mr-2" />
+                <div className="flex flex-col sm:flex-row gap-3">
+                    {/* Botón para cargar defaults (útil para migración inicial) */}
+                    {(packages.length === 0 && categories.length === 0) && (
+                        <Button
+                            onClick={loadDefaults}
+                            variant="outline"
+                            className="bg-zinc-800 hover:bg-zinc-700 text-white border-zinc-700"
+                        >
+                            <Zap className="w-4 h-4 mr-2 text-yellow-500" />
+                            Cargar Ajustes Predeterminados
+                        </Button>
                     )}
-                    {isSaved ? "Guardado" : "Guardar Cambios"}
-                </Button>
+
+                    <Button
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="bg-primary hover:bg-primary/90 text-white min-w-[140px]"
+                    >
+                        {isSaving ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : isSaved ? (
+                            <Check className="w-5 h-5 mr-2" />
+                        ) : (
+                            <Save className="w-5 h-5 mr-2" />
+                        )}
+                        {isSaved ? "Guardado" : "Guardar Cambios"}
+                    </Button>
+                </div>
             </div>
 
             {/* Tabs */}
