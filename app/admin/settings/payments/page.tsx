@@ -43,49 +43,49 @@ const PAYMENT_METHOD_TYPES: {
     icon: string;
     description: string;
 }[] = [
-    {
-        type: "bank_transfer",
-        label: "Transferencia Bancaria",
-        icon: "🏦",
-        description: "Cuenta bancaria para transferencias",
-    },
-    {
-        type: "mobile_payment",
-        label: "Pago Móvil",
-        icon: "📱",
-        description: "Pagos por teléfono (ej: Pago Móvil Venezuela)",
-    },
-    {
-        type: "zelle",
-        label: "Zelle",
-        icon: "💸",
-        description: "Pagos por Zelle (USA)",
-    },
-    {
-        type: "paypal_manual",
-        label: "PayPal",
-        icon: "🅿️",
-        description: "Transferencia manual a PayPal",
-    },
-    {
-        type: "crypto",
-        label: "Criptomonedas",
-        icon: "₿",
-        description: "Bitcoin, USDT, etc.",
-    },
-    {
-        type: "cash",
-        label: "Efectivo",
-        icon: "💵",
-        description: "Pago en efectivo al recibir",
-    },
-    {
-        type: "other",
-        label: "Otro",
-        icon: "💳",
-        description: "Otro método de pago",
-    },
-];
+        {
+            type: "bank_transfer",
+            label: "Transferencia Bancaria",
+            icon: "🏦",
+            description: "Cuenta bancaria para transferencias",
+        },
+        {
+            type: "mobile_payment",
+            label: "Pago Móvil",
+            icon: "📱",
+            description: "Pagos por teléfono (ej: Pago Móvil Venezuela)",
+        },
+        {
+            type: "zelle",
+            label: "Zelle",
+            icon: "💸",
+            description: "Pagos por Zelle (USA)",
+        },
+        {
+            type: "paypal_manual",
+            label: "PayPal",
+            icon: "🅿️",
+            description: "Transferencia manual a PayPal",
+        },
+        {
+            type: "crypto",
+            label: "Criptomonedas",
+            icon: "₿",
+            description: "Bitcoin, USDT, etc.",
+        },
+        {
+            type: "cash",
+            label: "Efectivo",
+            icon: "💵",
+            description: "Pago en efectivo al recibir",
+        },
+        {
+            type: "other",
+            label: "Otro",
+            icon: "💳",
+            description: "Otro método de pago",
+        },
+    ];
 
 export default function PaymentSettingsPage() {
     const { user, isLoading: authLoading } = useAuth();
@@ -135,7 +135,11 @@ export default function PaymentSettingsPage() {
             const { doc, setDoc } = await import("firebase/firestore");
 
             const configRef = doc(db, "shops", user.shopId, "settings", "payments");
-            await setDoc(configRef, config);
+
+            // Firebase doesn't support undefined values, strip them before saving
+            const cleanConfig = JSON.parse(JSON.stringify(config));
+
+            await setDoc(configRef, cleanConfig);
 
             setIsSaved(true);
             setTimeout(() => setIsSaved(false), 2000);
