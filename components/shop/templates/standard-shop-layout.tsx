@@ -57,10 +57,26 @@ export function StandardShopLayout({ shop, products, services, loadingData }: St
     // 3. UI State
     const [activeTab, setActiveTab] = useState<TabType>(() => {
         const queryTab = searchParams.get("tab") as TabType;
-        const initialShowServices = shop?.businessType === "beauty" || shop?.businessType === "repair";
         if (queryTab) return queryTab;
-        return initialShowServices ? "servicios" : "productos";
+
+        // Initial guess based on features
+        const types = shop?.businessTypes || (shop?.businessType ? [shop.businessType] : []);
+        const initialFeatures = getCombinedFeatures(types);
+
+        return (initialFeatures.hasServices || initialFeatures.hasBookings) ? "servicios" : "productos";
     });
+
+    // Auto-switch tab once data is loaded if current tab has no items but the other one does
+    useEffect(() => {
+        if (!loadingData && !searchParams.get("tab")) {
+            if (activeTab === "productos" && products.length === 0 && services.length > 0) {
+                setActiveTab("servicios");
+            } else if (activeTab === "servicios" && services.length === 0 && products.length > 0) {
+                setActiveTab("productos");
+            }
+        }
+    }, [loadingData, activeTab, products.length, services.length, searchParams]);
+
     const [isMealModalOpen, setIsMealModalOpen] = useState(false);
 
     // 4. Table Logic
