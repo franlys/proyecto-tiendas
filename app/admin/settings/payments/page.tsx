@@ -136,9 +136,27 @@ export default function PaymentSettingsPage() {
 
             const configRef = doc(db, "shops", user.shopId, "settings", "payments");
 
-            // Firebase doesn't support undefined values, strip them before saving.
-            // JSON stringify robustly removes ALL undefined keys and converts undefined array elements to null natively.
-            const cleanConfig = JSON.parse(JSON.stringify(config));
+            // Explicitly strip undefined to avoid Firestore errors, and prevent JSON.parse from turning undefined array items into nulls (which might also cause issues).
+            const deepStripUndefined = (obj: any): any => {
+                if (obj === null || obj === undefined) return null;
+                if (Array.isArray(obj)) {
+                    // Filter out undefined entirely from arrays
+                    return obj.filter(item => item !== undefined).map(deepStripUndefined);
+                }
+                if (typeof obj === 'object') {
+                    const result: any = {};
+                    for (const key in obj) {
+                        if (obj[key] !== undefined) {
+                            result[key] = deepStripUndefined(obj[key]);
+                        }
+                    }
+                    return result;
+                }
+                return obj;
+            };
+
+            const cleanConfig = deepStripUndefined(config);
+            console.log("PAYMENT_SAVE_PAYLOAD:", cleanConfig); // Force log to verify
 
             await setDoc(configRef, cleanConfig);
 
