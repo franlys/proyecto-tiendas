@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { X, ChefHat, Plus, Minus, MapPin, Truck, Check, MessageCircle, CheckCircle2 } from "lucide-react";
+import { X, ChefHat, Plus, Minus, MapPin, Truck, Check, MessageCircle, CheckCircle2, Lock } from "lucide-react";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import {
@@ -18,11 +18,17 @@ import {
     MEAL_PREP_PRICES,
     TRAINING_PLANS,
     TrainingPlanConfig,
+    MealPrepShopConfig
 } from "@/lib/types/meal-prep.types";
 import { geocodeAddress, getCurrentLocation, calculateDistance, Coordinates } from "@/lib/utils/distance";
 import { Loader2, Navigation } from "lucide-react";
 import { ExtrasSelector } from "./extras-selector";
 import { SelectedExtra } from "@/lib/types/product-extra.types";
+import { storage } from "@/lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { Copy, FileText, Image as ImageIcon, Store } from "lucide-react";
+import type { ShopManualPaymentConfig, ManualPaymentMethod } from "@/lib/types/payment.types";
+import { MANUAL_PAYMENT_METHOD_LABELS } from "@/lib/types/payment.types";
 
 interface MealPrepModalProps {
     isOpen: boolean;
@@ -36,6 +42,8 @@ interface MealPrepModalProps {
     businessAddress?: string;
     shopId?: string;
     trainingPackages?: any[];
+    mealPrepConfig?: MealPrepShopConfig;
+    manualPaymentConfig?: ShopManualPaymentConfig;
 }
 
 export function MealPrepModal({
@@ -50,6 +58,8 @@ export function MealPrepModal({
     businessAddress,
     shopId,
     trainingPackages = [],
+    mealPrepConfig,
+    manualPaymentConfig
 }: MealPrepModalProps) {
     const displayTrainingPlans = useMemo(() => {
         if (trainingPackages && trainingPackages.length > 0) {
@@ -85,6 +95,16 @@ export function MealPrepModal({
     const [deliveryType, setDeliveryType] = useState<"entrega" | "recogida">("entrega");
     const [addressDetails, setAddressDetails] = useState("");
 
+    // Payment State
+    const [paymentTiming, setPaymentTiming] = useState<"pay_now" | "pay_later">("pay_now");
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<ManualPaymentMethod | null>(null);
+    const [receiptFile, setReceiptFile] = useState<File | null>(null);
+    const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+    const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
+    const [copiedField, setCopiedField] = useState<string | null>(null);
+
+    const activePaymentMethods = manualPaymentConfig?.paymentMethods?.filter(m => m.isActive) || [];
+
     // Reset state when modal opens
     useEffect(() => {
         if (isOpen) {
@@ -118,7 +138,7 @@ export function MealPrepModal({
     const { ingredientCategories, productsByCategory } = useMemo(() => {
         const ingredients = (catalog || []).filter(p => !p || p.category !== "meal_prep_package");
         const grouped: Record<string, any[]> = {};
-        const cats: { id: string, name: string }[] = [];
+        const cats: { id: string, name: string, excludesCategories?: string[] }[] = [];
         const seenCats = new Set<string>();
 
         ingredients.forEach(p => {
@@ -138,8 +158,20 @@ export function MealPrepModal({
             }
         });
 
+        // Override or supplement with config
+        if (mealPrepConfig?.categories) {
+            mealPrepConfig.categories.forEach(rule => {
+                const existingIndex = cats.findIndex(c => c.id === rule.categoryId);
+                if (existingIndex >= 0) {
+                    cats[existingIndex] = { ...cats[existingIndex], ...rule };
+                } else {
+                    cats.push({ id: rule.categoryId, name: rule.label, ...rule });
+                }
+            });
+        }
+
         return { ingredientCategories: cats, productsByCategory: grouped };
-    }, [catalog]);
+    }, [catalog, mealPrepConfig]);
 
     // Calculate pricing summary
     const pricing = useMemo(() => {
@@ -241,6 +273,17 @@ export function MealPrepModal({
         setStep("summary");
     };
 
+    // Copy to clipboard helper
+    const copyToClipboard = async (text: string, fieldName: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopiedField(fieldName);
+            setTimeout(() => setCopiedField(null), 2000);
+        } catch (err) {
+            console.error("Error copying to clipboard:", err);
+        }
+    };
+
     const handleConfirm = async () => {
         if (!customerName || !customerPhone || !customerEmail) {
             setError("Por favor completa todos los campos de contacto");
@@ -257,6 +300,22 @@ export function MealPrepModal({
         setError(null);
 
         try {
+            let finalReceiptUrl = null;
+            let receiptFileName = null;
+
+            // Upload receipt if required and payment is pay_now
+            if (paymentTiming === 'pay_now' && manualPaymentConfig?.requiresReceipt && receiptFile) {
+                setIsUploadingReceipt(true);
+                const fileExtension = receiptFile.name.split('.').pop();
+                const fileName = `receipts/${shopId}/${Date.now()}.${fileExtension}`;
+                const storageRef = ref(storage, fileName);
+
+                await uploadBytes(storageRef, receiptFile);
+                finalReceiptUrl = await getDownloadURL(storageRef);
+                receiptFileName = fileName;
+                setIsUploadingReceipt(false);
+            }
+
             const items = plates.map((plate, index) => {
                 let plateExtrasSum = 0;
                 if (plate.componentExtras) {
@@ -298,6 +357,15 @@ export function MealPrepModal({
                     customerEmail,
                     customerAddress: deliveryType === "recogida" ? "Recogida en local" : `${address}${addressDetails ? `, ${addressDetails}` : ""}`,
                     deliveryType,
+                    paymentTiming,
+                    paymentStatus: paymentTiming === 'pay_now' ? 'pending_verification' : 'pending',
+                    paymentMethod: paymentTiming === 'pay_now' && selectedPaymentMethod ? selectedPaymentMethod.type : 'cash',
+                    paymentDetails: paymentTiming === 'pay_now' && selectedPaymentMethod ? {
+                        type: selectedPaymentMethod.type,
+                        name: selectedPaymentMethod.name,
+                        receiptUrl: finalReceiptUrl,
+                        receiptFileName,
+                    } : null,
                     items,
                     total: pricing.total,
                     notes: customerNotes
@@ -509,7 +577,7 @@ export function MealPrepModal({
 
                             {/* Dynamic Category Selection */}
                             <div className="space-y-6">
-                                {ingredientCategories.map((cat: { id: string, name: string }) => (
+                                {ingredientCategories.map((cat: { id: string, name: string, excludesCategories?: string[] }) => (
                                     <div key={cat.id} className={cn("space-y-3 transition-opacity", currentPlate.isCustom ? "opacity-30 pointer-events-none" : "opacity-100")}>
                                         <label className="block text-sm font-semibold text-white/90">
                                             {cat.name}
@@ -520,10 +588,30 @@ export function MealPrepModal({
                                                 const isExpanded = expandedProductId === prod.id;
                                                 const isSelected = currentPlate.components[cat.id]?.startsWith(prod.name);
 
+                                                // Determine if this product is excluded based on other selections in the current plate
+                                                let isExcluded = false;
+                                                let excludesReason = "";
+
+                                                if (cat.excludesCategories && cat.excludesCategories.length > 0) {
+                                                    // This category explicitly excludes others. Conversely, if others were selected first, is this one blocked?
+                                                    // Realistically, we check if the plate HAS any of the categories that BLOCKS this one.
+                                                }
+
+                                                // Better approach: Go through every category rule, see if the user has selected something in it, and if THAT rule excludes THIS `cat.id`
+                                                const activeRules = ingredientCategories.filter((c: any) =>
+                                                    currentPlate.components[c.id] && c.excludesCategories?.includes(cat.id)
+                                                );
+
+                                                if (activeRules.length > 0) {
+                                                    isExcluded = true;
+                                                    excludesReason = `No disponible junto con ${activeRules.map((c: any) => c.name).join(", ")}`;
+                                                }
+
                                                 return (
                                                     <div key={prod.id} className={cn("contents", isExpanded && "col-span-full")}>
                                                         <button
                                                             onClick={() => {
+                                                                if (isExcluded) return; // Prevent selection if excluded
                                                                 const hasExtras = prod.extras && prod.extras.length > 0;
                                                                 if (hasVariants || hasExtras) {
                                                                     setExpandedProductId(isExpanded ? null : prod.id);
@@ -532,18 +620,27 @@ export function MealPrepModal({
                                                                     setExpandedProductId(null);
                                                                 }
                                                             }}
+                                                            disabled={isExcluded}
                                                             className={cn(
-                                                                "px-3 py-2 rounded-xl text-xs font-medium border transition-all text-center h-full flex flex-col items-center justify-center gap-1 min-h-[60px]",
-                                                                isSelected
-                                                                    ? "bg-green-500 border-green-400 text-white shadow-lg shadow-green-500/20"
-                                                                    : "bg-white/5 border-white/10 text-slate-400 hover:border-white/20 hover:bg-white/10",
+                                                                "px-3 py-2 rounded-xl text-xs font-medium border transition-all text-center h-full flex flex-col items-center justify-center gap-1 min-h-[60px] relative overflow-hidden",
+                                                                isExcluded
+                                                                    ? "bg-slate-900/50 border-white/5 opacity-40 cursor-not-allowed grayscale"
+                                                                    : isSelected
+                                                                        ? "bg-green-500 border-green-400 text-white shadow-lg shadow-green-500/20"
+                                                                        : "bg-white/5 border-white/10 text-slate-400 hover:border-white/20 hover:bg-white/10",
                                                                 isExpanded && "border-green-500 ring-1 ring-green-500/50"
                                                             )}
                                                         >
+                                                            {isExcluded && <Lock className="absolute top-1 right-1 w-3 h-3 opacity-50 text-rose-400" />}
                                                             <span className="font-bold">{prod.name}</span>
-                                                            {(hasVariants || (prod.extras && prod.extras.length > 0)) && (
+                                                            {(hasVariants || (prod.extras && prod.extras.length > 0)) && !isExcluded && (
                                                                 <span className="text-[10px] opacity-70">
                                                                     {isExpanded ? "Cerrar" : (prod.extras && prod.extras.length > 0 ? "Personalizar" : "Ver opciones")}
+                                                                </span>
+                                                            )}
+                                                            {isExcluded && (
+                                                                <span className="text-[9px] text-rose-400/80 leading-tight mt-1 px-1">
+                                                                    {excludesReason}
                                                                 </span>
                                                             )}
                                                         </button>
@@ -612,50 +709,52 @@ export function MealPrepModal({
                                 ))}
 
                                 {/* Custom Selection Toggle */}
-                                <div className="p-4 rounded-xl border-2 transition-all border-dashed border-white/10 hover:border-indigo-500/30 bg-white/5">
-                                    <div className="flex items-center justify-between gap-4 mb-4">
-                                        <div className="flex-1">
-                                            <h4 className="font-bold text-white text-sm">¿Deseas personalizar este plato totalmente?</h4>
-                                            <p className="text-xs text-slate-400 mt-1">
-                                                Si no encuentras lo que buscas en el menú, escribe exactamente lo que deseas.
-                                            </p>
+                                {mealPrepConfig?.customInstructionsEnabled !== false && (
+                                    <div className="p-4 rounded-xl border-2 transition-all border-dashed border-white/10 hover:border-indigo-500/30 bg-white/5">
+                                        <div className="flex items-center justify-between gap-4 mb-4">
+                                            <div className="flex-1">
+                                                <h4 className="font-bold text-white text-sm">¿Deseas personalizar este plato totalmente?</h4>
+                                                <p className="text-xs text-slate-400 mt-1">
+                                                    Si no encuentras lo que buscas en el menú, escribe exactamente lo que deseas.
+                                                </p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const newPlates = [...plates];
+                                                    newPlates[currentPlateIndex].isCustom = !newPlates[currentPlateIndex].isCustom;
+                                                    if (newPlates[currentPlateIndex].isCustom) {
+                                                        newPlates[currentPlateIndex].components = {};
+                                                    }
+                                                    setPlates(newPlates);
+                                                }}
+                                                className={cn(
+                                                    "px-4 py-2 rounded-lg text-xs font-bold transition-all",
+                                                    currentPlate.isCustom
+                                                        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
+                                                        : "bg-white/10 text-slate-300 hover:bg-white/20"
+                                                )}
+                                            >
+                                                {currentPlate.isCustom ? "Plato Personalizado ACTIVO" : "Personalizar Plato (+$2)"}
+                                            </button>
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                const newPlates = [...plates];
-                                                newPlates[currentPlateIndex].isCustom = !newPlates[currentPlateIndex].isCustom;
-                                                if (newPlates[currentPlateIndex].isCustom) {
-                                                    newPlates[currentPlateIndex].components = {};
-                                                }
-                                                setPlates(newPlates);
-                                            }}
-                                            className={cn(
-                                                "px-4 py-2 rounded-lg text-xs font-bold transition-all",
-                                                currentPlate.isCustom
-                                                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
-                                                    : "bg-white/10 text-slate-300 hover:bg-white/20"
-                                            )}
-                                        >
-                                            {currentPlate.isCustom ? "Plato Personalizado ACTIVO" : "Personalizar Plato (+$2)"}
-                                        </button>
-                                    </div>
 
-                                    {(currentPlate.isCustom || currentPlate.notes) && (
-                                        <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                                            <label className="block text-xs font-semibold text-indigo-400 uppercase tracking-wider">
-                                                Especificaciones Detalladas ($15)
-                                            </label>
-                                            <textarea
-                                                value={currentPlate.notes || ""}
-                                                onChange={(e) => updatePlateNote(e.target.value)}
-                                                placeholder="Ej: Plato con carne asada, papas al horno con romero y espárragos frescos. Sin sal."
-                                                rows={3}
-                                                className="w-full px-4 py-3 rounded-xl bg-black/40 border border-indigo-500/30 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 resize-none text-sm"
-                                            />
-                                        </div>
-                                    )}
-                                </div>
+                                        {(currentPlate.isCustom || currentPlate.notes) && (
+                                            <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                                                <label className="block text-xs font-semibold text-indigo-400 uppercase tracking-wider">
+                                                    Especificaciones Detalladas ($15)
+                                                </label>
+                                                <textarea
+                                                    value={currentPlate.notes || ""}
+                                                    onChange={(e) => updatePlateNote(e.target.value)}
+                                                    placeholder="Ej: Plato con carne asada, papas al horno con romero y espárragos frescos. Sin sal."
+                                                    rows={3}
+                                                    className="w-full px-4 py-3 rounded-xl bg-black/40 border border-indigo-500/30 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 resize-none text-sm"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 {/* Premium protein shortcuts - Only show if current category list doesn't cover them or for easy access */}
                                 <div>
@@ -1105,6 +1204,186 @@ export function MealPrepModal({
                                 <p className="text-sm text-slate-400">
                                     {deliveryType === "entrega" ? `${address}${addressDetails ? ` (${addressDetails})` : ""}` : businessAddress || "Dirección del local"}
                                 </p>
+                            </div>
+
+                            {/* Payment Method Selection */}
+                            <div className="space-y-4">
+                                <h3 className="font-medium text-white">Método de Pago</h3>
+
+                                {activePaymentMethods.length > 0 ? (
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <button
+                                                onClick={() => setPaymentTiming("pay_later")}
+                                                className={cn(
+                                                    "flex flex-col items-center gap-2 p-3 rounded-xl border transition-all text-sm",
+                                                    paymentTiming === "pay_later"
+                                                        ? "bg-slate-800 border-slate-700 text-white"
+                                                        : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                                                )}
+                                            >
+                                                <Store className="w-5 h-5" />
+                                                <span>Pago en local</span>
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setPaymentTiming("pay_now");
+                                                    if (!selectedPaymentMethod && activePaymentMethods.length > 0) {
+                                                        setSelectedPaymentMethod(activePaymentMethods[0]);
+                                                    }
+                                                }}
+                                                className={cn(
+                                                    "flex flex-col items-center gap-2 p-3 rounded-xl border transition-all text-sm",
+                                                    paymentTiming === "pay_now"
+                                                        ? "bg-green-500/20 border-green-500 text-white"
+                                                        : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                                                )}
+                                            >
+                                                <CheckCircle2 className="w-5 h-5 text-green-500" />
+                                                <span>Pagar ahora</span>
+                                            </button>
+                                        </div>
+
+                                        {paymentTiming === "pay_now" && (
+                                            <div className="space-y-4 bg-black/20 p-4 rounded-xl border border-white/5">
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {activePaymentMethods.map((method) => (
+                                                        <button
+                                                            key={method.id}
+                                                            onClick={() => setSelectedPaymentMethod(method)}
+                                                            className={cn(
+                                                                "p-3 rounded-xl border text-left cursor-pointer transition-all",
+                                                                selectedPaymentMethod?.id === method.id
+                                                                    ? "border-green-500 bg-green-500/10 text-white"
+                                                                    : "border-white/10 hover:bg-white/5 text-slate-300"
+                                                            )}
+                                                        >
+                                                            <div className="font-medium text-sm">{method.name}</div>
+                                                            <div className="text-xs text-slate-500">{MANUAL_PAYMENT_METHOD_LABELS[method.type] || method.type}</div>
+                                                        </button>
+                                                    ))}
+                                                </div>
+
+                                                {selectedPaymentMethod && (
+                                                    <div className="bg-white/5 rounded-xl p-4 space-y-3">
+                                                        {selectedPaymentMethod.email && (
+                                                            <div className="flex justify-between items-center group">
+                                                                <div>
+                                                                    <div className="text-xs text-slate-400">Correo Electrónico (Zelle/PayPal)</div>
+                                                                    <div className="text-sm text-white font-medium">{selectedPaymentMethod.email}</div>
+                                                                </div>
+                                                                <button onClick={() => copyToClipboard(selectedPaymentMethod.email!, 'email')} className="p-2 text-slate-400 hover:text-white bg-white/5 rounded-lg">
+                                                                    {copiedField === 'email' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                        {selectedPaymentMethod.accountHolder && (
+                                                            <div className="flex justify-between items-center group">
+                                                                <div>
+                                                                    <div className="text-xs text-slate-400">Titular de la cuenta</div>
+                                                                    <div className="text-sm text-white font-medium">{selectedPaymentMethod.accountHolder}</div>
+                                                                </div>
+                                                                <button onClick={() => copyToClipboard(selectedPaymentMethod.accountHolder!, 'accountHolder')} className="p-2 text-slate-400 hover:text-white bg-white/5 rounded-lg">
+                                                                    {copiedField === 'accountHolder' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                        {selectedPaymentMethod.accountNumber && (
+                                                            <div className="flex justify-between items-center group">
+                                                                <div>
+                                                                    <div className="text-xs text-slate-400">Número de cuenta / Teléfono</div>
+                                                                    <div className="text-sm text-white font-medium">{selectedPaymentMethod.accountNumber}</div>
+                                                                </div>
+                                                                <button onClick={() => copyToClipboard(selectedPaymentMethod.accountNumber!, 'accountNumber')} className="p-2 text-slate-400 hover:text-white bg-white/5 rounded-lg">
+                                                                    {copiedField === 'accountNumber' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                        {selectedPaymentMethod.bankName && (
+                                                            <div className="flex justify-between items-center group">
+                                                                <div>
+                                                                    <div className="text-xs text-slate-400">Banco</div>
+                                                                    <div className="text-sm text-white font-medium">{selectedPaymentMethod.bankName}</div>
+                                                                </div>
+                                                                <button onClick={() => copyToClipboard(selectedPaymentMethod.bankName!, 'bank')} className="p-2 text-slate-400 hover:text-white bg-white/5 rounded-lg">
+                                                                    {copiedField === 'bank' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                        {selectedPaymentMethod.identificationNumber && (
+                                                            <div className="flex justify-between items-center group">
+                                                                <div>
+                                                                    <div className="text-xs text-slate-400">Cédula / RIF</div>
+                                                                    <div className="text-sm text-white font-medium">{selectedPaymentMethod.identificationNumber}</div>
+                                                                </div>
+                                                                <button onClick={() => copyToClipboard(selectedPaymentMethod.identificationNumber!, 'id')} className="p-2 text-slate-400 hover:text-white bg-white/5 rounded-lg">
+                                                                    {copiedField === 'id' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {manualPaymentConfig?.requiresReceipt && (
+                                                    <div className="mt-4 space-y-3 border-t border-white/10 pt-4">
+                                                        <label className="block text-sm font-medium text-slate-300">
+                                                            Sube tu comprobante de pago
+                                                        </label>
+                                                        <div className="border-2 border-dashed border-white/20 rounded-xl p-6 hover:bg-white/5 transition-colors group cursor-pointer relative text-center">
+                                                            <input
+                                                                type="file"
+                                                                onChange={(e) => {
+                                                                    const file = e.target.files?.[0];
+                                                                    if (file) {
+                                                                        setReceiptFile(file);
+                                                                        if (file.type.startsWith("image/")) {
+                                                                            const reader = new FileReader();
+                                                                            reader.onload = (e) => setReceiptPreview(e.target?.result as string);
+                                                                            reader.readAsDataURL(file);
+                                                                        } else {
+                                                                            setReceiptPreview(null);
+                                                                        }
+                                                                    }
+                                                                }}
+                                                                accept="image/*,.pdf"
+                                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                            />
+                                                            {receiptPreview ? (
+                                                                <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-black/50">
+                                                                    <img src={receiptPreview} alt="Comprobante" className="w-full h-full object-contain" />
+                                                                </div>
+                                                            ) : receiptFile ? (
+                                                                <div className="flex items-center justify-center gap-3 text-white">
+                                                                    <FileText className="w-8 h-8 text-primary" />
+                                                                    <div className="text-left">
+                                                                        <div className="text-sm font-medium">{receiptFile.name}</div>
+                                                                        <div className="text-xs text-slate-400">Subido</div>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="flex flex-col items-center gap-2">
+                                                                    <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                                                                        <ImageIcon className="w-6 h-6 text-slate-400 group-hover:text-primary transition-colors" />
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="text-sm text-white font-medium">Haz clic para subir comprobante</p>
+                                                                        <p className="text-xs text-slate-400">PNG, JPG o PDF</p>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                                        <p className="text-sm text-slate-400 text-center">
+                                            El pago se realizará al momento de entregarte el pedido.
+                                        </p>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Action buttons */}

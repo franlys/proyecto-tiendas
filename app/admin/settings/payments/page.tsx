@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useAuth, useShops } from "@/components/shared";
-import { cn } from "@/lib/utils";
+import { cn, cleanForFirestore } from "@/lib/utils";
 import type {
     ManualPaymentMethod,
     ManualPaymentMethodType,
@@ -136,8 +136,8 @@ export default function PaymentSettingsPage() {
 
             const configRef = doc(db, "shops", user.shopId, "settings", "payments");
 
-            // Firebase doesn't support undefined values, strip them before saving
-            const cleanConfig = JSON.parse(JSON.stringify(config));
+            // Firebase doesn't support undefined values, strip them before saving using the dedicated utility
+            const cleanConfig = cleanForFirestore(config);
 
             await setDoc(configRef, cleanConfig);
 

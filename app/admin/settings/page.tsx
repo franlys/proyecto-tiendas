@@ -1144,6 +1144,12 @@ export default function AdminSettingsPage() {
                   Configurar Calendario
                 </a>
                 <a
+                  href="/admin/settings/meal-prep"
+                  className="block w-full px-4 py-2 rounded-lg bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 text-sm text-center transition-colors mb-2 "
+                >
+                  Configurar Reglas de Meal Prep
+                </a>
+                <a
                   href="/admin/settings/payments"
                   className="block w-full px-4 py-2 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-400 text-sm text-center transition-colors"
                 >

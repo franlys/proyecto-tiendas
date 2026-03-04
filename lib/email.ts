@@ -29,6 +29,7 @@ export interface BrandingConfig {
   logo?: string;
   primaryColor?: string;
   secondaryColor?: string;
+  backgroundImage?: string;
 }
 
 /**
@@ -104,7 +105,12 @@ export function generateEmailTemplate(
     logo = "",
     primaryColor = "#06b6d4", // cyan-500
     secondaryColor = "#0f172a", // slate-900
+    backgroundImage,
   } = branding || {};
+
+  const backgroundStyle = backgroundImage
+    ? `background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url(${backgroundImage}) center/cover no-repeat;`
+    : `background: linear-gradient(135deg, ${primaryColor}, ${secondaryColor});`;
 
   return `
 <!DOCTYPE html>
@@ -118,7 +124,7 @@ export function generateEmailTemplate(
   <div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
 
     <!-- Header with Shop Branding -->
-    <div style="background: linear-gradient(135deg, ${primaryColor}, ${secondaryColor}); padding: 32px; text-align: center;">
+    <div style="${backgroundStyle} padding: 48px 32px; text-align: center;">
       ${logo
       ? `<img src="${logo}" alt="${name}" style="max-height: 80px; max-width: 200px; margin-bottom: 8px; border-radius: 8px;">`
       : `<h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">${name}</h1>`
@@ -163,11 +169,13 @@ export const emailTemplates = {
     shopAddress?: string;
     shopLogo?: string;
     shopPrimaryColor?: string;
+    shopBackgroundImage?: string;
   }) => {
     const branding: BrandingConfig = {
       name: data.shopName,
       logo: data.shopLogo,
       primaryColor: data.shopPrimaryColor || "#06b6d4",
+      backgroundImage: data.shopBackgroundImage,
     };
 
     return generateEmailTemplate(`
@@ -227,6 +235,7 @@ export const emailTemplates = {
     shopName: string;
     shopLogo?: string;
     shopPrimaryColor?: string;
+    shopBackgroundImage?: string;
     deliveryType?: string;
     paymentStatus?: string;
   }) => {
@@ -234,6 +243,7 @@ export const emailTemplates = {
       name: data.shopName,
       logo: data.shopLogo,
       primaryColor: data.shopPrimaryColor || "#06b6d4",
+      backgroundImage: data.shopBackgroundImage,
     };
 
     const itemsHtml = data.items
@@ -289,11 +299,10 @@ export const emailTemplates = {
       ${data.paymentStatus ? `
       <div style="background: ${data.paymentStatus === "pending_verification" ? "#fef3c7" : "#f0fdf4"}; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
         <p style="margin: 0; color: ${data.paymentStatus === "pending_verification" ? "#92400e" : "#166534"}; font-size: 13px;">
-          💳 Estado del pago: <strong>${
-            data.paymentStatus === "pending_verification" ? "Verificando comprobante" :
-            data.paymentStatus === "pending" ? "Pendiente de pago" :
+          💳 Estado del pago: <strong>${data.paymentStatus === "pending_verification" ? "Verificando comprobante" :
+          data.paymentStatus === "pending" ? "Pendiente de pago" :
             data.paymentStatus === "verified" ? "Pago verificado" : data.paymentStatus
-          }</strong>
+        }</strong>
         </p>
       </div>
       ` : ""}
@@ -311,6 +320,7 @@ export const emailTemplates = {
     shopName: string;
     shopLogo?: string;
     shopPrimaryColor?: string;
+    shopBackgroundImage?: string;
     orderNumber: string;
     customerName: string;
     customerPhone: string;
@@ -329,6 +339,7 @@ export const emailTemplates = {
       name: data.shopName,
       logo: data.shopLogo,
       primaryColor: data.shopPrimaryColor || "#06b6d4",
+      backgroundImage: data.shopBackgroundImage,
     };
 
     const itemsHtml = data.items
@@ -500,6 +511,7 @@ export const emailTemplates = {
     shopName: string;
     shopLogo?: string;
     shopPrimaryColor?: string;
+    shopBackgroundImage?: string;
     customerName: string;
     customerPhone: string;
     customerEmail?: string;
@@ -515,6 +527,7 @@ export const emailTemplates = {
       name: data.shopName,
       logo: data.shopLogo,
       primaryColor: data.shopPrimaryColor || "#06b6d4",
+      backgroundImage: data.shopBackgroundImage,
     };
 
     return generateEmailTemplate(`

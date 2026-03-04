@@ -227,6 +227,24 @@ export interface MealPrepProduct {
 }
 
 // ============================================
+// CONFIGURACIÓN DE TIENDA (REGLAS Y CATEGORÍAS)
+// ============================================
+
+export interface MealPrepCategoryRule {
+    categoryId: string;          // Ej: "verduras"
+    label: string;               // Ej: "Verduras"
+    excludesCategories?: string[]; // Ej: ["frutas"], si se elige algo aquí, se bloquea "frutas"
+    isPremiumCategory?: boolean;   // Si los productos aquí tienen costo extra por defecto
+    isRequired?: boolean;        // Si el usuario debe elegir forzosamente de esta categoría
+}
+
+export interface MealPrepShopConfig {
+    categories: MealPrepCategoryRule[]; // Reglas personalizadas por la tienda
+    customInstructionsEnabled: boolean; // Si permite instrucciones manuales ($15)
+    premiumProteinsCategories?: string[]; // Identificador de qué categorías se tratan como "Proteinas Premium" para la UI
+}
+
+// ============================================
 // FUNCIONES DE UTILIDAD
 // ============================================
 

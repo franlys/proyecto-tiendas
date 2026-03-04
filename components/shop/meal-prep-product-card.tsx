@@ -6,7 +6,7 @@ import { ChefHat, UtensilsCrossed } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MealPrepModal } from "./meal-prep-modal";
 import type { MealPlate } from "@/lib/types/meal-prep.types";
-import { useCart } from "@/components/shared";
+import { useCart, useShop } from "@/components/shared";
 import { ShoppingCart } from "lucide-react";
 
 interface MealPrepPackageProduct {
@@ -45,6 +45,7 @@ export function MealPrepProductCard({
 }: MealPrepProductCardProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { addProduct } = useCart();
+    const shop = useShop();
 
     const pricePerPlate = product.pricePerPlate || 13;
     const basePrice = product.plateCount * pricePerPlate;
@@ -154,6 +155,7 @@ export function MealPrepProductCard({
                 hidePriceIfZero={true}
                 businessCoordinates={businessCoordinates}
                 businessAddress={businessAddress}
+                mealPrepConfig={shop?.mealPrepConfig}
             />
         </>
     );

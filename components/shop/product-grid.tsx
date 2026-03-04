@@ -255,6 +255,7 @@ export function ProductGrid({
         businessCoordinates={businessCoordinates}
         businessAddress={businessAddress}
         trainingPackages={trainingPackages}
+        mealPrepConfig={shop?.mealPrepConfig}
       />
       {categories.map((category) => {
         const catInfo = getCategoryInfo(category);

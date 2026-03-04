@@ -61,6 +61,7 @@ async function getShopData(shopId: string): Promise<ShopConfig | null> {
         backgroundAudio: shopData.backgroundAudio,
         templateType: shopData.templateType,
         dropTheme: shopData.dropTheme,
+        mealPrepConfig: shopData.mealPrepConfig,
       } as ShopConfig;
     }
 
@@ -98,6 +99,7 @@ async function getShopData(shopId: string): Promise<ShopConfig | null> {
         backgroundAudio: shopData.backgroundAudio,
         templateType: shopData.templateType,
         dropTheme: shopData.dropTheme,
+        mealPrepConfig: shopData.mealPrepConfig,
       } as ShopConfig;
     }
   } catch (error) {

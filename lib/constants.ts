@@ -26,14 +26,15 @@ export const WEBHOOK_BASE_URL = PRODUCTION_URL;
 import type { BusinessType } from "@/lib/types/business.types";
 import { BUSINESS_TYPE_CONFIG as FULL_BUSINESS_CONFIG } from "@/lib/types/business.types";
 import type { ProductExtra } from "@/lib/types/product-extra.types";
-import type { MealPlate } from "@/lib/types/meal-prep.types";
-import type { ShopPaymentConfig } from "@/lib/types/payment.types";
+import type { MealPlate, MealPrepShopConfig } from "@/lib/types/meal-prep.types";
 import type { DropThemeConfig } from "@/lib/types/drop-theme.types";
+import type { ShopPaymentConfig } from "@/lib/types/payment.types";
 export type { BusinessType };
 export type { ShopPaymentConfig };
 export type { DropThemeConfig };
 export type { ProductExtra };
 export type { MealPlate };
+export type { MealPrepShopConfig };
 
 // Las 6 categorías principales de UI (legacy)
 export type MainBusinessCategory = "beauty" | "retail" | "repair" | "restaurant" | "rentcar" | "technology";
@@ -282,6 +283,8 @@ export interface ShopConfig {
   businessTypes?: string[]; // Multi-type support
   wholesaleCode?: string;
   wholesaleEnabled?: boolean;
+  // Meal Prep
+  mealPrepConfig?: MealPrepShopConfig;
   // Auth (for Mock/Seeding purposes)
   ownerUsername?: string;
   ownerPassword?: string;

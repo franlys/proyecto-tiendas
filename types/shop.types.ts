@@ -102,6 +102,12 @@ export interface FirestoreShop {
   logo?: string;
   banner?: string;
   slogan?: string;
+  hero?: string;
+  background?: {
+    image?: string;
+    type?: string;
+    color?: string;
+  };
 
   // Timestamps
   createdAt: Timestamp;

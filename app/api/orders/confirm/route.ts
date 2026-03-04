@@ -179,6 +179,7 @@ export async function POST(request: NextRequest) {
                     shopName: shop.name,
                     shopLogo: shop.logo,
                     shopPrimaryColor: shop.theme?.primaryColor,
+                    shopBackgroundImage: shop.background?.image || shop.hero,
                     deliveryType: deliveryType === "recogida" ? "Recoger en tienda" : "Entrega a domicilio",
                     paymentStatus: paymentInfo?.paymentTiming === "pay_now" ? "Comprobante enviado" : "Pendiente"
                 });
@@ -202,6 +203,7 @@ export async function POST(request: NextRequest) {
                     shopName: shop.name,
                     shopLogo: shop.logo,
                     shopPrimaryColor: shop.theme?.primaryColor,
+                    shopBackgroundImage: shop.background?.image || shop.hero,
                     customerName,
                     customerPhone,
                     customerEmail,
@@ -236,6 +238,7 @@ export async function POST(request: NextRequest) {
                     shopName: shop.name,
                     shopLogo: shop.logo,
                     shopPrimaryColor: shop.theme?.primaryColor,
+                    shopBackgroundImage: shop.background?.image || shop.hero,
                     deliveryType: deliveryType === "recogida" ? "Recoger en tienda" : "Entrega a domicilio",
                     paymentStatus: paymentInfo?.paymentTiming === "pay_now" ? "Comprobante enviado" : "Pendiente"
                 });
