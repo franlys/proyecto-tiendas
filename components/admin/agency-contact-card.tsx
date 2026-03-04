@@ -56,8 +56,12 @@ export function AgencyContactCard({
     <div className="glass-panel rounded-2xl p-6 border border-cyan-500/20 bg-gradient-to-br from-cyan-500/5 to-transparent">
       {/* Header */}
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
-          <span className="text-white text-xl font-bold">{logoInitial}</span>
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center overflow-hidden">
+          {config.logoUrl ? (
+            <img src={config.logoUrl} alt="Agency Logo" className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-white text-xl font-bold">{logoInitial}</span>
+          )}
         </div>
         <div>
           <p className="text-xs text-cyan-400 font-medium uppercase tracking-wider">

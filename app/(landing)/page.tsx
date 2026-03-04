@@ -25,11 +25,11 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 import Link from "next/link";
-import { AuthProvider, useAuth } from "@/components/shared";
+import { AuthProvider, useAuth, AgencyProvider, useAgency } from "@/components/shared";
 import { DemoWalkthrough } from "@/components/landing/demo-walkthrough";
 
-// Información de contacto del administrador
-const ADMIN_CONTACT = {
+// Fallback contact info if agency profile isn't fully set up or loading
+const FALLBACK_CONTACT = {
   name: "Linko",
   phone: "+52 1 55 1234 5678",
   whatsapp: "5215512345678",
@@ -73,6 +73,19 @@ function SmartAuthButton() {
 }
 
 function LandingPageContent({ showContactModal, setShowContactModal }: { showContactModal: boolean; setShowContactModal: (show: boolean) => void }) {
+  const { config, isLoaded } = useAgency();
+
+  // Compute display details based on whether the agency data is loaded
+  const displayContact = {
+    name: isLoaded && config.name ? config.name : FALLBACK_CONTACT.name,
+    phone: isLoaded && config.phone ? config.phone : FALLBACK_CONTACT.phone,
+    whatsapp: isLoaded && config.whatsapp ? config.whatsapp : FALLBACK_CONTACT.whatsapp,
+    email: isLoaded && config.email ? config.email : FALLBACK_CONTACT.email,
+    location: FALLBACK_CONTACT.location, // Location isn't strictly defined in AgencyConfig yet, use fallback or add to Config later
+  };
+
+  const logoSource = isLoaded && config.logoUrl ? config.logoUrl : "/logo.png";
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -81,10 +94,10 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-600 flex items-center justify-center overflow-hidden shadow-lg shadow-cyan-500/20">
-                <img src="/logo.png" alt="Linko" className="w-full h-full object-cover" />
+                <img src={logoSource} alt={displayContact.name} className="w-full h-full object-cover" />
               </div>
               <span className="font-display text-xl font-bold text-white">
-                Linko
+                {displayContact.name}
               </span>
             </div>
 
@@ -419,11 +432,15 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-600 flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-600 flex items-center justify-center overflow-hidden">
+                {isLoaded && config.logoUrl ? (
+                  <img src={config.logoUrl} alt={displayContact.name} className="w-full h-full object-cover" />
+                ) : (
+                  <Sparkles className="w-4 h-4 text-white" />
+                )}
               </div>
               <span className="font-display text-lg font-bold text-white">
-                Linko
+                {displayContact.name}
               </span>
             </div>
 
@@ -446,7 +463,7 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
             </div>
 
             <p className="text-slate-500 text-sm">
-              © {new Date().getFullYear()} Linko
+              © {new Date().getFullYear()} {displayContact.name}
             </p>
           </div>
         </div>
@@ -488,7 +505,7 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
             <div className="space-y-4">
               {/* WhatsApp - Primary CTA */}
               <a
-                href={`https://wa.me/${ADMIN_CONTACT.whatsapp}?text=${encodeURIComponent("¡Hola! Me interesa unirme a Linko")}`}
+                href={`https://wa.me/${displayContact.whatsapp}?text=${encodeURIComponent("¡Hola! Me interesa unirme a " + displayContact.name)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-4 p-4 rounded-xl bg-green-500/20 border border-green-500/30 hover:bg-green-500/30 transition-colors group"
@@ -498,14 +515,14 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
                 </div>
                 <div>
                   <p className="text-white font-semibold">WhatsApp</p>
-                  <p className="text-green-400 text-sm">{ADMIN_CONTACT.phone}</p>
+                  <p className="text-green-400 text-sm">{displayContact.phone}</p>
                 </div>
                 <ArrowRight className="w-5 h-5 text-green-400 ml-auto" />
               </a>
 
               {/* Phone */}
               <a
-                href={`tel:${ADMIN_CONTACT.phone.replace(/\s/g, "")}`}
+                href={`tel:${displayContact.phone.replace(/\s/g, "")}`}
                 className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
               >
                 <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
@@ -513,13 +530,13 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
                 </div>
                 <div>
                   <p className="text-white font-medium">Teléfono</p>
-                  <p className="text-slate-400 text-sm">{ADMIN_CONTACT.phone}</p>
+                  <p className="text-slate-400 text-sm">{displayContact.phone}</p>
                 </div>
               </a>
 
               {/* Email */}
               <a
-                href={`mailto:${ADMIN_CONTACT.email}?subject=${encodeURIComponent("Interesado en Linko")}`}
+                href={`mailto:${displayContact.email}?subject=${encodeURIComponent("Interesado en " + displayContact.name)}`}
                 className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
               >
                 <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
@@ -527,7 +544,7 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
                 </div>
                 <div>
                   <p className="text-white font-medium">Email</p>
-                  <p className="text-slate-400 text-sm">{ADMIN_CONTACT.email}</p>
+                  <p className="text-slate-400 text-sm">{displayContact.email}</p>
                 </div>
               </a>
 
@@ -538,7 +555,7 @@ function LandingPageContent({ showContactModal, setShowContactModal }: { showCon
                 </div>
                 <div>
                   <p className="text-white font-medium">Ubicación</p>
-                  <p className="text-slate-400 text-sm">{ADMIN_CONTACT.location}</p>
+                  <p className="text-slate-400 text-sm">{displayContact.location}</p>
                 </div>
               </div>
             </div>
@@ -560,10 +577,12 @@ export default function LandingPage() {
 
   return (
     <AuthProvider>
-      <LandingPageContent
-        showContactModal={showContactModal}
-        setShowContactModal={setShowContactModal}
-      />
+      <AgencyProvider>
+        <LandingPageContent
+          showContactModal={showContactModal}
+          setShowContactModal={setShowContactModal}
+        />
+      </AgencyProvider>
     </AuthProvider>
   );
 }
