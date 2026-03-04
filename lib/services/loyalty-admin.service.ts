@@ -7,6 +7,7 @@ import type {
   LoyaltyRedemption,
   DEFAULT_LOYALTY_CONFIG,
 } from "@/lib/types/loyalty.types";
+import { FieldValue } from "firebase-admin/firestore";
 
 // ============ CONFIG FUNCTIONS ============
 
@@ -61,6 +62,23 @@ export async function saveLoyaltyConfigAdmin(
         ...config,
       });
     }
+
+    // Sync the "loyalty" string with the main shop document's feature arrays
+    const shopRef = db.doc(`shops/${shopId}`);
+    if (config.enabled) {
+      // Add 'loyalty' to both arrays to ensure compatibility
+      await shopRef.update({
+        features: FieldValue.arrayUnion("loyalty"),
+        enabledFeatures: FieldValue.arrayUnion("loyalty"),
+      });
+    } else if (config.enabled === false) {
+      // Remove 'loyalty' from both arrays
+      await shopRef.update({
+        features: FieldValue.arrayRemove("loyalty"),
+        enabledFeatures: FieldValue.arrayRemove("loyalty"),
+      });
+    }
+
     return true;
   } catch (error) {
     console.error("Error saving loyalty config:", error);
