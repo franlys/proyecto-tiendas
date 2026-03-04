@@ -12,6 +12,9 @@ import { useCombinedBusinessFeatures } from "@/lib/hooks";
 import type { BookingService, CreateServiceInput } from "@/lib/types/booking.types";
 import { cn } from "@/lib/utils";
 
+const TRAINING_PACKAGE_TYPES = ["gimnasio", "entrenador_personal", "estudio_yoga", "crossfit"];
+const MEAL_PREP_TYPES = ["meal_prep"];
+
 // Business types that are primarily service-based (not product-based)
 const SERVICE_CENTRIC_TYPES = [
   "beauty", "salon_belleza", "barberia", "spa", "nail_salon", "estetica_facial",
@@ -702,7 +705,7 @@ function SmartInventoryContent({ shopId, businessType }: { shopId: string; busin
         </div>
 
         {viewMode === "services" ? (
-          <ServicesContent shopId={shopId} />
+          <ServicesTabRedirect shopId={shopId} businessType={businessType} />
         ) : (
           <InventoryProvider shopId={shopId}>
             <ProductsContent shopId={shopId} businessType={businessType} />
@@ -712,9 +715,9 @@ function SmartInventoryContent({ shopId, businessType }: { shopId: string; busin
     );
   }
 
-  // For service-centric businesses, show services
+  // For service-centric businesses, show services (unless redirected)
   if (isServiceCentric) {
-    return <ServicesContent shopId={shopId} />;
+    return <ServicesTabRedirect shopId={shopId} businessType={businessType} />;
   }
 
   // For product-centric businesses (default), show products
@@ -723,6 +726,53 @@ function SmartInventoryContent({ shopId, businessType }: { shopId: string; busin
       <ProductsContent shopId={shopId} businessType={businessType} />
     </InventoryProvider>
   );
+}
+
+// ====================================
+// SERVICES TAB REDIRECT (For specialized businesses)
+// ====================================
+function ServicesTabRedirect({ shopId, businessType }: { shopId: string, businessType: string }) {
+  if (TRAINING_PACKAGE_TYPES.includes(businessType)) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center">
+          <Store className="w-8 h-8 text-zinc-500" />
+        </div>
+        <h2 className="text-xl font-bold text-white">Gestión de Entrenamientos</h2>
+        <p className="text-zinc-400 text-center max-w-md">
+          Tu configuración utiliza el gestor avanzado de Paquetes de Entrenamiento en su lugar.
+        </p>
+        <Link
+          href="/admin/training-packages"
+          className="mt-4 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-medium transition-all"
+        >
+          Gestionar Paquetes de Entrenamiento
+        </Link>
+      </div>
+    );
+  }
+
+  if (MEAL_PREP_TYPES.includes(businessType)) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center">
+          <Package className="w-8 h-8 text-zinc-500" />
+        </div>
+        <h2 className="text-xl font-bold text-white">Configuración de Meal Prep</h2>
+        <p className="text-zinc-400 text-center max-w-md">
+          La configuración de tus platillos y paquetes dinámicos se realiza en su propio panel.
+        </p>
+        <Link
+          href="/admin/settings/meal-prep"
+          className="mt-4 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-medium transition-all"
+        >
+          Ir a Reglas de Meal Prep
+        </Link>
+      </div>
+    );
+  }
+
+  return <ServicesContent shopId={shopId} />;
 }
 
 // ====================================

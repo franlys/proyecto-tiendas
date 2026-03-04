@@ -227,21 +227,48 @@ export interface MealPrepProduct {
 }
 
 // ============================================
-// CONFIGURACIÓN DE TIENDA (REGLAS Y CATEGORÍAS)
+// CONFIGURACIÓN DE TIENDA (PAQUETES, REGLAS Y CATEGORÍAS DINÁMICAS)
 // ============================================
 
-export interface MealPrepCategoryRule {
-    categoryId: string;          // Ej: "verduras"
-    label: string;               // Ej: "Verduras"
-    excludesCategories?: string[]; // Ej: ["frutas"], si se elige algo aquí, se bloquea "frutas"
-    isPremiumCategory?: boolean;   // Si los productos aquí tienen costo extra por defecto
-    isRequired?: boolean;        // Si el usuario debe elegir forzosamente de esta categoría
+export interface MealPrepPackage {
+    id: string;
+    name: string;
+    mealsPerWeek: number;
+    daysPerWeek: number;
+    price: number;
+    isActive: boolean;
+}
+
+export interface MealPrepDynamicCategory {
+    id: string;
+    name: string;
+    isPremium: boolean;
+    isRequired: boolean;
+    selectionLimit?: number; // Cuántos items se pueden elegir de esta categoría
+}
+
+export interface MealPrepExtraItem {
+    id: string;
+    name: string;
+    price: number;
+    categoryId: string; // Referencia a MealPrepDynamicCategory
+    isActive: boolean;
+}
+
+export interface MealPrepRule {
+    id: string;
+    type: "exclude" | "require" | "surcharge";
+    sourceCategoryId: string;
+    targetCategoryId: string;
+    surchargeAmount?: number;
 }
 
 export interface MealPrepShopConfig {
-    categories: MealPrepCategoryRule[]; // Reglas personalizadas por la tienda
-    customInstructionsEnabled: boolean; // Si permite instrucciones manuales ($15)
-    premiumProteinsCategories?: string[]; // Identificador de qué categorías se tratan como "Proteinas Premium" para la UI
+    packages?: MealPrepPackage[];
+    categories?: MealPrepDynamicCategory[];
+    extras?: MealPrepExtraItem[];
+    rules?: MealPrepRule[];
+    customInstructionsEnabled?: boolean;
 }
 
 // ============================================

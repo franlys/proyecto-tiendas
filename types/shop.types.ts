@@ -9,6 +9,7 @@ import type {
   ShopFeatureToggles,
 } from "@/lib/types/shop-customization.types";
 import type { ShopPaymentConfig } from "@/lib/types/payment.types";
+import type { MealPrepShopConfig } from "@/lib/types/meal-prep.types";
 
 // Re-export para compatibilidad
 export type { BusinessType, BusinessCategory };
@@ -92,6 +93,9 @@ export interface FirestoreShop {
   // Configuración de pagos (Stripe Connect)
   payments?: ShopPaymentConfig;
 
+  // Configuración global Meal Prep
+  mealPrepConfig?: MealPrepShopConfig;
+
   // Credenciales y notificaciones del owner
   ownerUsername?: string;
   ownerPassword?: string;
@@ -157,6 +161,8 @@ export interface UpdateShopInput {
   featureToggles?: Partial<ShopFeatureToggles>;
   // Configuración de pagos
   payments?: Partial<ShopPaymentConfig>;
+  // Configuración global Meal Prep
+  mealPrepConfig?: Partial<MealPrepShopConfig>;
 }
 
 // Respuesta de API

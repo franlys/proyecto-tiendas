@@ -161,11 +161,13 @@ export function MealPrepModal({
         // Override or supplement with config
         if (mealPrepConfig?.categories) {
             mealPrepConfig.categories.forEach(rule => {
-                const existingIndex = cats.findIndex(c => c.id === rule.categoryId);
+                const existingIndex = cats.findIndex(c => c.id === rule.id);
                 if (existingIndex >= 0) {
                     cats[existingIndex] = { ...cats[existingIndex], ...rule };
                 } else {
-                    cats.push({ id: rule.categoryId, name: rule.label, ...rule });
+                    // Extract excludesCategories safely if using old rules format conceptually, 
+                    // though they should be migrated to rules[] array
+                    cats.push({ ...rule });
                 }
             });
         }

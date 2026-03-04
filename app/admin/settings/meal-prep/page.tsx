@@ -1,94 +1,86 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import {
-    ArrowLeft,
-    Check,
-    Loader2,
-    Save,
+    Package,
     Plus,
     Trash2,
-    Utensils,
-    Lock,
-    Unlock,
+    Save,
+    Check,
+    Loader2,
+    Tag,
+    AlertTriangle,
     Settings,
+    AlertCircle,
+    MenuSquare,
+    Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useAuth, useShops } from "@/components/shared";
-import { cn, cleanForFirestore } from "@/lib/utils";
-import type { MealPrepShopConfig, MealPrepCategoryRule } from "@/lib/types/meal-prep.types";
+import type {
+    MealPrepShopConfig,
+    MealPrepPackage,
+    MealPrepDynamicCategory,
+    MealPrepExtraItem,
+    MealPrepRule,
+} from "@/lib/types/meal-prep.types";
+import { v4 as uuidv4 } from "uuid";
 
-const DEFAULT_MEAL_PREP_CONFIG: MealPrepShopConfig = {
-    categories: [
-        { categoryId: "carbs", label: "Carbohidratos" },
-        { categoryId: "proteins", label: "Proteínas" },
-        { categoryId: "veggies", label: "Vegetales" },
-    ],
-    customInstructionsEnabled: true,
-    premiumProteinsCategories: [],
-};
+type Tab = "packages" | "categories" | "rules";
 
 export default function MealPrepSettingsPage() {
     const { user, isLoading: authLoading } = useAuth();
-    const { getShop } = useShops();
+    const { getShop, updateShop, isLoading: shopsLoading } = useShops();
 
-    const [config, setConfig] = useState<MealPrepShopConfig>(DEFAULT_MEAL_PREP_CONFIG);
+    const [activeTab, setActiveTab] = useState<Tab>("packages");
     const [isSaving, setIsSaving] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
 
-    // Editing State
-    const [newCategoryName, setNewCategoryName] = useState("");
-    const [newCategoryId, setNewCategoryId] = useState("");
+    // Status
+    const [packages, setPackages] = useState<MealPrepPackage[]>([]);
+    const [categories, setCategories] = useState<MealPrepDynamicCategory[]>([]);
+    const [extras, setExtras] = useState<MealPrepExtraItem[]>([]);
+    const [rules, setRules] = useState<MealPrepRule[]>([]);
+    const [customInstructionsEnabled, setCustomInstructionsEnabled] = useState(false);
 
-    // Load config from Firestore
+    // Load from Firestore
     useEffect(() => {
-        async function loadConfig() {
-            if (!user?.shopId) return;
-
-            try {
-                const { db } = await import("@/lib/firebase");
-                const { doc, getDoc } = await import("firebase/firestore");
-
-                const configRef = doc(db, "shops", user.shopId);
-                const configSnap = await getDoc(configRef);
-
-                if (configSnap.exists()) {
-                    const shopData = configSnap.data();
-                    if (shopData.mealPrepConfig) {
-                        setConfig(shopData.mealPrepConfig as MealPrepShopConfig);
-                    }
-                }
-            } catch (err) {
-                console.error("Error loading meal prep config:", err);
-            } finally {
-                setIsLoading(false);
+        if (user?.shopId && !shopsLoading) {
+            const shop = getShop(user.shopId);
+            if (shop?.mealPrepConfig) {
+                setPackages(shop.mealPrepConfig.packages || []);
+                setCategories(shop.mealPrepConfig.categories || []);
+                setExtras(shop.mealPrepConfig.extras || []);
+                setRules(shop.mealPrepConfig.rules || []);
+                setCustomInstructionsEnabled(
+                    shop.mealPrepConfig.customInstructionsEnabled ?? false
+                );
             }
         }
+    }, [user?.shopId, shopsLoading, getShop]);
 
-        if (!authLoading) {
-            loadConfig();
-        }
-    }, [user?.shopId, authLoading]);
+    if (authLoading || shopsLoading) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            </div>
+        );
+    }
 
-    // Save config to Firestore
     const handleSave = async () => {
         if (!user?.shopId) return;
 
         setIsSaving(true);
         try {
-            const { db } = await import("@/lib/firebase");
-            const { doc, updateDoc } = await import("firebase/firestore");
+            const mealPrepConfig: MealPrepShopConfig = {
+                packages,
+                categories,
+                extras,
+                rules,
+                customInstructionsEnabled,
+            };
 
-            const shopRef = doc(db, "shops", user.shopId);
-
-            // Firebase doesn't support undefined values, strip them before saving using the dedicated utility
-            const cleanConfig = cleanForFirestore(config);
-
-            await updateDoc(shopRef, {
-                mealPrepConfig: cleanConfig
-            });
+            await updateShop(user.shopId, { mealPrepConfig });
 
             setIsSaved(true);
             setTimeout(() => setIsSaved(false), 2000);
@@ -100,251 +92,507 @@ export default function MealPrepSettingsPage() {
         }
     };
 
-    // Category Toggles
-    const handleAddCategory = () => {
-        if (!newCategoryId || !newCategoryName) return;
-        setConfig(prev => ({
-            ...prev,
-            categories: [
-                ...prev.categories,
-                { categoryId: newCategoryId, label: newCategoryName }
-            ]
-        }));
-        setNewCategoryId("");
-        setNewCategoryName("");
-        setIsSaved(false);
+    // ======================
+    // PACKAGES LOGIC
+    // ======================
+    const addPackage = () => {
+        setPackages([
+            ...packages,
+            {
+                id: uuidv4(),
+                name: "Nuevo Paquete",
+                mealsPerWeek: 3,
+                daysPerWeek: 1,
+                price: 39,
+                isActive: true,
+            },
+        ]);
     };
 
-    const handleDeleteCategory = (id: string) => {
-        if (!confirm("¿Eliminar esta categoría?")) return;
-        setConfig(prev => ({
-            ...prev,
-            categories: prev.categories.filter(c => c.categoryId !== id)
-        }));
-        setIsSaved(false);
-    };
-
-    const toggleExclusion = (categoryId: string, targetCategoryId: string) => {
-        setConfig(prev => {
-            const cats = prev.categories.map(c => {
-                if (c.categoryId === categoryId) {
-                    const excludes = c.excludesCategories || [];
-                    if (excludes.includes(targetCategoryId)) {
-                        return { ...c, excludesCategories: excludes.filter(e => e !== targetCategoryId) };
-                    } else {
-                        return { ...c, excludesCategories: [...excludes, targetCategoryId] };
-                    }
-                }
-                return c;
-            });
-            return { ...prev, categories: cats };
-        });
-        setIsSaved(false);
-    };
-
-    const togglePremium = (categoryId: string) => {
-        setConfig(prev => {
-            const premiums = prev.premiumProteinsCategories || [];
-            if (premiums.includes(categoryId)) {
-                return { ...prev, premiumProteinsCategories: premiums.filter(p => p !== categoryId) };
-            } else {
-                return { ...prev, premiumProteinsCategories: [...premiums, categoryId] };
-            }
-        });
-        setIsSaved(false);
-    };
-
-    if (authLoading || isLoading) {
-        return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
-            </div>
+    const updatePackage = (id: string, field: keyof MealPrepPackage, value: any) => {
+        setPackages(
+            packages.map((p) => (p.id === id ? { ...p, [field]: value } : p))
         );
-    }
+    };
+
+    const deletePackage = (id: string) => {
+        setPackages(packages.filter((p) => p.id !== id));
+    };
+
+    // ======================
+    // CATEGORIES LOGIC
+    // ======================
+    const addCategory = () => {
+        setCategories([
+            ...categories,
+            {
+                id: uuidv4(),
+                name: "Nueva Categoría",
+                isPremium: false,
+                isRequired: false,
+                selectionLimit: 1,
+            },
+        ]);
+    };
+
+    const updateCategory = (id: string, field: keyof MealPrepDynamicCategory, value: any) => {
+        setCategories(
+            categories.map((c) => (c.id === id ? { ...c, [field]: value } : c))
+        );
+    };
+
+    const deleteCategory = (id: string) => {
+        setCategories(categories.filter((c) => c.id !== id));
+        setExtras(extras.filter((e) => e.categoryId !== id));
+        setRules(rules.filter((r) => r.sourceCategoryId !== id && r.targetCategoryId !== id));
+    };
+
+    // ======================
+    // EXTRAS LOGIC
+    // ======================
+    const addExtra = (categoryId: string) => {
+        setExtras([
+            ...extras,
+            {
+                id: uuidv4(),
+                name: "Ingrediente",
+                price: 0,
+                categoryId,
+                isActive: true,
+            },
+        ]);
+    };
+
+    const updateExtra = (id: string, field: keyof MealPrepExtraItem, value: any) => {
+        setExtras(
+            extras.map((e) => (e.id === id ? { ...e, [field]: value } : e))
+        );
+    };
+
+    const deleteExtra = (id: string) => {
+        setExtras(extras.filter((e) => e.id !== id));
+    };
+
+    // ======================
+    // RULES LOGIC
+    // ======================
+    const addRule = () => {
+        if (categories.length < 2) return alert("Necesitas al menos 2 categorías para crear reglas.");
+        setRules([
+            ...rules,
+            {
+                id: uuidv4(),
+                type: "exclude",
+                sourceCategoryId: categories[0].id,
+                targetCategoryId: categories[1].id,
+            },
+        ]);
+    };
+
+    const updateRule = (id: string, field: keyof MealPrepRule, value: any) => {
+        setRules(rules.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
+    };
+
+    const deleteRule = (id: string) => {
+        setRules(rules.filter((r) => r.id !== id));
+    };
 
     return (
-        <div className="min-h-screen bg-background pb-20">
+        <div className="max-w-5xl mx-auto md:px-6 px-4 py-8 space-y-6 pb-20">
             {/* Header */}
-            <header className="border-b border-white/10 py-6">
-                <div className="container mx-auto px-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <Link href="/admin/settings">
-                                <Button variant="ghost" size="sm">
-                                    <ArrowLeft className="w-4 h-4" />
-                                </Button>
-                            </Link>
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-orange-500 to-amber-400 flex items-center justify-center">
-                                    <Utensils className="w-5 h-5 text-white" />
-                                </div>
-                                <div>
-                                    <h1 className="font-display text-2xl font-bold text-white">
-                                        Reglas de Meal Prep
-                                    </h1>
-                                    <p className="text-slate-400 text-sm">
-                                        Configura exclusiones y comportamiento de tus comidas
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <Button onClick={handleSave} disabled={isSaved || isSaving}>
-                            {isSaved ? (
-                                <>
-                                    <Check className="w-4 h-4" />
-                                    Guardado
-                                </>
-                            ) : (
-                                <>
-                                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                                    {isSaving ? "Guardando..." : "Guardar"}
-                                </>
-                            )}
-                        </Button>
-                    </div>
-                </div>
-            </header>
-
-            <main className="container mx-auto px-4 py-8 max-w-4xl space-y-8">
-
-                {/* Global Meal Prep settings */}
-                <div className="glass-panel rounded-2xl p-6 border border-white/10">
-                    <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                        <Settings className="w-5 h-5 text-gold" />
-                        Opciones del Modal
-                    </h2>
-
-                    <label className="flex items-center justify-between p-4 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
-                        <div>
-                            <p className="font-medium text-white">Permitir Instrucciones Manuales</p>
-                            <p className="text-sm text-slate-400 mt-1">
-                                Deja que los clientes escriban notas adicionales al fondo del plato.
-                            </p>
-                        </div>
-                        <input
-                            type="checkbox"
-                            checked={config.customInstructionsEnabled}
-                            onChange={(e) => {
-                                setConfig(prev => ({ ...prev, customInstructionsEnabled: e.target.checked }));
-                                setIsSaved(false);
-                            }}
-                            className="w-5 h-5 accent-primary rounded cursor-pointer"
-                        />
-                    </label>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                        <Package className="w-6 h-6 text-primary" />
+                        Configuración Meal Prep
+                    </h1>
+                    <p className="text-zinc-400 mt-1">
+                        Gestiona tus paquetes de comida, categorías de ingredientes, extras y exclusiones.
+                    </p>
                 </div>
 
+                <Button
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="bg-primary hover:bg-primary/90 text-white min-w-[140px]"
+                >
+                    {isSaving ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : isSaved ? (
+                        <Check className="w-5 h-5 mr-2" />
+                    ) : (
+                        <Save className="w-5 h-5 mr-2" />
+                    )}
+                    {isSaved ? "Guardado" : "Guardar Cambios"}
+                </Button>
+            </div>
 
-                {/* Categorías Dinámicas */}
-                <div className="glass-panel rounded-2xl p-6 border border-white/10">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                        <div>
-                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                Categorías
-                            </h2>
-                            <p className="text-sm text-slate-400 mt-1">
-                                Agrega las IDs y nombres de tus variantes (ej: ID: vegetales, Nombre: Verduras).
-                            </p>
-                        </div>
-                    </div>
+            {/* Tabs */}
+            <div className="flex space-x-1 bg-zinc-900/50 p-1 rounded-xl border border-white/5 w-fit overflow-x-auto max-w-full">
+                <button
+                    onClick={() => setActiveTab("packages")}
+                    className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${activeTab === "packages"
+                        ? "bg-primary text-white shadow-lg"
+                        : "text-zinc-400 hover:text-white hover:bg-white/5"
+                        }`}
+                >
+                    <Package className="w-4 h-4" />
+                    Paquetes Base
+                </button>
+                <button
+                    onClick={() => setActiveTab("categories")}
+                    className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${activeTab === "categories"
+                        ? "bg-primary text-white shadow-lg"
+                        : "text-zinc-400 hover:text-white hover:bg-white/5"
+                        }`}
+                >
+                    <MenuSquare className="w-4 h-4" />
+                    Categorías e Ingredientes
+                </button>
+                <button
+                    onClick={() => setActiveTab("rules")}
+                    className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${activeTab === "rules"
+                        ? "bg-primary text-white shadow-lg"
+                        : "text-zinc-400 hover:text-white hover:bg-white/5"
+                        }`}
+                >
+                    <Zap className="w-4 h-4" />
+                    Lógica & Reglas
+                </button>
+            </div>
 
-                    <div className="grid gap-4 mb-6">
-                        {config.categories.map((category) => (
-                            <div key={category.categoryId} className="flex flex-col gap-4 p-4 rounded-xl border border-white/10 bg-white/5">
-                                <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                                            <span className="text-lg">🍱</span>
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-white text-lg">{category.label}</p>
-                                            <p className="text-xs text-slate-400 font-mono">ID: {category.categoryId}</p>
-                                        </div>
-                                    </div>
-
-                                    {/* Action tags */}
-                                    <div className="flex items-center gap-3">
-                                        <label className="flex gap-2 items-center text-xs text-amber-400 hover:text-amber-300 transition-colors cursor-pointer bg-amber-500/10 px-3 py-1.5 rounded-full border border-amber-500/20">
-                                            <input
-                                                type="checkbox"
-                                                className="hidden"
-                                                checked={config.premiumProteinsCategories?.includes(category.categoryId) || false}
-                                                onChange={() => togglePremium(category.categoryId)}
-                                            />
-                                            {config.premiumProteinsCategories?.includes(category.categoryId) ? 'Es Premium' : 'Hacer Premium'}
-                                        </label>
-                                        <button
-                                            onClick={() => handleDeleteCategory(category.categoryId)}
-                                            className="p-2 text-rose-400 hover:text-white hover:bg-rose-500 rounded-lg transition-colors border border-rose-500/20 hover:border-transparent"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Exclusions section */}
-                                <div>
-                                    <p className="text-sm text-slate-400 mb-3 flex items-center gap-2">
-                                        <Lock className="w-4 h-4 text-rose-400" />
-                                        Si eligen algo de <strong>{category.label}</strong>, bloquear:
-                                    </p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {config.categories.map(otherCat => {
-                                            if (otherCat.categoryId === category.categoryId) return null;
-                                            const isExcluded = category.excludesCategories?.includes(otherCat.categoryId);
-                                            return (
-                                                <button
-                                                    key={otherCat.categoryId}
-                                                    onClick={() => toggleExclusion(category.categoryId, otherCat.categoryId)}
-                                                    className={cn(
-                                                        "px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-2 border",
-                                                        isExcluded
-                                                            ? "bg-rose-500/20 border-rose-500/50 text-white"
-                                                            : "bg-black/20 border-white/10 text-slate-400 hover:border-white/30"
-                                                    )}
-                                                >
-                                                    {isExcluded ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3 opacity-50" />}
-                                                    {otherCat.label}
-                                                </button>
-                                            )
-                                        })}
-                                    </div>
-                                </div>
+            {/* Tab Contents */}
+            <div className="bg-zinc-900 border border-white/10 rounded-2xl p-4 md:p-6">
+                {/* PACKAGES TAB */}
+                {activeTab === "packages" && (
+                    <div className="space-y-6">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                                <h2 className="text-xl font-semibold text-white">Paquetes Disponibles</h2>
+                                <p className="text-sm text-zinc-400">
+                                    Agrega los paquetes que los clientes pueden elegir (ej: 4 comidas a la semana).
+                                </p>
                             </div>
-                        ))}
-                    </div>
-
-                    {/* Form to add new Category */}
-                    <div className="p-4 rounded-xl border border-dashed border-white/20 bg-white/5 space-y-4">
-                        <p className="text-sm font-medium text-white">Nueva Categoría</p>
-                        <div className="flex flex-col sm:flex-row gap-3">
-                            <input
-                                type="text"
-                                placeholder="ID interno (ej: carbs)"
-                                value={newCategoryId}
-                                onChange={(e) => setNewCategoryId(e.target.value)}
-                                className="flex-1 px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary/50 text-sm font-mono"
-                            />
-                            <input
-                                type="text"
-                                placeholder="Nombre UI (ej: Carbohidratos)"
-                                value={newCategoryName}
-                                onChange={(e) => setNewCategoryName(e.target.value)}
-                                className="flex-1 px-4 py-2 bg-slate-900 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary/50 text-sm"
-                            />
-                            <Button
-                                onClick={handleAddCategory}
-                                disabled={!newCategoryId || !newCategoryName}
-                                className="whitespace-nowrap sm:w-auto"
-                            >
+                            <Button onClick={addPackage} variant="outline" className="border-dashed border-zinc-700 bg-black/20 text-white w-full md:w-auto">
                                 <Plus className="w-4 h-4 mr-2" />
-                                Añadir
+                                Nuevo Paquete
                             </Button>
                         </div>
+
+                        {packages.length === 0 ? (
+                            <div className="py-12 text-center border-2 border-dashed border-zinc-800 rounded-xl">
+                                <Package className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
+                                <h3 className="text-lg font-medium text-zinc-400">No hay paquetes configurados</h3>
+                                <p className="text-sm text-zinc-500 mb-4">Empieza agregando tu primer paquete base.</p>
+                                <Button onClick={addPackage} variant="outline" className="text-white border-zinc-700">Agregar Paquete</Button>
+                            </div>
+                        ) : (
+                            <div className="grid gap-4">
+                                {packages.map((pkg) => (
+                                    <div key={pkg.id} className="p-4 bg-zinc-950 border border-zinc-800 rounded-xl flex flex-col md:flex-row items-end md:items-start justify-between gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
+                                            <div>
+                                                <label className="text-xs text-zinc-500 mb-1 block">Nombre del Paquete</label>
+                                                <input
+                                                    type="text"
+                                                    value={pkg.name}
+                                                    onChange={(e) => updatePackage(pkg.id, "name", e.target.value)}
+                                                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary transition-colors"
+                                                    placeholder="Ej: Plan Mantenimiento"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs text-zinc-500 mb-1 block">Comidas por semana</label>
+                                                <input
+                                                    type="number"
+                                                    value={pkg.mealsPerWeek}
+                                                    onChange={(e) => updatePackage(pkg.id, "mealsPerWeek", Number(e.target.value))}
+                                                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary transition-colors"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs text-zinc-500 mb-1 block">Días de Entrega</label>
+                                                <input
+                                                    type="number"
+                                                    value={pkg.daysPerWeek}
+                                                    onChange={(e) => updatePackage(pkg.id, "daysPerWeek", Number(e.target.value))}
+                                                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary transition-colors"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs text-zinc-500 mb-1 block">Precio Total ($)</label>
+                                                <input
+                                                    type="number"
+                                                    value={pkg.price}
+                                                    onChange={(e) => updatePackage(pkg.id, "price", Number(e.target.value))}
+                                                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary transition-colors"
+                                                />
+                                            </div>
+                                        </div>
+                                        <Button
+                                            onClick={() => deletePackage(pkg.id)}
+                                            variant="ghost"
+                                            size="sm"
+                                            className="w-8 h-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-400/10 md:mt-6 shrink-0"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
-                </div>
-            </main>
+                )}
+
+                {/* CATEGORIES TAB */}
+                {activeTab === "categories" && (
+                    <div className="space-y-6">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                                <h2 className="text-xl font-semibold text-white">Categorías de Menú</h2>
+                                <p className="text-sm text-zinc-400">
+                                    Crea opciones como "Proteínas", "Carbohidratos" y asocia ingredientes y cobros extras.
+                                </p>
+                            </div>
+                            <Button onClick={addCategory} variant="outline" className="border-dashed border-zinc-700 bg-black/20 text-white w-full md:w-auto">
+                                <Plus className="w-4 h-4 mr-2" />
+                                Nueva Categoría
+                            </Button>
+                        </div>
+
+                        {categories.length === 0 ? (
+                            <div className="py-12 text-center border-2 border-dashed border-zinc-800 rounded-xl">
+                                <MenuSquare className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
+                                <h3 className="text-lg font-medium text-zinc-400">No hay categorías</h3>
+                                <p className="text-sm text-zinc-500 mb-4">Empieza agregando tu primera categoría de inventario.</p>
+                                <Button onClick={addCategory} variant="outline" className="text-white border-zinc-700">Agregar Categoría</Button>
+                            </div>
+                        ) : (
+                            <div className="space-y-6">
+                                {categories.map((cat) => (
+                                    <div key={cat.id} className="p-4 md:p-5 bg-zinc-950 border border-zinc-800 rounded-xl space-y-4">
+                                        {/* Category Header */}
+                                        <div className="flex flex-col md:flex-row items-end md:items-start justify-between gap-4 pb-4 border-b border-zinc-800">
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
+                                                <div>
+                                                    <label className="text-xs text-zinc-500 mb-1 block">Nombre de Categoría</label>
+                                                    <input
+                                                        type="text"
+                                                        value={cat.name}
+                                                        onChange={(e) => updateCategory(cat.id, "name", e.target.value)}
+                                                        className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary transition-colors"
+                                                        placeholder="Ej: Proteínas"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs text-zinc-500 mb-1 block">Límite de Selección (por plato)</label>
+                                                    <input
+                                                        type="number"
+                                                        value={cat.selectionLimit || 1}
+                                                        onChange={(e) => updateCategory(cat.id, "selectionLimit", Number(e.target.value))}
+                                                        className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary transition-colors"
+                                                    />
+                                                </div>
+                                                <div className="flex items-center gap-4 mt-1 md:mt-6 bg-zinc-900/50 p-2 rounded-lg border border-white/5">
+                                                    <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer hover:text-white">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={cat.isRequired}
+                                                            onChange={(e) => updateCategory(cat.id, "isRequired", e.target.checked)}
+                                                            className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-primary focus:ring-primary focus:ring-offset-zinc-950"
+                                                        />
+                                                        Es obligatoria
+                                                    </label>
+                                                    <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer hover:text-white">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={cat.isPremium}
+                                                            onChange={(e) => updateCategory(cat.id, "isPremium", e.target.checked)}
+                                                            className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-yellow-500 focus:ring-yellow-500 focus:ring-offset-zinc-950"
+                                                        />
+                                                        Es Premium ⭐
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <Button
+                                                onClick={() => deleteCategory(cat.id)}
+                                                variant="ghost"
+                                                size="sm"
+                                                className="w-8 h-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-400/10 shrink-0"
+                                            >
+                                                <Trash2 className="w-5 h-5" />
+                                            </Button>
+                                        </div>
+
+                                        {/* Category Extras */}
+                                        <div className="pl-2 md:pl-4 border-l-2 border-zinc-800 space-y-3">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                                                <h4 className="text-sm font-medium text-zinc-400 flex items-center gap-2">
+                                                    <Tag className="w-4 h-4" /> Elementos / Ingredientes
+                                                </h4>
+                                                <Button
+                                                    onClick={() => addExtra(cat.id)}
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    className="h-8 text-primary hover:text-primary hover:bg-primary/10 w-fit"
+                                                >
+                                                    <Plus className="w-4 h-4 mr-1" /> Nuevo Ingrediente
+                                                </Button>
+                                            </div>
+
+                                            {extras.filter((e) => e.categoryId === cat.id).length === 0 ? (
+                                                <p className="text-xs text-zinc-600 italic py-2">No hay ingredientes registrados en esta categoría.</p>
+                                            ) : (
+                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                                                    {extras
+                                                        .filter((e) => e.categoryId === cat.id)
+                                                        .map((extra) => (
+                                                            <div key={extra.id} className="flex items-center gap-2 bg-zinc-900 p-2 rounded-lg border border-white/5">
+                                                                <input
+                                                                    type="text"
+                                                                    value={extra.name}
+                                                                    onChange={(e) => updateExtra(extra.id, "name", e.target.value)}
+                                                                    className="flex-1 bg-transparent border-0 px-2 py-1 text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary rounded"
+                                                                    placeholder="Nombre..."
+                                                                />
+                                                                <div className="relative w-24 shrink-0">
+                                                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">$</span>
+                                                                    <input
+                                                                        type="number"
+                                                                        value={extra.price}
+                                                                        onChange={(e) => updateExtra(extra.id, "price", Number(e.target.value))}
+                                                                        className="w-full bg-zinc-950 border border-zinc-700 rounded pl-6 pr-2 py-1 text-white text-sm focus:outline-none focus:border-primary"
+                                                                        placeholder="0"
+                                                                    />
+                                                                </div>
+                                                                <Button
+                                                                    onClick={() => deleteExtra(extra.id)}
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="h-8 w-8 p-0 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 shrink-0"
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </Button>
+                                                            </div>
+                                                        ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* RULES TAB */}
+                {activeTab === "rules" && (
+                    <div className="space-y-6">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                                <h2 className="text-xl font-semibold text-white">Lógica y Reglas</h2>
+                                <p className="text-sm text-zinc-400">
+                                    Aplica condiciones al menú. Ej: "Si seleccionan una Proteína Premium, ocultar Frutas".
+                                </p>
+                            </div>
+                            <Button onClick={addRule} variant="outline" className="border-dashed border-zinc-700 bg-black/20 text-white w-full md:w-auto">
+                                <Plus className="w-4 h-4 mr-2" />
+                                Nueva Regla
+                            </Button>
+                        </div>
+
+                        {/* Custom Special Requests Switch */}
+                        <div className="p-4 bg-zinc-950 border border-zinc-800 rounded-xl flex items-center justify-between mb-8 cursor-pointer hover:bg-white/5 transition-colors" onClick={() => setCustomInstructionsEnabled(!customInstructionsEnabled)}>
+                            <div>
+                                <h3 className="text-white font-medium flex items-center gap-2">
+                                    <Settings className="w-4 h-4 text-primary" />
+                                    Permitir Platos Personalizados (Notas libres)
+                                </h3>
+                                <p className="text-sm text-zinc-400 mt-1">Si está activo, el cliente podrá escribir instrucciones libres fuera del flujo.</p>
+                            </div>
+                            <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${customInstructionsEnabled ? "bg-primary" : "bg-zinc-700"}`}>
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${customInstructionsEnabled ? "translate-x-6" : "translate-x-1"}`} />
+                            </div>
+                        </div>
+
+                        {rules.length === 0 ? (
+                            <div className="py-12 text-center border-2 border-dashed border-zinc-800 rounded-xl">
+                                <Zap className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
+                                <h3 className="text-lg font-medium text-zinc-400">No hay reglas condicionales</h3>
+                                <p className="text-sm text-zinc-500 mb-4">Haz tu menú dinámico con exclusiones o cobros extra condicionales.</p>
+                                <Button onClick={addRule} variant="outline" className="text-white border-zinc-700">Agregar Regla</Button>
+                            </div>
+                        ) : (
+                            <div className="grid gap-4">
+                                {rules.map((rule) => (
+                                    <div key={rule.id} className="p-4 bg-zinc-950 border border-zinc-800 rounded-xl flex flex-col md:flex-row items-center gap-4">
+                                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-indigo-500/10 shrink-0 self-start md:self-center">
+                                            <AlertCircle className="w-5 h-5 text-indigo-400" />
+                                        </div>
+
+                                        <div className="flex flex-col md:flex-row items-start md:items-center flex-wrap gap-3 flex-1 w-full">
+                                            <span className="text-sm text-zinc-400 shrink-0">Si el cliente elige de</span>
+                                            <select
+                                                value={rule.sourceCategoryId}
+                                                onChange={(e) => updateRule(rule.id, "sourceCategoryId", e.target.value)}
+                                                className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-primary w-full md:w-auto"
+                                            >
+                                                {categories.map((c) => (
+                                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                                ))}
+                                            </select>
+
+                                            <span className="text-sm text-zinc-400 shrink-0">, entonces</span>
+                                            <select
+                                                value={rule.type}
+                                                onChange={(e) => updateRule(rule.id, "type", e.target.value)}
+                                                className="bg-indigo-900/20 text-indigo-300 border border-indigo-500/30 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none w-full md:w-auto"
+                                            >
+                                                <option value="exclude">Ocultar</option>
+                                                <option value="require">Requerir obligatoriamente</option>
+                                                <option value="surcharge">Aplicar cobro extra a</option>
+                                            </select>
+
+                                            <span className="text-sm text-zinc-400 shrink-0">la categoría</span>
+                                            <select
+                                                value={rule.targetCategoryId}
+                                                onChange={(e) => updateRule(rule.id, "targetCategoryId", e.target.value)}
+                                                className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-primary w-full md:w-auto"
+                                            >
+                                                {categories.map((c) => (
+                                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                                ))}
+                                            </select>
+
+                                            {rule.type === "surcharge" && (
+                                                <div className="relative w-full md:w-auto md:ml-2">
+                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">$</span>
+                                                    <input
+                                                        type="number"
+                                                        value={rule.surchargeAmount || 0}
+                                                        onChange={(e) => updateRule(rule.id, "surchargeAmount", Number(e.target.value))}
+                                                        className="w-full md:w-28 bg-zinc-900 border border-zinc-700 rounded-lg pl-8 pr-3 py-1.5 text-white text-sm focus:outline-none focus:border-primary"
+                                                        placeholder="Monto"
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <Button
+                                            onClick={() => deleteRule(rule.id)}
+                                            variant="ghost"
+                                            size="sm"
+                                            className="w-8 h-8 p-0 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 shrink-0 self-end md:self-center"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
-
