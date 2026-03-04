@@ -141,19 +141,27 @@ export function MealPrepModal({
         const cats: any[] = [];
         const nameToCatId: Record<string, string> = {};
 
+        // Helper string normalizer to prevent "Proteínas" vs "proteinas" divergence
+        const normalizeCatName = (name: string) =>
+            name.toLowerCase()
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove accents
+                .trim();
+
         // 1. Process Admin Configured Categories First (preserves order and settings)
         if (mealPrepConfig?.categories) {
             mealPrepConfig.categories.forEach(rule => {
+                const normName = normalizeCatName(rule.name);
                 cats.push({ ...rule });
-                nameToCatId[rule.name.toLowerCase().trim()] = rule.id;
+                nameToCatId[normName] = rule.id;
                 grouped[rule.id] = [];
             });
         }
 
-        // 2. Map Catalog Products to Categories
+        // 2. Map Catalog Products to Categories (Initial Pass)
         ingredients.forEach(p => {
             if (!p || !p.category) return;
-            const catNameLower = p.category.toLowerCase().trim();
+            const originalCatName = p.category;
+            const catNameLower = normalizeCatName(originalCatName);
             let catId = nameToCatId[catNameLower];
 
             if (!catId) {
@@ -161,16 +169,23 @@ export function MealPrepModal({
                 // We add it to the Meal Prep dynamically so it's still available.
                 catId = `cat-${catNameLower}-${Date.now()}`;
                 nameToCatId[catNameLower] = catId;
-                const label = p.category
+
+                const label = originalCatName
                     .split('-')
                     .map((w: string) => w ? w.charAt(0).toUpperCase() + w.slice(1) : "")
                     .join(' ');
 
-                cats.push({ id: catId, name: label || p.category, isPremium: false });
+                cats.push({ id: catId, name: label, isPremium: false });
                 grouped[catId] = [];
             }
 
-            grouped[catId].push(p);
+            // Ensure the nested array exists (safety check)
+            if (!grouped[catId]) {
+                grouped[catId] = [];
+            }
+
+            // We temporary store the generic category it belongs to so we can remove it later if it's explicitly premium
+            grouped[catId].push({ ...p, _originalCatId: catId });
         });
 
         // 3. Inject explicit admin "Ingredientes / Extras" into their respective categories
@@ -183,15 +198,27 @@ export function MealPrepModal({
                     grouped[extra.categoryId] = [];
                 }
 
-                // Check if it already exists from catalog to prevent duplication
-                const existingProductIndex = grouped[extra.categoryId].findIndex(p => p.name.toLowerCase() === extra.name.toLowerCase());
+                // Check if it already exists ANYWHERE in the grouped dictionary to prevent duplication
+                // If it exists in a "normal" category but the owner added it to "Premium", we move it to Premium.
+                let foundPreviousInfo: any = null;
+                let previousCatId: string | null = null;
 
-                if (existingProductIndex >= 0) {
-                    // Update the catalog product with the explicitly defined surcharge price
-                    grouped[extra.categoryId][existingProductIndex] = {
-                        ...grouped[extra.categoryId][existingProductIndex],
+                Object.keys(grouped).forEach(k => {
+                    const idx = grouped[k].findIndex(p => p.name.toLowerCase() === extra.name.toLowerCase());
+                    if (idx >= 0) {
+                        foundPreviousInfo = grouped[k][idx];
+                        previousCatId = k;
+                        // Remove from the old category so it doesn't show up twice
+                        grouped[k].splice(idx, 1);
+                    }
+                });
+
+                if (foundPreviousInfo) {
+                    // Update the catalog product with the explicitly defined surcharge price and move it to the admin's chosen category
+                    grouped[extra.categoryId].push({
+                        ...foundPreviousInfo,
                         mealPrepSurcharge: extra.price
-                    };
+                    });
                 } else {
                     // It's purely an extra defined in the admin, inject it as a pseudo-product
                     grouped[extra.categoryId].push({
@@ -625,136 +652,138 @@ export function MealPrepModal({
 
                             {/* Dynamic Category Selection */}
                             <div className="space-y-6">
-                                {ingredientCategories.map((cat: { id: string, name: string, excludesCategories?: string[] }) => (
-                                    <div key={cat.id} className={cn("space-y-3 transition-opacity", currentPlate.isCustom ? "opacity-30 pointer-events-none" : "opacity-100")}>
-                                        <label className="block text-sm font-semibold text-white/90">
-                                            {cat.name}
-                                        </label>
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                            {productsByCategory[cat.id]?.map((prod: any) => {
-                                                const hasVariants = prod.variants && prod.variants.length > 0;
-                                                const isExpanded = expandedProductId === prod.id;
-                                                const isSelected = currentPlate.components[cat.id]?.startsWith(prod.name);
+                                {ingredientCategories
+                                    .filter(cat => productsByCategory[cat.id] && productsByCategory[cat.id].length > 0)
+                                    .map((cat: { id: string, name: string, excludesCategories?: string[] }) => (
+                                        <div key={cat.id} className={cn("space-y-3 transition-opacity", currentPlate.isCustom ? "opacity-30 pointer-events-none" : "opacity-100")}>
+                                            <label className="block text-sm font-semibold text-white/90">
+                                                {cat.name}
+                                            </label>
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                                {productsByCategory[cat.id]?.map((prod: any) => {
+                                                    const hasVariants = prod.variants && prod.variants.length > 0;
+                                                    const isExpanded = expandedProductId === prod.id;
+                                                    const isSelected = currentPlate.components[cat.id]?.startsWith(prod.name);
 
-                                                // Determine if this product is excluded based on other selections in the current plate
-                                                let isExcluded = false;
-                                                let excludesReason = "";
+                                                    // Determine if this product is excluded based on other selections in the current plate
+                                                    let isExcluded = false;
+                                                    let excludesReason = "";
 
-                                                if (cat.excludesCategories && cat.excludesCategories.length > 0) {
-                                                    // This category explicitly excludes others. Conversely, if others were selected first, is this one blocked?
-                                                    // Realistically, we check if the plate HAS any of the categories that BLOCKS this one.
-                                                }
+                                                    if (cat.excludesCategories && cat.excludesCategories.length > 0) {
+                                                        // This category explicitly excludes others. Conversely, if others were selected first, is this one blocked?
+                                                        // Realistically, we check if the plate HAS any of the categories that BLOCKS this one.
+                                                    }
 
-                                                // Better approach: Go through every category rule, see if the user has selected something in it, and if THAT rule excludes THIS `cat.id`
-                                                const activeRules = ingredientCategories.filter((c: any) =>
-                                                    currentPlate.components[c.id] && c.excludesCategories?.includes(cat.id)
-                                                );
+                                                    // Better approach: Go through every category rule, see if the user has selected something in it, and if THAT rule excludes THIS `cat.id`
+                                                    const activeRules = ingredientCategories.filter((c: any) =>
+                                                        currentPlate.components[c.id] && c.excludesCategories?.includes(cat.id)
+                                                    );
 
-                                                if (activeRules.length > 0) {
-                                                    isExcluded = true;
-                                                    excludesReason = `No disponible junto con ${activeRules.map((c: any) => c.name).join(", ")}`;
-                                                }
+                                                    if (activeRules.length > 0) {
+                                                        isExcluded = true;
+                                                        excludesReason = `No disponible junto con ${activeRules.map((c: any) => c.name).join(", ")}`;
+                                                    }
 
-                                                return (
-                                                    <div key={prod.id} className={cn("contents", isExpanded && "col-span-full")}>
-                                                        <button
-                                                            onClick={() => {
-                                                                if (isExcluded) return; // Prevent selection if excluded
-                                                                const hasExtras = prod.extras && prod.extras.length > 0;
-                                                                if (hasVariants || hasExtras) {
-                                                                    setExpandedProductId(isExpanded ? null : prod.id);
-                                                                } else {
-                                                                    updatePlateComponent(cat.id, prod.name, prod.mealPrepSurcharge || 0);
-                                                                    setExpandedProductId(null);
-                                                                }
-                                                            }}
-                                                            disabled={isExcluded}
-                                                            className={cn(
-                                                                "px-3 py-2 rounded-xl text-xs font-medium border transition-all text-center h-full flex flex-col items-center justify-center gap-1 min-h-[60px] relative overflow-hidden",
-                                                                isExcluded
-                                                                    ? "bg-slate-900/50 border-white/5 opacity-40 cursor-not-allowed grayscale"
-                                                                    : isSelected
-                                                                        ? "bg-green-500 border-green-400 text-white shadow-lg shadow-green-500/20"
-                                                                        : "bg-white/5 border-white/10 text-slate-400 hover:border-white/20 hover:bg-white/10",
-                                                                isExpanded && "border-green-500 ring-1 ring-green-500/50"
-                                                            )}
-                                                        >
-                                                            {isExcluded && <Lock className="absolute top-1 right-1 w-3 h-3 opacity-50 text-rose-400" />}
-                                                            <span className="font-bold">{prod.name}</span>
-                                                            {(hasVariants || (prod.extras && prod.extras.length > 0)) && !isExcluded && (
-                                                                <span className="text-[10px] opacity-70">
-                                                                    {isExpanded ? "Cerrar" : (prod.extras && prod.extras.length > 0 ? "Personalizar" : "Ver opciones")}
-                                                                </span>
-                                                            )}
-                                                            {isExcluded && (
-                                                                <span className="text-[9px] text-rose-400/80 leading-tight mt-1 px-1">
-                                                                    {excludesReason}
-                                                                </span>
-                                                            )}
-                                                        </button>
-
-                                                        {/* Expanded section for variants and extras */}
-                                                        {isExpanded && (hasVariants || (prod.extras && prod.extras.length > 0)) && (
-                                                            <div className="col-span-full space-y-4 p-4 bg-black/40 rounded-xl border border-white/10 animate-in fade-in slide-in-from-top-2 duration-200 mt-1">
-                                                                {hasVariants && (
-                                                                    <div className="space-y-2">
-                                                                        <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Opciones / Tamaños</p>
-                                                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                                                            {prod.variants.map((v: any) => (
-                                                                                <button
-                                                                                    key={v.id}
-                                                                                    onClick={() => {
-                                                                                        updatePlateComponent(cat.id, `${prod.name} (${v.name})`, prod.mealPrepSurcharge || 0);
-                                                                                        // No cerramos automáticamente si hay extras, para dejar que el usuario configure más
-                                                                                        if (!(prod.extras && prod.extras.length > 0)) {
-                                                                                            setExpandedProductId(null);
-                                                                                        }
-                                                                                    }}
-                                                                                    className={cn(
-                                                                                        "px-3 py-2 rounded-lg text-xs font-medium border transition-all text-center",
-                                                                                        currentPlate.components[cat.id] === `${prod.name} (${v.name})`
-                                                                                            ? "bg-green-500 border-green-400 text-white"
-                                                                                            : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
-                                                                                    )}
-                                                                                >
-                                                                                    {v.name}
-                                                                                </button>
-                                                                            ))}
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-
-                                                                {prod.extras && prod.extras.length > 0 && (
-                                                                    <div className="space-y-2">
-                                                                        <ExtrasSelector
-                                                                            extras={prod.extras}
-                                                                            selectedExtras={currentPlate.componentExtras?.[cat.id] || []}
-                                                                            onExtrasChange={(extras) => updatePlateExtras(cat.id, extras)}
-                                                                            className="bg-transparent border-0 p-0"
-                                                                        />
-                                                                    </div>
-                                                                )}
-
-                                                                <Button
-                                                                    onClick={() => {
-                                                                        // Si no seleccionó variante pero la tiene, obligar o usar base
-                                                                        if (!currentPlate.components[cat.id]) {
-                                                                            updatePlateComponent(cat.id, prod.name, prod.mealPrepSurcharge || 0);
-                                                                        }
+                                                    return (
+                                                        <div key={prod.id} className={cn("contents", isExpanded && "col-span-full")}>
+                                                            <button
+                                                                onClick={() => {
+                                                                    if (isExcluded) return; // Prevent selection if excluded
+                                                                    const hasExtras = prod.extras && prod.extras.length > 0;
+                                                                    if (hasVariants || hasExtras) {
+                                                                        setExpandedProductId(isExpanded ? null : prod.id);
+                                                                    } else {
+                                                                        updatePlateComponent(cat.id, prod.name, prod.mealPrepSurcharge || 0);
                                                                         setExpandedProductId(null);
-                                                                    }}
-                                                                    className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/10 text-xs py-2 h-auto"
-                                                                >
-                                                                    Confirmar y Continuar
-                                                                </Button>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
+                                                                    }
+                                                                }}
+                                                                disabled={isExcluded}
+                                                                className={cn(
+                                                                    "px-3 py-2 rounded-xl text-xs font-medium border transition-all text-center h-full flex flex-col items-center justify-center gap-1 min-h-[60px] relative overflow-hidden",
+                                                                    isExcluded
+                                                                        ? "bg-slate-900/50 border-white/5 opacity-40 cursor-not-allowed grayscale"
+                                                                        : isSelected
+                                                                            ? "bg-green-500 border-green-400 text-white shadow-lg shadow-green-500/20"
+                                                                            : "bg-white/5 border-white/10 text-slate-400 hover:border-white/20 hover:bg-white/10",
+                                                                    isExpanded && "border-green-500 ring-1 ring-green-500/50"
+                                                                )}
+                                                            >
+                                                                {isExcluded && <Lock className="absolute top-1 right-1 w-3 h-3 opacity-50 text-rose-400" />}
+                                                                <span className="font-bold">{prod.name}</span>
+                                                                {(hasVariants || (prod.extras && prod.extras.length > 0)) && !isExcluded && (
+                                                                    <span className="text-[10px] opacity-70">
+                                                                        {isExpanded ? "Cerrar" : (prod.extras && prod.extras.length > 0 ? "Personalizar" : "Ver opciones")}
+                                                                    </span>
+                                                                )}
+                                                                {isExcluded && (
+                                                                    <span className="text-[9px] text-rose-400/80 leading-tight mt-1 px-1">
+                                                                        {excludesReason}
+                                                                    </span>
+                                                                )}
+                                                            </button>
+
+                                                            {/* Expanded section for variants and extras */}
+                                                            {isExpanded && (hasVariants || (prod.extras && prod.extras.length > 0)) && (
+                                                                <div className="col-span-full space-y-4 p-4 bg-black/40 rounded-xl border border-white/10 animate-in fade-in slide-in-from-top-2 duration-200 mt-1">
+                                                                    {hasVariants && (
+                                                                        <div className="space-y-2">
+                                                                            <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Opciones / Tamaños</p>
+                                                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                                                                {prod.variants.map((v: any) => (
+                                                                                    <button
+                                                                                        key={v.id}
+                                                                                        onClick={() => {
+                                                                                            updatePlateComponent(cat.id, `${prod.name} (${v.name})`, prod.mealPrepSurcharge || 0);
+                                                                                            // No cerramos automáticamente si hay extras, para dejar que el usuario configure más
+                                                                                            if (!(prod.extras && prod.extras.length > 0)) {
+                                                                                                setExpandedProductId(null);
+                                                                                            }
+                                                                                        }}
+                                                                                        className={cn(
+                                                                                            "px-3 py-2 rounded-lg text-xs font-medium border transition-all text-center",
+                                                                                            currentPlate.components[cat.id] === `${prod.name} (${v.name})`
+                                                                                                ? "bg-green-500 border-green-400 text-white"
+                                                                                                : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
+                                                                                        )}
+                                                                                    >
+                                                                                        {v.name}
+                                                                                    </button>
+                                                                                ))}
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+
+                                                                    {prod.extras && prod.extras.length > 0 && (
+                                                                        <div className="space-y-2">
+                                                                            <ExtrasSelector
+                                                                                extras={prod.extras}
+                                                                                selectedExtras={currentPlate.componentExtras?.[cat.id] || []}
+                                                                                onExtrasChange={(extras) => updatePlateExtras(cat.id, extras)}
+                                                                                className="bg-transparent border-0 p-0"
+                                                                            />
+                                                                        </div>
+                                                                    )}
+
+                                                                    <Button
+                                                                        onClick={() => {
+                                                                            // Si no seleccionó variante pero la tiene, obligar o usar base
+                                                                            if (!currentPlate.components[cat.id]) {
+                                                                                updatePlateComponent(cat.id, prod.name, prod.mealPrepSurcharge || 0);
+                                                                            }
+                                                                            setExpandedProductId(null);
+                                                                        }}
+                                                                        className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/10 text-xs py-2 h-auto"
+                                                                    >
+                                                                        Confirmar y Continuar
+                                                                    </Button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))}
 
                                 {/* Custom Selection Toggle */}
                                 {mealPrepConfig?.customInstructionsEnabled !== false && (
