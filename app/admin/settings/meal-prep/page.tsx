@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
     Package,
     Plus,
@@ -16,7 +16,8 @@ import {
     Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui";
-import { useAuth, useShops } from "@/components/shared";
+import { useAuth, useShops, useInventory, InventoryProvider } from "@/components/shared";
+import type { Product } from "@/lib/constants";
 import type {
     MealPrepShopConfig,
     MealPrepPackage,
@@ -28,9 +29,11 @@ import { v4 as uuidv4 } from "uuid";
 
 type Tab = "packages" | "categories" | "rules";
 
-export default function MealPrepSettingsPage() {
+// Separamos el contenido para poder usar el contexto de inventario
+function MealPrepSettingsContent() {
     const { user, isLoading: authLoading } = useAuth();
     const { getShop, updateShop, isLoading: shopsLoading } = useShops();
+    const { products } = useInventory(); // Extraer catálogo para sugerencias de categorías
 
     const [activeTab, setActiveTab] = useState<Tab>("packages");
     const [isSaving, setIsSaving] = useState(false);
@@ -42,6 +45,17 @@ export default function MealPrepSettingsPage() {
     const [extras, setExtras] = useState<MealPrepExtraItem[]>([]);
     const [rules, setRules] = useState<MealPrepRule[]>([]);
     const [customInstructionsEnabled, setCustomInstructionsEnabled] = useState(false);
+
+    // Get unique existing categories from catalog
+    const existingCatalogCategories = useMemo(() => {
+        const uniqueCats = new Set<string>();
+        products.forEach(p => {
+            if (p.category && p.category !== "meal_prep_package") {
+                uniqueCats.add(p.category);
+            }
+        });
+        return Array.from(uniqueCats).sort();
+    }, [products]);
 
     // Load from Firestore
     useEffect(() => {
@@ -432,6 +446,13 @@ export default function MealPrepSettingsPage() {
                             </div>
                         ) : (
                             <div className="space-y-6">
+                                {/* Datalist para sugerir categorías del catálogo real */}
+                                <datalist id="catalog-categories">
+                                    {existingCatalogCategories.map(c => (
+                                        <option key={c} value={c} />
+                                    ))}
+                                </datalist>
+
                                 {categories.map((cat) => (
                                     <div key={cat.id} className="p-4 md:p-5 bg-zinc-950 border border-zinc-800 rounded-xl space-y-4">
                                         {/* Category Header */}
@@ -441,10 +462,11 @@ export default function MealPrepSettingsPage() {
                                                     <label className="text-xs text-zinc-500 mb-1 block">Nombre de Categoría</label>
                                                     <input
                                                         type="text"
+                                                        list="catalog-categories"
                                                         value={cat.name}
                                                         onChange={(e) => updateCategory(cat.id, "name", e.target.value)}
                                                         className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary transition-colors"
-                                                        placeholder="Ej: Proteínas"
+                                                        placeholder="Elige o escribe (Ej: Proteínas)"
                                                     />
                                                 </div>
                                                 <div>
@@ -657,5 +679,29 @@ export default function MealPrepSettingsPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+// Wrapper para inyectar InventoryContext y usar sus hooks
+export default function MealPrepSettingsPage() {
+    const { user, isLoading } = useAuth();
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            </div>
+        );
+    }
+
+    if (!user?.shopId) {
+        return <div className="p-8 text-center text-red-400">Error: Tienda no encontrada.</div>;
+    }
+
+    // Importante tener a mano useAuth para inyectar shopId
+    return (
+        <InventoryProvider shopId={user.shopId}>
+            <MealPrepSettingsContent />
+        </InventoryProvider>
     );
 }
