@@ -654,10 +654,12 @@ export function MealPrepModal({
                             <div className="space-y-6">
                                 {ingredientCategories
                                     .filter(cat => productsByCategory[cat.id] && productsByCategory[cat.id].length > 0)
-                                    .map((cat: { id: string, name: string, excludesCategories?: string[] }) => (
+                                    .sort((a, b) => (a.isPremium === b.isPremium ? 0 : a.isPremium ? 1 : -1))
+                                    .map((cat: { id: string, name: string, isPremium?: boolean, excludesCategories?: string[] }) => (
                                         <div key={cat.id} className={cn("space-y-3 transition-opacity", currentPlate.isCustom ? "opacity-30 pointer-events-none" : "opacity-100")}>
-                                            <label className="block text-sm font-semibold text-white/90">
+                                            <label className={cn("block text-sm font-semibold flex items-center gap-2", cat.isPremium ? "text-amber-400" : "text-white/90")}>
                                                 {cat.name}
+                                                {cat.isPremium && <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px] uppercase font-bold tracking-wider border border-amber-500/20">Premium</span>}
                                             </label>
                                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                                 {productsByCategory[cat.id]?.map((prod: any) => {
@@ -703,13 +705,22 @@ export function MealPrepModal({
                                                                     isExcluded
                                                                         ? "bg-slate-900/50 border-white/5 opacity-40 cursor-not-allowed grayscale"
                                                                         : isSelected
-                                                                            ? "bg-green-500 border-green-400 text-white shadow-lg shadow-green-500/20"
+                                                                            ? cat.isPremium
+                                                                                ? "bg-gradient-to-br from-amber-400 to-amber-600 border-amber-400 text-amber-950 shadow-lg shadow-amber-500/20"
+                                                                                : "bg-green-500 border-green-400 text-white shadow-lg shadow-green-500/20"
                                                                             : "bg-white/5 border-white/10 text-slate-400 hover:border-white/20 hover:bg-white/10",
-                                                                    isExpanded && "border-green-500 ring-1 ring-green-500/50"
+                                                                    isExpanded && (cat.isPremium ? "border-amber-500 ring-1 ring-amber-500/50" : "border-green-500 ring-1 ring-green-500/50")
                                                                 )}
                                                             >
                                                                 {isExcluded && <Lock className="absolute top-1 right-1 w-3 h-3 opacity-50 text-rose-400" />}
-                                                                <span className="font-bold">{prod.name}</span>
+                                                                <span className="font-bold flex flex-wrap items-center justify-center gap-1">
+                                                                    {prod.name}
+                                                                    {prod.mealPrepSurcharge > 0 && (
+                                                                        <span className={cn("text-[10px]", isSelected ? "text-amber-950/70" : "text-amber-500 font-normal")}>
+                                                                            +${prod.mealPrepSurcharge}
+                                                                        </span>
+                                                                    )}
+                                                                </span>
                                                                 {(hasVariants || (prod.extras && prod.extras.length > 0)) && !isExcluded && (
                                                                     <span className="text-[10px] opacity-70">
                                                                         {isExpanded ? "Cerrar" : (prod.extras && prod.extras.length > 0 ? "Personalizar" : "Ver opciones")}
