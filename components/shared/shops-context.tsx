@@ -242,6 +242,8 @@ export function ShopsProvider({ children }: { children: ReactNode }) {
           payments: data.payments,
           // Drop Theme (for premium streetwear templates)
           dropTheme: data.dropTheme,
+          // Meal Prep
+          mealPrepConfig: data.mealPrepConfig,
         } as ManagedShop);
       });
 
