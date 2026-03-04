@@ -32,6 +32,7 @@ export interface MealPlate {
     id: string;
     components: MealPlateComponents;
     componentExtras?: MealPlateComponentExtras;
+    componentSurcharges?: Record<string, number>; // Maps category ID -> surcharge amount
     notes?: string;               // Notas por plato individual
     isPremiumProtein?: boolean;   // Si usa proteína premium
     premiumSurcharge?: number;    // Cargo extra
@@ -294,7 +295,13 @@ export function calculateMealPrepTotal(
         return sum + (plate.isCustom ? MEAL_PREP_PRICES.CUSTOM_PLATE : MEAL_PREP_PRICES.STANDARD_PLATE);
     }, 0);
 
-    const premiumTotal = plates.reduce((sum, plate) => sum + (plate.premiumSurcharge || 0), 0);
+    const premiumTotal = plates.reduce((sum, plate) => {
+        let plateSurcharge = plate.premiumSurcharge || 0;
+        if (plate.componentSurcharges) {
+            plateSurcharge += Object.values(plate.componentSurcharges).reduce((a, b) => a + b, 0);
+        }
+        return sum + plateSurcharge;
+    }, 0);
 
     // Calcular cargos por extras
     const extrasTotal = plates.reduce((sum, plate) => {

@@ -138,36 +138,69 @@ export function MealPrepModal({
     const { ingredientCategories, productsByCategory } = useMemo(() => {
         const ingredients = (catalog || []).filter(p => !p || p.category !== "meal_prep_package");
         const grouped: Record<string, any[]> = {};
-        const cats: { id: string, name: string, excludesCategories?: string[] }[] = [];
-        const seenCats = new Set<string>();
+        const cats: any[] = [];
+        const nameToCatId: Record<string, string> = {};
 
-        ingredients.forEach(p => {
-            if (!p || !p.category) return; // Seguridad: Ignorar productos sin categoría
-
-            if (!grouped[p.category]) grouped[p.category] = [];
-            grouped[p.category].push(p);
-
-            if (!seenCats.has(p.category)) {
-                seenCats.add(p.category);
-                // Try to find a nice label or capitalize
-                const label = p.category
-                    .split('-')
-                    .map((word: string) => word && word.length > 0 ? word.charAt(0).toUpperCase() + word.slice(1) : "")
-                    .join(' ');
-                cats.push({ id: p.category, name: label || p.category });
-            }
-        });
-
-        // Override or supplement with config
+        // 1. Process Admin Configured Categories First (preserves order and settings)
         if (mealPrepConfig?.categories) {
             mealPrepConfig.categories.forEach(rule => {
-                const existingIndex = cats.findIndex(c => c.id === rule.id);
-                if (existingIndex >= 0) {
-                    cats[existingIndex] = { ...cats[existingIndex], ...rule };
+                cats.push({ ...rule });
+                nameToCatId[rule.name.toLowerCase().trim()] = rule.id;
+                grouped[rule.id] = [];
+            });
+        }
+
+        // 2. Map Catalog Products to Categories
+        ingredients.forEach(p => {
+            if (!p || !p.category) return;
+            const catNameLower = p.category.toLowerCase().trim();
+            let catId = nameToCatId[catNameLower];
+
+            if (!catId) {
+                // Product belongs to a category not configured in Admin Settings.
+                // We add it to the Meal Prep dynamically so it's still available.
+                catId = `cat-${catNameLower}-${Date.now()}`;
+                nameToCatId[catNameLower] = catId;
+                const label = p.category
+                    .split('-')
+                    .map((w: string) => w ? w.charAt(0).toUpperCase() + w.slice(1) : "")
+                    .join(' ');
+
+                cats.push({ id: catId, name: label || p.category, isPremium: false });
+                grouped[catId] = [];
+            }
+
+            grouped[catId].push(p);
+        });
+
+        // 3. Inject explicit admin "Ingredientes / Extras" into their respective categories
+        // Because the admin might have added explicit items with surcharges via the settings panel.
+        if (mealPrepConfig?.extras) {
+            mealPrepConfig.extras.forEach(extra => {
+                if (!extra.isActive) return;
+
+                if (!grouped[extra.categoryId]) {
+                    grouped[extra.categoryId] = [];
+                }
+
+                // Check if it already exists from catalog to prevent duplication
+                const existingProductIndex = grouped[extra.categoryId].findIndex(p => p.name.toLowerCase() === extra.name.toLowerCase());
+
+                if (existingProductIndex >= 0) {
+                    // Update the catalog product with the explicitly defined surcharge price
+                    grouped[extra.categoryId][existingProductIndex] = {
+                        ...grouped[extra.categoryId][existingProductIndex],
+                        mealPrepSurcharge: extra.price
+                    };
                 } else {
-                    // Extract excludesCategories safely if using old rules format conceptually, 
-                    // though they should be migrated to rules[] array
-                    cats.push({ ...rule });
+                    // It's purely an extra defined in the admin, inject it as a pseudo-product
+                    grouped[extra.categoryId].push({
+                        id: extra.id,
+                        name: extra.name,
+                        category: cats.find(c => c.id === extra.categoryId)?.name || "Extra",
+                        mealPrepSurcharge: extra.price,
+                        isConfigExtra: true
+                    });
                 }
             });
         }
@@ -186,14 +219,24 @@ export function MealPrepModal({
     const currentPlate = plates[currentPlateIndex];
     const packageConfig = MEAL_PREP_PACKAGES.find(p => p.plateCount === selectedPackage);
 
-    const updatePlateComponent = (field: string, value: string) => {
+    const updatePlateComponent = (field: string, value: string, surcharge: number = 0) => {
         const newPlates = [...plates];
+        const currentPlate = newPlates[currentPlateIndex];
+
+        const newSurcharges = { ...(currentPlate.componentSurcharges || {}) };
+        if (surcharge > 0) {
+            newSurcharges[field] = surcharge;
+        } else {
+            delete newSurcharges[field];
+        }
+
         newPlates[currentPlateIndex] = {
-            ...newPlates[currentPlateIndex],
+            ...currentPlate,
             components: {
-                ...newPlates[currentPlateIndex].components,
+                ...currentPlate.components,
                 [field]: value,
             },
+            componentSurcharges: newSurcharges,
             isCustom: false, // Selección del menú desactiva el modo custom
         };
         setPlates(newPlates);
@@ -410,8 +453,11 @@ export function MealPrepModal({
                 }
             });
 
-            if (plate.isPremiumProtein && plate.premiumSurcharge) {
-                message += `  - (Proteina Premium +$${plate.premiumSurcharge})\n`;
+            if (plate.componentSurcharges) {
+                Object.entries(plate.componentSurcharges).forEach(([catId, surcharge]) => {
+                    const catName = ingredientCategories.find((c: any) => c.id === catId)?.name || "Extra";
+                    message += `  - (${catName} premium +$${surcharge})\n`;
+                });
             }
             if (plate.notes) {
                 message += `  - Nota/Especificaciones: ${plate.notes}\n`;
@@ -618,7 +664,7 @@ export function MealPrepModal({
                                                                 if (hasVariants || hasExtras) {
                                                                     setExpandedProductId(isExpanded ? null : prod.id);
                                                                 } else {
-                                                                    updatePlateComponent(cat.id, prod.name);
+                                                                    updatePlateComponent(cat.id, prod.name, prod.mealPrepSurcharge || 0);
                                                                     setExpandedProductId(null);
                                                                 }
                                                             }}
@@ -658,7 +704,7 @@ export function MealPrepModal({
                                                                                 <button
                                                                                     key={v.id}
                                                                                     onClick={() => {
-                                                                                        updatePlateComponent(cat.id, `${prod.name} (${v.name})`);
+                                                                                        updatePlateComponent(cat.id, `${prod.name} (${v.name})`, prod.mealPrepSurcharge || 0);
                                                                                         // No cerramos automáticamente si hay extras, para dejar que el usuario configure más
                                                                                         if (!(prod.extras && prod.extras.length > 0)) {
                                                                                             setExpandedProductId(null);
@@ -693,7 +739,7 @@ export function MealPrepModal({
                                                                     onClick={() => {
                                                                         // Si no seleccionó variante pero la tiene, obligar o usar base
                                                                         if (!currentPlate.components[cat.id]) {
-                                                                            updatePlateComponent(cat.id, prod.name);
+                                                                            updatePlateComponent(cat.id, prod.name, prod.mealPrepSurcharge || 0);
                                                                         }
                                                                         setExpandedProductId(null);
                                                                     }}
@@ -758,28 +804,7 @@ export function MealPrepModal({
                                     </div>
                                 )}
 
-                                {/* Premium protein shortcuts - Only show if current category list doesn't cover them or for easy access */}
-                                <div>
-                                    <label className="block text-sm font-semibold text-amber-400 mb-2">
-                                        Proteinas Premium (Cargo Extra)
-                                    </label>
-                                    <div className="flex flex-wrap gap-2">
-                                        {PREMIUM_PROTEINS.map((protein) => (
-                                            <button
-                                                key={protein.id}
-                                                onClick={() => setPremiumProtein(protein)}
-                                                className={cn(
-                                                    "px-3 py-2 rounded-xl text-xs font-medium border transition-all",
-                                                    currentPlate.isPremiumProtein && currentPlate.premiumSurcharge === protein.surcharge && currentPlate.components[ingredientCategories.find((c: any) => c.id.toLowerCase().includes("protein"))?.id || "proteina"] === protein.name
-                                                        ? "bg-amber-500 border-amber-400 text-black shadow-lg shadow-amber-500/20"
-                                                        : "bg-amber-500/10 border-amber-500/20 text-amber-300 hover:bg-amber-500/20"
-                                                )}
-                                            >
-                                                {protein.name} (+${protein.surcharge})
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
+                                {/* Premium protein shortcuts removed to favor dynamic catalog loaded ones */}
 
                             </div>
 
