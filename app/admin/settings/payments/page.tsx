@@ -136,8 +136,9 @@ export default function PaymentSettingsPage() {
 
             const configRef = doc(db, "shops", user.shopId, "settings", "payments");
 
-            // Firebase doesn't support undefined values, strip them before saving using the dedicated utility
-            const cleanConfig = cleanForFirestore(config);
+            // Firebase doesn't support undefined values, strip them before saving.
+            // JSON stringify robustly removes ALL undefined keys and converts undefined array elements to null natively.
+            const cleanConfig = JSON.parse(JSON.stringify(config));
 
             await setDoc(configRef, cleanConfig);
 
