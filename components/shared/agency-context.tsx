@@ -112,8 +112,10 @@ export function AgencyProvider({ children }: { children: ReactNode }) {
     // Background push to Firebase
     try {
       const docRef = doc(db, "agency", "config");
+      // Sanitize: Firestore doesn't accept undefined values
+      const sanitizedConfig = JSON.parse(JSON.stringify(newConfig));
       // Use setDoc with merge: true to avoid overwriting unrelated fields if any
-      await setDoc(docRef, newConfig, { merge: true });
+      await setDoc(docRef, sanitizedConfig, { merge: true });
     } catch (error) {
       console.error("Error saving agency config to Firestore:", error);
     }

@@ -134,9 +134,11 @@ service cloud.firestore {
     // Let's support both for flexibility.
     match /products/{productId} {
       allow read: if true;
-      allow write: if isAuthenticated() && (resource.data.shopId == request.auth.uid || request.resource.data.shopId == request.auth.uid); 
-      // Note: This assumes Mapping shopId <-> auth.uid which we might not have yet.
-      // Fallback:
+    }
+    
+    // AGENCY CONFIG: Public read, admin write
+    match /agency/{document=**} {
+      allow read: if true;
       allow write: if isAuthenticated();
     }
   }
