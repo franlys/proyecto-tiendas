@@ -30,6 +30,7 @@ function AgencyProfileForm() {
     phone: "",
     whatsapp: "",
     email: "",
+    location: "",
     logoInitial: "",
     logoUrl: "",
   });
@@ -44,6 +45,7 @@ function AgencyProfileForm() {
         phone: config.phone,
         whatsapp: config.whatsapp,
         email: config.email,
+        location: config.location || "",
         logoInitial: config.logoInitial,
         logoUrl: config.logoUrl || "",
       });
@@ -90,6 +92,7 @@ function AgencyProfileForm() {
       phone: "+52 55 1234 5678",
       whatsapp: "5215512345678",
       email: "soporte@tuagencia.com",
+      location: "Ciudad de México, México",
       logoInitial: "T",
       logoUrl: "",
     });
@@ -287,6 +290,21 @@ function AgencyProfileForm() {
                     value={formData.email}
                     onChange={(e) => handleChange("email", e.target.value)}
                     placeholder="soporte@tuagencia.com"
+                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                  />
+                </div>
+
+                {/* Location */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    <Building2 className="w-4 h-4 inline mr-2" />
+                    Ubicación (Sede)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.location}
+                    onChange={(e) => handleChange("location", e.target.value)}
+                    placeholder="Ciudad de México, México"
                     className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
                   />
                 </div>
