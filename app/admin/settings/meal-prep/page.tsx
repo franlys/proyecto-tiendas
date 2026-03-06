@@ -123,10 +123,10 @@ function MealPrepSettingsContent() {
         const premiumProteinsId = uuidv4();
 
         const defaultCategories: MealPrepDynamicCategory[] = [
-            { id: proteinsId, name: "Proteínas", isPremium: false, isRequired: true, selectionLimit: 1 },
-            { id: carbsId, name: "Carbohidratos", isPremium: false, isRequired: false, selectionLimit: 1 },
-            { id: veggiesId, name: "Vegetales", isPremium: false, isRequired: false, selectionLimit: 1 },
-            { id: premiumProteinsId, name: "Proteínas Premium", isPremium: true, isRequired: false, selectionLimit: 1 },
+            { id: proteinsId, name: "Proteínas", isPremium: false, isRequired: true, selectionLimit: 1, extraPrice: 0 },
+            { id: carbsId, name: "Carbohidratos", isPremium: false, isRequired: false, selectionLimit: 1, extraPrice: 0 },
+            { id: veggiesId, name: "Vegetales", isPremium: false, isRequired: false, selectionLimit: 1, extraPrice: 0 },
+            { id: premiumProteinsId, name: "Proteínas Premium", isPremium: true, isRequired: false, selectionLimit: 1, extraPrice: 0 },
         ];
 
         // Extras (Proteínas Premium Base)
@@ -194,6 +194,7 @@ function MealPrepSettingsContent() {
                 isPremium: false,
                 isRequired: false,
                 selectionLimit: 1,
+                extraPrice: 0,
             },
         ]);
     };
@@ -497,6 +498,20 @@ function MealPrepSettingsContent() {
                                                         />
                                                         Es Premium ⭐
                                                     </label>
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs text-zinc-500 mb-1 block">Precio Extra (Opcional $)</label>
+                                                    <div className="relative">
+                                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">$</span>
+                                                        <input
+                                                            type="number"
+                                                            value={cat.extraPrice || 0}
+                                                            onChange={(e) => updateCategory(cat.id, "extraPrice", Number(e.target.value))}
+                                                            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg pl-8 pr-3 py-2 text-white text-sm focus:outline-none focus:border-primary transition-colors"
+                                                            placeholder="0"
+                                                        />
+                                                    </div>
+                                                    <p className="text-[10px] text-zinc-500 mt-1">Precio para añadir esta categoría o desbloquearla.</p>
                                                 </div>
                                             </div>
                                             <Button
