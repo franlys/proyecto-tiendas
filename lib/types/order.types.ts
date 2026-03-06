@@ -41,4 +41,12 @@ export interface SalesOrder {
     deliveryDistance?: number; // Distance in miles
     deliveryFee?: number; // Extra fee for distance
     deliveryCoordinates?: { lat: number; lng: number }; // Customer location
+    paymentInfo?: {
+        paymentTiming: "pay_now" | "pay_on_delivery";
+        paymentMethodId?: string;
+        paymentMethodName?: string;
+        paymentMethodType?: string;
+        receiptUrl?: string;
+        status: "pending" | "pending_verification" | "verified" | "rejected";
+    };
 }

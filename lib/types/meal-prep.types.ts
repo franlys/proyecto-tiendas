@@ -37,6 +37,7 @@ export interface MealPlate {
     isPremiumProtein?: boolean;   // Si usa proteína premium
     premiumSurcharge?: number;    // Cargo extra
     isCustom?: boolean;           // Si el plato es personalizado (entrada libre), sube a $15
+    extraCategories?: Record<string, boolean>; // Categorías desbloqueadas como extras (pago adicional)
 }
 
 // Precios base
@@ -246,6 +247,7 @@ export interface MealPrepDynamicCategory {
     isPremium: boolean;
     isRequired: boolean;
     selectionLimit?: number; // Cuántos items se pueden elegir de esta categoría
+    extraPrice?: number; // Precio por agregar esta categoría como extra o desbloquearla
 }
 
 export interface MealPrepExtraItem {
@@ -282,7 +284,8 @@ export interface MealPrepShopConfig {
 export function calculateMealPrepTotal(
     plates: MealPlate[],
     trainingPlan?: TrainingPlanConfig,
-    distanceMiles?: number
+    distanceMiles?: number,
+    mealPrepConfig?: MealPrepShopConfig
 ): {
     basePrice: number;
     premiumTotal: number;
@@ -305,13 +308,29 @@ export function calculateMealPrepTotal(
 
     // Calcular cargos por extras
     const extrasTotal = plates.reduce((sum, plate) => {
-        if (!plate.componentExtras) return sum;
         let plateExtrasSum = 0;
-        Object.values(plate.componentExtras).forEach(extras => {
-            extras.forEach(extra => {
-                plateExtrasSum += (extra.price * extra.quantity);
+
+        // Product-based extras
+        if (plate.componentExtras) {
+            Object.values(plate.componentExtras).forEach(extras => {
+                extras.forEach(extra => {
+                    plateExtrasSum += (extra.price * extra.quantity);
+                });
             });
-        });
+        }
+
+        // Category-based extra unlocking/quantity surcharges
+        if (plate.extraCategories && mealPrepConfig?.categories) {
+            Object.keys(plate.extraCategories).forEach(catId => {
+                if (plate.extraCategories![catId]) {
+                    const catConfig = mealPrepConfig.categories?.find(c => c.id === catId);
+                    if (catConfig?.extraPrice) {
+                        plateExtrasSum += catConfig.extraPrice;
+                    }
+                }
+            });
+        }
+
         return sum + plateExtrasSum;
     }, 0);
 
@@ -369,11 +388,19 @@ export function formatPlateDescription(plate: MealPlate): string {
     Object.entries(plate.components).forEach(([catId, name]) => {
         if (!name) return;
         let componentDesc = name;
+
+        // Product-based extras
         const extras = plate.componentExtras?.[catId];
         if (extras && extras.length > 0) {
             const extrasStr = extras.map(e => e.quantity > 1 ? `${e.name} x${e.quantity}` : e.name).join(", ");
             componentDesc += ` (+ ${extrasStr})`;
         }
+
+        // Category-based extra surcharge
+        if (plate.extraCategories?.[catId]) {
+            componentDesc += " [EXTRA]";
+        }
+
         parts.push(componentDesc);
     });
 

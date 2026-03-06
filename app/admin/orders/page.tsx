@@ -43,7 +43,7 @@ function OrderDetailModal({
   onClose: () => void;
   shopId: string;
 }) {
-  const { updateOrderStatus, updatePaymentStatus } = useSalesOrders();
+  const { updateOrderStatus, updatePaymentStatus, updateOrder } = useSalesOrders();
   const { getShop } = useShops();
   const [isNotifying, setIsNotifying] = useState(false);
   const [autoNotify, setAutoNotify] = useState(true); // Auto-notify enabled by default
@@ -381,13 +381,14 @@ function OrderDetailModal({
                 {order.paymentStatus === "refunded" && "↩️ Reembolsado"}
               </span>
             </div>
-            {order.paymentStatus === "pending" && (
+
+            {/* Regular Payment Buttons (for non-manual or cash-on-delivery) */}
+            {order.paymentStatus === "pending" && (!order.paymentInfo || order.paymentInfo.paymentTiming === "pay_on_delivery") && (
               <div className="flex gap-2">
                 <Button
                   size="sm"
                   onClick={async () => {
                     await updatePaymentStatus(order.id, "paid");
-                    // Send payment confirmed notification
                     if (order.customerPhone) {
                       try {
                         await fetch("/api/orders/notify", {
@@ -452,6 +453,74 @@ function OrderDetailModal({
               </div>
             )}
           </div>
+
+          {/* Manual Payment Information */}
+          {order.paymentInfo && order.paymentInfo.paymentTiming === "pay_now" && (
+            <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-medium text-blue-400 flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4" />
+                  Información de Pago (Transferencia)
+                </h4>
+                <span className={cn(
+                  "px-2 py-0.5 rounded-full text-[10px] font-medium uppercase",
+                  order.paymentInfo.status === "pending_verification" && "bg-amber-500/20 text-amber-400",
+                  order.paymentInfo.status === "verified" && "bg-green-500/20 text-green-400",
+                  order.paymentInfo.status === "rejected" && "bg-red-500/20 text-red-400"
+                )}>
+                  {order.paymentInfo.status === "pending_verification" ? "⏳ Por Verificar" :
+                    order.paymentInfo.status === "verified" ? "✅ Verificado" : "❌ Rechazado"}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div>
+                  <p className="text-slate-400">Método</p>
+                  <p className="text-white">{order.paymentInfo.paymentMethodName || "Manual"}</p>
+                </div>
+                <div>
+                  <p className="text-slate-400">Tipo</p>
+                  <p className="text-white uppercase text-[10px]">{order.paymentInfo.paymentMethodType || "-"}</p>
+                </div>
+              </div>
+
+              {order.paymentInfo.receiptUrl && (
+                <div className="space-y-2">
+                  <p className="text-xs text-slate-400">Comprobante de Pago</p>
+                  <div className="relative aspect-video rounded-lg overflow-hidden border border-white/10 bg-black/40 group cursor-pointer" onClick={() => window.open(order.paymentInfo?.receiptUrl, '_blank')}>
+                    <img
+                      src={order.paymentInfo.receiptUrl}
+                      alt="Recibo de pago"
+                      className="w-full h-full object-contain"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <span className="text-white text-xs font-medium bg-black/60 px-3 py-1 rounded-full border border-white/20">Ver pantalla completa</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {order.paymentInfo.status === "pending_verification" && (
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={async () => {
+                      // Mark as verified
+                      await updateOrder(order.id, {
+                        paymentStatus: "paid",
+                        paymentInfo: { ...order.paymentInfo!, status: "verified" }
+                      });
+                      alert("✅ Pago verificado exitosamente");
+                    }}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Verificar Pago
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Notes */}
           {order.notes && (

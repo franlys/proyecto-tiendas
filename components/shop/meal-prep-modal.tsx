@@ -238,8 +238,8 @@ export function MealPrepModal({
     // Calculate pricing summary
     const pricing = useMemo(() => {
         const calculatedDistance = deliveryType === "recogida" ? 0 : distance;
-        return calculateMealPrepTotal(plates, selectedTrainingPlan, calculatedDistance);
-    }, [plates, selectedTrainingPlan, distance, deliveryType]);
+        return calculateMealPrepTotal(plates, selectedTrainingPlan, calculatedDistance, mealPrepConfig);
+    }, [plates, selectedTrainingPlan, distance, deliveryType, mealPrepConfig]);
 
     if (!isOpen) return null;
 
@@ -250,6 +250,11 @@ export function MealPrepModal({
         const newPlates = [...plates];
         const currentPlate = newPlates[currentPlateIndex];
 
+        const newComponents = {
+            ...currentPlate.components,
+            [field]: value,
+        };
+
         const newSurcharges = { ...(currentPlate.componentSurcharges || {}) };
         if (surcharge > 0) {
             newSurcharges[field] = surcharge;
@@ -257,12 +262,24 @@ export function MealPrepModal({
             delete newSurcharges[field];
         }
 
+        // Auto-clear excluded categories (unless unlocked)
+        const rulesFromThisChoice = (mealPrepConfig?.rules || []).filter(r => r.type === "exclude" && r.sourceCategoryId === field);
+        rulesFromThisChoice.forEach(rule => {
+            if (newComponents[rule.targetCategoryId] && !currentPlate.extraCategories?.[rule.targetCategoryId]) {
+                delete newComponents[rule.targetCategoryId];
+                delete newSurcharges[rule.targetCategoryId];
+                // Also clear extras for that category if any
+                if (currentPlate.componentExtras && currentPlate.componentExtras[rule.targetCategoryId]) {
+                    const newExtras = { ...currentPlate.componentExtras };
+                    delete newExtras[rule.targetCategoryId];
+                    currentPlate.componentExtras = newExtras;
+                }
+            }
+        });
+
         newPlates[currentPlateIndex] = {
             ...currentPlate,
-            components: {
-                ...currentPlate.components,
-                [field]: value,
-            },
+            components: newComponents,
             componentSurcharges: newSurcharges,
             isCustom: false, // Selección del menú desactiva el modo custom
         };
@@ -279,6 +296,22 @@ export function MealPrepModal({
         newPlates[currentPlateIndex] = {
             ...currentPlate,
             componentExtras: newComponentExtras
+        };
+        setPlates(newPlates);
+    };
+
+    const toggleExtraCategory = (catId: string) => {
+        const newPlates = [...plates];
+        const currentPlate = newPlates[currentPlateIndex];
+        const newExtraCategories = {
+            ...(currentPlate.extraCategories || {})
+        };
+
+        newExtraCategories[catId] = !newExtraCategories[catId];
+
+        newPlates[currentPlateIndex] = {
+            ...currentPlate,
+            extraCategories: newExtraCategories
         };
         setPlates(newPlates);
     };
@@ -322,6 +355,25 @@ export function MealPrepModal({
     };
 
     const handleNextPlate = () => {
+        // Enforce required categories
+        const missingRequired = ingredientCategories
+            .filter(cat => cat.isRequired)
+            .filter(cat => {
+                // Si la categoría está excluida y no se ha desbloqueado como extra, no cuenta como faltante
+                const exclusionRules = (mealPrepConfig?.rules || []).filter(r => r.type === "exclude" && r.targetCategoryId === cat.id);
+                const isExcluded = exclusionRules.some(rule =>
+                    currentPlate.components[rule.sourceCategoryId] && !currentPlate.extraCategories?.[cat.id]
+                );
+
+                if (isExcluded) return false;
+                return !currentPlate.components[cat.id];
+            });
+
+        if (missingRequired.length > 0) {
+            alert(`Por favor selecciona las opciones obligatorias: ${missingRequired.map(c => c.name).join(", ")}`);
+            return;
+        }
+
         if (currentPlateIndex < plates.length - 1) {
             setCurrentPlateIndex(currentPlateIndex + 1);
         } else {
@@ -429,15 +481,17 @@ export function MealPrepModal({
                     customerEmail,
                     customerAddress: deliveryType === "recogida" ? "Recogida en local" : `${address}${addressDetails ? `, ${addressDetails}` : ""}`,
                     deliveryType,
-                    paymentTiming,
-                    paymentStatus: paymentTiming === 'pay_now' ? 'pending_verification' : 'pending',
-                    paymentMethod: paymentTiming === 'pay_now' && selectedPaymentMethod ? selectedPaymentMethod.type : 'cash',
-                    paymentDetails: paymentTiming === 'pay_now' && selectedPaymentMethod ? {
-                        type: selectedPaymentMethod.type,
-                        name: selectedPaymentMethod.name,
-                        receiptUrl: finalReceiptUrl,
-                        receiptFileName,
-                    } : null,
+                    paymentInfo: paymentTiming === 'pay_now' ? {
+                        paymentTiming: 'pay_now',
+                        paymentMethodId: selectedPaymentMethod?.id,
+                        paymentMethodName: selectedPaymentMethod?.name,
+                        paymentMethodType: selectedPaymentMethod?.type,
+                        receiptUrl: finalReceiptUrl || undefined,
+                        status: 'pending_verification'
+                    } : {
+                        paymentTiming: 'pay_on_delivery',
+                        status: 'pending'
+                    },
                     items,
                     total: pricing.total,
                     notes: customerNotes
@@ -655,12 +709,30 @@ export function MealPrepModal({
                                 {ingredientCategories
                                     .filter(cat => productsByCategory[cat.id] && productsByCategory[cat.id].length > 0)
                                     .sort((a, b) => (a.isPremium === b.isPremium ? 0 : a.isPremium ? 1 : -1))
-                                    .map((cat: { id: string, name: string, isPremium?: boolean, excludesCategories?: string[] }) => (
+                                    .map((cat: any) => (
                                         <div key={cat.id} className={cn("space-y-3 transition-opacity", currentPlate.isCustom ? "opacity-30 pointer-events-none" : "opacity-100")}>
-                                            <label className={cn("block text-sm font-semibold flex items-center gap-2", cat.isPremium ? "text-amber-400" : "text-white/90")}>
-                                                {cat.name}
-                                                {cat.isPremium && <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px] uppercase font-bold tracking-wider border border-amber-500/20">Premium</span>}
-                                            </label>
+                                            <div className="flex items-center justify-between">
+                                                <label className={cn("block text-sm font-semibold flex items-center gap-2", cat.isPremium ? "text-amber-400" : "text-white/90")}>
+                                                    {cat.name}
+                                                    {cat.isPremium && <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px] uppercase font-bold tracking-wider border border-amber-500/20">Premium</span>}
+                                                    {currentPlate.extraCategories?.[cat.id] && <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 text-[10px] uppercase font-bold tracking-wider border border-green-500/20">Extra +${cat.extraPrice}</span>}
+                                                </label>
+
+                                                {/* Add Extra Button */}
+                                                {(cat.extraPrice && cat.extraPrice > 0) && (
+                                                    <button
+                                                        onClick={() => toggleExtraCategory(cat.id)}
+                                                        className={cn(
+                                                            "px-2 py-1 rounded-lg text-[10px] font-bold transition-all border",
+                                                            currentPlate.extraCategories?.[cat.id]
+                                                                ? "bg-green-600 text-white border-green-500"
+                                                                : "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10"
+                                                        )}
+                                                    >
+                                                        {currentPlate.extraCategories?.[cat.id] ? "Remover Extra" : `¿Agregar Extra? (+$${cat.extraPrice})`}
+                                                    </button>
+                                                )}
+                                            </div>
                                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                                 {productsByCategory[cat.id]?.map((prod: any) => {
                                                     const hasVariants = prod.variants && prod.variants.length > 0;
@@ -676,14 +748,17 @@ export function MealPrepModal({
                                                         // Realistically, we check if the plate HAS any of the categories that BLOCKS this one.
                                                     }
 
-                                                    // Better approach: Go through every category rule, see if the user has selected something in it, and if THAT rule excludes THIS `cat.id`
-                                                    const activeRules = ingredientCategories.filter((c: any) =>
-                                                        currentPlate.components[c.id] && c.excludesCategories?.includes(cat.id)
+                                                    // 2. Logic for exclusion rules from mealPrepConfig
+                                                    const exclusionRules = (mealPrepConfig?.rules || []).filter(r => r.type === "exclude" && r.targetCategoryId === cat.id);
+
+                                                    const activeRules = exclusionRules.filter(rule =>
+                                                        currentPlate.components[rule.sourceCategoryId] && !currentPlate.extraCategories?.[cat.id]
                                                     );
 
                                                     if (activeRules.length > 0) {
                                                         isExcluded = true;
-                                                        excludesReason = `No disponible junto con ${activeRules.map((c: any) => c.name).join(", ")}`;
+                                                        const sourceCatNames = activeRules.map(r => ingredientCategories.find(c => c.id === r.sourceCategoryId)?.name || "otra categoría");
+                                                        excludesReason = `No disponible junto con ${sourceCatNames.join(", ")}`;
                                                     }
 
                                                     return (

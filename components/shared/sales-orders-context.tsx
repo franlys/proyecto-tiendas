@@ -188,7 +188,8 @@ export function SalesOrdersProvider({ children, shopId }: SalesOrdersProviderPro
           dispatchedAt: data.dispatchedAt ? formatDate(data.dispatchedAt) : undefined,
           deliveredAt: data.deliveredAt ? formatDate(data.deliveredAt) : undefined,
           tableId: data.tableId,
-          source: data.source
+          source: data.source,
+          paymentInfo: data.paymentInfo
         });
       });
       setOrders(fetchedOrders);
