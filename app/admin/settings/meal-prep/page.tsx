@@ -73,6 +73,24 @@ function MealPrepSettingsContent() {
         }
     }, [user?.shopId, shopsLoading, getShop]);
 
+    // ======================
+    // CATEGORIES & HELPERS (Following Rules of Hooks)
+    // ======================
+    const sortedCategories = useMemo(() => {
+        return [...categories].sort((a, b) => (a.order || 0) - (b.order || 0));
+    }, [categories]);
+
+    // Helper string normalizer to match logic in MealPrepModal
+    const normalizeCatName = (name: string) =>
+        name.toLowerCase()
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove accents
+            .trim();
+
+    const getCatalogPreview = (catName: string) => {
+        const normSearch = normalizeCatName(catName);
+        return products.filter(p => p.category && normalizeCatName(p.category) === normSearch);
+    };
+
     if (authLoading || shopsLoading) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
@@ -185,21 +203,6 @@ function MealPrepSettingsContent() {
     // ======================
     // CATEGORIES LOGIC
     // ======================
-    const sortedCategories = useMemo(() => {
-        return [...categories].sort((a, b) => (a.order || 0) - (b.order || 0));
-    }, [categories]);
-
-    // Helper string normalizer to match logic in MealPrepModal
-    const normalizeCatName = (name: string) =>
-        name.toLowerCase()
-            .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove accents
-            .trim();
-
-    const getCatalogPreview = (catName: string) => {
-        const normSearch = normalizeCatName(catName);
-        return products.filter(p => p.category && normalizeCatName(p.category) === normSearch);
-    };
-
     const addCategory = () => {
         setCategories([
             ...categories,
