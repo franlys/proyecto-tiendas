@@ -114,6 +114,14 @@ export async function POST(request: NextRequest) {
             // Get instance name for this shop using PRECISELY the slug (as in confirm/route.ts)
             const instanceName = getInstanceName(shopSlug);
 
+            // Generate message
+            let message = messageGenerator(customerName || "Cliente", orderNumber || orderId, total || 0);
+
+            // Add PDF link fallback if available
+            if (invoiceUrl) {
+                message += `\n\n📄 *Factura Digital:*\n${invoiceUrl}`;
+            }
+
             // Format phone number
             const formattedPhone = formatPhoneForWhatsApp(customerPhone);
 

@@ -478,27 +478,41 @@ function OrderDetailModal({
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div>
                   <p className="text-slate-400">Método</p>
-                  <p className="text-white">{order.paymentInfo.paymentMethodName || "Manual"}</p>
+                  <p className="text-white font-medium">{order.paymentInfo.paymentMethodName || "Manual"}</p>
                 </div>
                 <div>
                   <p className="text-slate-400">Tipo</p>
-                  <p className="text-white uppercase text-[10px]">{order.paymentInfo.paymentMethodType || "-"}</p>
+                  <p className="text-white font-medium uppercase text-[10px]">{order.paymentInfo.paymentMethodType || "-"}</p>
                 </div>
               </div>
 
+              {/* Show receipt ONLY if not verified yet, or provide a button to see it if verified */}
               {order.paymentInfo.receiptUrl && (
                 <div className="space-y-2">
-                  <p className="text-xs text-slate-400">Comprobante de Pago</p>
-                  <div className="relative aspect-video rounded-lg overflow-hidden border border-white/10 bg-black/40 group cursor-pointer" onClick={() => window.open(order.paymentInfo?.receiptUrl, '_blank')}>
-                    <img
-                      src={order.paymentInfo.receiptUrl}
-                      alt="Recibo de pago"
-                      className="w-full h-full object-contain"
-                    />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <span className="text-white text-xs font-medium bg-black/60 px-3 py-1 rounded-full border border-white/20">Ver pantalla completa</span>
-                    </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-slate-400">Comprobante de Pago</p>
+                    {order.paymentInfo.status === "verified" && (
+                      <button
+                        onClick={() => window.open(order.paymentInfo?.receiptUrl, '_blank')}
+                        className="text-[10px] text-blue-400 hover:underline"
+                      >
+                        Ver Comprobante
+                      </button>
+                    )}
                   </div>
+
+                  {order.paymentInfo.status !== "verified" && (
+                    <div className="relative aspect-video rounded-lg overflow-hidden border border-white/10 bg-black/40 group cursor-pointer" onClick={() => window.open(order.paymentInfo?.receiptUrl, '_blank')}>
+                      <img
+                        src={order.paymentInfo.receiptUrl}
+                        alt="Recibo de pago"
+                        className="w-full h-full object-contain"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-white text-xs font-medium bg-black/60 px-3 py-1 rounded-full border border-white/20">Ver pantalla completa</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -507,12 +521,19 @@ function OrderDetailModal({
                   <Button
                     size="sm"
                     onClick={async () => {
-                      // Mark as verified
+                      // Mark as verified AND move order to confirmed
                       await updateOrder(order.id, {
+                        status: "confirmed",
                         paymentStatus: "paid",
                         paymentInfo: { ...order.paymentInfo!, status: "verified" }
                       });
-                      alert("✅ Pago verificado exitosamente");
+
+                      // Notify customer if enabled
+                      if (autoNotify && order.customerPhone) {
+                        await sendStatusNotification("confirmed");
+                      }
+
+                      alert("✅ Pago verificado y pedido confirmado");
                     }}
                     className="flex-1 bg-green-600 hover:bg-green-700"
                   >
@@ -521,6 +542,29 @@ function OrderDetailModal({
                   </Button>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Delivery Address (Prominent for Admin) */}
+          {order.deliveryType === "delivery" && (
+            <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-medium text-green-400 flex items-center gap-2">
+                  <Truck className="w-4 h-4" />
+                  Dirección de Entrega
+                </h4>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.customerAddress || "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] bg-green-500 text-white px-2 py-1 rounded-md font-bold hover:bg-green-600 transition-colors"
+                >
+                  ABRIR EN MAPS
+                </a>
+              </div>
+              <p className="text-white text-sm font-medium leading-relaxed">
+                {order.customerAddress || "No especificada"}
+              </p>
             </div>
           )}
 

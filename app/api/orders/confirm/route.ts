@@ -199,7 +199,6 @@ export async function POST(request: NextRequest) {
             }
             clientMsg += `💰 Total: *$${total.toLocaleString()}*\n`;
 
-            // Add payment info to client message
             if (paymentInfo?.paymentTiming === "pay_now") {
                 clientMsg += `💳 Pago: *Transferencia enviada*\n`;
                 clientMsg += `📝 Estado: *Verificando comprobante*\n\n`;
@@ -210,20 +209,29 @@ export async function POST(request: NextRequest) {
                 clientMsg += `Te notificaremos pronto sobre los siguientes pasos. ¡Gracias por tu confianza!`;
             }
 
+            if (pdfDownloadUrl) {
+                clientMsg += `\n\n📄 *Factura Digital:*\n${pdfDownloadUrl}`;
+            }
+
             try {
                 await sendTextMessage(instanceName, cleanPhone, clientMsg);
                 console.log(`[Orders] WhatsApp message sent to client: ${cleanPhone}`);
 
                 // Send PDF Invoice if generated
                 if (pdfDownloadUrl) {
-                    await sendDocument(
-                        instanceName,
-                        cleanPhone,
-                        pdfDownloadUrl,
-                        `Factura_${order.orderNumber}.pdf`,
-                        `Aquí tienes tu factura para el pedido #${order.orderNumber}`
-                    );
-                    console.log(`[Orders] WhatsApp PDF Invoice sent to client: ${cleanPhone}`);
+                    console.log(`[Orders] Attempting to send PDF file to client via WhatsApp...`);
+                    try {
+                        await sendDocument(
+                            instanceName,
+                            cleanPhone,
+                            pdfDownloadUrl,
+                            `Factura_${order.orderNumber}.pdf`,
+                            `Aquí tienes tu factura para el pedido #${order.orderNumber}`
+                        );
+                        console.log(`[Orders] WhatsApp PDF Invoice file sent to client successfully`);
+                    } catch (documentError) {
+                        console.error(`[Orders] Failed to send PDF file via WhatsApp (fallback text link should still work):`, documentError);
+                    }
                 }
             } catch (waError) {
                 console.error("Error enviando WhatsApp al cliente:", waError);

@@ -115,7 +115,7 @@ export function getCurrentLocation(): Promise<Coordinates> {
  * Geocode an address using Nominatim (OpenStreetMap) - Free, no API key required
  * Note: For production, consider using Google Maps Geocoding API for better accuracy
  */
-export async function geocodeAddress(address: string): Promise<Coordinates | null> {
+export async function geocodeAddress(address: string): Promise<Coordinates & { displayName?: string } | null> {
     try {
         const encodedAddress = encodeURIComponent(address);
         const response = await fetch(
@@ -137,12 +137,39 @@ export async function geocodeAddress(address: string): Promise<Coordinates | nul
             return {
                 lat: parseFloat(data[0].lat),
                 lng: parseFloat(data[0].lon),
+                displayName: data[0].display_name
             };
         }
 
         return null;
     } catch (error) {
         console.error("Geocoding error:", error);
+        return null;
+    }
+}
+
+/**
+ * Reverse geocode coordinates to get an address using Nominatim
+ */
+export async function reverseGeocode(coords: Coordinates): Promise<string | null> {
+    try {
+        const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lng}`,
+            {
+                headers: {
+                    "User-Agent": "Linko-App/1.0",
+                },
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Reverse geocoding request failed");
+        }
+
+        const data = await response.json();
+        return data.display_name || null;
+    } catch (error) {
+        console.error("Reverse geocoding error:", error);
         return null;
     }
 }

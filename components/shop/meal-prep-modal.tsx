@@ -20,7 +20,7 @@ import {
     TrainingPlanConfig,
     MealPrepShopConfig
 } from "@/lib/types/meal-prep.types";
-import { geocodeAddress, getCurrentLocation, calculateDistance, Coordinates } from "@/lib/utils/distance";
+import { geocodeAddress, getCurrentLocation, calculateDistance, Coordinates, reverseGeocode } from "@/lib/utils/distance";
 import { Loader2, Navigation } from "lucide-react";
 import { ExtrasSelector } from "./extras-selector";
 import { SelectedExtra } from "@/lib/types/product-extra.types";
@@ -84,6 +84,7 @@ export function MealPrepModal({
     const [customerNotes, setCustomerNotes] = useState("");
     const [isGeocoding, setIsGeocoding] = useState(false);
     const [isLocating, setIsLocating] = useState(false);
+    const [confirmedAddressText, setConfirmedAddressText] = useState<string | null>(null);
     const [address, setAddress] = useState("");
     const [customerName, setCustomerName] = useState("");
     const [customerPhone, setCustomerPhone] = useState("");
@@ -1054,9 +1055,17 @@ export function MealPrepModal({
                                         <div>
                                             <p className="text-white font-medium">Distancia de entrega</p>
                                             <p className="text-sm text-slate-400">
-                                                Gratis hasta {DEFAULT_DELIVERY_CONFIG.freeDistanceMiles} mi.
-                                                Cargo de ${DEFAULT_DELIVERY_CONFIG.surchargeAmount} para mayores.
+                                                {mealPrepConfig?.delivery?.feeScaling ? (
+                                                    `Cargo de $${mealPrepConfig.delivery.feeScaling.amount} por cada ${mealPrepConfig.delivery.feeScaling.perMiles} mi.`
+                                                ) : (
+                                                    `Gratis hasta ${mealPrepConfig?.delivery?.freeDistanceMiles || DEFAULT_DELIVERY_CONFIG.freeDistanceMiles} mi. Cargo de $${mealPrepConfig?.delivery?.surchargeAmount || DEFAULT_DELIVERY_CONFIG.surchargeAmount} para mayores.`
+                                                )}
                                             </p>
+                                            {mealPrepConfig?.delivery?.allowedAreas && mealPrepConfig.delivery.allowedAreas.length > 0 && (
+                                                <p className="text-xs text-primary-400 font-medium mt-1">
+                                                    Solo entregamos en: {mealPrepConfig.delivery.allowedAreas.join(", ")}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
 
@@ -1091,12 +1100,33 @@ export function MealPrepModal({
 
                                                         if (coords && originCoords) {
                                                             const dist = calculateDistance(originCoords, coords);
+
+                                                            // AREA VALIDATION
+                                                            const allowedAreas = mealPrepConfig?.delivery?.allowedAreas;
+                                                            if (allowedAreas && allowedAreas.length > 0 && coords.displayName) {
+                                                                const normalizedAddress = coords.displayName.toLowerCase();
+                                                                const isAllowed = allowedAreas.some(area =>
+                                                                    normalizedAddress.includes(area.toLowerCase().trim())
+                                                                );
+
+                                                                if (!isAllowed) {
+                                                                    setError(`Lo sentimos, no realizamos entregas en esta zona. Áreas permitidas: ${allowedAreas.join(", ")}`);
+                                                                    setConfirmedAddressText(null);
+                                                                    setIsGeocoding(false);
+                                                                    return;
+                                                                }
+                                                            }
+
                                                             setDistance(dist);
                                                             setDistanceInput(dist.toString());
+                                                            // Use the formatted display name if available for better verification
+                                                            setConfirmedAddressText(coords.displayName || address);
                                                         } else if (!originCoords) {
                                                             setError("Error: Ubicación del negocio no configurada.");
+                                                            setConfirmedAddressText(null);
                                                         } else {
                                                             setError("No se pudo encontrar la dirección.");
+                                                            setConfirmedAddressText(null);
                                                         }
                                                         setIsGeocoding(false);
                                                     }}
@@ -1140,10 +1170,31 @@ export function MealPrepModal({
                                                     }
                                                     const coords = await getCurrentLocation();
                                                     const dist = calculateDistance(originCoords, coords);
+
+                                                    // REVERSE GEOCODE FOR AREA VALIDATION
+                                                    const addressName = await reverseGeocode(coords);
+                                                    const allowedAreas = mealPrepConfig?.delivery?.allowedAreas;
+
+                                                    if (allowedAreas && allowedAreas.length > 0 && addressName) {
+                                                        const normalizedAddress = addressName.toLowerCase();
+                                                        const isAllowed = allowedAreas.some(area =>
+                                                            normalizedAddress.includes(area.toLowerCase().trim())
+                                                        );
+
+                                                        if (!isAllowed) {
+                                                            setError(`Lo sentimos, no realizamos entregas en esta zona. Áreas permitidas: ${allowedAreas.join(", ")}`);
+                                                            setConfirmedAddressText(null);
+                                                            setIsLocating(false);
+                                                            return;
+                                                        }
+                                                    }
+
                                                     setDistance(dist);
                                                     setDistanceInput(dist.toString());
+                                                    setConfirmedAddressText(addressName || "Ubicación actual detectada");
                                                 } catch (err: any) {
                                                     setError(err.message || "Error al obtener ubicación");
+                                                    setConfirmedAddressText(null);
                                                 } finally {
                                                     setIsLocating(false);
                                                 }
@@ -1155,20 +1206,43 @@ export function MealPrepModal({
                                             Usar mi ubicación actual
                                         </Button>
 
+                                        {confirmedAddressText && (
+                                            <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-start gap-2 animate-in slide-in-from-top-2">
+                                                <CheckCircle2 className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                                                <div>
+                                                    <p className="text-xs font-bold text-blue-400 uppercase tracking-tight">Ubicación Confirmada</p>
+                                                    <p className="text-sm text-white line-clamp-2">{confirmedAddressText}</p>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {distance !== undefined && (
                                             <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-center animate-in zoom-in-95">
                                                 <p className="text-green-400 font-bold">
                                                     Distancia: {distance} millas
                                                 </p>
-                                                {distance > DEFAULT_DELIVERY_CONFIG.freeDistanceMiles ? (
-                                                    <p className="text-xs text-amber-300 mt-1">
-                                                        Cargo de ${DEFAULT_DELIVERY_CONFIG.surchargeAmount} aplicado.
-                                                    </p>
-                                                ) : (
-                                                    <p className="text-xs text-green-300 mt-1">
-                                                        ¡Entrega GRATIS!
-                                                    </p>
-                                                )}
+                                                {(() => {
+                                                    const deliveryConfig = mealPrepConfig?.delivery || DEFAULT_DELIVERY_CONFIG;
+                                                    let fee = 0;
+                                                    if (deliveryConfig.feeScaling) {
+                                                        fee = Math.floor(distance / deliveryConfig.feeScaling.perMiles) * deliveryConfig.feeScaling.amount;
+                                                    } else {
+                                                        fee = distance > deliveryConfig.freeDistanceMiles ? deliveryConfig.surchargeAmount : 0;
+                                                    }
+
+                                                    if (fee > 0) {
+                                                        return (
+                                                            <p className="text-xs text-amber-300 mt-1">
+                                                                Cargo de ${fee} aplicado.
+                                                            </p>
+                                                        );
+                                                    }
+                                                    return (
+                                                        <p className="text-xs text-green-300 mt-1">
+                                                            ¡Entrega GRATIS!
+                                                        </p>
+                                                    );
+                                                })()}
                                             </div>
                                         )}
                                     </div>

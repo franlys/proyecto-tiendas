@@ -238,16 +238,16 @@ export const PDFInvoice = ({ order, shop }: PDFInvoiceProps) => (
                 <Text style={styles.sectionTitle}>Detalle del Pedido</Text>
                 <View style={styles.table}>
                     <View style={styles.tableHeader}>
-                        <Text style={[styles.tableCol, { flex: 2 }]}>Descripción</Text>
+                        <Text style={[styles.tableCol, { flex: 3 }]}>Descripción</Text>
                         <Text style={styles.tableColRight}>Canti.</Text>
                         <Text style={styles.tableColRight}>P. Unit</Text>
                         <Text style={styles.tableColRight}>Total</Text>
                     </View>
                     {order.items.map((item, i) => (
                         <View key={i} style={styles.tableRow}>
-                            <Text style={[styles.tableCell, { flex: 2 }]}>
+                            <Text style={[styles.tableCell, { flex: 3, fontSize: 9, lineHeight: 1.2 }]}>
                                 {item.productName || item.name}
-                                {item.notes ? `\n(${item.notes})` : ""}
+                                {item.notes ? `\nNota: ${item.notes}` : ""}
                             </Text>
                             <Text style={styles.tableCellRight}>{item.quantity || 1}</Text>
                             <Text style={styles.tableCellRight}>${(item.unitPrice || item.price || 0).toLocaleString()}</Text>

@@ -224,10 +224,12 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                 let productName = p.name;
                 if (p.variantName) productName += ` (${p.variantName})`;
                 if (p.selectedExtras && p.selectedExtras.length > 0) {
-                    const extrasStr = p.selectedExtras.map(e =>
-                        e.quantity > 1 ? `${e.name} x${e.quantity}` : e.name
-                    ).join(", ");
-                    productName += ` + ${extrasStr}`;
+                    const extrasStr = p.selectedExtras.map(e => {
+                        const qtyStr = e.quantity > 1 ? ` x${e.quantity}` : "";
+                        const priceStr = e.price > 0 ? ` +$${(e.price * e.quantity).toLocaleString()}` : "";
+                        return `${e.name}${qtyStr}${priceStr}`;
+                    }).join(", ");
+                    productName += ` (${extrasStr})`;
                 }
 
                 return {

@@ -14,6 +14,7 @@ import {
     AlertCircle,
     MenuSquare,
     Zap,
+    Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useAuth, useShops, useInventory, InventoryProvider } from "@/components/shared";
@@ -24,10 +25,11 @@ import type {
     MealPrepDynamicCategory,
     MealPrepExtraItem,
     MealPrepRule,
+    DeliveryConfig,
 } from "@/lib/types/meal-prep.types";
 import { v4 as uuidv4 } from "uuid";
 
-type Tab = "packages" | "categories" | "rules";
+type Tab = "packages" | "categories" | "rules" | "delivery";
 
 // Separamos el contenido para poder usar el contexto de inventario
 function MealPrepSettingsContent() {
@@ -44,6 +46,12 @@ function MealPrepSettingsContent() {
     const [categories, setCategories] = useState<MealPrepDynamicCategory[]>([]);
     const [extras, setExtras] = useState<MealPrepExtraItem[]>([]);
     const [rules, setRules] = useState<MealPrepRule[]>([]);
+    const [delivery, setDelivery] = useState<DeliveryConfig>({
+        freeDistanceMiles: 10,
+        surchargeAmount: 30,
+        allowedAreas: [],
+        feeScaling: { amount: 30, perMiles: 10 }
+    });
     const [customInstructionsEnabled, setCustomInstructionsEnabled] = useState(false);
 
     // Get unique existing categories from catalog
@@ -66,6 +74,12 @@ function MealPrepSettingsContent() {
                 setCategories(shop.mealPrepConfig.categories || []);
                 setExtras(shop.mealPrepConfig.extras || []);
                 setRules(shop.mealPrepConfig.rules || []);
+                setDelivery(shop.mealPrepConfig.delivery || {
+                    freeDistanceMiles: 10,
+                    surchargeAmount: 30,
+                    allowedAreas: [],
+                    feeScaling: { amount: 30, perMiles: 10 }
+                });
                 setCustomInstructionsEnabled(
                     shop.mealPrepConfig.customInstructionsEnabled ?? false
                 );
@@ -109,6 +123,7 @@ function MealPrepSettingsContent() {
                 categories,
                 extras,
                 rules,
+                delivery,
                 customInstructionsEnabled,
             };
 
@@ -355,6 +370,16 @@ function MealPrepSettingsContent() {
                 >
                     <Zap className="w-4 h-4" />
                     Lógica & Reglas
+                </button>
+                <button
+                    onClick={() => setActiveTab("delivery")}
+                    className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${activeTab === "delivery"
+                        ? "bg-primary text-white shadow-lg"
+                        : "text-zinc-400 hover:text-white hover:bg-white/5"
+                        }`}
+                >
+                    <Truck className="w-4 h-4" />
+                    Zonas & Envío
                 </button>
             </div>
 
@@ -733,6 +758,128 @@ function MealPrepSettingsContent() {
                                 ))}
                             </div>
                         )}
+                    </div>
+                )}
+                {/* DELIVERY TAB */}
+                {activeTab === "delivery" && (
+                    <div className="space-y-8">
+                        <div>
+                            <h2 className="text-xl font-semibold text-white">Zonas y Tarifas de Envío</h2>
+                            <p className="text-sm text-zinc-400">
+                                Delimita dónde puedes entregar y configura cargos automáticos por distancia.
+                            </p>
+                        </div>
+
+                        {/* Restricted Areas */}
+                        <div className="p-5 bg-zinc-950 border border-zinc-800 rounded-xl space-y-4">
+                            <h3 className="text-white font-medium flex items-center gap-2">
+                                <AlertCircle className="w-4 h-4 text-primary" />
+                                Áreas de Cobertura (Restricción por Condado/Ciudad)
+                            </h3>
+                            <p className="text-sm text-zinc-400">
+                                Si agregas áreas aquí, solo los clientes cuya dirección contenga estos nombres podrán pedir para delivery.
+                                <br />
+                                <span className="text-zinc-500 italic text-xs">Para Sculpt Love NJ: "Bergen County, Hudson County, Passaic County"</span>
+                            </p>
+
+                            <div className="space-y-2">
+                                <label className="text-xs text-zinc-500 block">Nombres de Áreas Permitidas (Separados por coma)</label>
+                                <textarea
+                                    value={delivery.allowedAreas?.join(", ") || ""}
+                                    onChange={(e) => setDelivery({
+                                        ...delivery,
+                                        allowedAreas: e.target.value.split(",").map(s => s.trim()).filter(s => s !== "")
+                                    })}
+                                    placeholder="Ej: Bergen County, Hudson County, Passaic County, NY"
+                                    className="w-full h-24 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary transition-colors"
+                                />
+                                <p className="text-[10px] text-zinc-500">
+                                    Nota: El sistema busca que estas palabras aparezcan en la dirección real de Google Maps que el cliente carga.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Distance Fee Scaling */}
+                        <div className="p-5 bg-zinc-950 border border-zinc-800 rounded-xl space-y-6">
+                            <h3 className="text-white font-medium flex items-center gap-2">
+                                <Truck className="w-4 h-4 text-primary" />
+                                Cálculo de Tarifa por Distancia
+                            </h3>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-4 p-4 border border-zinc-900 bg-zinc-900/40 rounded-lg">
+                                    <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Regla Escalde (Recomendado)</h4>
+                                    <div className="grid grid-cols-1 gap-4">
+                                        <div>
+                                            <label className="text-xs text-zinc-500 mb-1 block">Cargar Pago Extra de ($)</label>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">$</span>
+                                                <input
+                                                    type="number"
+                                                    value={delivery.feeScaling?.amount || 0}
+                                                    onChange={(e) => setDelivery({
+                                                        ...delivery,
+                                                        feeScaling: {
+                                                            amount: Number(e.target.value),
+                                                            perMiles: delivery.feeScaling?.perMiles || 10
+                                                        }
+                                                    })}
+                                                    className="w-full bg-zinc-950 border border-zinc-700 rounded-lg pl-8 pr-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
+                                                    placeholder="30"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-zinc-500 mb-1 block">Por cada cuántas millas (Distancia)</label>
+                                            <div className="relative">
+                                                <input
+                                                    type="number"
+                                                    value={delivery.feeScaling?.perMiles || 10}
+                                                    onChange={(e) => setDelivery({
+                                                        ...delivery,
+                                                        feeScaling: {
+                                                            amount: delivery.feeScaling?.amount || 30,
+                                                            perMiles: Number(e.target.value)
+                                                        }
+                                                    })}
+                                                    className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
+                                                    placeholder="10"
+                                                />
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">millas</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-2 bg-primary/10 border border-primary/20 p-2 rounded text-[11px] text-primary-300">
+                                        <strong>Ejemplo:</strong> Si pones $30 por cada 10 millas:<br />
+                                        - 5 millas = $0 extra<br />
+                                        - 15 millas = $30 extra<br />
+                                        - 25 millas = $60 extra
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4 p-4 border border-zinc-900 bg-zinc-900/40 rounded-lg opacity-50 grayscale hover:grayscale-0 transition-all cursor-not-allowed">
+                                    <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Regla Simple (Inactiva si hay escala)</h4>
+                                    <div>
+                                        <label className="text-xs text-zinc-500 mb-1 block">Millas Gratis hasta</label>
+                                        <input
+                                            type="number"
+                                            disabled
+                                            value={delivery.freeDistanceMiles || 10}
+                                            className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-zinc-500 text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-zinc-500 mb-1 block">Cargo fijo si es mayor ($)</label>
+                                        <input
+                                            type="number"
+                                            disabled
+                                            value={delivery.surchargeAmount || 30}
+                                            className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-zinc-500 text-sm"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>

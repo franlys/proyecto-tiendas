@@ -251,10 +251,11 @@ export const emailTemplates = {
       .map(
         (item) => `
         <tr>
-          <td style="padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
-            ${item.name} x${item.quantity}
+          <td style="padding: 12px 0; border-bottom: 1px solid #e2e8f0; font-size: 14px; line-height: 1.4; color: #0f172a;">
+            <div style="font-weight: 500;">${item.name}</div>
+            ${item.quantity > 1 ? `<div style="font-size: 12px; color: #64748b;">Cantidad: ${item.quantity}</div>` : ""}
           </td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #e2e8f0; text-align: right;">
+          <td style="padding: 12px 0; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 600; color: #0f172a; vertical-align: top;">
             $${item.price.toLocaleString()}
           </td>
         </tr>

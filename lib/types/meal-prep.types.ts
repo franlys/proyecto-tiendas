@@ -152,13 +152,19 @@ export const TRAINING_PLANS: TrainingPlanConfig[] = [
  * Configuración de cargos por distancia
  */
 export interface DeliveryConfig {
-    freeDistanceMiles: number;   // Hasta 10 millas gratis
-    surchargeAmount: number;     // $30 por más de 10 millas
+    freeDistanceMiles: number;   // Hasta 10 millas gratis (opcional dependiente de scaling)
+    surchargeAmount: number;     // Cargo fijo (opcional dependiente de scaling)
+    allowedAreas?: string[];     // Áreas permitidas (ej: ["Bergen County", "Hudson County"])
+    feeScaling?: {
+        amount: number;          // Monto a cobrar ($30)
+        perMiles: number;        // Por cada cuántas millas (10)
+    };
 }
 
 export const DEFAULT_DELIVERY_CONFIG: DeliveryConfig = {
     freeDistanceMiles: 10,
-    surchargeAmount: 30, // Se cobra si es mayor a 10 millas, pero el usuario dijo que el flujo es fundamental
+    surchargeAmount: 30,
+    allowedAreas: [],
 };
 
 // ============================================
@@ -272,6 +278,7 @@ export interface MealPrepShopConfig {
     categories?: MealPrepDynamicCategory[];
     extras?: MealPrepExtraItem[];
     rules?: MealPrepRule[];
+    delivery?: DeliveryConfig;
     customInstructionsEnabled?: boolean;
 }
 
@@ -336,9 +343,22 @@ export function calculateMealPrepTotal(
         return sum + plateExtrasSum;
     }, 0);
 
-    const deliverySurcharge = distanceMiles && distanceMiles > DEFAULT_DELIVERY_CONFIG.freeDistanceMiles
-        ? DEFAULT_DELIVERY_CONFIG.surchargeAmount
-        : 0;
+    const config = mealPrepConfig?.delivery || DEFAULT_DELIVERY_CONFIG;
+    let deliverySurcharge = 0;
+
+    if (distanceMiles && distanceMiles > 0) {
+        if (config.feeScaling) {
+            // $30 per 10 miles. e.g. 15 miles = (15/10) * 30 = 45 or Math.ceil(15/10) * 30 = 60?
+            // User said "30 extras por cada 10 millas". Usually means step-based.
+            // Let's use Math.floor(distance / perMiles) * amount if they want "for every 10 complete miles"
+            // or Math.ceil(distance / perMiles) * amount for "any part of 10 miles".
+            // Given the context, let's assume step-based:
+            deliverySurcharge = Math.floor(distanceMiles / config.feeScaling.perMiles) * config.feeScaling.amount;
+        } else {
+            // Legacy flat fee
+            deliverySurcharge = distanceMiles > config.freeDistanceMiles ? config.surchargeAmount : 0;
+        }
+    }
     const trainingTotal = trainingPlan?.monthlyPrice || 0;
 
     return {
@@ -395,8 +415,12 @@ export function formatPlateDescription(plate: MealPlate): string {
         // Product-based extras
         const extras = plate.componentExtras?.[catId];
         if (extras && extras.length > 0) {
-            const extrasStr = extras.map(e => e.quantity > 1 ? `${e.name} x${e.quantity}` : e.name).join(", ");
-            componentDesc += ` (+ ${extrasStr})`;
+            const extrasStr = extras.map(e => {
+                const qtyStr = e.quantity > 1 ? ` x${e.quantity}` : "";
+                const priceStr = e.price > 0 ? ` +$${(e.price * e.quantity).toLocaleString()}` : "";
+                return `${e.name}${qtyStr}${priceStr}`;
+            }).join(", ");
+            componentDesc += ` (${extrasStr})`;
         }
 
         // Category-based extra surcharge
