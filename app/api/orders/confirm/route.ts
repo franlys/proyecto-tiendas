@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getShopById, getShopBySlug } from "@/lib/services/shops.service";
 import { createOrder, Order } from "@/lib/services/orders.service";
-import { sendTextMessage, isEvolutionConfigured, getInstanceName } from "@/lib/evolution";
+import { sendTextMessage, sendDocument, isEvolutionConfigured, getInstanceName } from "@/lib/evolution";
 import { sendEmail, emailTemplates } from "@/lib/email";
 import { formatPhoneForWhatsApp } from "@/lib/utils";
-import { adminDb } from "@/lib/firebase-admin";
+import { adminDb, adminStorage } from "@/lib/firebase-admin";
+import { generateOrderInvoiceBuffer } from "@/lib/services/pdf.service";
+import { getDownloadURL } from "firebase-admin/storage";
+import { ref, uploadBytes } from "firebase/storage";
 
 interface PaymentInfo {
     paymentTiming: "pay_now" | "pay_on_delivery";
@@ -131,6 +134,43 @@ export async function POST(request: NextRequest) {
             // Don't fail the order if notification creation fails
         }
 
+        // 3.6 Generate PDF Invoice and Upload to Storage
+        let pdfDownloadUrl = null;
+        let pdfBuffer = null;
+        try {
+            pdfBuffer = await generateOrderInvoiceBuffer(order, shop);
+            const storage = adminStorage();
+            if (storage && pdfBuffer) {
+                const bucket = storage.bucket();
+                const fileName = `invoices/${shop.id}/${order.id}_invoice.pdf`;
+                const file = bucket.file(fileName);
+
+                await file.save(pdfBuffer, {
+                    metadata: {
+                        contentType: "application/pdf",
+                    },
+                });
+
+                // Generate signed URL (valid for 1 year)
+                const [signedUrl] = await file.getSignedUrl({
+                    action: 'read',
+                    expires: '03-01-2027', // Adjust to a reasonable future date
+                });
+                pdfDownloadUrl = signedUrl;
+
+                // Update order with invoice URL
+                const db = adminDb();
+                if (db) {
+                    await db.collection("shops").doc(shop.id).collection("orders").doc(order.id).update({
+                        invoiceUrl: pdfDownloadUrl
+                    });
+                }
+            }
+        } catch (pdfError) {
+            console.error("Error generating/uploading PDF invoice:", pdfError);
+            // Don't fail the order if PDF fails
+        }
+
         // 4. Notificar al Cliente vía WhatsApp (Evolution API)
         if (isEvolutionConfigured()) {
             const instanceName = getInstanceName(shop.slug);
@@ -161,6 +201,17 @@ export async function POST(request: NextRequest) {
 
             try {
                 await sendTextMessage(instanceName, cleanPhone, clientMsg);
+
+                // Send PDF Invoice if generated
+                if (pdfDownloadUrl) {
+                    await sendDocument(
+                        instanceName,
+                        cleanPhone,
+                        pdfDownloadUrl,
+                        `Factura_${order.orderNumber}.pdf`,
+                        `Aquí tienes tu factura para el pedido #${order.orderNumber}`
+                    );
+                }
             } catch (waError) {
                 console.error("Error enviando WhatsApp al cliente:", waError);
             }
@@ -246,7 +297,11 @@ export async function POST(request: NextRequest) {
                 await sendEmail({
                     to: customerEmail,
                     subject: `Confirmación de pedido #${order.orderNumber} en ${shop.name}`,
-                    html: customerEmailContent
+                    html: customerEmailContent,
+                    attachments: pdfBuffer ? [{
+                        filename: `Factura_${order.orderNumber}.pdf`,
+                        content: pdfBuffer
+                    }] : undefined
                 });
             } catch (customerEmailError) {
                 console.error("Error enviando email al cliente:", customerEmailError);

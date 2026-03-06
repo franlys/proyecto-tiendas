@@ -154,3 +154,8 @@ export const adminDb = () => {
         return app.firestore();
     }
 };
+
+export const adminStorage = () => {
+    const app = initAdmin();
+    return app ? app.storage() : null;
+};
