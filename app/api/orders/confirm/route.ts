@@ -246,7 +246,7 @@ export async function POST(request: NextRequest) {
                 const emailContent = emailTemplates.orderConfirmation({
                     clientName: customerName,
                     orderNumber: order.orderNumber,
-                    items: items.map(i => ({ name: i.name, quantity: i.quantity || 1, price: i.price })),
+                    items: items.map(i => ({ name: i.name, quantity: i.quantity || 1, price: i.price, notes: i.notes })),
                     total: total,
                     shopName: shop.name,
                     shopLogo: shop.logo,
@@ -306,7 +306,7 @@ export async function POST(request: NextRequest) {
                 const customerEmailContent = emailTemplates.orderConfirmation({
                     clientName: customerName,
                     orderNumber: order.orderNumber,
-                    items: items.map(i => ({ name: i.name, quantity: i.quantity || 1, price: i.price })),
+                    items: items.map(i => ({ name: i.name, quantity: i.quantity || 1, price: i.price, notes: i.notes })),
                     total: total,
                     shopName: shop.name,
                     shopLogo: shop.logo,
@@ -349,6 +349,7 @@ export async function POST(request: NextRequest) {
                 ownerMsg += `📝 *Pedido:*\n`;
                 items.forEach(item => {
                     ownerMsg += `• ${item.name} ($${item.price.toLocaleString()})\n`;
+                    if (item.notes) ownerMsg += `  _${item.notes}_\n`;
                 });
                 ownerMsg += `\nTipo: *${deliveryType === "recogida" ? "Para Recoger" : "Dírecto a Domicilio"}*\n`;
                 if (customerAddress) {

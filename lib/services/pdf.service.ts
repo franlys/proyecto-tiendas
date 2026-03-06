@@ -34,19 +34,24 @@ export async function generateOrderInvoiceBuffer(order: any, shop: any): Promise
         // Render to Buffer (compatible with nodemailer and Firebase upload)
         // Note: we're casting PDFInvoice to any because of React 19 vs @react-pdf/renderer type conflicts sometimes
         console.log(`[PDF Service] Calling renderToBuffer...`);
-        const buffer = await renderToBuffer(
-            React.createElement(PDFInvoice as any, { order: orderForPdf, shop: shopForPdf } as any)
-        );
+        let buffer;
+        try {
+            buffer = await renderToBuffer(
+                React.createElement(PDFInvoice as any, { order: orderForPdf, shop: shopForPdf } as any)
+            );
+        } catch (renderError: any) {
+            console.error("❌ [PDF Service] renderToBuffer FAILED:", renderError.message);
+            throw renderError;
+        }
 
-        if (!buffer) {
-            throw new Error("renderToBuffer returned empty result");
+        if (!buffer || buffer.length === 0) {
+            throw new Error("renderToBuffer returned empty result or zero-length buffer");
         }
 
         console.log(`[PDF Service] PDF generated successfully. Buffer size: ${buffer.length} bytes`);
         return Buffer.from(buffer);
     } catch (error: any) {
-        console.error("❌ [PDF Service] Error generating PDF buffer:", error);
-        console.error("❌ Error stack:", error?.stack);
+        console.error("❌ [PDF Service] Global error in PDF service:", error.message);
         throw error;
     }
 }

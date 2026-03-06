@@ -249,11 +249,12 @@ export const emailTemplates = {
 
     const itemsHtml = data.items
       .map(
-        (item) => `
+        (item: any) => `
         <tr>
           <td style="padding: 12px 0; border-bottom: 1px solid #e2e8f0; font-size: 14px; line-height: 1.4; color: #0f172a;">
             <div style="font-weight: 500;">${item.name}</div>
-            ${item.quantity > 1 ? `<div style="font-size: 12px; color: #64748b;">Cantidad: ${item.quantity}</div>` : ""}
+            ${item.quantity > 1 ? `<div style="font-size: 11px; color: #64748b; margin-top: 2px;">Cantidad: ${item.quantity}</div>` : ""}
+            ${item.notes ? `<div style="font-size: 11px; color: #06b6d4; font-style: italic; margin-top: 2px;">${item.notes}</div>` : ""}
           </td>
           <td style="padding: 12px 0; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 600; color: #0f172a; vertical-align: top;">
             $${item.price.toLocaleString()}
@@ -293,7 +294,7 @@ export const emailTemplates = {
       ${data.deliveryType ? `
       <div style="background: #f0fdf4; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
         <p style="margin: 0; color: #166534; font-size: 13px;">
-          📦 Tipo de entrega: <strong>${data.deliveryType === "pickup" || data.deliveryType === "recogida" ? "Recoger en tienda" : "Envío a domicilio"}</strong>
+          📦 Tipo de entrega: <strong>${data.deliveryType === "pickup" || data.deliveryType === "recogida" || data.deliveryType.toLowerCase().includes("recog") ? "Pasar a recoger" : "Envío a domicilio"}</strong>
         </p>
       </div>
       ` : ""}

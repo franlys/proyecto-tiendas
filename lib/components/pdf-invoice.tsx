@@ -217,8 +217,7 @@ export const PDFInvoice = ({ order, shop }: PDFInvoiceProps) => (
                 <View style={{ flex: 1 }}>
                     <Text style={styles.sectionTitle}>Envío y Pago</Text>
                     <View style={styles.row}>
-                        <Text style={styles.label}>Método:</Text>
-                        <Text style={styles.value}>{order.deliveryType === "recogida" ? "Recoger en tienda" : "Entrega a domicilio"}</Text>
+                        <Text style={styles.value}>{order.deliveryType === "recogida" || order.deliveryType?.toLowerCase().includes("recog") ? "Pasar a recoger" : "Envío a domicilio"}</Text>
                     </View>
                     {order.customerAddress && (
                         <View style={styles.row}>

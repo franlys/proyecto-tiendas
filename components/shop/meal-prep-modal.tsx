@@ -448,14 +448,21 @@ export function MealPrepModal({
             }
 
             const items = plates.map((plate, index) => {
+                const selectedExtrasList: string[] = [];
                 let plateExtrasSum = 0;
+
                 if (plate.componentExtras) {
-                    Object.values(plate.componentExtras).forEach(extras => {
+                    Object.entries(plate.componentExtras).forEach(([catId, extras]) => {
                         extras.forEach(extra => {
                             plateExtrasSum += (extra.price * extra.quantity);
+                            selectedExtrasList.push(`${extra.name}${extra.quantity > 1 ? ` (x${extra.quantity})` : ''}`);
                         });
                     });
                 }
+
+                const extrasText = selectedExtrasList.length > 0
+                    ? `Extras: ${selectedExtrasList.join(", ")}`
+                    : "";
 
                 return {
                     id: `plate-${index}`,
@@ -464,7 +471,7 @@ export function MealPrepModal({
                     price: (plate.isCustom ? MEAL_PREP_PRICES.CUSTOM_PLATE : MEAL_PREP_PRICES.STANDARD_PLATE) +
                         (plate.premiumSurcharge || 0) +
                         plateExtrasSum,
-                    notes: plate.notes
+                    notes: [plate.notes, extrasText].filter(Boolean).join(" | ")
                 };
             });
 
@@ -486,7 +493,7 @@ export function MealPrepModal({
                     customerName,
                     customerPhone,
                     customerEmail,
-                    customerAddress: deliveryType === "recogida" ? "Recogida en local" : `${address}${addressDetails ? `, ${addressDetails}` : ""}`,
+                    customerAddress: deliveryType === "recogida" ? businessAddress || "Recogida en local" : `${address}${addressDetails ? `, ${addressDetails}` : ""}`,
                     deliveryType,
                     paymentInfo: paymentTiming === 'pay_now' ? {
                         paymentTiming: 'pay_now',
