@@ -138,7 +138,14 @@ export async function POST(request: NextRequest) {
         let pdfDownloadUrl = null;
         let pdfBuffer = null;
         try {
+            console.log(`[Orders] Generating PDF Invoice for order #${order.orderNumber}...`);
             pdfBuffer = await generateOrderInvoiceBuffer(order, shop);
+
+            if (pdfBuffer) {
+                console.log(`[Orders] PDF Invoice generated successfully. Size: ${pdfBuffer.length} bytes`);
+            } else {
+                console.error(`[Orders] PDF Invoice generation returned null/undefined`);
+            }
             const storage = adminStorage();
             if (storage && pdfBuffer) {
                 const bucket = storage.bucket();
@@ -245,7 +252,8 @@ export async function POST(request: NextRequest) {
                     await sendEmail({
                         to: email as string,
                         subject: `Nuevo pedido recibido: #${order.orderNumber}`,
-                        html: emailContent
+                        html: emailContent,
+                        from: `${shop.name} <Prologixcompany@gmail.com>`
                     });
                 }
             } catch (emailError) {
@@ -300,15 +308,18 @@ export async function POST(request: NextRequest) {
                     paymentStatus: paymentInfo?.paymentTiming === "pay_now" ? "Comprobante enviado" : "Pendiente"
                 });
 
-                await sendEmail({
+                console.log(`[Orders] Sending confirmation email to customer: ${customerEmail}`);
+                const customerEmailResult = await sendEmail({
                     to: customerEmail,
                     subject: `Confirmación de pedido #${order.orderNumber} en ${shop.name}`,
                     html: customerEmailContent,
+                    from: `${shop.name} <Prologixcompany@gmail.com>`,
                     attachments: pdfBuffer ? [{
                         filename: `Factura_${order.orderNumber}.pdf`,
                         content: pdfBuffer
                     }] : undefined
                 });
+                console.log(`[Orders] Customer email result: ${customerEmailResult.success ? '✅ Success' : '❌ Failed: ' + customerEmailResult.error}`);
             } catch (customerEmailError) {
                 console.error("Error enviando email al cliente:", customerEmailError);
             }
