@@ -150,6 +150,7 @@ export async function POST(request: NextRequest) {
                         contentType: "application/pdf",
                     },
                 });
+                console.log(`[Orders] PDF Invoice saved to storage: ${fileName}`);
 
                 // Generate signed URL (valid for 1 year)
                 const [signedUrl] = await file.getSignedUrl({
@@ -157,6 +158,7 @@ export async function POST(request: NextRequest) {
                     expires: '03-01-2027', // Adjust to a reasonable future date
                 });
                 pdfDownloadUrl = signedUrl;
+                console.log(`[Orders] Generated signed URL for PDF: ${pdfDownloadUrl.substring(0, 50)}...`);
 
                 // Update order with invoice URL
                 const db = adminDb();
@@ -165,6 +167,8 @@ export async function POST(request: NextRequest) {
                         invoiceUrl: pdfDownloadUrl
                     });
                 }
+            } else {
+                console.error(`[Orders] Storage or PDF buffer missing: storage=${!!storage}, buffer=${!!pdfBuffer}`);
             }
         } catch (pdfError) {
             console.error("Error generating/uploading PDF invoice:", pdfError);
@@ -201,6 +205,7 @@ export async function POST(request: NextRequest) {
 
             try {
                 await sendTextMessage(instanceName, cleanPhone, clientMsg);
+                console.log(`[Orders] WhatsApp message sent to client: ${cleanPhone}`);
 
                 // Send PDF Invoice if generated
                 if (pdfDownloadUrl) {
@@ -211,6 +216,7 @@ export async function POST(request: NextRequest) {
                         `Factura_${order.orderNumber}.pdf`,
                         `Aquí tienes tu factura para el pedido #${order.orderNumber}`
                     );
+                    console.log(`[Orders] WhatsApp PDF Invoice sent to client: ${cleanPhone}`);
                 }
             } catch (waError) {
                 console.error("Error enviando WhatsApp al cliente:", waError);
@@ -230,7 +236,7 @@ export async function POST(request: NextRequest) {
                     shopName: shop.name,
                     shopLogo: shop.logo,
                     shopPrimaryColor: shop.theme?.primaryColor,
-                    shopBackgroundImage: shop.background?.image || shop.hero,
+                    shopBackgroundImage: shop.banner || shop.background?.image || shop.hero,
                     deliveryType: deliveryType === "recogida" ? "Recoger en tienda" : "Entrega a domicilio",
                     paymentStatus: paymentInfo?.paymentTiming === "pay_now" ? "Comprobante enviado" : "Pendiente"
                 });
@@ -254,7 +260,7 @@ export async function POST(request: NextRequest) {
                     shopName: shop.name,
                     shopLogo: shop.logo,
                     shopPrimaryColor: shop.theme?.primaryColor,
-                    shopBackgroundImage: shop.background?.image || shop.hero,
+                    shopBackgroundImage: shop.banner || shop.background?.image || shop.hero,
                     customerName,
                     customerPhone,
                     customerEmail,
@@ -289,7 +295,7 @@ export async function POST(request: NextRequest) {
                     shopName: shop.name,
                     shopLogo: shop.logo,
                     shopPrimaryColor: shop.theme?.primaryColor,
-                    shopBackgroundImage: shop.background?.image || shop.hero,
+                    shopBackgroundImage: shop.banner || shop.background?.image || shop.hero,
                     deliveryType: deliveryType === "recogida" ? "Recoger en tienda" : "Entrega a domicilio",
                     paymentStatus: paymentInfo?.paymentTiming === "pay_now" ? "Comprobante enviado" : "Pendiente"
                 });

@@ -292,6 +292,7 @@ export function calculateMealPrepTotal(
     premiumTotal: number;
     deliverySurcharge: number;
     trainingTotal: number;
+    extrasTotal: number;
     total: number
 } {
     // Calcular base considerando platos estandard vs custom
@@ -345,6 +346,7 @@ export function calculateMealPrepTotal(
         premiumTotal,
         deliverySurcharge,
         trainingTotal,
+        extrasTotal,
         total: basePrice + premiumTotal + extrasTotal + deliverySurcharge + trainingTotal,
     };
 }

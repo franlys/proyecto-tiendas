@@ -519,7 +519,7 @@ function MealPrepSettingsContent() {
                                                     </label>
                                                 </div>
                                                 <div>
-                                                    <label className="text-xs text-zinc-500 mb-1 block">Precio Extra (Opcional $)</label>
+                                                    <label className="text-xs text-zinc-500 mb-1 block">Precio Botón "Añadir Extra" (+$)</label>
                                                     <div className="relative">
                                                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">$</span>
                                                         <input
@@ -530,7 +530,7 @@ function MealPrepSettingsContent() {
                                                             placeholder="0"
                                                         />
                                                     </div>
-                                                    <p className="text-[10px] text-zinc-500 mt-1">Precio para añadir esta categoría o desbloquearla.</p>
+                                                    <p className="text-[10px] text-zinc-500 mt-1">Si es mayor a 0, aparecerá un botón (+) para añadir esta categoría como un extra pagado.</p>
                                                 </div>
                                             </div>
                                             <Button

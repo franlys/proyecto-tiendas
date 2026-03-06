@@ -285,6 +285,8 @@ export type ManualPaymentMethodType =
     | "crypto"             // Criptomonedas
     | "zelle"              // Zelle
     | "paypal_manual"      // PayPal sin integración (solo email)
+    | "apple_pay"          // Apple Pay (manual)
+    | "google_pay"         // Google Pay (manual)
     | "other";             // Otro
 
 // A single manual payment method configuration
@@ -362,6 +364,8 @@ export const MANUAL_PAYMENT_METHOD_LABELS: Record<ManualPaymentMethodType, strin
     crypto: "Criptomonedas",
     zelle: "Zelle",
     paypal_manual: "PayPal",
+    apple_pay: "Apple Pay",
+    google_pay: "Google Pay",
     other: "Otro",
 };
 
@@ -373,6 +377,8 @@ export const MANUAL_PAYMENT_METHOD_ICONS: Record<ManualPaymentMethodType, string
     crypto: "₿",
     zelle: "💸",
     paypal_manual: "🅿️",
+    apple_pay: "🍎",
+    google_pay: "🤖",
     other: "💳",
 };
 

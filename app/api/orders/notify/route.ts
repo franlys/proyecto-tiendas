@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
-import { sendTextMessage, isEvolutionConfigured, getInstanceName } from "@/lib/evolution";
+import { sendTextMessage, sendDocument, isEvolutionConfigured, getInstanceName } from "@/lib/evolution";
 import { formatPhoneForWhatsApp } from "@/lib/utils";
 
 interface NotifyRequest {
@@ -98,10 +98,34 @@ export async function POST(request: NextRequest) {
 
         // Send via Evolution API
         try {
+            // Get order details to check for invoiceUrl
+            const db = adminDb();
+            let invoiceUrl = null;
+            if (db) {
+                const orderDoc = await db.collection("shops").doc(shopId).collection("orders").doc(orderId).get();
+                if (orderDoc.exists) {
+                    invoiceUrl = orderDoc.data()?.invoiceUrl;
+                }
+            }
+
             const result = await sendTextMessage(instanceName, formattedPhone, message);
 
+            // Send PDF if available
+            if (invoiceUrl) {
+                try {
+                    await sendDocument(
+                        instanceName,
+                        formattedPhone,
+                        invoiceUrl,
+                        `Factura_${orderNumber || orderId}.pdf`,
+                        `Factura actualizada de tu pedido #${orderNumber || orderId}`
+                    );
+                } catch (pdfError) {
+                    console.error("[Notify] Error sending PDF document:", pdfError);
+                }
+            }
+
             // Log notification to Firestore
-            const db = adminDb();
             if (db) {
                 await db.collection("shops").doc(shopId).collection("orderNotifications").add({
                     orderId,

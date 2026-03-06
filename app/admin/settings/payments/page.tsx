@@ -80,6 +80,18 @@ const PAYMENT_METHOD_TYPES: {
             description: "Pago en efectivo al recibir",
         },
         {
+            type: "apple_pay",
+            label: "Apple Pay",
+            icon: "🍎",
+            description: "Pagos vía Apple Pay ID",
+        },
+        {
+            type: "google_pay",
+            label: "Google Pay",
+            icon: "🇬",
+            description: "Pagos vía Google Pay ID",
+        },
+        {
             type: "other",
             label: "Otro",
             icon: "💳",
@@ -670,15 +682,16 @@ function PaymentMethodModal({ method, onClose, onSave }: PaymentMethodModalProps
                         </>
                     )}
 
-                    {/* Zelle/PayPal Fields */}
-                    {(formData.type === "zelle" || formData.type === "paypal_manual") && (
+                    {/* Zelle/PayPal/ApplePay/GooglePay Fields */}
+                    {(formData.type === "zelle" || formData.type === "paypal_manual" || formData.type === "apple_pay" || formData.type === "google_pay") && (
                         <>
                             <div>
                                 <label className="block text-sm text-slate-400 mb-2">
-                                    Email
+                                    {formData.type === "apple_pay" ? "Apple ID / Email" :
+                                        formData.type === "google_pay" ? "Google Account / Email" : "Email"}
                                 </label>
                                 <input
-                                    type="email"
+                                    type="text"
                                     value={formData.email || ""}
                                     onChange={(e) => updateField("email", e.target.value)}
                                     placeholder="correo@ejemplo.com"

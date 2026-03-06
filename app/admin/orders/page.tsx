@@ -120,9 +120,11 @@ function OrderDetailModal({
         console.log("✅ Notification sent via Evolution API");
       } else if (data.needsSetup) {
         console.warn("⚠️ Bot no configurado - mensaje no enviado");
-      } else if (data.whatsappUrl && confirm("⚠️ Error al enviar via bot. ¿Abrir WhatsApp manualmente?")) {
-        // Fallback: open WhatsApp link only if user confirms
-        window.open(data.whatsappUrl, "_blank");
+      } else if (data.whatsappUrl) {
+        const errorMsg = "⚠️ El bot de WhatsApp no está conectado o ha fallado. \n\n¿Deseas abrir WhatsApp manualmente?\n\n(Tip: Revisa en Centro de Automatizacion si el bot está en estado 'Open')";
+        if (confirm(errorMsg)) {
+          window.open(data.whatsappUrl, "_blank");
+        }
       }
     } catch (error) {
       console.error("Error sending notification:", error);

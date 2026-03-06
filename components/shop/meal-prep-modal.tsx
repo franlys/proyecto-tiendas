@@ -221,13 +221,19 @@ export function MealPrepModal({
                     });
                 } else {
                     // It's purely an extra defined in the admin, inject it as a pseudo-product
-                    grouped[extra.categoryId].push({
-                        id: extra.id,
-                        name: extra.name,
-                        category: cats.find(c => c.id === extra.categoryId)?.name || "Extra",
-                        mealPrepSurcharge: extra.price,
-                        isConfigExtra: true
-                    });
+                    // SKIP if the name is just a price or empty, as it's redundant with the category extra button
+                    const cleanName = extra.name.trim();
+                    const isJustPrice = /^(\+|-)?\$?\s*\d+(\.\d+)?$/.test(cleanName);
+
+                    if (cleanName && !isJustPrice) {
+                        grouped[extra.categoryId].push({
+                            id: extra.id,
+                            name: extra.name,
+                            category: cats.find(c => c.id === extra.categoryId)?.name || "Extra",
+                            mealPrepSurcharge: extra.price,
+                            isConfigExtra: true
+                        });
+                    }
                 }
             });
         }
@@ -1319,6 +1325,12 @@ export function MealPrepModal({
                                         <span>+${pricing.premiumTotal}</span>
                                     </div>
                                 )}
+                                {pricing.extrasTotal > 0 && (
+                                    <div className="flex justify-between text-blue-400 text-sm">
+                                        <span>Extras / Adicionales</span>
+                                        <span>+${pricing.extrasTotal}</span>
+                                    </div>
+                                )}
                                 {selectedTrainingPlan && (
                                     <div className="flex justify-between text-green-400 text-sm">
                                         <span>Plan: {selectedTrainingPlan.label}</span>
@@ -1411,7 +1423,12 @@ export function MealPrepModal({
                                                         {selectedPaymentMethod.email && (
                                                             <div className="flex justify-between items-center group">
                                                                 <div>
-                                                                    <div className="text-xs text-slate-400">Correo Electrónico (Zelle/PayPal)</div>
+                                                                    <div className="text-xs text-slate-400">
+                                                                        {selectedPaymentMethod.type === 'zelle' ? 'Correo de Zelle' :
+                                                                            selectedPaymentMethod.type === 'paypal_manual' ? 'Correo de PayPal' :
+                                                                                selectedPaymentMethod.type === 'apple_pay' ? 'ID de Apple Pay' :
+                                                                                    selectedPaymentMethod.type === 'google_pay' ? 'ID de Google Pay' : 'Correo Electrónico'}
+                                                                    </div>
                                                                     <div className="text-sm text-white font-medium">{selectedPaymentMethod.email}</div>
                                                                 </div>
                                                                 <button onClick={() => copyToClipboard(selectedPaymentMethod.email!, 'email')} className="p-2 text-slate-400 hover:text-white bg-white/5 rounded-lg">
@@ -1430,11 +1447,31 @@ export function MealPrepModal({
                                                                 </button>
                                                             </div>
                                                         )}
+                                                        {selectedPaymentMethod.phoneNumber && (
+                                                            <div className="flex justify-between items-center group">
+                                                                <div>
+                                                                    <div className="text-xs text-slate-400">
+                                                                        {selectedPaymentMethod.type === 'mobile_payment' ? 'Teléfono (Pago Móvil)' :
+                                                                            selectedPaymentMethod.type === 'zelle' ? 'Teléfono (Zelle)' : 'Teléfono / WhatsApp'}
+                                                                    </div>
+                                                                    <div className="text-sm text-white font-medium">{selectedPaymentMethod.phoneNumber}</div>
+                                                                </div>
+                                                                <button onClick={() => copyToClipboard(selectedPaymentMethod.phoneNumber!, 'phoneNumber')} className="p-2 text-slate-400 hover:text-white bg-white/5 rounded-lg">
+                                                                    {copiedField === 'phoneNumber' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                                                                </button>
+                                                            </div>
+                                                        )}
                                                         {selectedPaymentMethod.accountNumber && (
                                                             <div className="flex justify-between items-center group">
                                                                 <div>
-                                                                    <div className="text-xs text-slate-400">Número de cuenta / Teléfono</div>
-                                                                    <div className="text-sm text-white font-medium">{selectedPaymentMethod.accountNumber}</div>
+                                                                    <div className="text-xs text-slate-400">
+                                                                        {selectedPaymentMethod.type === 'mobile_payment' ? 'Teléfono (Pago Móvil)' :
+                                                                            selectedPaymentMethod.type === 'bank_transfer' ? 'Número de Cuenta' : 'Número / Teléfono'}
+                                                                    </div>
+                                                                    <div className="text-sm text-white font-medium">
+                                                                        {selectedPaymentMethod.accountNumber}
+                                                                        {selectedPaymentMethod.accountType && <span className="ml-2 text-[10px] uppercase opacity-70">({selectedPaymentMethod.accountType})</span>}
+                                                                    </div>
                                                                 </div>
                                                                 <button onClick={() => copyToClipboard(selectedPaymentMethod.accountNumber!, 'accountNumber')} className="p-2 text-slate-400 hover:text-white bg-white/5 rounded-lg">
                                                                     {copiedField === 'accountNumber' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
@@ -1444,7 +1481,7 @@ export function MealPrepModal({
                                                         {selectedPaymentMethod.bankName && (
                                                             <div className="flex justify-between items-center group">
                                                                 <div>
-                                                                    <div className="text-xs text-slate-400">Banco</div>
+                                                                    <div className="text-xs text-slate-400">Banco / Entidad</div>
                                                                     <div className="text-sm text-white font-medium">{selectedPaymentMethod.bankName}</div>
                                                                 </div>
                                                                 <button onClick={() => copyToClipboard(selectedPaymentMethod.bankName!, 'bank')} className="p-2 text-slate-400 hover:text-white bg-white/5 rounded-lg">
@@ -1455,12 +1492,18 @@ export function MealPrepModal({
                                                         {selectedPaymentMethod.identificationNumber && (
                                                             <div className="flex justify-between items-center group">
                                                                 <div>
-                                                                    <div className="text-xs text-slate-400">Cédula / RIF</div>
+                                                                    <div className="text-xs text-slate-400">Cédula / RIF / ID</div>
                                                                     <div className="text-sm text-white font-medium">{selectedPaymentMethod.identificationNumber}</div>
                                                                 </div>
                                                                 <button onClick={() => copyToClipboard(selectedPaymentMethod.identificationNumber!, 'id')} className="p-2 text-slate-400 hover:text-white bg-white/5 rounded-lg">
                                                                     {copiedField === 'id' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                                                                 </button>
+                                                            </div>
+                                                        )}
+                                                        {selectedPaymentMethod.instructions && (
+                                                            <div className="pt-2 border-t border-white/5 mt-2">
+                                                                <div className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-1">Instrucciones Adicionales</div>
+                                                                <div className="text-xs text-slate-300 italic whitespace-pre-wrap">{selectedPaymentMethod.instructions}</div>
                                                             </div>
                                                         )}
                                                     </div>

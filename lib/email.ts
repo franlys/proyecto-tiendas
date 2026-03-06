@@ -108,8 +108,9 @@ export function generateEmailTemplate(
     backgroundImage,
   } = branding || {};
 
-  const backgroundStyle = backgroundImage
-    ? `background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url(${backgroundImage}) center/cover no-repeat;`
+  const headerBackground = backgroundImage || logo;
+  const backgroundStyle = headerBackground
+    ? `background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url(${headerBackground}) center/cover no-repeat; background-color: ${primaryColor};`
     : `background: linear-gradient(135deg, ${primaryColor}, ${secondaryColor});`;
 
   return `
