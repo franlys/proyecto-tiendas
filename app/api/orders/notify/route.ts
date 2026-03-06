@@ -90,23 +90,32 @@ export async function POST(request: NextRequest) {
         // Generate message
         const message = messageGenerator(customerName || "Cliente", orderNumber || orderId, total || 0);
 
-        // Get instance name for this shop
-        const instanceName = getInstanceName(shopId);
-
-        // Format phone number
-        const formattedPhone = formatPhoneForWhatsApp(customerPhone);
-
         // Send via Evolution API
         try {
-            // Get order details to check for invoiceUrl
+            // Get order details to check for invoiceUrl and shop slug
             const db = adminDb();
             let invoiceUrl = null;
+            let shopSlug = shopId; // Fallback to shopId if slug not found
+
             if (db) {
+                // Fetch shop document for slug
+                const shopDoc = await db.collection("shops").doc(shopId).get();
+                if (shopDoc.exists) {
+                    shopSlug = shopDoc.data()?.slug || shopId;
+                }
+
+                // Fetch order document for invoice
                 const orderDoc = await db.collection("shops").doc(shopId).collection("orders").doc(orderId).get();
                 if (orderDoc.exists) {
                     invoiceUrl = orderDoc.data()?.invoiceUrl;
                 }
             }
+
+            // Get instance name for this shop using PRECISELY the slug (as in confirm/route.ts)
+            const instanceName = getInstanceName(shopSlug);
+
+            // Format phone number
+            const formattedPhone = formatPhoneForWhatsApp(customerPhone);
 
             const result = await sendTextMessage(instanceName, formattedPhone, message);
 
