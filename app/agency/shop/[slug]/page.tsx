@@ -155,16 +155,21 @@ function FeatureToggle({
     description,
     enabled,
     onToggle,
+    disabled = false,
 }: {
     label: string;
     description: string;
     enabled: boolean;
     onToggle: () => void;
+    disabled?: boolean;
 }) {
     return (
         <div
-            className="flex items-center justify-between p-3 rounded-xl bg-black/20 hover:bg-black/30 transition-colors cursor-pointer"
-            onClick={onToggle}
+            className={cn(
+                "flex items-center justify-between p-3 rounded-xl bg-black/20 transition-all",
+                disabled ? "opacity-60 cursor-not-allowed" : "hover:bg-black/30 cursor-pointer"
+            )}
+            onClick={() => !disabled && onToggle()}
         >
             <div>
                 <p className="font-medium text-white">{label}</p>
@@ -592,7 +597,7 @@ function ShopDetailContent() {
 
         // Allow access if: Super Admin OR shop owner accessing their own shop
         const isShopOwner = user?.shopId === params.slug ||
-                           shops.find(s => s.slug === params.slug)?.id === user?.shopId;
+            shops.find(s => s.slug === params.slug)?.id === user?.shopId;
 
         if (!isSuperAdmin && !isShopOwner) {
             console.log("🔧 [SHOP-CONFIG] Not authorized, redirecting to login", {
@@ -1090,11 +1095,10 @@ function ShopDetailContent() {
                                         {/* Standard Template */}
                                         <button
                                             onClick={() => setTemplateType("standard")}
-                                            className={`p-4 rounded-xl border-2 transition-all text-left ${
-                                                templateType === "standard"
+                                            className={`p-4 rounded-xl border-2 transition-all text-left ${templateType === "standard"
                                                     ? "border-cyan-500 bg-cyan-500/10"
                                                     : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-                                            }`}
+                                                }`}
                                         >
                                             <div className="w-full h-16 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/20 mb-3 flex items-center justify-center">
                                                 <Store className="w-6 h-6 text-cyan-400" />
@@ -1108,11 +1112,10 @@ function ShopDetailContent() {
                                         {/* Premium Drop Template */}
                                         <button
                                             onClick={() => setTemplateType("premium-drop-v1")}
-                                            className={`p-4 rounded-xl border-2 transition-all text-left ${
-                                                templateType === "premium-drop-v1"
+                                            className={`p-4 rounded-xl border-2 transition-all text-left ${templateType === "premium-drop-v1"
                                                     ? "border-amber-500 bg-amber-500/10"
                                                     : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-                                            }`}
+                                                }`}
                                         >
                                             <div className="w-full h-16 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 mb-3 flex items-center justify-center">
                                                 <svg className="w-6 h-6 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1128,11 +1131,10 @@ function ShopDetailContent() {
                                         {/* Street Drop Template */}
                                         <button
                                             onClick={() => setTemplateType("street-drop-v1")}
-                                            className={`p-4 rounded-xl border-2 transition-all text-left ${
-                                                templateType === "street-drop-v1"
+                                            className={`p-4 rounded-xl border-2 transition-all text-left ${templateType === "street-drop-v1"
                                                     ? "border-red-500 bg-red-500/10"
                                                     : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-                                            }`}
+                                                }`}
                                         >
                                             <div className="w-full h-16 rounded-lg bg-gradient-to-br from-red-500/20 to-pink-500/20 mb-3 flex items-center justify-center relative overflow-hidden">
                                                 <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(255,255,255,0.1) 8px, rgba(255,255,255,0.1) 16px)" }} />
@@ -1150,11 +1152,10 @@ function ShopDetailContent() {
                                         {/* Cosmic Drop Template */}
                                         <button
                                             onClick={() => setTemplateType("cosmic-drop-v1")}
-                                            className={`p-4 rounded-xl border-2 transition-all text-left ${
-                                                templateType === "cosmic-drop-v1"
+                                            className={`p-4 rounded-xl border-2 transition-all text-left ${templateType === "cosmic-drop-v1"
                                                     ? "border-violet-500 bg-violet-500/10"
                                                     : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-                                            }`}
+                                                }`}
                                         >
                                             <div className="w-full h-16 rounded-lg bg-gradient-to-br from-violet-500/20 to-cyan-500/20 mb-3 flex items-center justify-center relative overflow-hidden">
                                                 <div className="absolute inset-0 opacity-40" style={{ background: "radial-gradient(circle at 30% 30%, rgba(139,92,246,0.3) 0%, transparent 50%), radial-gradient(circle at 70% 70%, rgba(6,182,212,0.3) 0%, transparent 50%)" }} />
@@ -1193,11 +1194,10 @@ function ShopDetailContent() {
                                                             preset: key as DropThemePreset,
                                                             primaryColor: preset.colors?.primary || prev.primaryColor,
                                                         }))}
-                                                        className={`p-3 rounded-xl border-2 transition-all text-center ${
-                                                            dropTheme.preset === key
+                                                        className={`p-3 rounded-xl border-2 transition-all text-center ${dropTheme.preset === key
                                                                 ? "border-red-500 bg-red-500/20 scale-105"
                                                                 : "border-white/10 bg-black/30 hover:border-white/30"
-                                                        }`}
+                                                            }`}
                                                     >
                                                         <div
                                                             className="w-full h-8 rounded-lg mb-2"
@@ -2122,7 +2122,9 @@ function ShopDetailContent() {
                                     Funcionalidades Activas
                                 </h3>
                                 <p className="text-sm text-slate-400 mb-6">
-                                    Activa o desactiva módulos para esta tienda. Los cambios se aplican inmediatamente.
+                                    {isSuperAdmin
+                                        ? "Activa o desactiva módulos para esta tienda. Los cambios se aplican inmediatamente."
+                                        : "Módulos activos para tu tienda. Para activar funciones adicionales, contacta con el administrador de la agencia."}
                                 </p>
 
                                 {/* Inventory Features */}
@@ -2136,18 +2138,21 @@ function ShopDetailContent() {
                                         description="Gestión de productos y stock"
                                         enabled={(shop.enabledFeatures || DEFAULT_FEATURES).includes("inventory")}
                                         onToggle={() => toggleFeature(shop.slug, "inventory")}
+                                        disabled={!isSuperAdmin}
                                     />
                                     <FeatureToggle
                                         label="Variantes"
                                         description="Tallas, colores, opciones de producto"
                                         enabled={(shop.enabledFeatures || DEFAULT_FEATURES).includes("variants")}
                                         onToggle={() => toggleFeature(shop.slug, "variants")}
+                                        disabled={!isSuperAdmin}
                                     />
                                     <FeatureToggle
                                         label="Alertas de Stock Bajo"
                                         description="Notificaciones cuando hay poco inventario"
                                         enabled={(shop.enabledFeatures || DEFAULT_FEATURES).includes("lowStockAlerts")}
                                         onToggle={() => toggleFeature(shop.slug, "lowStockAlerts")}
+                                        disabled={!isSuperAdmin}
                                     />
                                 </div>
 
@@ -2162,18 +2167,21 @@ function ShopDetailContent() {
                                         description="Recepción y gestión de pedidos"
                                         enabled={(shop.enabledFeatures || DEFAULT_FEATURES).includes("orders")}
                                         onToggle={() => toggleFeature(shop.slug, "orders")}
+                                        disabled={!isSuperAdmin}
                                     />
                                     <FeatureToggle
                                         label="Tablero Kanban"
                                         description="Vista visual de estados de pedidos"
                                         enabled={(shop.enabledFeatures || DEFAULT_FEATURES).includes("kanban")}
                                         onToggle={() => toggleFeature(shop.slug, "kanban")}
+                                        disabled={!isSuperAdmin}
                                     />
                                     <FeatureToggle
                                         label="Integración WhatsApp"
                                         description="Mensajes automáticos por WhatsApp"
                                         enabled={(shop.enabledFeatures || DEFAULT_FEATURES).includes("whatsappIntegration")}
                                         onToggle={() => toggleFeature(shop.slug, "whatsappIntegration")}
+                                        disabled={!isSuperAdmin}
                                     />
                                 </div>
 
@@ -2188,18 +2196,21 @@ function ShopDetailContent() {
                                         description="Base de datos de clientes"
                                         enabled={(shop.enabledFeatures || DEFAULT_FEATURES).includes("crm")}
                                         onToggle={() => toggleFeature(shop.slug, "crm")}
+                                        disabled={!isSuperAdmin}
                                     />
                                     <FeatureToggle
                                         label="Historial de Cliente"
                                         description="Ver compras anteriores por cliente"
                                         enabled={(shop.enabledFeatures || DEFAULT_FEATURES).includes("clientHistory")}
                                         onToggle={() => toggleFeature(shop.slug, "clientHistory")}
+                                        disabled={!isSuperAdmin}
                                     />
                                     <FeatureToggle
                                         label="Programa de Lealtad"
                                         description="Puntos y recompensas para clientes"
                                         enabled={(shop.enabledFeatures || DEFAULT_FEATURES).includes("loyalty")}
                                         onToggle={() => toggleFeature(shop.slug, "loyalty")}
+                                        disabled={!isSuperAdmin}
                                     />
                                 </div>
 
@@ -2214,18 +2225,21 @@ function ShopDetailContent() {
                                         description="Email y WhatsApp marketing"
                                         enabled={(shop.enabledFeatures || DEFAULT_FEATURES).includes("campaigns")}
                                         onToggle={() => toggleFeature(shop.slug, "campaigns")}
+                                        disabled={!isSuperAdmin}
                                     />
                                     <FeatureToggle
                                         label="Generador de Promos"
                                         description="Crear stories y gráficos promocionales"
                                         enabled={(shop.enabledFeatures || DEFAULT_FEATURES).includes("promoGenerator")}
                                         onToggle={() => toggleFeature(shop.slug, "promoGenerator")}
+                                        disabled={!isSuperAdmin}
                                     />
                                     <FeatureToggle
                                         label="Email Marketing"
                                         description="Envío masivo de correos"
                                         enabled={(shop.enabledFeatures || DEFAULT_FEATURES).includes("emailMarketing")}
                                         onToggle={() => toggleFeature(shop.slug, "emailMarketing")}
+                                        disabled={!isSuperAdmin}
                                     />
                                 </div>
 
@@ -2240,12 +2254,14 @@ function ShopDetailContent() {
                                         description="Usuarios y roles de empleados"
                                         enabled={(shop.enabledFeatures || DEFAULT_FEATURES).includes("staffManagement")}
                                         onToggle={() => toggleFeature(shop.slug, "staffManagement")}
+                                        disabled={!isSuperAdmin}
                                     />
                                     <FeatureToggle
                                         label="Comisiones"
                                         description="Cálculo de comisiones por ventas"
                                         enabled={(shop.enabledFeatures || DEFAULT_FEATURES).includes("staffCommissions")}
                                         onToggle={() => toggleFeature(shop.slug, "staffCommissions")}
+                                        disabled={!isSuperAdmin}
                                     />
                                 </div>
 
@@ -2260,18 +2276,21 @@ function ShopDetailContent() {
                                         description="Reportes y estadísticas avanzadas"
                                         enabled={(shop.enabledFeatures || DEFAULT_FEATURES).includes("analytics")}
                                         onToggle={() => toggleFeature(shop.slug, "analytics")}
+                                        disabled={!isSuperAdmin}
                                     />
                                     <FeatureToggle
                                         label="Multi-Ubicación"
                                         description="Gestionar múltiples sucursales"
                                         enabled={(shop.enabledFeatures || DEFAULT_FEATURES).includes("multiLocation")}
                                         onToggle={() => toggleFeature(shop.slug, "multiLocation")}
+                                        disabled={!isSuperAdmin}
                                     />
                                     <FeatureToggle
                                         label="API"
                                         description="Acceso a API para integraciones"
                                         enabled={(shop.enabledFeatures || DEFAULT_FEATURES).includes("api")}
                                         onToggle={() => toggleFeature(shop.slug, "api")}
+                                        disabled={!isSuperAdmin}
                                     />
                                 </div>
                             </div>
