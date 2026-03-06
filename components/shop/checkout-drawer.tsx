@@ -31,6 +31,7 @@ import { collection, addDoc, serverTimestamp, doc, getDoc } from "firebase/fires
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase";
 import { Button } from "@/components/ui";
+import { useManualPaymentConfig } from "@/lib/hooks";
 import type { ProductCartItem } from "@/components/shared/cart-context";
 import { StripePayButton } from "@/components/shop/stripe-checkout-button";
 import { PayPalPayButton } from "@/components/shop/paypal-checkout-button";
@@ -72,7 +73,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
     // Payment timing state
     const [paymentTiming, setPaymentTiming] = useState<"pay_now" | "pay_on_delivery">("pay_on_delivery");
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<ManualPaymentMethod | null>(null);
-    const [manualPaymentConfig, setManualPaymentConfig] = useState<ShopManualPaymentConfig | null>(null);
+    const { config: manualPaymentConfig } = useManualPaymentConfig(shop?.id || shop?.slug);
     const [receiptFile, setReceiptFile] = useState<File | null>(null);
     const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
     const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
@@ -81,26 +82,6 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
     // Phase 15: Thematic UI
     const isStreetDrop = shop?.templateType === "street-drop-v1" || shop?.slug === "gingxerstudio";
 
-    // Load manual payment configuration
-    useEffect(() => {
-        async function loadManualPaymentConfig() {
-            if (!shop?.id && !shop?.slug) return;
-            const shopId = shop.id || shop.slug;
-            try {
-                const configRef = doc(db, "shops", shopId, "settings", "payments");
-                const configSnap = await getDoc(configRef);
-                if (configSnap.exists()) {
-                    const config = configSnap.data() as ShopManualPaymentConfig;
-                    if (config.enabled && config.paymentMethods?.length > 0) {
-                        setManualPaymentConfig(config);
-                    }
-                }
-            } catch (err) {
-                console.error("Error loading manual payment config:", err);
-            }
-        }
-        loadManualPaymentConfig();
-    }, [shop?.id, shop?.slug]);
 
     // Check if shop has payments enabled (Stripe or PayPal)
     const paymentProvider = shop?.payments?.provider;

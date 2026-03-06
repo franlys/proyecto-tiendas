@@ -1,19 +1,17 @@
 "use client";
 
-import { useMemo, useRef } from "react";
-import { ShoppingBag, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { ShoppingBag, ChevronLeft, ChevronRight, ChefHat, ArrowRight } from "lucide-react";
 import { ProductCard } from "./product-card";
 import { MealPrepProductCard } from "./meal-prep-product-card";
 import { StaggerContainer, StaggerItem, ScrollReveal, useShop, useCart } from "@/components/shared";
-import { useBusinessFeatures, useCombinedBusinessFeatures } from "@/lib/hooks";
+import { useManualPaymentConfig, useBusinessFeatures, useCombinedBusinessFeatures } from "@/lib/hooks";
 import {
   PRODUCT_CATEGORY_LABELS,
   type Product,
   type ProductCategory,
 } from "@/lib/constants";
-import { useState, useEffect } from "react";
 import { MealPrepModal } from "./meal-prep-modal";
-import { ChefHat, ArrowRight } from "lucide-react";
 import type { MealPlate } from "@/lib/types/meal-prep.types";
 import { cn } from "@/lib/utils";
 
@@ -84,6 +82,7 @@ export function ProductGrid({
   const shop = useShop();
   const { addProduct } = useCart();
   const { hasInventory, config } = useCombinedBusinessFeatures(shop?.businessTypes || [shop?.businessType || "otro"]);
+  const { config: manualPaymentConfig } = useManualPaymentConfig(shop?.id || shop?.slug);
 
   const isMealPrep = hidePriceIfZero ||
     (shop?.businessType as any) === "meal_prep" ||
@@ -256,6 +255,7 @@ export function ProductGrid({
         businessAddress={businessAddress}
         trainingPackages={trainingPackages}
         mealPrepConfig={shop?.mealPrepConfig}
+        manualPaymentConfig={manualPaymentConfig || undefined}
       />
       {categories.map((category) => {
         const catInfo = getCategoryInfo(category);
