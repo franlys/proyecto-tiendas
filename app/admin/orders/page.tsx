@@ -35,7 +35,7 @@ import { cn } from "@/lib/utils";
 
 // Order Detail Modal
 function OrderDetailModal({
-  order,
+  order: initialOrder,
   onClose,
   shopId,
 }: {
@@ -43,7 +43,10 @@ function OrderDetailModal({
   onClose: () => void;
   shopId: string;
 }) {
-  const { updateOrderStatus, updatePaymentStatus, updateOrder } = useSalesOrders();
+  const { orders, updateOrderStatus, updatePaymentStatus, updateOrder } = useSalesOrders();
+
+  // Find the latest version of the order from context to ensure real-time updates in the modal
+  const order = orders.find(o => o.id === initialOrder?.id) || initialOrder;
   const { getShop } = useShops();
   const [isNotifying, setIsNotifying] = useState(false);
   const [autoNotify, setAutoNotify] = useState(true); // Auto-notify enabled by default
