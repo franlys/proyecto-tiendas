@@ -248,6 +248,7 @@ export interface MealPrepDynamicCategory {
     isRequired: boolean;
     selectionLimit?: number; // Cuántos items se pueden elegir de esta categoría
     extraPrice?: number; // Precio por agregar esta categoría como extra o desbloquearla
+    order?: number; // Orden de visualización
 }
 
 export interface MealPrepExtraItem {

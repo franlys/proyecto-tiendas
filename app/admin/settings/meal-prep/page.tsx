@@ -185,6 +185,21 @@ function MealPrepSettingsContent() {
     // ======================
     // CATEGORIES LOGIC
     // ======================
+    const sortedCategories = useMemo(() => {
+        return [...categories].sort((a, b) => (a.order || 0) - (b.order || 0));
+    }, [categories]);
+
+    // Helper string normalizer to match logic in MealPrepModal
+    const normalizeCatName = (name: string) =>
+        name.toLowerCase()
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove accents
+            .trim();
+
+    const getCatalogPreview = (catName: string) => {
+        const normSearch = normalizeCatName(catName);
+        return products.filter(p => p.category && normalizeCatName(p.category) === normSearch);
+    };
+
     const addCategory = () => {
         setCategories([
             ...categories,
@@ -195,6 +210,7 @@ function MealPrepSettingsContent() {
                 isRequired: false,
                 selectionLimit: 1,
                 extraPrice: 0,
+                order: categories.length,
             },
         ]);
     };
@@ -524,59 +540,83 @@ function MealPrepSettingsContent() {
                                             </Button>
                                         </div>
 
-                                        {/* Category Extras */}
-                                        <div className="pl-2 md:pl-4 border-l-2 border-zinc-800 space-y-3">
-                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-                                                <h4 className="text-sm font-medium text-zinc-400 flex items-center gap-2">
-                                                    <Tag className="w-4 h-4" /> Elementos / Ingredientes
+                                        {/* Vista Previa del Catálogo (Base) */}
+                                        <div className="mt-6 pt-6 border-t border-zinc-800">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <Package className="w-4 h-4 text-zinc-400" />
+                                                <h4 className="text-sm font-semibold text-zinc-400">Productos Vinculados (Del Inventario)</h4>
+                                            </div>
+                                            <div className="bg-zinc-900/50 rounded-lg p-4 border border-zinc-800">
+                                                {cat.name && getCatalogPreview(cat.name).length > 0 ? (
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {getCatalogPreview(cat.name).map(p => (
+                                                            <span key={p.id} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-zinc-800 border border-zinc-700 text-zinc-300">
+                                                                {p.name}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-xs text-zinc-500 space-y-1">
+                                                        <p className="italic">No hay productos en tu catálogo con la categoría "{cat.name || "..."}".</p>
+                                                        <p>Para que los productos aparezcan aquí, ve a tu <span className="text-zinc-400 font-medium">Inventario</span> y asígnales la categoría exacta: <span className="text-primary-400 font-mono">"{cat.name || "frutas"}"</span>.</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Extras Items */}
+                                        <div className="mt-8 pt-8 border-t border-zinc-800">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-4">
+                                                <h4 className="text-sm font-medium text-zinc-200 flex items-center gap-2">
+                                                    <Tag className="w-4 h-4 text-primary" /> Extras / Recargos Especiales
                                                 </h4>
                                                 <Button
                                                     onClick={() => addExtra(cat.id)}
-                                                    size="sm"
                                                     variant="ghost"
                                                     className="h-8 text-primary hover:text-primary hover:bg-primary/10 w-fit"
                                                 >
-                                                    <Plus className="w-4 h-4 mr-1" /> Nuevo Ingrediente
+                                                    <Plus className="w-4 h-4 mr-1" /> Nuevo Item Extra
                                                 </Button>
                                             </div>
 
-                                            {extras.filter((e) => e.categoryId === cat.id).length === 0 ? (
-                                                <p className="text-xs text-zinc-600 italic py-2">No hay ingredientes registrados en esta categoría.</p>
-                                            ) : (
-                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                                                    {extras
-                                                        .filter((e) => e.categoryId === cat.id)
-                                                        .map((extra) => (
-                                                            <div key={extra.id} className="flex items-center gap-2 bg-zinc-900 p-2 rounded-lg border border-white/5">
+                                            <p className="text-[11px] text-zinc-500 mb-4 bg-zinc-900/30 p-2 rounded border border-zinc-800/50">
+                                                Usa esta sección solo para cobrar recargos adicionales (ej: "Extra Pollo", "Aguacate")
+                                                o para opciones que NO están en tu catálogo regular.
+                                            </p>
+
+                                            <div className="space-y-3">
+                                                {extras
+                                                    .filter((e) => e.categoryId === cat.id)
+                                                    .map((extra) => (
+                                                        <div key={extra.id} className="flex items-center gap-2 bg-zinc-900 p-2 rounded-lg border border-white/5">
+                                                            <input
+                                                                type="text"
+                                                                value={extra.name}
+                                                                onChange={(e) => updateExtra(extra.id, "name", e.target.value)}
+                                                                className="flex-1 bg-transparent border-0 px-2 py-1 text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary rounded"
+                                                                placeholder="Nombre..."
+                                                            />
+                                                            <div className="relative w-24 shrink-0">
+                                                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">$</span>
                                                                 <input
-                                                                    type="text"
-                                                                    value={extra.name}
-                                                                    onChange={(e) => updateExtra(extra.id, "name", e.target.value)}
-                                                                    className="flex-1 bg-transparent border-0 px-2 py-1 text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary rounded"
-                                                                    placeholder="Nombre..."
+                                                                    type="number"
+                                                                    value={extra.price}
+                                                                    onChange={(e) => updateExtra(extra.id, "price", Number(e.target.value))}
+                                                                    className="w-full bg-zinc-950 border border-zinc-700 rounded pl-6 pr-2 py-1 text-white text-sm focus:outline-none focus:border-primary"
+                                                                    placeholder="0"
                                                                 />
-                                                                <div className="relative w-24 shrink-0">
-                                                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">$</span>
-                                                                    <input
-                                                                        type="number"
-                                                                        value={extra.price}
-                                                                        onChange={(e) => updateExtra(extra.id, "price", Number(e.target.value))}
-                                                                        className="w-full bg-zinc-950 border border-zinc-700 rounded pl-6 pr-2 py-1 text-white text-sm focus:outline-none focus:border-primary"
-                                                                        placeholder="0"
-                                                                    />
-                                                                </div>
-                                                                <Button
-                                                                    onClick={() => deleteExtra(extra.id)}
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="h-8 w-8 p-0 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 shrink-0"
-                                                                >
-                                                                    <Trash2 className="w-4 h-4" />
-                                                                </Button>
                                                             </div>
-                                                        ))}
-                                                </div>
-                                            )}
+                                                            <Button
+                                                                onClick={() => deleteExtra(extra.id)}
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-8 w-8 p-0 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 shrink-0"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </Button>
+                                                        </div>
+                                                    ))}
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
