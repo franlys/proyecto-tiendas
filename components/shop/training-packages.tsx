@@ -46,6 +46,7 @@ export function TrainingPackages({ shopId }: TrainingPackagesProps) {
     const [enrollmentStep, setEnrollmentStep] = useState<"info" | "preferences" | "upsell" | "summary">("info");
     const [customerName, setCustomerName] = useState("");
     const [customerPhone, setCustomerPhone] = useState("");
+    const [customerEmail, setCustomerEmail] = useState("");
     const [customerAddress, setCustomerAddress] = useState("");
     const [preferredDays, setPreferredDays] = useState<DayOfWeek[]>([]);
     const [preferredTime, setPreferredTime] = useState<"morning" | "afternoon" | "evening">("morning");
@@ -156,6 +157,7 @@ export function TrainingPackages({ shopId }: TrainingPackagesProps) {
                     shopId,
                     customerName,
                     customerPhone,
+                    customerEmail,
                     customerAddress,
                     items,
                     total: totalPrice,
@@ -359,11 +361,18 @@ export function TrainingPackages({ shopId }: TrainingPackagesProps) {
                                             placeholder="Tu teléfono (WhatsApp)"
                                             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
                                         />
+                                        <input
+                                            type="email"
+                                            value={customerEmail}
+                                            onChange={(e) => setCustomerEmail(e.target.value)}
+                                            placeholder="Tu correo electrónico"
+                                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                                        />
                                     </div>
 
                                     <Button
                                         onClick={() => setEnrollmentStep("preferences")}
-                                        disabled={!customerName || !customerPhone}
+                                        disabled={!customerName || !customerPhone || !customerEmail}
                                         className="w-full"
                                     >
                                         Siguiente

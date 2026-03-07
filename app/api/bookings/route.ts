@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
       "servicePrice",
       "date",
       "time",
+      "customerEmail",
     ];
 
     for (const field of requiredFields) {
@@ -191,6 +192,7 @@ async function notifyOwnerOfNewBooking(shopId: string, booking: CreateBookingInp
       try {
         const emailContent = emailTemplates.appointmentConfirmation({
           clientName: booking.customerName,
+          clientEmail: (booking as any).customerEmail,
           serviceName: booking.serviceName,
           date: booking.date,
           time: booking.time,
@@ -239,6 +241,7 @@ async function notifyOwnerOfNewBooking(shopId: string, booking: CreateBookingInp
       `📆 *Fecha:* ${dateStr}\n` +
       `🕐 *Hora:* ${booking.time}\n` +
       `⏱️ *Duración:* ${booking.serviceDuration} min\n` +
+      `📧 *Email:* ${(booking as any).customerEmail || "No proporcionado"}\n` +
       `💰 *Precio:* $${booking.servicePrice.toLocaleString()}\n\n` +
       `_Responde "Citas" para ver todas las citas del día._`;
 

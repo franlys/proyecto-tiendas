@@ -112,6 +112,7 @@ export function AppointmentModal({
   const [notes, setNotes] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState<{ id: string, number: string } | null>(null);
 
@@ -133,7 +134,7 @@ export function AppointmentModal({
         const dateStr = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, "0")}-${today.getDate().toString().padStart(2, "0")}`;
 
         const response = await fetch(
-          `/api/staff/available?shopId=${shop.slug}&services=${serviceIds}&date=${dateStr}`
+          `/api/staff/available?shopId=${shop.id || shop.slug}&services=${serviceIds}&date=${dateStr}`
         );
 
         if (response.ok) {
@@ -165,7 +166,7 @@ export function AppointmentModal({
         const day = selectedDate.getDate().toString().padStart(2, "0");
         const dateStr = `${year}-${month}-${day}`;
 
-        let url = `/api/bookings/slots?shopId=${shop.slug}&date=${dateStr}&duration=${totalDuration}`;
+        let url = `/api/bookings/slots?shopId=${shop.id || shop.slug}&date=${dateStr}&duration=${totalDuration}`;
 
         // Add staffId if multi-staff mode and staff selected
         if (multiStaffEnabled && selectedStaff) {
@@ -230,7 +231,7 @@ export function AppointmentModal({
 
       // Create proper booking via API
       const bookingPayload: Record<string, unknown> = {
-        shopId: shop.slug,
+        shopId: shop.id || shop.slug,
         customerName: "Cliente WhatsApp", // Will be updated when WhatsApp message is received
         customerPhone: "", // Will be updated when WhatsApp message is received
         serviceId: services.length === 1 ? services[0].id : "multi-service",
@@ -257,6 +258,7 @@ export function AppointmentModal({
           ...bookingPayload,
           customerName,
           customerPhone: customerPhone || "pending",
+          customerEmail: customerEmail || "",
         }),
       });
 
@@ -317,16 +319,18 @@ export function AppointmentModal({
   const canProceedFromCurrentStep = (): boolean => {
     if (multiStaffEnabled) {
       switch (step) {
-        case 1: return canProceedToStaffStep;
-        case 2: return canProceedToDateStep;
+        case 1: return canProceedToStep2;
+        case 2: return selectedStaff !== null;
         case 3: return canProceedToConfirm;
-        default: return false;
+        case 4: return !!(customerName && customerPhone.length >= 10 && customerEmail);
+        default: return true;
       }
     } else {
       switch (step) {
         case 1: return canProceedToStep2;
         case 2: return canProceedToConfirm;
-        default: return false;
+        case 3: return !!(customerName && customerPhone.length >= 10 && customerEmail);
+        default: return true;
       }
     }
   };
@@ -673,6 +677,16 @@ export function AppointmentModal({
                       className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <label className="text-sm text-slate-300">Correo Electrónico</label>
+                    <input
+                      type="email"
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
+                      placeholder="Ej: correo@ejemplo.com"
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50"
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -780,10 +794,7 @@ export function AppointmentModal({
                 {!isConfirmStep ? (
                   <Button
                     onClick={() => setStep((s) => Math.min(totalSteps, s + 1))}
-                    disabled={
-                      (isDateTimeStep && !canProceedToConfirm) ||
-                      (isInfoStep && (!customerName || customerPhone.length < 10))
-                    }
+                    disabled={!canProceedFromCurrentStep()}
                     className="flex-1"
                   >
                     Continuar

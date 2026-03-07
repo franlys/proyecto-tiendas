@@ -100,6 +100,9 @@ export async function POST(request: NextRequest) {
             source: "web"
         };
 
+        const deliveryTypeLabel = (deliveryType === "recogida" || deliveryType === "pickup") ? "Recoger en tienda" : "Entrega a domicilio";
+        const ownerDeliveryLabel = (deliveryType === "recogida" || deliveryType === "pickup") ? "Para Recoger" : "Directo a Domicilio";
+
         if (customerAddress) orderData.customerAddress = customerAddress;
         if (customerEmail) orderData.customerEmail = customerEmail;
         if (notes) orderData.notes = notes;
@@ -252,7 +255,7 @@ export async function POST(request: NextRequest) {
                     shopLogo: shop.logo,
                     shopPrimaryColor: shop.theme?.primaryColor,
                     shopBackgroundImage: shop.banner || shop.background?.image || shop.hero,
-                    deliveryType: deliveryType === "recogida" ? "Recoger en tienda" : "Entrega a domicilio",
+                    deliveryType: deliveryTypeLabel,
                     paymentStatus: paymentInfo?.paymentTiming === "pay_now" ? "Comprobante enviado" : "Pendiente"
                 });
 
@@ -312,7 +315,7 @@ export async function POST(request: NextRequest) {
                     shopLogo: shop.logo,
                     shopPrimaryColor: shop.theme?.primaryColor,
                     shopBackgroundImage: shop.banner || shop.background?.image || shop.hero,
-                    deliveryType: deliveryType === "recogida" ? "Recoger en tienda" : "Entrega a domicilio",
+                    deliveryType: deliveryTypeLabel,
                     paymentStatus: paymentInfo?.paymentTiming === "pay_now" ? "Comprobante enviado" : "Pendiente"
                 });
 
@@ -351,7 +354,7 @@ export async function POST(request: NextRequest) {
                     ownerMsg += `• ${item.name} ($${item.price.toLocaleString()})\n`;
                     if (item.notes) ownerMsg += `  _${item.notes}_\n`;
                 });
-                ownerMsg += `\nTipo: *${deliveryType === "recogida" ? "Para Recoger" : "Dírecto a Domicilio"}*\n`;
+                ownerMsg += `\nTipo: *${ownerDeliveryLabel}*\n`;
                 if (customerAddress) {
                     ownerMsg += `📍 Direcc: ${customerAddress}\n`;
                 }
