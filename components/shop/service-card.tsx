@@ -1,9 +1,10 @@
 "use client";
 
+import { useRef } from "react";
 import Image from "next/image";
 import { Plus, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCart } from "@/components/shared";
+import { useCart, useVisualFeedback } from "@/components/shared";
 import type { Service } from "@/lib/constants";
 
 interface ServiceCardProps {
@@ -12,18 +13,29 @@ interface ServiceCardProps {
 
 export function ServiceCard({ service }: ServiceCardProps) {
   const { addService, removeItem, isInCart } = useCart();
+  const { triggerFlyToCart, triggerTrashItem } = useVisualFeedback();
+  const cardRef = useRef<HTMLDivElement>(null);
   const inCart = isInCart(service.id);
 
-  const handleToggle = () => {
+  const handleToggle = (e: React.MouseEvent) => {
     if (inCart) {
+      // Trigger trash animation when removing
+      triggerTrashItem(e.clientX, e.clientY);
       removeItem(service.id);
     } else {
+      // Trigger fly-to-cart animation when adding
+      if (cardRef.current) {
+        const rect = cardRef.current.getBoundingClientRect();
+        const startX = rect.left + rect.width / 2;
+        const startY = rect.top + rect.height / 3;
+        triggerFlyToCart(startX, startY, service.image);
+      }
       addService(service);
     }
   };
 
   return (
-    <div className="group relative">
+    <div ref={cardRef} className="group relative">
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden rounded-2xl bg-surface">
         <Image
@@ -42,7 +54,7 @@ export function ServiceCard({ service }: ServiceCardProps) {
 
         {/* Add/Remove Button */}
         <button
-          onClick={handleToggle}
+          onClick={(e) => handleToggle(e)}
           className={cn(
             "absolute bottom-3 right-3 z-10",
             "w-10 h-10 rounded-full",
