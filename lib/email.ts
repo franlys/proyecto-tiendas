@@ -295,10 +295,9 @@ export const emailTemplates = {
       ${data.deliveryType ? `
       <div style="background: #f0fdf4; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
         <p style="margin: 0; color: #166534; font-size: 13px;">
-          📦 Tipo de entrega: <strong>${data.deliveryType === "pickup" || data.deliveryType === "recogida" || data.deliveryType.toLowerCase().includes("recog") ? "Pasar a recoger" : "Envío a domicilio"}</strong>
+          📦 Tipo de entrega: <strong>${(data.deliveryType === "pickup" || data.deliveryType === "recogida" || data.deliveryType.toLowerCase().includes("recog")) ? "Pasar a recoger" : "Envío a domicilio"}</strong>
         </p>
-      </div>
-      ` : ""}
+      </div>` : ""}
 
       ${data.paymentStatus ? `
       <div style="background: ${data.paymentStatus === "pending_verification" ? "#fef3c7" : "#f0fdf4"}; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
@@ -308,17 +307,11 @@ export const emailTemplates = {
             data.paymentStatus === "verified" ? "Pago verificado" : data.paymentStatus
         }</strong>
         </p>
-      </div>
-      ` : ""}
-
-        </p>
-      </div>
-      ` : ""}
-
-      < p style = "margin: 32px 0 0; color: #64748b; font-size: 13px;" >
-    Te notificaremos cuando tu pedido esté listo. ¡Gracias por tu confianza!
-</p>
-  `, branding);
+      </div>` : ""}
+      <p style="margin: 32px 0 0; color: #64748b; font-size: 13px;">
+        Te notificaremos cuando tu pedido esté listo. ¡Gracias por tu confianza!
+      </p>
+    `, branding);
   },
 
   /**
@@ -353,106 +346,92 @@ export const emailTemplates = {
     const itemsHtml = data.items
       .map(
         (item) => `
-  < tr >
-  <td style="padding: 12px 0; border-bottom: 1px solid #e2e8f0; font-size: 14px;" >
-    <div style="font-weight: 600; color: #0f172a;" > ${ item.name } x${ item.quantity } </div>
-            ${ item.notes ? `<div style="font-size: 11px; color: #06b6d4; font-style: italic; margin-top: 2px;">${item.notes}</div>` : "" }
-</td>
-  < td style = "padding: 12px 0; border-bottom: 1px solid #e2e8f0; text-align: right; font-size: 14px; font-weight: 500; color: #0f172a; vertical-align: top;" >
-    $${ item.price.toLocaleString() }
-</td>
-  </tr>
-    `
+        <tr>
+          <td style="padding: 12px 0; border-bottom: 1px solid #e2e8f0; font-size: 14px;">
+            <div style="font-weight: 600; color: #0f172a;">${item.name} x${item.quantity}</div>
+            ${item.notes ? `<div style="font-size: 11px; color: #06b6d4; font-style: italic; margin-top: 2px;">${item.notes}</div>` : ""}
+          </td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #e2e8f0; text-align: right; font-size: 14px; font-weight: 500; color: #0f172a; vertical-align: top;">
+            $${item.price.toLocaleString()}
+          </td>
+        </tr>`
       )
       .join("");
 
     return generateEmailTemplate(`
-  < h2 style = "margin: 0 0 16px; color: #0f172a; font-size: 20px;" >
+      <h2 style="margin: 0 0 16px; color: #0f172a; font-size: 20px;">
         🔔 ¡Nuevo Pedido Recibido!
-  </h2>
+      </h2>
 
-  < div style = "background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin-bottom: 24px; border-radius: 0 8px 8px 0;" >
-    <strong style="color: #92400e;" > Pedido #${ data.orderNumber } </strong>
-      < p style = "margin: 8px 0 0; color: #92400e; font-size: 14px;" >
-        Revisa los detalles y procesa el pedido.
+      <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin-bottom: 24px; border-radius: 0 8px 8px 0;">
+        <strong style="color: #92400e;">Pedido #${data.orderNumber}</strong>
+        <p style="margin: 8px 0 0; color: #92400e; font-size: 14px;">
+          Revisa los detalles y procesa el pedido.
         </p>
-          </div>
+      </div>
 
-          < div style = "background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 24px;" >
-            <h3 style="margin: 0 0 12px; color: #0f172a; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;" >
-              Datos del Cliente
-                </h3>
-                < table style = "width: 100%; border-collapse: collapse;" >
-                  <tr>
-                  <td style="padding: 6px 0; color: #64748b; font-size: 13px;" > Nombre </td>
-                    < td style = "padding: 6px 0; text-align: right; font-weight: 600; color: #0f172a;" > ${ data.customerName } </td>
-                      </tr>
-                      < tr >
-                      <td style="padding: 6px 0; color: #64748b; font-size: 13px;" > Teléfono </td>
-                        < td style = "padding: 6px 0; text-align: right; color: #0f172a;" > ${ data.customerPhone } </td>
-                          </tr>
-          ${
-  data.customerEmail ? `
+      <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+        <h3 style="margin: 0 0 12px; color: #0f172a; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
+          Datos del Cliente
+        </h3>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Nombre</td>
+            <td style="padding: 6px 0; text-align: right; font-weight: 600; color: #0f172a;">${data.customerName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Teléfono</td>
+            <td style="padding: 6px 0; text-align: right; color: #0f172a;">${data.customerPhone}</td>
+          </tr>
+          ${data.customerEmail ? `
           <tr>
             <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Email</td>
             <td style="padding: 6px 0; text-align: right; color: #0f172a;">${data.customerEmail}</td>
-          </tr>
-          ` : ""
-}
-          ${
-  data.customerAddress ? `
+          </tr>` : ""}
+          ${data.customerAddress ? `
           <tr>
             <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Dirección</td>
             <td style="padding: 6px 0; text-align: right; color: #0f172a;">${data.customerAddress}</td>
+          </tr>` : ""}
+        </table>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <h3 style="margin: 0 0 12px; color: #0f172a; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
+          Productos
+        </h3>
+        <table style="width: 100%; border-collapse: collapse;">
+          ${itemsHtml}
+          <tr>
+            <td style="padding: 12px 0; font-weight: 700; font-size: 16px;">Total</td>
+            <td style="padding: 12px 0; text-align: right; font-weight: 700; font-size: 18px; color: ${data.shopPrimaryColor || "#06b6d4"};">
+              $${data.total.toLocaleString()}
+            </td>
           </tr>
-          ` : ""
-}
-</table>
-  </div>
+        </table>
+      </div>
 
-  < div style = "margin-bottom: 24px;" >
-    <h3 style="margin: 0 0 12px; color: #0f172a; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;" >
-      Productos
-      </h3>
-      < table style = "width: 100%; border-collapse: collapse;" >
-        ${ itemsHtml }
-<tr>
-  <td style="padding: 12px 0; font-weight: 700; font-size: 16px;" > Total </td>
-    < td style = "padding: 12px 0; text-align: right; font-weight: 700; font-size: 18px; color: ${data.shopPrimaryColor || "#06b6d4"};" >
-      $${ data.total.toLocaleString() }
-</td>
-  </tr>
-  </table>
-  </div>
-
-      ${
-  data.deliveryType ? `
+      ${data.deliveryType ? `
       <div style="background: #f0fdf4; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
         <p style="margin: 0; color: #166534; font-size: 13px;">
           📦 <strong>${data.deliveryType === "pickup" || data.deliveryType === "recogida" ? "Para recoger en tienda" : "Envío a domicilio"}</strong>
         </p>
-      </div>
-      ` : ""
-}
+      </div>` : ""}
 
-      ${
-  data.paymentInfo ? `
+      ${data.paymentInfo ? `
       <div style="background: ${data.paymentInfo.paymentTiming === "pay_now" ? "#dbeafe" : "#f1f5f9"}; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
         <p style="margin: 0; color: ${data.paymentInfo.paymentTiming === "pay_now" ? "#1e40af" : "#475569"}; font-size: 13px;">
           💳 <strong>${data.paymentInfo.paymentTiming === "pay_now" ? `Pago anticipado - ${data.paymentInfo.paymentMethodName || "Transferencia"}` : "Pago al recibir"}</strong>
           ${data.paymentInfo.receiptUrl ? " (Comprobante adjunto)" : ""}
         </p>
-      </div>
-      ` : ""
-}
+      </div>` : ""}
 
-<div style="text-align: center; margin: 32px 0;" >
-  <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://linko.app"}/admin/orders"
-style = "display: inline-block; background: linear-gradient(135deg, ${data.shopPrimaryColor || "#06b6d4"}, #0f172a); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600;" >
-  Ver Pedido
-    </a>
-    </div>
-      `, branding);
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://linko.app"}/admin/orders"
+          style="display: inline-block; background: linear-gradient(135deg, ${data.shopPrimaryColor || "#06b6d4"}, #0f172a); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600;">
+          Ver Pedido
+        </a>
+      </div>`, branding);
   },
 
   /**
@@ -460,30 +439,29 @@ style = "display: inline-block; background: linear-gradient(135deg, ${data.shopP
    */
   welcomeShopOwner: (data: { name: string; shopName: string }) => {
     return generateEmailTemplate(`
-    < h2 style = "margin: 0 0 16px; color: #0f172a; font-size: 20px;" >
+      <h2 style="margin: 0 0 16px; color: #0f172a; font-size: 20px;">
         ¡Bienvenido!
-  </h2>
+      </h2>
 
-  < p style = "margin: 0 0 16px;" >
-    Hola < strong > ${ data.name } </strong>,
+      <p style="margin: 0 0 16px;">
+        Hola <strong>${data.name}</strong>,
       </p>
 
-      < p style = "margin: 0 0 24px;" >
-        Tu tienda < strong > ${ data.shopName } </strong> ha sido creada exitosamente.
+      <p style="margin: 0 0 24px;">
+        Tu tienda <strong>${data.shopName}</strong> ha sido creada exitosamente.
         Ahora puedes empezar a configurar tu negocio y recibir clientes.
       </p>
 
-  < div style = "text-align: center; margin: 32px 0;" >
-    <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://linko.app"}/admin"
-style = "display: inline-block; background: linear-gradient(135deg, #06b6d4, #3b82f6); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600;" >
-  Ir a mi Panel
-    </a>
-    </div>
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://linko.app"}/admin"
+          style="display: inline-block; background: linear-gradient(135deg, #06b6d4, #3b82f6); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600;">
+          Ir a mi Panel
+        </a>
+      </div>
 
-    < p style = "margin: 0; color: #64748b; font-size: 13px;" >
-      Si tienes alguna pregunta, nuestro equipo de soporte está aquí para ayudarte.
-      </p>
-          `, { name: data.shopName });
+      <p style="margin: 0; color: #64748b; font-size: 13px;">
+        Si tienes alguna pregunta, nuestro equipo de soporte está aquí para ayudarte.
+      </p>`, { name: data.shopName });
   },
 
   /**
@@ -491,34 +469,33 @@ style = "display: inline-block; background: linear-gradient(135deg, #06b6d4, #3b
    */
   passwordReset: (data: { name: string; resetLink: string }) => {
     return generateEmailTemplate(`
-        < h2 style = "margin: 0 0 16px; color: #0f172a; font-size: 20px;" >
-          Restablecer Contraseña
-            </h2>
+      <h2 style="margin: 0 0 16px; color: #0f172a; font-size: 20px;">
+        Restablecer Contraseña
+      </h2>
 
-            < p style = "margin: 0 0 16px;" >
-              Hola < strong > ${ data.name } </strong>,
-                </p>
+      <p style="margin: 0 0 16px;">
+        Hola <strong>${data.name}</strong>,
+      </p>
 
-                < p style = "margin: 0 0 24px;" >
-                  Recibimos una solicitud para restablecer tu contraseña.
+      <p style="margin: 0 0 24px;">
+        Recibimos una solicitud para restablecer tu contraseña.
         Haz clic en el botón de abajo para crear una nueva.
       </p>
 
-  < div style = "text-align: center; margin: 32px 0;" >
-    <a href="${data.resetLink}"
-style = "display: inline-block; background: linear-gradient(135deg, #06b6d4, #3b82f6); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600;" >
-  Restablecer Contraseña
-    </a>
-    </div>
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${data.resetLink}"
+          style="display: inline-block; background: linear-gradient(135deg, #06b6d4, #3b82f6); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600;">
+          Restablecer Contraseña
+        </a>
+      </div>
 
-    < p style = "margin: 0 0 8px; color: #64748b; font-size: 13px;" >
-      Este enlace expirará en 1 hora.
+      <p style="margin: 0 0 8px; color: #64748b; font-size: 13px;">
+        Este enlace expirará en 1 hora.
       </p>
 
-        < p style = "margin: 0; color: #64748b; font-size: 13px;" >
-          Si no solicitaste este cambio, ignora este correo.
-      </p>
-              `);
+      <p style="margin: 0; color: #64748b; font-size: 13px;">
+        Si no solicitaste este cambio, ignora este correo.
+      </p>`);
   },
 
   /**
@@ -548,78 +525,72 @@ style = "display: inline-block; background: linear-gradient(135deg, #06b6d4, #3b
     };
 
     return generateEmailTemplate(`
-            < h2 style = "margin: 0 0 16px; color: #0f172a; font-size: 20px;" >
+      <h2 style="margin: 0 0 16px; color: #0f172a; font-size: 20px;">
         🔔 ¡Nuevo Comprobante de Pago!
-  </h2>
+      </h2>
 
-  < p style = "margin: 0 0 24px;" >
-    ${ data.orderNumber ? `Pedido <strong>#${data.orderNumber}</strong> - ` : "" }Un cliente ha enviado un comprobante de pago que requiere validación.
+      <p style="margin: 0 0 24px;">
+        ${data.orderNumber ? `Pedido <strong>#${data.orderNumber}</strong> - ` : ""}Un cliente ha enviado un comprobante de pago que requiere validación.
       </p>
 
-      < div style = "background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin-bottom: 24px; border-radius: 0 8px 8px 0;" >
-        <strong style="color: #92400e;" >⚠️ Acción Requerida: </strong>
-          < p style = "margin: 8px 0 0; color: #92400e; font-size: 14px;" >
-            Revisa el comprobante y valida el pago en tu panel de administración.
+      <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin-bottom: 24px; border-radius: 0 8px 8px 0;">
+        <strong style="color: #92400e;">⚠️ Acción Requerida: </strong>
+        <p style="margin: 8px 0 0; color: #92400e; font-size: 14px;">
+          Revisa el comprobante y valida el pago en tu panel de administración.
         </p>
-              </div>
+      </div>
 
-              < div style = "background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 24px;" >
-                <table style="width: 100%; border-collapse: collapse;" >
-                  <tr>
-                  <td style="padding: 8px 0; color: #64748b; font-size: 13px;" > Cliente </td>
-                    < td style = "padding: 8px 0; text-align: right; font-weight: 600; color: #0f172a;" > ${ data.customerName } </td>
-                      </tr>
-                      < tr >
-                      <td style="padding: 8px 0; color: #64748b; font-size: 13px;" > Teléfono </td>
-                        < td style = "padding: 8px 0; text-align: right; color: #0f172a;" > ${ data.customerPhone } </td>
-                          </tr>
-          ${
-  data.customerEmail ? `
+      <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Cliente</td>
+            <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #0f172a;">${data.customerName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Teléfono</td>
+            <td style="padding: 8px 0; text-align: right; color: #0f172a;">${data.customerPhone}</td>
+          </tr>
+          ${data.customerEmail ? `
           <tr>
             <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Email</td>
             <td style="padding: 8px 0; text-align: right; color: #0f172a;">${data.customerEmail}</td>
+          </tr>` : ""}
+          <tr>
+            <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Método de Pago</td>
+            <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #0f172a;">${data.paymentMethod}</td>
           </tr>
-          ` : ""
-}
-<tr>
-  <td style="padding: 8px 0; color: #64748b; font-size: 13px;" > Método de Pago </td>
-    < td style = "padding: 8px 0; text-align: right; font-weight: 600; color: #0f172a;" > ${ data.paymentMethod } </td>
-      </tr>
-          ${
-  data.referenceNumber ? `
+          ${data.referenceNumber ? `
           <tr>
             <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Referencia</td>
             <td style="padding: 8px 0; text-align: right; font-family: monospace; color: #0f172a;">${data.referenceNumber}</td>
+          </tr>` : ""}
+          <tr>
+            <td style="padding: 12px 0; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0;">Monto</td>
+            <td style="padding: 12px 0; text-align: right; font-weight: 700; font-size: 18px; color: ${data.shopPrimaryColor || "#06b6d4"}; border-top: 1px solid #e2e8f0;">
+              $${data.amount.toLocaleString()} ${data.currency}
+            </td>
           </tr>
-          ` : ""
-}
-<tr>
-  <td style="padding: 12px 0; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0;" > Monto </td>
-    < td style = "padding: 12px 0; text-align: right; font-weight: 700; font-size: 18px; color: ${data.shopPrimaryColor || "#06b6d4"}; border-top: 1px solid #e2e8f0;" >
-      $${ data.amount.toLocaleString() } ${ data.currency }
-</td>
-  </tr>
-  </table>
-  </div>
+        </table>
+      </div>
 
-  < div style = "margin-bottom: 24px;" >
-    <p style="margin: 0 0 12px; color: #64748b; font-size: 13px;" >📷 Comprobante adjunto: </p>
-      < a href = "${data.receiptUrl}" target = "_blank" style = "display: block;" >
-        <img src="${data.receiptUrl}" alt = "Comprobante de pago" style = "max-width: 100%; border-radius: 8px; border: 1px solid #e2e8f0;" >
-          </a>
-          </div>
+      <div style="margin-bottom: 24px;">
+        <p style="margin: 0 0 12px; color: #64748b; font-size: 13px;">📷 Comprobante adjunto: </p>
+        <a href="${data.receiptUrl}" target="_blank" style="display: block;">
+          <img src="${data.receiptUrl}" alt="Comprobante de pago" style="max-width: 100%; border-radius: 8px; border: 1px solid #e2e8f0;">
+        </a>
+      </div>
 
-          < div style = "text-align: center; margin: 32px 0;" >
-            <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://linko.app"}/admin/orders${data.orderId ? `?orderId=${data.orderId}` : ""}"
-style = "display: inline-block; background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600;" >
-  Validar Pago
-    </a>
-    </div>
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://linko.app"}/admin/orders${data.orderId ? `?orderId=${data.orderId}` : ""}"
+          style="display: inline-block; background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600;">
+          Validar Pago
+        </a>
+      </div>
 
-    < p style = "margin: 0; color: #64748b; font-size: 13px; text-align: center;" >
-      O accede a tu panel de administración para gestionar los pagos pendientes.
+      <p style="margin: 0; color: #64748b; font-size: 13px; text-align: center;">
+        O accede a tu panel de administración para gestionar los pagos pendientes.
       </p>
-          `, branding);
+    `, branding);
   },
 };
 
