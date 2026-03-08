@@ -86,9 +86,10 @@ interface SalesChartProps {
     sales: number;
     orders: number;
   }>;
+  orderLabel?: string;
 }
 
-export function SalesChart({ data }: SalesChartProps) {
+export function SalesChart({ data, orderLabel = "Pedido" }: SalesChartProps) {
   // Custom tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -98,8 +99,8 @@ export function SalesChart({ data }: SalesChartProps) {
           <p className="text-primary text-sm">
             Ventas: ${payload[0].value.toLocaleString()}
           </p>
-          <p className="text-slate-400 text-xs">
-            {payload[0].payload.orders} órdenes
+          <p className="text-slate-400 text-xs text-capitalize">
+            {payload[0].payload.orders} {orderLabel.toLowerCase()}{payload[0].payload.orders !== 1 ? 's' : ''}
           </p>
         </div>
       );
@@ -166,7 +167,9 @@ interface DashboardKPIsProps {
   totalOrders: number;
   averageTicket: number;
   topService: string | null;
-  businessType?: "retail" | "service" | "rental" | "restaurant";
+  businessType?: string;
+  orderLabel?: string;
+  productLabel?: string;
 }
 
 export function DashboardKPIs({
@@ -176,8 +179,21 @@ export function DashboardKPIs({
   averageTicket,
   topService,
   businessType = "service", // Default to service for backward compatibility
+  orderLabel,
+  productLabel,
 }: DashboardKPIsProps) {
-  const isService = businessType === "service" || businessType === "rental";
+  const type = businessType?.toLowerCase() || "";
+  const isService = type.includes("service") ||
+    type.includes("rental") ||
+    type.includes("beauty") ||
+    type.includes("salon") ||
+    type.includes("nails") ||
+    type.includes("makeup") ||
+    type.includes("spa") ||
+    type.includes("barber");
+
+  const finalOrderLabel = orderLabel || (isService ? "Cita" : "Pedido");
+  const finalProductLabel = productLabel || (isService ? "Servicio" : "Producto");
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -192,12 +208,12 @@ export function DashboardKPIs({
 
       {/* Conditionally show Appointments or Orders */}
       <KPICard
-        title={isService ? "Citas Hoy" : "Pedidos Hoy"}
+        title={`${finalOrderLabel}s Hoy`}
         value={totalOrders}
         subtitle={
           totalOrders === 1
-            ? (isService ? "cita agendada" : "pedido recibido")
-            : (isService ? "citas agendadas" : "pedidos recibidos")
+            ? `${finalOrderLabel.toLowerCase()} recibid${finalOrderLabel.endsWith('a') ? 'a' : 'o'}`
+            : `${finalOrderLabel.toLowerCase()}s recibid${finalOrderLabel.endsWith('a') ? 'a' : 'o'}s`
         }
         icon={isService ? <Calendar className="w-6 h-6" /> : <Package className="w-6 h-6" />}
         variant="gold"
@@ -211,7 +227,7 @@ export function DashboardKPIs({
 
       {/* Show Top Service/Product or specific metric based on type */}
       <KPICard
-        title={isService ? "Top Servicio" : "Top Producto"}
+        title={`Top ${finalProductLabel}`}
         value={topService || "—"}
         subtitle="Más solicitado hoy"
         icon={<Sparkles className="w-6 h-6" />}

@@ -579,6 +579,8 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
             averageTicket={todayStats.averageTicket}
             topService={todayStats.topService}
             businessType={shop?.businessType}
+            orderLabel={features.hasBookings ? features.labels.booking : features.labels.order}
+            productLabel={features.hasBookings ? features.labels.services : features.labels.products}
           />
 
           {/* Orders and Bookings Widgets - Based on business type */}
@@ -603,7 +605,10 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Sales Chart - Takes 2 columns */}
             <div className="lg:col-span-2">
-              <SalesChart data={displayChartData} />
+              <SalesChart
+                data={displayChartData}
+                orderLabel={features.hasBookings ? features.labels.booking : features.labels.order}
+              />
               {!hasRealData && (
                 <p className="text-xs text-slate-500 text-center mt-2">
                   📊 Datos de demostración - Las gráficas se actualizarán con ventas reales
@@ -621,6 +626,7 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
                 totalOrders={todayStats.totalOrders}
                 topService={todayStats.topService}
                 ownerPhone={shop?.contact?.phone || ""}
+                orderLabel={features.hasBookings ? features.labels.booking : features.labels.order}
               />
             </div>
           </div>

@@ -14,6 +14,7 @@ interface DailyReportCardProps {
   totalOrders: number;
   topService: string | null;
   ownerPhone?: string;
+  orderLabel?: string;
 }
 
 export function DailyReportCard({
@@ -24,6 +25,7 @@ export function DailyReportCard({
   totalOrders,
   topService,
   ownerPhone = "",
+  orderLabel = "Pedido",
 }: DailyReportCardProps) {
   const [isSent, setIsSent] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -41,7 +43,7 @@ export function DailyReportCard({
   const buildReportMessage = () => {
     let message = `📊 *Reporte ${shopName}* - ${formattedDate}\n\n`;
     message += `✅ Ventas: $${totalSales.toLocaleString()}\n`;
-    message += `📅 Citas: ${totalOrders}\n`;
+    message += `📅 ${orderLabel}s: ${totalOrders}\n`;
 
     if (topService) {
       message += `✨ Top: ${topService}\n`;
@@ -146,7 +148,7 @@ export function DailyReportCard({
         <p className="text-gold mb-2">📊 Reporte {shopName}</p>
         <div className="space-y-1 text-slate-300">
           <p>✅ Ventas: <span className="text-white font-bold">${totalSales.toLocaleString()}</span></p>
-          <p>📅 Citas: <span className="text-white font-bold">{totalOrders}</span></p>
+          <p>📅 {orderLabel}s: <span className="text-white font-bold">{totalOrders}</span></p>
           {topService && (
             <p>✨ Top: <span className="text-white">{topService}</span></p>
           )}
@@ -164,7 +166,7 @@ export function DailyReportCard({
       {/* Today's Orders List */}
       {orders.length > 0 && (
         <div className="mb-6">
-          <p className="text-sm text-slate-400 mb-3">Órdenes de hoy:</p>
+          <p className="text-sm text-slate-400 mb-3">{orderLabel}s de hoy:</p>
           <div className="space-y-2 max-h-40 overflow-y-auto">
             {orders.map((order) => (
               <div
@@ -190,7 +192,7 @@ export function DailyReportCard({
       {orders.length === 0 && (
         <div className="text-center py-6 mb-6">
           <Clock className="w-10 h-10 text-slate-600 mx-auto mb-2" />
-          <p className="text-slate-500 text-sm">No hay órdenes hoy</p>
+          <p className="text-slate-500 text-sm">No hay {orderLabel.toLowerCase()}s hoy</p>
         </div>
       )}
 
