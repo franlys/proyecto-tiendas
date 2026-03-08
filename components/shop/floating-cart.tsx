@@ -113,12 +113,25 @@ export function FloatingCart() {
 
   return (
     <>
-      <div
+      <motion.div
+        key={`cart-${totalItems}`}
+        initial={{ y: 20, opacity: 0, scale: 0.95 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        transition={{
+          type: "spring",
+          damping: 15,
+          stiffness: 300,
+          scale: {
+            type: "spring",
+            damping: 10,
+            stiffness: 400,
+            restDelta: 0.001
+          }
+        }}
         className={cn(
           "fixed bottom-4 left-2 right-2 z-40",
           "sm:left-4 sm:right-4",
           "md:left-auto md:right-6 md:max-w-md",
-          "animate-in slide-in-from-bottom-4 duration-300",
           // Limit max height when expanded to prevent blocking content
           isCartExpanded && "max-h-[70vh] overflow-hidden",
           isStreetDrop
@@ -239,126 +252,134 @@ export function FloatingCart() {
                 "mt-4 pt-4 border-t max-h-[35vh] overflow-y-auto space-y-3 overscroll-contain",
                 isStreetDrop ? "border-red-500/30" : "border-white/10"
               )}>
-                {/* Products with images and controls */}
-                {products.map((product, idx) => {
-                  const extrasKey = product.selectedExtras?.map(e => e.extraId).join("-") || "";
-                  const uniqueKey = `${product.id}-${product.variantId || ""}-${extrasKey}-${idx}`;
-                  const itemPrice = (product.promoPrice || product.price) + (product.extrasTotal || 0);
+                <AnimatePresence initial={false}>
+                  {/* Products with images and controls */}
+                  {products.map((product, idx) => {
+                    const extrasKey = product.selectedExtras?.map(e => e.extraId).join("-") || "";
+                    const uniqueKey = `${product.id}-${product.variantId || ""}-${extrasKey}-${idx}`;
+                    const itemPrice = (product.promoPrice || product.price) + (product.extrasTotal || 0);
 
-                  return (
-                    <div
-                      key={uniqueKey}
+                    return (
+                      <motion.div
+                        key={uniqueKey}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className={cn(
+                          "flex items-center gap-3 p-2 rounded-lg",
+                          isStreetDrop ? "bg-black/50 border border-red-500/20" : "bg-white/5"
+                        )}
+                      >
+                        {/* Product Image */}
+                        <div className="w-14 h-14 rounded-lg overflow-hidden bg-black/50 flex-shrink-0 relative">
+                          <Image
+                            src={product.image || "/placeholder.png"}
+                            alt={product.name}
+                            fill
+                            className="object-cover"
+                            sizes="56px"
+                          />
+                        </div>
+
+                        {/* Product Info */}
+                        <div className="flex-1 min-w-0">
+                          <p className={cn(
+                            "text-sm font-medium text-white truncate",
+                            isStreetDrop && "uppercase tracking-wider text-xs"
+                          )}>
+                            {product.name}
+                          </p>
+                          {product.variantName && (
+                            <p className={cn(
+                              "text-xs",
+                              isStreetDrop ? "text-red-400" : "text-primary"
+                            )}>
+                              {product.variantName}
+                            </p>
+                          )}
+                          {product.selectedExtras && product.selectedExtras.length > 0 && (
+                            <p className="text-xs text-slate-400">
+                              +{product.selectedExtras.map(e => e.name).join(", ")}
+                            </p>
+                          )}
+                          <p className={cn(
+                            "text-sm font-bold mt-1",
+                            isStreetDrop ? "text-red-400" : "text-gold"
+                          )}>
+                            ${(itemPrice * product.quantity).toLocaleString()}
+                          </p>
+                        </div>
+
+                        {/* Quantity Controls */}
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => {
+                              if (product.quantity > 1) {
+                                updateProductQuantity(product.id, product.quantity - 1, product.variantId);
+                              } else {
+                                removeItem(product.id, product.variantId);
+                              }
+                            }}
+                            className={cn(
+                              "w-7 h-7 rounded-lg flex items-center justify-center transition-colors",
+                              isStreetDrop
+                                ? "bg-red-500/20 text-red-400 hover:bg-red-500/40"
+                                : "bg-white/10 text-white hover:bg-white/20"
+                            )}
+                          >
+                            {product.quantity === 1 ? <Trash2 className="w-3.5 h-3.5" /> : <Minus className="w-3.5 h-3.5" />}
+                          </button>
+                          <span className={cn(
+                            "w-8 text-center text-sm font-medium",
+                            isStreetDrop ? "text-white font-black" : "text-white"
+                          )}>
+                            {product.quantity}
+                          </span>
+                          <button
+                            onClick={() => updateProductQuantity(product.id, product.quantity + 1, product.variantId)}
+                            className={cn(
+                              "w-7 h-7 rounded-lg flex items-center justify-center transition-colors",
+                              isStreetDrop
+                                ? "bg-red-500/20 text-red-400 hover:bg-red-500/40"
+                                : "bg-white/10 text-white hover:bg-white/20"
+                            )}
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+
+                  {/* Services (for beauty businesses) */}
+                  {hasServices && services.map((service) => (
+                    <motion.div
+                      key={service.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
                       className={cn(
                         "flex items-center gap-3 p-2 rounded-lg",
                         isStreetDrop ? "bg-black/50 border border-red-500/20" : "bg-white/5"
                       )}
                     >
-                      {/* Product Image */}
-                      <div className="w-14 h-14 rounded-lg overflow-hidden bg-black/50 flex-shrink-0 relative">
-                        <Image
-                          src={product.image || "/placeholder.png"}
-                          alt={product.name}
-                          fill
-                          className="object-cover"
-                          sizes="56px"
-                        />
+                      <div className="w-14 h-14 rounded-lg overflow-hidden bg-primary/20 flex-shrink-0 flex items-center justify-center">
+                        <Calendar className="w-6 h-6 text-primary" />
                       </div>
-
-                      {/* Product Info */}
                       <div className="flex-1 min-w-0">
-                        <p className={cn(
-                          "text-sm font-medium text-white truncate",
-                          isStreetDrop && "uppercase tracking-wider text-xs"
-                        )}>
-                          {product.name}
-                        </p>
-                        {product.variantName && (
-                          <p className={cn(
-                            "text-xs",
-                            isStreetDrop ? "text-red-400" : "text-primary"
-                          )}>
-                            {product.variantName}
-                          </p>
-                        )}
-                        {product.selectedExtras && product.selectedExtras.length > 0 && (
-                          <p className="text-xs text-slate-400">
-                            +{product.selectedExtras.map(e => e.name).join(", ")}
-                          </p>
-                        )}
-                        <p className={cn(
-                          "text-sm font-bold mt-1",
-                          isStreetDrop ? "text-red-400" : "text-gold"
-                        )}>
-                          ${(itemPrice * product.quantity).toLocaleString()}
-                        </p>
+                        <p className="text-sm font-medium text-white truncate">{service.name}</p>
+                        <p className="text-xs text-slate-400">{service.duration} min</p>
+                        <p className="text-sm font-bold text-primary mt-1">${service.price.toLocaleString()}</p>
                       </div>
-
-                      {/* Quantity Controls */}
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => {
-                            if (product.quantity > 1) {
-                              updateProductQuantity(product.id, product.quantity - 1, product.variantId);
-                            } else {
-                              removeItem(product.id, product.variantId);
-                            }
-                          }}
-                          className={cn(
-                            "w-7 h-7 rounded-lg flex items-center justify-center transition-colors",
-                            isStreetDrop
-                              ? "bg-red-500/20 text-red-400 hover:bg-red-500/40"
-                              : "bg-white/10 text-white hover:bg-white/20"
-                          )}
-                        >
-                          {product.quantity === 1 ? <Trash2 className="w-3.5 h-3.5" /> : <Minus className="w-3.5 h-3.5" />}
-                        </button>
-                        <span className={cn(
-                          "w-8 text-center text-sm font-medium",
-                          isStreetDrop ? "text-white font-black" : "text-white"
-                        )}>
-                          {product.quantity}
-                        </span>
-                        <button
-                          onClick={() => updateProductQuantity(product.id, product.quantity + 1, product.variantId)}
-                          className={cn(
-                            "w-7 h-7 rounded-lg flex items-center justify-center transition-colors",
-                            isStreetDrop
-                              ? "bg-red-500/20 text-red-400 hover:bg-red-500/40"
-                              : "bg-white/10 text-white hover:bg-white/20"
-                          )}
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {/* Services (for beauty businesses) */}
-                {hasServices && services.map((service) => (
-                  <div
-                    key={service.id}
-                    className={cn(
-                      "flex items-center gap-3 p-2 rounded-lg",
-                      isStreetDrop ? "bg-black/50 border border-red-500/20" : "bg-white/5"
-                    )}
-                  >
-                    <div className="w-14 h-14 rounded-lg overflow-hidden bg-primary/20 flex-shrink-0 flex items-center justify-center">
-                      <Calendar className="w-6 h-6 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{service.name}</p>
-                      <p className="text-xs text-slate-400">{service.duration} min</p>
-                      <p className="text-sm font-bold text-primary mt-1">${service.price.toLocaleString()}</p>
-                    </div>
-                    <button
-                      onClick={() => removeItem(service.id)}
-                      className="w-7 h-7 rounded-lg bg-white/10 text-white hover:bg-red-500/20 hover:text-red-400 flex items-center justify-center transition-colors"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
+                      <button
+                        onClick={() => removeItem(service.id)}
+                        className="w-7 h-7 rounded-lg bg-white/10 text-white hover:bg-red-500/20 hover:text-red-400 flex items-center justify-center transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
 
                 {/* Duration indicator for beauty services */}
                 {shouldUseAppointmentFlow && totalDuration > 0 && (

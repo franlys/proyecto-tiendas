@@ -594,9 +594,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
             {/* If neither orders nor bookings, show a placeholder */}
             {!features.dashboardWidgets.pendingOrders && !features.dashboardWidgets.upcomingBookings && (
               <div className="lg:col-span-2 glass-panel rounded-2xl p-6 text-center">
-                <Briefcase className="w-12 h-12 mx-auto mb-3 text-slate-500 opacity-50" />
-                <p className="text-slate-400">Panel de {features.config.label}</p>
-                <p className="text-xs text-slate-500 mt-1">Configura tu negocio desde Mi Negocio</p>
+                <Briefcase className="w-12 h-12 mx-auto mb-3 text-slate-400 opacity-50" />
+                <p className="text-slate-300">Panel de {features.config.label}</p>
+                <p className="text-xs text-slate-400 mt-1">Configura tu negocio desde Mi Negocio</p>
               </div>
             )}
           </div>
@@ -639,7 +639,7 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               <Shield className="w-8 h-8 text-cyan-400" />
             </div>
             <h2 className="text-xl font-bold text-white mb-2">Vista de Mantenimiento</h2>
-            <p className="text-slate-400 mb-6">
+            <p className="text-slate-300 mb-6">
               Como administrador de agencia, los reportes financieros individuales de cada tienda
               son privados. Accede al panel de Agencia para ver el estado de suscripciones.
             </p>
@@ -670,9 +670,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
             </div>
             <div className="flex-1">
               <p className="text-white font-medium">Ver Tienda</p>
-              <p className="text-xs text-slate-400">{shop?.name || "Mi Tienda"}</p>
+              <p className="text-xs text-slate-300">{shop?.name || "Mi Tienda"}</p>
             </div>
-            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+            <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
           </Link>
 
           {/* Calendario - Solo si tiene bookings */}
@@ -686,9 +686,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">Calendario de {features.labels.booking}s</p>
-                <p className="text-xs text-slate-400">Gestionar agenda</p>
+                <p className="text-xs text-slate-300">Gestionar agenda</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
             </Link>
           )}
 
@@ -703,9 +703,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">{features.labels.products}</p>
-                <p className="text-xs text-slate-400">Gestionar catálogo</p>
+                <p className="text-xs text-slate-300">Gestionar catálogo</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
             </Link>
           )}
 
@@ -720,9 +720,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">{features.labels.services}</p>
-                <p className="text-xs text-slate-400">Órdenes de reparación</p>
+                <p className="text-xs text-slate-300">Órdenes de reparación</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
             </Link>
           )}
 
@@ -737,9 +737,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">Rentas</p>
-                <p className="text-xs text-slate-400">Gestionar alquileres</p>
+                <p className="text-xs text-slate-300">Gestionar alquileres</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
             </Link>
           )}
 
@@ -754,9 +754,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">Meal Prep</p>
-                <p className="text-xs text-slate-400">Reglas y Categorías</p>
+                <p className="text-xs text-slate-300">Reglas y Categorías</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
             </Link>
           )}
 
@@ -772,9 +772,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">Mesas</p>
-                <p className="text-xs text-slate-400">Gestionar reservas</p>
+                <p className="text-xs text-slate-300">Gestionar reservas</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
             </Link>
           )}
 
@@ -788,9 +788,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
             </div>
             <div className="flex-1">
               <p className="text-white font-medium">Crear Promo</p>
-              <p className="text-xs text-slate-400">Stories Instagram</p>
+              <p className="text-xs text-slate-300">Stories Instagram</p>
             </div>
-            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+            <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
           </Link>
 
           {/* Settings - Siempre visible */}
@@ -803,9 +803,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
             </div>
             <div className="flex-1">
               <p className="text-white font-medium">Diseño Visual</p>
-              <p className="text-xs text-slate-400">Colores, fondo, efectos</p>
+              <p className="text-xs text-slate-300">Colores, fondo, efectos</p>
             </div>
-            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+            <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
           </Link>
 
           {/* Billing - Solo para Shop Owner */}
@@ -819,9 +819,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">Mi Suscripción</p>
-                <p className="text-xs text-slate-400">Ver facturación</p>
+                <p className="text-xs text-slate-300">Ver facturación</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
             </Link>
           )}
 
@@ -836,9 +836,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">Información de Contacto</p>
-                <p className="text-xs text-slate-400">Teléfono, redes sociales, dirección</p>
+                <p className="text-xs text-slate-300">Teléfono, redes sociales, dirección</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
             </Link>
           )}
 
@@ -853,9 +853,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">Horarios de Atención</p>
-                <p className="text-xs text-slate-400">Configura disponibilidad y citas</p>
+                <p className="text-xs text-slate-300">Configura disponibilidad y citas</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
             </Link>
           )}
 
@@ -872,9 +872,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
                 </div>
                 <div className="flex-1">
                   <p className="text-white font-medium">Paquetes de Entrenamiento</p>
-                  <p className="text-xs text-slate-400">Planes, precios y distancia</p>
+                  <p className="text-xs text-slate-300">Planes, precios y distancia</p>
                 </div>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+                <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
               </Link>
             )}
         </div>
@@ -945,7 +945,7 @@ function AdminDashboardWithSubscription() {
                 <h1 className="font-display text-2xl font-bold text-white">
                   Dashboard
                 </h1>
-                <p className="text-slate-400 text-sm">
+                <p className="text-slate-300 text-sm">
                   {user?.name} · {isSuperAdmin ? "Super Admin" : "Shop Owner"}
                 </p>
               </div>

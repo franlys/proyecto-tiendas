@@ -72,8 +72,8 @@ export function KPICard({
 
       <div>
         <p className="text-3xl font-bold text-white mb-1">{value}</p>
-        <p className="text-sm text-slate-400">{title}</p>
-        {subtitle && <p className="text-xs text-slate-500 mt-1">{subtitle}</p>}
+        <p className="text-sm text-slate-300">{title}</p>
+        {subtitle && <p className="text-xs text-slate-400 mt-1">{subtitle}</p>}
       </div>
     </div>
   );
@@ -99,7 +99,7 @@ export function SalesChart({ data, orderLabel = "Pedido" }: SalesChartProps) {
           <p className="text-primary text-sm">
             Ventas: ${payload[0].value.toLocaleString()}
           </p>
-          <p className="text-slate-400 text-xs text-capitalize">
+          <p className="text-slate-300 text-xs text-capitalize">
             {payload[0].payload.orders} {orderLabel.toLowerCase()}{payload[0].payload.orders !== 1 ? 's' : ''}
           </p>
         </div>
@@ -113,11 +113,11 @@ export function SalesChart({ data, orderLabel = "Pedido" }: SalesChartProps) {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-white">Ventas Semanales</h3>
-          <p className="text-sm text-slate-400">Últimos 7 días</p>
+          <p className="text-sm text-slate-300">Últimos 7 días</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-primary" />
-          <span className="text-xs text-slate-400">Ventas</span>
+          <span className="text-xs text-slate-300">Ventas</span>
         </div>
       </div>
 
@@ -133,7 +133,7 @@ export function SalesChart({ data, orderLabel = "Pedido" }: SalesChartProps) {
               dataKey="day"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#94a3b8", fontSize: 12 }}
+              tick={{ fill: "#cbd5e1", fontSize: 12 }}
             />
             <YAxis
               axisLine={false}

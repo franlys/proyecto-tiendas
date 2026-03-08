@@ -174,7 +174,7 @@ export function BeautyConsultationForm({
                                     onChange={(e) => setEventDescription(e.target.value)}
                                     placeholder="Ej: Es una boda en la playa al atardecer, el dress code es elegante casual..."
                                     rows={3}
-                                    className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white placeholder-slate-500 resize-none focus:outline-none focus:border-pink-500"
+                                    className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white placeholder-slate-500 resize-none focus:outline-none focus:border-primary"
                                 />
                             </div>
                         )}
@@ -289,7 +289,7 @@ export function BeautyConsultationForm({
                                 onChange={(e) => setNotes(e.target.value)}
                                 placeholder="Cualquier cosa que quieras que la maquillista sepa..."
                                 rows={3}
-                                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white placeholder-slate-500 resize-none focus:outline-none focus:border-pink-500"
+                                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white placeholder-slate-500 resize-none focus:outline-none focus:border-primary"
                             />
                         </div>
                     </div>
@@ -314,7 +314,7 @@ export function BeautyConsultationForm({
                                     type="checkbox"
                                     checked={wearContactLenses}
                                     onChange={(e) => setWearContactLenses(e.target.checked)}
-                                    className="w-5 h-5 rounded border-white/20 bg-black/20 text-pink-500 focus:ring-pink-500"
+                                    className="w-5 h-5 rounded border-white/20 bg-black/20 text-primary focus:ring-primary"
                                 />
                                 <div>
                                     <p className="text-white font-medium">Uso lentes de contacto</p>
@@ -328,7 +328,7 @@ export function BeautyConsultationForm({
                                     type="checkbox"
                                     checked={hadReactionBefore}
                                     onChange={(e) => setHadReactionBefore(e.target.checked)}
-                                    className="w-5 h-5 rounded border-white/20 bg-black/20 text-pink-500 focus:ring-pink-500"
+                                    className="w-5 h-5 rounded border-white/20 bg-black/20 text-primary focus:ring-primary"
                                 />
                                 <div>
                                     <p className="text-white font-medium">He tenido reacciones a productos de maquillaje</p>
@@ -368,7 +368,7 @@ export function BeautyConsultationForm({
                                         type="button"
                                         onClick={() => setPreferCrueltyFree(!preferCrueltyFree)}
                                         className={`px-4 py-2 rounded-full border text-sm transition-all ${preferCrueltyFree
-                                            ? "border-pink-500 bg-pink-500/20 text-pink-400"
+                                            ? "border-primary bg-primary/20 text-primary"
                                             : "border-white/10 text-slate-300 hover:border-white/30"
                                             }`}
                                     >
@@ -397,7 +397,7 @@ export function BeautyConsultationForm({
                 return (
                     <div className="space-y-6">
                         <div className="text-center mb-8">
-                            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center">
+                            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-primary to-orange-500 flex items-center justify-center">
                                 <Sparkles className="w-8 h-8 text-white" />
                             </div>
                             <h2 className="text-2xl font-bold text-white mb-2">
@@ -508,7 +508,7 @@ export function BeautyConsultationForm({
             <div className="max-w-2xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <p className="text-sm text-pink-400 mb-1">Pre-consulta para</p>
+                    <p className="text-sm text-primary mb-1">Pre-consulta para</p>
                     <h1 className="text-xl font-bold text-white">{serviceName}</h1>
                 </div>
 
@@ -520,7 +520,7 @@ export function BeautyConsultationForm({
                     </div>
                     <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-gradient-to-r from-pink-500 to-purple-500 transition-all duration-300"
+                            className="h-full bg-gradient-to-r from-primary to-orange-500 transition-all duration-300"
                             style={{ width: `${progress}%` }}
                         />
                     </div>
@@ -558,7 +558,7 @@ export function BeautyConsultationForm({
                             <Button
                                 onClick={handleSubmit}
                                 disabled={isSubmitting}
-                                className="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-8"
+                                className="bg-gradient-to-r from-primary to-orange-500 text-white px-8"
                             >
                                 {isSubmitting ? (
                                     <>
@@ -576,7 +576,7 @@ export function BeautyConsultationForm({
                             <Button
                                 onClick={goNext}
                                 disabled={!canProceed()}
-                                className="bg-gradient-to-r from-pink-500 to-purple-500 text-white"
+                                className="bg-gradient-to-r from-primary to-orange-500 text-white"
                             >
                                 Siguiente
                                 <ChevronRight className="w-4 h-4 ml-1" />

@@ -515,9 +515,9 @@ function PaymentMethodModal({ method, onClose, onSave }: PaymentMethodModalProps
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
-            <div className="relative w-full max-w-lg max-h-[90vh] overflow-auto bg-slate-900 rounded-2xl border border-white/10 shadow-2xl">
+            <div className="relative w-full max-w-lg max-h-[90vh] overflow-auto bg-slate-800 rounded-2xl border border-white/20 shadow-2xl">
                 {/* Header */}
-                <div className="sticky top-0 z-10 bg-slate-900 border-b border-white/10 p-4 flex items-center justify-between">
+                <div className="sticky top-0 z-10 bg-slate-800 border-b border-white/20 p-4 flex items-center justify-between">
                     <h2 className="text-lg font-bold text-white">
                         {isEditing ? "Editar Método de Pago" : "Agregar Método de Pago"}
                     </h2>

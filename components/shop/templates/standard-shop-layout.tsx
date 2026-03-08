@@ -153,11 +153,11 @@ export function StandardShopLayout({ shop, products, services, loadingData }: St
                         {/* Shop Logo */}
                         {shop?.logo && (
                             <FadeIn delay={0.05}>
-                                <div className="mx-auto mb-8 w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white/20 shadow-2xl overflow-hidden bg-white/5 backdrop-blur-sm">
+                                <div className="mx-auto mb-8 w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white/20 shadow-2xl overflow-hidden bg-white p-2">
                                     <img
                                         src={shop.logo}
                                         alt={shop.name}
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-full object-contain"
                                     />
                                 </div>
                             </FadeIn>

@@ -41,16 +41,16 @@
 
   /* Glass Panel Effect - Premium Glassmorphism */
   .glass-panel {
-    @apply bg-white/5 backdrop-blur-lg border border-white/10 shadow-xl;
+    @apply bg-white/10 backdrop-blur-lg border border-white/20 shadow-xl;
   }
 
   /* Glass Panel Variants */
   .glass-panel-hover {
-    @apply glass-panel transition-all duration-300 hover:bg-white/10 hover:border-white/20;
+    @apply glass-panel transition-all duration-300 hover:bg-white/15 hover:border-white/30;
   }
 
   .glass-panel-gold {
-    @apply bg-gold/5 backdrop-blur-lg border border-gold/20 shadow-xl;
+    @apply bg-gold/10 backdrop-blur-lg border border-gold/30 shadow-xl;
   }
 
   /* Gradient Text Utility */

@@ -10,6 +10,7 @@ import type { Product, ProductVariant } from "@/lib/constants";
 import type { SelectedExtra } from "@/lib/types/product-extra.types";
 import { ExtrasSelector } from "@/components/shop/extras-selector";
 import { motion, AnimatePresence } from "framer-motion";
+import { InteractiveCartButton } from "./interactive-cart-button";
 
 interface ProductCardProps {
   product: Product;
@@ -95,20 +96,42 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
 
   return (
     <>
-      <div className="group relative">
-        {/* Image Container */}
-        <div className="relative aspect-square overflow-hidden rounded-2xl bg-surface">
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            className={cn(
-              "object-cover transition-transform duration-500",
-              "group-hover:scale-110",
-              isOutOfStock && "opacity-50"
-            )}
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        className="group relative"
+      >
+        {/* Image Container with 3D Tilt */}
+        <motion.div
+          whileHover={{
+            rotateY: -5,
+            rotateX: 5,
+            scale: 1.02,
+            transition: { duration: 0.4, ease: "easeOut" }
+          }}
+          style={{ perspective: 1000 }}
+          className="relative aspect-square overflow-hidden rounded-2xl bg-surface"
+        >
+          <motion.div
+            variants={{
+              initial: { scale: 1 },
+              hover: { scale: 1.1 }
+            }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full h-full relative"
+          >
+            <Image
+              src={product.image}
+              alt={product.name}
+              fill
+              className={cn(
+                "object-cover",
+                isOutOfStock && "opacity-50"
+              )}
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            />
+          </motion.div>
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
@@ -173,31 +196,18 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
                     </button>
                   </div>
                 ) : (
-                  <button
+                  <InteractiveCartButton
                     onClick={(e) => handleSimpleAdd(e)}
-                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/90 hover:bg-white hover:scale-110 flex items-center justify-center transition-all shadow-lg"
-                  >
-                    <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-slate-900" />
-                  </button>
+                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/90 hover:bg-white shadow-lg"
+                    iconClassName="text-slate-900"
+                  />
                 )
               )}
             </div>
           )}
+        </motion.div>
 
-          {/* Price Badge */}
-          {/* Price Badge */}
-          {basePrice > 0 && (
-            <div className="absolute top-3 left-3 z-10">
-              <div className="flex flex-col items-start">
-                <span className="px-3 py-1 rounded-full bg-black/50 backdrop-blur-sm text-white text-sm font-bold">
-                  {hasVariants ? "Desde " : ""}${basePrice.toLocaleString()}
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Info */}
+        {/* Product Info Section */}
         <div className="mt-3 px-1">
           <h3 className="font-display text-lg font-semibold text-white truncate">
             {product.name}
@@ -205,8 +215,21 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
           <p className="text-sm text-slate-400 line-clamp-1">
             {product.description}
           </p>
+          <div className="flex items-center justify-between mt-1">
+            <span className={cn(
+              "font-bold",
+              hasPromo ? "text-gold" : "text-white"
+            )}>
+              {hidePriceIfZero && basePrice === 0 ? "Seleccionable" : `$${basePrice.toLocaleString()}`}
+            </span>
+            {hasPromo && !hasVariants && (
+              <span className="text-xs text-slate-500 line-through">
+                ${product.price.toLocaleString()}
+              </span>
+            )}
+          </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Product Options Modal (Variants and/or Extras) */}
       <AnimatePresence>

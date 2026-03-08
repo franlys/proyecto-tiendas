@@ -260,7 +260,7 @@ export function ProductGrid({
       {categories.map((category) => {
         const catInfo = getCategoryInfo(category);
         return (
-          <div key={category} className="relative">
+          <ScrollReveal key={category} direction="up" distance={40} className="relative">
             {/* Category Header */}
             <div className="flex items-center justify-between gap-4 mb-6">
               <div>
@@ -369,7 +369,7 @@ export function ProductGrid({
                 ))}
               </div>
             )}
-          </div>
+          </ScrollReveal>
         );
       })}
     </div>
