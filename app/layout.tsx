@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
-import { AuthProvider, ShopsProvider, SmoothScroll, ScrollProgress } from "@/components/shared";
+import { AuthProvider, ShopsProvider, SmoothScroll, ScrollProgress, VisualFeedbackProvider } from "@/components/shared";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -80,9 +80,11 @@ export default function RootLayout({
         <ScrollProgress />
         <AuthProvider>
           <ShopsProvider>
-            <SmoothScroll>
-              {children}
-            </SmoothScroll>
+            <VisualFeedbackProvider>
+              <SmoothScroll>
+                {children}
+              </SmoothScroll>
+            </VisualFeedbackProvider>
           </ShopsProvider>
         </AuthProvider>
       </body>

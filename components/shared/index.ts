@@ -119,3 +119,4 @@ export {
 
 export { SmoothScroll } from "./smooth-scroll";
 export { ScrollProgress } from "./scroll-progress";
+export { VisualFeedbackProvider, useVisualFeedback } from "./visual-feedback-context";

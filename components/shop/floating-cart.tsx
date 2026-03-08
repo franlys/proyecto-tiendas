@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { MessageCircle, X, ShoppingBag, Calendar, Loader2, ChevronUp, ChevronDown, Minus, Plus, Trash2 } from "lucide-react";
-import { useCart, useShop, useOrders, useShopConfig } from "@/components/shared";
+import { useCart, useShop, useOrders, useShopConfig, useVisualFeedback } from "@/components/shared";
 import { AppointmentModal } from "./appointment-modal";
 import { getCombinedFeatures } from "@/lib/hooks/use-business-features";
 import { CheckoutDrawer } from "./checkout-drawer";
@@ -40,6 +40,7 @@ export function FloatingCart() {
   const shop = useShop();
   const { config } = useShopConfig();
   const { addOrder } = useOrders(); // Legacy local storage
+  const { cartRef, triggerTrashItem } = useVisualFeedback();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCartExpanded, setIsCartExpanded] = useState(false);
@@ -142,10 +143,13 @@ export function FloatingCart() {
         <div className="flex items-center justify-between gap-2 sm:gap-4">
           {/* Left: Item count */}
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-            <div className={cn(
-              "w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-              shouldUseAppointmentFlow ? "bg-primary/20" : "bg-gold/20"
-            )}>
+            <div
+              ref={cartRef}
+              className={cn(
+                "w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0",
+                shouldUseAppointmentFlow ? "bg-primary/20" : "bg-gold/20"
+              )}
+            >
               {shouldUseAppointmentFlow ? (
                 <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               ) : (
@@ -313,10 +317,11 @@ export function FloatingCart() {
                         {/* Quantity Controls */}
                         <div className="flex items-center gap-1">
                           <button
-                            onClick={() => {
+                            onClick={(e) => {
                               if (product.quantity > 1) {
                                 updateProductQuantity(product.id, product.quantity - 1, product.variantId);
                               } else {
+                                triggerTrashItem(e.clientX, e.clientY);
                                 removeItem(product.id, product.variantId);
                               }
                             }}
@@ -372,7 +377,10 @@ export function FloatingCart() {
                         <p className="text-sm font-bold text-primary mt-1">${service.price.toLocaleString()}</p>
                       </div>
                       <button
-                        onClick={() => removeItem(service.id)}
+                        onClick={(e) => {
+                          triggerTrashItem(e.clientX, e.clientY);
+                          removeItem(service.id);
+                        }}
                         className="w-7 h-7 rounded-lg bg-white/10 text-white hover:bg-red-500/20 hover:text-red-400 flex items-center justify-center transition-colors"
                       >
                         <Trash2 className="w-3.5 h-3.5" />

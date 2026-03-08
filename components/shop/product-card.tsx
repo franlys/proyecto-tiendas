@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
 import { Plus, Minus, ShoppingBag, Tag, ChevronDown, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCart, useShop } from "@/components/shared";
+import { useCart, useShop, useVisualFeedback } from "@/components/shared";
 import { useBusinessFeatures, useCombinedBusinessFeatures } from "@/lib/hooks/use-business-features";
 import type { Product, ProductVariant } from "@/lib/constants";
 import type { SelectedExtra } from "@/lib/types/product-extra.types";
@@ -20,6 +20,8 @@ interface ProductCardProps {
 
 export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: ProductCardProps) {
   const { addProduct, removeItem, getProductQuantity, updateProductQuantity, getVariantQuantity, updateVariantQuantity, removeVariant } = useCart();
+  const { triggerFlyToCart, triggerTrashItem } = useVisualFeedback();
+  const cardRef = useRef<HTMLDivElement>(null);
 
   // State for modal selection
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -82,11 +84,22 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
       return;
     }
     if (!isOutOfStock && simpleQuantity < effectiveStock) {
+      // Trigger fly-to-cart animation
+      if (cardRef.current) {
+        const rect = cardRef.current.getBoundingClientRect();
+        const startX = rect.left + rect.width / 2;
+        const startY = rect.top + rect.height / 3;
+        triggerFlyToCart(startX, startY, product.image);
+      }
       addProduct(product, 1);
     }
   };
 
-  const handleSimpleRemove = () => {
+  const handleSimpleRemove = (e?: React.MouseEvent) => {
+    // Trigger trash animation
+    if (e && simpleQuantity === 1) {
+      triggerTrashItem(e.clientX, e.clientY);
+    }
     if (simpleQuantity > 1) {
       updateProductQuantity(product.id, simpleQuantity - 1);
     } else {
@@ -97,6 +110,7 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
   return (
     <>
       <motion.div
+        ref={cardRef}
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-50px" }}
@@ -174,7 +188,7 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
                 simpleInCart && !(hidePriceIfZero && basePrice === 0) ? (
                   <div className="flex items-center gap-0.5 sm:gap-1 bg-white rounded-full shadow-lg p-0.5 sm:p-1">
                     <button
-                      onClick={handleSimpleRemove}
+                      onClick={(e) => handleSimpleRemove(e)}
                       className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
                     >
                       <Minus className="w-3 h-3 sm:w-4 sm:h-4 text-slate-900" />
@@ -247,6 +261,8 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
 
 function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: Product, onClose: () => void, hidePriceIfZero?: boolean }) {
   const { addProduct, getVariantQuantity, removeVariant, updateVariantQuantity } = useCart();
+  const { triggerFlyToCart } = useVisualFeedback();
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const hasVariants = product.variants && product.variants.length > 0;
   const hasExtras = product.extras && product.extras.length > 0;
@@ -275,6 +291,14 @@ function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: P
 
     if (product.extrasRequired && selectedExtras.length === 0) return; // Must select extras
 
+    // Trigger fly-to-cart animation from modal center
+    if (modalRef.current) {
+      const rect = modalRef.current.getBoundingClientRect();
+      const startX = rect.left + rect.width / 2;
+      const startY = rect.top + rect.height / 3;
+      triggerFlyToCart(startX, startY, product.image);
+    }
+
     addProduct(product, quantity, selectedVariant || undefined, selectedExtras.length > 0 ? selectedExtras : undefined);
     onClose();
   };
@@ -292,6 +316,7 @@ function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: P
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
       />
       <motion.div
+        ref={modalRef}
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
