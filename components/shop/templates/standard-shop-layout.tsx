@@ -124,6 +124,8 @@ export function StandardShopLayout({ shop, products, services, loadingData }: St
                     onClose={() => setIsAppointmentModalOpen(false)}
                     shopName={shop.name}
                     shopPhone={shop.contact.phone}
+                    shopId={shop.id}
+                    isBeautyBusiness={getCombinedFeatures(shop.businessTypes || [shop.businessType || "beauty"]).adminModules.beautyConsultations}
                 />
             )}
 

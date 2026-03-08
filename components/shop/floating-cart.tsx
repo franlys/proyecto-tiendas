@@ -4,6 +4,7 @@ import { useState } from "react";
 import { MessageCircle, X, ShoppingBag, Calendar, Loader2, ChevronUp, ChevronDown, Minus, Plus, Trash2 } from "lucide-react";
 import { useCart, useShop, useOrders, useShopConfig } from "@/components/shared";
 import { AppointmentModal } from "./appointment-modal";
+import { getCombinedFeatures } from "@/lib/hooks/use-business-features";
 import { CheckoutDrawer } from "./checkout-drawer";
 import { cn, formatPhoneForWhatsApp } from "@/lib/utils";
 import { db } from "@/lib/firebase";
@@ -376,12 +377,14 @@ export function FloatingCart() {
       </div>
 
       {/* Phase 22: Appointment Modal for Beauty businesses */}
-      {shop && shop.contact.phone && (
+      {shop && shop.contact?.phone && (
         <AppointmentModal
           isOpen={isAppointmentModalOpen}
           onClose={() => setIsAppointmentModalOpen(false)}
           shopName={shop.name}
           shopPhone={shop.contact.phone}
+          shopId={shop.id}
+          isBeautyBusiness={getCombinedFeatures(shop.businessTypes || [shop.businessType || "beauty"]).adminModules.beautyConsultations}
         />
       )}
 

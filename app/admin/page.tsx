@@ -584,10 +584,10 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
           {/* Orders and Bookings Widgets - Based on business type */}
           <div className="grid lg:grid-cols-2 gap-6">
             {features.dashboardWidgets.pendingOrders && (
-              <PendingOrdersWidget shopId={shop?.slug || "default"} features={features} />
+              <PendingOrdersWidget shopId={shop?.id || shop?.slug || "default"} features={features} />
             )}
             {features.dashboardWidgets.upcomingBookings && (
-              <BookingsWidget shopId={shop?.slug || "default"} features={features} />
+              <BookingsWidget shopId={shop?.id || shop?.slug || "default"} features={features} />
             )}
             {/* If neither orders nor bookings, show a placeholder */}
             {!features.dashboardWidgets.pendingOrders && !features.dashboardWidgets.upcomingBookings && (

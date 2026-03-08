@@ -14,12 +14,16 @@ import {
   Loader2,
   User,
   Star,
+  Palette,
+  XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useCart, type ServiceCartItem } from "@/components/shared/cart-context";
 import { useShop } from "@/components/shared";
 import { cn, formatPhoneForWhatsApp } from "@/lib/utils";
 import type { BeautyStaff, BeautyStaffRole, BEAUTY_STAFF_ROLES } from "@/lib/types/staff.types";
+import { BeautyConsultationForm } from "@/components/beauty";
+import type { BeautyConsultation } from "@/lib/types/beauty-consultation.types";
 
 // Staff role labels in Spanish
 const ROLE_LABELS: Record<BeautyStaffRole, string> = {
@@ -49,6 +53,8 @@ interface AppointmentModalProps {
   onClose: () => void;
   shopName: string;
   shopPhone: string;
+  shopId?: string;
+  isBeautyBusiness?: boolean;
 }
 
 // Generate available time slots
@@ -93,12 +99,24 @@ export function AppointmentModal({
   onClose,
   shopName,
   shopPhone,
+  shopId: propShopId,
+  isBeautyBusiness: propIsBeautyBusiness,
 }: AppointmentModalProps) {
   const { services, totalDuration, totalPrice, clearCart, tableId } = useCart();
-  const shop = useShop(); // Get full shop data for slug and owner phone
+  const shopFromHook = useShop(); // Get full shop data for slug and owner phone
+
+  // Use props or values from context
+  const shopId = propShopId || shopFromHook?.id || "";
+  const isBeautyBusiness = propIsBeautyBusiness ||
+    shopFromHook?.businessType?.toLowerCase().includes("beauty") ||
+    shopFromHook?.businessType?.toLowerCase().includes("salon") ||
+    shopFromHook?.businessType?.toLowerCase().includes("makeup") ||
+    shopFromHook?.businessType?.toLowerCase().includes("nails") ||
+    shopFromHook?.businessType?.toLowerCase().includes("barbershop") ||
+    shopFromHook?.businessType?.toLowerCase().includes("spa");
 
   // Check if multi-staff mode is enabled (feature is in the features array)
-  const multiStaffEnabled = shop?.features?.includes("multiStaff") ?? false;
+  const multiStaffEnabled = shopFromHook?.features?.includes("multiStaff") ?? false;
   const totalSteps = multiStaffEnabled ? 5 : 4;
 
   const [step, setStep] = useState<number>(1);
@@ -115,13 +133,15 @@ export function AppointmentModal({
   const [customerEmail, setCustomerEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState<{ id: string, number: string } | null>(null);
+  const [showConsultationForm, setShowConsultationForm] = useState(false);
+  const [consultationComplete, setConsultationComplete] = useState(false);
 
   const defaultTimeSlots = useMemo(() => generateTimeSlots(), []);
   const availableDates = useMemo(() => getAvailableDates(), []);
 
   // Fetch available staff when services change (multi-staff mode)
   useEffect(() => {
-    if (!multiStaffEnabled || !shop?.slug || services.length === 0) {
+    if (!multiStaffEnabled || !shopFromHook?.slug || services.length === 0) {
       setAvailableStaff([]);
       return;
     }
@@ -134,7 +154,7 @@ export function AppointmentModal({
         const dateStr = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, "0")}-${today.getDate().toString().padStart(2, "0")}`;
 
         const response = await fetch(
-          `/api/staff/available?shopId=${shop.id || shop.slug}&services=${serviceIds}&date=${dateStr}`
+          `/api/staff/available?shopId=${shopFromHook?.id || shopFromHook?.slug}&services=${serviceIds}&date=${dateStr}`
         );
 
         if (response.ok) {
@@ -149,11 +169,11 @@ export function AppointmentModal({
     };
 
     fetchStaff();
-  }, [multiStaffEnabled, shop?.slug, services]);
+  }, [multiStaffEnabled, shopFromHook?.slug, services]);
 
   // Fetch available slots when date and staff are selected
   useEffect(() => {
-    if (!shop?.slug || !selectedDate) {
+    if (!shopFromHook?.slug || !selectedDate) {
       setAvailableSlots([]);
       return;
     }
@@ -166,7 +186,7 @@ export function AppointmentModal({
         const day = selectedDate.getDate().toString().padStart(2, "0");
         const dateStr = `${year}-${month}-${day}`;
 
-        let url = `/api/bookings/slots?shopId=${shop.id || shop.slug}&date=${dateStr}&duration=${totalDuration}`;
+        let url = `/api/bookings/slots?shopId=${shopFromHook?.id || shopFromHook?.slug}&date=${dateStr}&duration=${totalDuration}`;
 
         // Add staffId if multi-staff mode and staff selected
         if (multiStaffEnabled && selectedStaff) {
@@ -187,7 +207,7 @@ export function AppointmentModal({
     };
 
     fetchSlots();
-  }, [shop?.slug, selectedDate, selectedStaff, multiStaffEnabled, totalDuration]);
+  }, [shopFromHook?.slug, selectedDate, selectedStaff, multiStaffEnabled, totalDuration]);
 
   // Reset selections when staff changes
   useEffect(() => {
@@ -211,7 +231,7 @@ export function AppointmentModal({
   };
 
   const handleConfirm = async () => {
-    if (!selectedDate || !selectedTime || !shop?.slug) return;
+    if (!selectedDate || !selectedTime || !shopFromHook?.slug) return;
 
     setIsSubmitting(true);
 
@@ -231,7 +251,7 @@ export function AppointmentModal({
 
       // Create proper booking via API
       const bookingPayload: Record<string, unknown> = {
-        shopId: shop.id || shop.slug,
+        shopId: shopFromHook?.id || shopFromHook?.slug,
         customerName: "Cliente WhatsApp", // Will be updated when WhatsApp message is received
         customerPhone: "", // Will be updated when WhatsApp message is received
         serviceId: services.length === 1 ? services[0].id : "multi-service",
@@ -316,6 +336,34 @@ export function AppointmentModal({
     }
   };
 
+  const handleConsultationComplete = async (consultation: Partial<BeautyConsultation>) => {
+    try {
+      await fetch("/api/beauty-consultations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...consultation,
+          shopId,
+        }),
+      });
+      setConsultationComplete(true);
+      setShowConsultationForm(false);
+    } catch (error) {
+      console.error("Error saving consultation:", error);
+      alert("Error al guardar la consulta. Pero no te preocupes, tu cita ya está confirmada.");
+      setShowConsultationForm(false);
+    }
+  };
+
+  // Close modal logic - reset internal state
+  const handleClose = () => {
+    setStep(1);
+    setBookingSuccess(null);
+    setShowConsultationForm(false);
+    setConsultationComplete(false);
+    onClose();
+  };
+
   const canProceedFromCurrentStep = (): boolean => {
     if (multiStaffEnabled) {
       switch (step) {
@@ -349,13 +397,36 @@ export function AppointmentModal({
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
       >
+        {/* Consultation Overlay */}
+        {showConsultationForm && bookingSuccess && (
+          <div className="fixed inset-0 z-[100] bg-slate-900 overflow-y-auto">
+            <div className="sticky top-0 right-0 p-4 flex justify-end z-50">
+              <button
+                onClick={() => setShowConsultationForm(false)}
+                className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <BeautyConsultationForm
+              shopId={shopId}
+              bookingId={bookingSuccess.id}
+              customerName={customerName}
+              customerPhone={customerPhone}
+              serviceName={services.map(s => s.name).join(" + ")}
+              onComplete={handleConsultationComplete}
+              onSkip={() => setShowConsultationForm(false)}
+            />
+          </div>
+        )}
+
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-          onClick={onClose}
+          onClick={handleClose}
         />
 
         {/* Modal */}
@@ -377,7 +448,7 @@ export function AppointmentModal({
               </div>
             </div>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="p-2 rounded-full hover:bg-white/10 transition-colors"
             >
               <X className="w-5 h-5 text-slate-400" />
@@ -770,7 +841,46 @@ export function AppointmentModal({
                 <p className="text-sm text-slate-400 max-w-xs">
                   Te contactaremos pronto para confirmar la disponibilidad final.
                 </p>
-                <Button onClick={onClose} className="w-full bg-primary hover:bg-primary/90">
+
+                {/* Beauty Consultation Prompt */}
+                {isBeautyBusiness && !consultationComplete && (
+                  <div className="w-full mt-4 p-4 rounded-xl bg-gradient-to-r from-pink-500/10 to-purple-500/10 border border-pink-500/20 text-left animate-in fade-in slide-in-from-bottom-2 duration-500 delay-300">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                        <Palette className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-white font-medium text-sm">Pre-consulta de belleza</p>
+                        <p className="text-[10px] text-slate-400">Ayúdanos a preparar tu look perfecto</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-300 mb-4 line-clamp-2">
+                      Comparte fotos de inspiración y cuéntanos tu estilo preferido para que la maquillista llegue preparada.
+                    </p>
+                    <Button
+                      onClick={() => setShowConsultationForm(true)}
+                      className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-xs h-10"
+                    >
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Completar pre-consulta (3 min)
+                    </Button>
+                  </div>
+                )}
+
+                {/* Consultation Complete Message */}
+                {consultationComplete && (
+                  <div className="w-full mt-4 p-4 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center gap-3 text-left">
+                    <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                      <CheckCircle className="w-4 h-4 text-green-400" />
+                    </div>
+                    <div>
+                      <p className="text-green-400 font-medium text-sm">Pre-consulta completada</p>
+                      <p className="text-[10px] text-slate-400">Revisaremos tu información antes de la cita</p>
+                    </div>
+                  </div>
+                )}
+
+                <Button onClick={handleClose} className="w-full bg-primary hover:bg-primary/90">
                   Cerrar
                 </Button>
               </div>
