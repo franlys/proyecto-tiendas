@@ -55,7 +55,7 @@ export default function ServicesPage() {
   const { user } = useAuth();
   const { getShop } = useShops();
   const shop = user?.shopId ? getShop(user.shopId) : null;
-  const shopId = shop?.slug || user?.shopId || "";
+  const shopId = user?.shopId || shop?.id || "";
 
   const [services, setServices] = useState<BookingService[]>([]);
   const [isLoading, setIsLoading] = useState(true);

@@ -38,10 +38,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Obtener todos los slots disponibles
+    console.log(`[SLOTS_API] Fetching slots for shopId: ${shopId}, date: ${date}`);
     const config = await getBookingConfigAdmin(shopId);
+    console.log(`[SLOTS_API] Config found for ${shopId}: enabled=${config.enabled}, slotDuration=${config.slotDurationMinutes}`);
 
     // Verificar si está habilitado
     if (!config.enabled) {
+      console.log(`[SLOTS_API] Booking is DISABLED for shopId: ${shopId}`);
       return NextResponse.json(
         { error: "Booking is not enabled for this shop", enabled: false },
         { status: 400 }
@@ -112,11 +115,11 @@ export async function GET(request: NextRequest) {
     const isToday = dateObj.toDateString() === new Date().toDateString();
     const filteredSlots = isToday
       ? slots.filter((slot) => {
-          const [hours, minutes] = slot.time.split(":").map(Number);
-          const slotTime = new Date();
-          slotTime.setHours(hours, minutes, 0, 0);
-          return slotTime > minDateTime;
-        })
+        const [hours, minutes] = slot.time.split(":").map(Number);
+        const slotTime = new Date();
+        slotTime.setHours(hours, minutes, 0, 0);
+        return slotTime > minDateTime;
+      })
       : slots;
 
     return NextResponse.json({

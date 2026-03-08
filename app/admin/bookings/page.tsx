@@ -297,7 +297,7 @@ function BookingsPageContent() {
   const { user } = useAuth();
   const { getShop } = useShops();
   const shop = user?.shopId ? getShop(user.shopId) : null;
-  const shopId = shop?.slug || user?.shopId || "";
+  const shopId = user?.shopId || shop?.id || "";
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);

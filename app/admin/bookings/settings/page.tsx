@@ -69,7 +69,7 @@ export default function BookingSettingsPage() {
   const { user } = useAuth();
   const { getShop } = useShops();
   const shop = user?.shopId ? getShop(user.shopId) : null;
-  const shopId = shop?.slug || user?.shopId || "";
+  const shopId = user?.shopId || shop?.id || "";
 
   const [config, setConfig] = useState<BookingConfig>(DEFAULT_BOOKING_CONFIG);
   const [isLoading, setIsLoading] = useState(true);
