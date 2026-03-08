@@ -110,5 +110,12 @@ export {
 // Background Gallery for Shop Configuration
 export { BackgroundGallery } from "./background-gallery";
 // Real-time Notifications
+export {
+  NotificationsProvider,
+  useNotifications,
+  useNotificationsOptional,
+  type AppNotification,
+} from "./notifications-context";
+
 export { SmoothScroll } from "./smooth-scroll";
 export { ScrollProgress } from "./scroll-progress";

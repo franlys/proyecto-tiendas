@@ -395,7 +395,7 @@ export function FloatingCart() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
 
       {/* Phase 22: Appointment Modal for Beauty businesses */}
       {shop && shop.contact?.phone && (
@@ -404,7 +404,7 @@ export function FloatingCart() {
           onClose={() => setIsAppointmentModalOpen(false)}
           shopName={shop.name}
           shopPhone={shop.contact.phone}
-          shopId={shop.id}
+          shopId={shop.id || ""}
           isBeautyBusiness={getCombinedFeatures(shop.businessTypes || [shop.businessType || "beauty"]).adminModules.beautyConsultations}
         />
       )}
