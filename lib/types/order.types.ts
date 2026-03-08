@@ -35,7 +35,7 @@ export interface SalesOrder {
     tableId?: string;
     source?: string;
     // Delivery & Scheduling (for meal prep, catering, etc.)
-    deliveryType?: "pickup" | "delivery";
+    deliveryType?: "pickup" | "delivery" | "entrega" | "recogida";
     scheduledDate?: string; // YYYY-MM-DD
     scheduledTime?: string; // HH:MM (delivery/pickup time slot)
     deliveryDistance?: number; // Distance in miles

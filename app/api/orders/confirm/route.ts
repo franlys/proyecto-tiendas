@@ -28,7 +28,7 @@ interface ConfirmOrderRequest {
     total: number;
     notes?: string;
     type?: "order" | "training";
-    deliveryType?: "entrega" | "recogida";
+    deliveryType?: "entrega" | "recogida" | "pickup" | "delivery";
     paymentInfo?: PaymentInfo;
 }
 
