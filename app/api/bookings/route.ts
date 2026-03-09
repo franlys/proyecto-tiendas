@@ -187,28 +187,60 @@ async function notifyOwnerOfNewBooking(shopId: string, booking: CreateBookingInp
   try {
     const shopInfo = await getShopBasicInfo(shopId);
 
-    // 1. Send Email Notification
-    if (shopInfo?.contact?.email) {
+    // 1. Send Email Confirmation to CUSTOMER
+    const customerEmail = (booking as any).customerEmail;
+    if (customerEmail && customerEmail !== "pending") {
       try {
-        const emailContent = emailTemplates.appointmentConfirmation({
+        const customerEmailContent = emailTemplates.appointmentConfirmation({
           clientName: booking.customerName,
-          clientEmail: (booking as any).customerEmail,
+          clientEmail: customerEmail,
           serviceName: booking.serviceName,
           date: booking.date,
           time: booking.time,
+          shopName: shopInfo?.name || shopId,
+          shopLogo: shopInfo?.logo,
+          shopPrimaryColor: shopInfo?.theme?.primaryColor,
+        });
+
+        await sendEmail({
+          to: customerEmail,
+          subject: `Confirmación de cita en ${shopInfo?.name || shopId}`,
+          html: customerEmailContent
+        });
+        console.log(`[Booking Notify] 📧 Sent confirmation email to customer: ${customerEmail}`);
+      } catch (emailErr) {
+        console.error("[Booking Notify] Customer email error:", emailErr);
+      }
+    }
+
+    // 2. Send Email Notification to SHOP OWNER
+    if (shopInfo?.contact?.email) {
+      try {
+        // Build owner notification content
+        const ownerEmailContent = emailTemplates.newBookingNotification({
           shopName: shopInfo.name || shopId,
           shopLogo: shopInfo.logo,
           shopPrimaryColor: shopInfo.theme?.primaryColor,
+          orderNumber: booking.orderNumber || "",
+          customerName: booking.customerName,
+          customerPhone: booking.customerPhone,
+          customerEmail: customerEmail,
+          serviceName: booking.serviceName,
+          servicePrice: booking.servicePrice,
+          date: booking.date,
+          time: booking.time,
+          duration: booking.serviceDuration,
+          staffName: booking.assignedStaffName,
         });
 
         await sendEmail({
           to: shopInfo.contact.email,
-          subject: `Nueva cita recibida: #${booking.orderNumber}`,
-          html: emailContent
+          subject: `🗓️ Nueva cita recibida: #${booking.orderNumber}`,
+          html: ownerEmailContent
         });
-        console.log(`[Booking Notify] 📧 Sent email notification to ${shopInfo.contact.email}`);
+        console.log(`[Booking Notify] 📧 Sent notification email to shop owner: ${shopInfo.contact.email}`);
       } catch (emailErr) {
-        console.error("[Booking Notify] Email error:", emailErr);
+        console.error("[Booking Notify] Shop owner email error:", emailErr);
       }
     }
 

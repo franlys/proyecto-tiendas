@@ -49,7 +49,7 @@ export function VisualFeedbackProvider({ children }: { children: React.ReactNode
 
         setTimeout(() => {
             setElements((prev) => prev.filter((el) => el.id !== id));
-        }, 800);
+        }, 1800);
     }, []);
 
     const triggerTrashItem = useCallback((startX: number, startY: number) => {
@@ -77,31 +77,31 @@ export function VisualFeedbackProvider({ children }: { children: React.ReactNode
                         <motion.div
                             key={el.id}
                             initial={{
-                                x: el.startX - 24,
-                                y: el.startY - 24,
+                                x: el.startX - 32,
+                                y: el.startY - 32,
                                 scale: 1,
                                 opacity: 1,
                                 rotate: 0,
                             }}
                             animate={el.type === "add" ? {
-                                x: [el.startX - 24, el.startX - 24 - 30, el.endX - 24],
-                                y: [el.startY - 24, el.startY - 80, el.endY - 24],
-                                scale: [1, 1.2, 0.3],
+                                x: [el.startX - 32, el.startX - 32 - 40, el.endX - 32],
+                                y: [el.startY - 32, el.startY - 100, el.endY - 32],
+                                scale: [1, 1.15, 0.35],
                                 opacity: [1, 1, 0],
-                                rotate: [0, -15, 0],
+                                rotate: [0, -10, 0],
                             } : {
-                                x: el.endX - 24,
-                                y: el.endY - 24,
+                                x: el.endX - 32,
+                                y: el.endY - 32,
                                 scale: 0.3,
                                 opacity: 0,
                                 rotate: 45,
                             }}
                             transition={el.type === "add" ? {
-                                duration: 0.7,
-                                times: [0, 0.3, 1],
-                                ease: [0.32, 0, 0.67, 0],
+                                duration: 1.5,
+                                times: [0, 0.4, 1],
+                                ease: [0.22, 0.68, 0.32, 1],
                             } : {
-                                duration: 0.5,
+                                duration: 0.7,
                                 ease: [0.4, 0, 1, 1],
                             }}
                             className="absolute top-0 left-0"
@@ -110,16 +110,17 @@ export function VisualFeedbackProvider({ children }: { children: React.ReactNode
                                 <div className="relative">
                                     {/* Glow effect */}
                                     <div className={`absolute inset-0 rounded-full blur-lg scale-150 ${el.image ? 'bg-white/30' : 'bg-primary/40'}`} />
-                                    {/* Main circle */}
-                                    <div className={`relative w-12 h-12 rounded-full overflow-hidden flex items-center justify-center shadow-2xl border-2 border-white/50 ${el.image ? 'bg-white' : 'bg-gradient-to-br from-primary to-orange-500 shadow-primary/50'}`}>
+                                    {/* Main circle - larger for better visibility */}
+                                    <div className={`relative w-16 h-16 rounded-full overflow-hidden flex items-center justify-center shadow-2xl border-3 border-white/60 ${el.image ? 'bg-slate-200' : 'bg-gradient-to-br from-primary to-orange-500 shadow-primary/50'}`}>
                                         {el.image ? (
                                             <img
                                                 src={el.image}
                                                 alt=""
                                                 className="w-full h-full object-cover"
+                                                loading="eager"
                                             />
                                         ) : (
-                                            <Check className="w-6 h-6 text-white" />
+                                            <Check className="w-7 h-7 text-white" />
                                         )}
                                     </div>
                                     {/* Sparkle particles */}

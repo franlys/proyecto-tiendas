@@ -499,6 +499,115 @@ export const emailTemplates = {
   },
 
   /**
+   * New booking notification for shop owner
+   */
+  newBookingNotification: (data: {
+    shopName: string;
+    shopLogo?: string;
+    shopPrimaryColor?: string;
+    orderNumber: string;
+    customerName: string;
+    customerPhone: string;
+    customerEmail?: string;
+    serviceName: string;
+    servicePrice: number;
+    date: string;
+    time: string;
+    duration: number;
+    staffName?: string;
+  }) => {
+    const branding: BrandingConfig = {
+      name: data.shopName,
+      logo: data.shopLogo,
+      primaryColor: data.shopPrimaryColor || "#06b6d4",
+    };
+
+    // Format date in Spanish
+    const dateObj = new Date(data.date + "T12:00:00");
+    const dateStr = dateObj.toLocaleDateString("es-MX", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    });
+
+    return generateEmailTemplate(`
+      <h2 style="margin: 0 0 16px; color: #0f172a; font-size: 20px;">
+        🗓️ ¡Nueva Cita Recibida!
+      </h2>
+
+      <div style="background: #dbeafe; border-left: 4px solid #3b82f6; padding: 16px; margin-bottom: 24px; border-radius: 0 8px 8px 0;">
+        <strong style="color: #1e40af;">Cita #${data.orderNumber}</strong>
+        <p style="margin: 8px 0 0; color: #1e40af; font-size: 14px;">
+          Tienes una nueva reservación pendiente.
+        </p>
+      </div>
+
+      <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+        <h3 style="margin: 0 0 12px; color: #0f172a; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
+          Datos del Cliente
+        </h3>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">👤 Nombre</td>
+            <td style="padding: 6px 0; text-align: right; font-weight: 600; color: #0f172a;">${data.customerName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">📱 Teléfono</td>
+            <td style="padding: 6px 0; text-align: right; color: #0f172a;">${data.customerPhone}</td>
+          </tr>
+          ${data.customerEmail ? `
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">📧 Email</td>
+            <td style="padding: 6px 0; text-align: right; color: #0f172a;">${data.customerEmail}</td>
+          </tr>` : ""}
+        </table>
+      </div>
+
+      <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+        <h3 style="margin: 0 0 12px; color: #0f172a; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
+          Detalles de la Cita
+        </h3>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">✂️ Servicio</td>
+            <td style="padding: 6px 0; text-align: right; font-weight: 600; color: #0f172a;">${data.serviceName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">📆 Fecha</td>
+            <td style="padding: 6px 0; text-align: right; font-weight: 600; color: #0f172a;">${dateStr}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">🕐 Hora</td>
+            <td style="padding: 6px 0; text-align: right; font-weight: 600; color: ${data.shopPrimaryColor || "#06b6d4"};">${data.time}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">⏱️ Duración</td>
+            <td style="padding: 6px 0; text-align: right; color: #0f172a;">${data.duration} min</td>
+          </tr>
+          ${data.staffName ? `
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">👩‍💼 Atendido por</td>
+            <td style="padding: 6px 0; text-align: right; color: #0f172a;">${data.staffName}</td>
+          </tr>` : ""}
+          <tr>
+            <td style="padding: 12px 0; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0;">💰 Precio</td>
+            <td style="padding: 12px 0; text-align: right; font-weight: 700; font-size: 18px; color: ${data.shopPrimaryColor || "#06b6d4"}; border-top: 1px solid #e2e8f0;">
+              $${data.servicePrice.toLocaleString()}
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://linko.app"}/admin/bookings"
+          style="display: inline-block; background: linear-gradient(135deg, ${data.shopPrimaryColor || "#06b6d4"}, #0f172a); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600;">
+          Ver Agenda
+        </a>
+      </div>
+    `, branding);
+  },
+
+  /**
    * Payment receipt notification for shop owner
    */
   paymentReceiptNotification: (data: {
