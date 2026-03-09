@@ -935,7 +935,8 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                 </div>
                             )}
                         </div>
-                    </div>
+                    )}
+                </div>
             </div>
 
             {/* Footer with total and CTA */}
