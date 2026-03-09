@@ -41,6 +41,7 @@ import {
     Music,
     Volume2,
     LayoutDashboard,
+    CreditCard,
     Cpu,
     Zap,
 } from "lucide-react";
