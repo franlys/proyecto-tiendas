@@ -66,6 +66,7 @@ interface ShopConfig {
   facebook: string;
   tiktok: string;
   website: string;
+  templateType: string;
 }
 
 const BACKGROUND_OPTIONS: { id: BackgroundEffect; name: string; description: string }[] = [
@@ -103,6 +104,7 @@ export default function AdminSettingsPage() {
     facebook: "",
     tiktok: "",
     website: "",
+    templateType: "standard",
   });
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -139,6 +141,7 @@ export default function AdminSettingsPage() {
           facebook: shop.social?.facebook || "",
           tiktok: shop.social?.tiktok || "",
           website: shop.social?.website || "",
+          templateType: shop.templateType || "standard",
         });
       }
     }
@@ -185,6 +188,7 @@ export default function AdminSettingsPage() {
           tiktok: config.tiktok,
           website: config.website,
         },
+        templateType: config.templateType,
       };
 
       // Add URL based on type
@@ -506,6 +510,52 @@ export default function AdminSettingsPage() {
                         );
                       })}
                     </div>
+                  </div>
+                </div>
+
+                {/* Template Selection */}
+                <div className="glass-panel rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-colors">
+                  <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-gold" />
+                    Diseño de la Tienda (Plantilla)
+                  </h2>
+                  <p className="text-sm text-slate-400 mb-6 font-medium">
+                    Elige el estilo visual que mejor se adapte a tu negocio. Cada plantilla tiene animaciones y layouts únicos.
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {[
+                      { id: "standard", name: "Estándar", desc: "Diseño limpio y funcional para todo tipo de negocios." },
+                      { id: "premium-drop-v1", name: "Premium Drop", desc: "Enfoque en productos destacados y elegancia." },
+                      { id: "street-drop-v1", name: "Street Style", desc: "Estética urbana, ideal para moda y accesorios." },
+                      { id: "cosmic-drop-v1", name: "Cosmic", desc: "Inspirado en el espacio, efectos galácticos." },
+                      { id: "tech-drop-v1", name: "Tech Premium", desc: "Innovación, seguridad y tecnología con animejs v4.", isNew: true },
+                    ].map((tpl) => (
+                      <button
+                        key={tpl.id}
+                        type="button"
+                        onClick={() => updateConfig({ templateType: tpl.id as any })}
+                        className={cn(
+                          "relative p-5 rounded-2xl border-2 transition-all text-left group",
+                          config.templateType === tpl.id
+                            ? "border-primary bg-primary/10 shadow-[0_0_20px_rgba(244,63,94,0.15)]"
+                            : "border-white/10 hover:border-white/30 bg-white/5"
+                        )}
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <p className="text-white font-bold tracking-tight">{tpl.name}</p>
+                          {tpl.isNew && (
+                            <span className="bg-cyan-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase shadow-[0_0_10px_#06b6d4]">Nuevo</span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-500 leading-relaxed font-medium">{tpl.desc}</p>
+                        {config.templateType === tpl.id && (
+                          <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                            <Check className="w-3 h-3 text-white" />
+                          </div>
+                        )}
+                      </button>
+                    ))}
                   </div>
                 </div>
 

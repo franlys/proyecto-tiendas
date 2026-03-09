@@ -19,6 +19,7 @@ import { StandardShopLayout } from "@/components/shop/templates/standard-shop-la
 import { PremiumDropLayout } from "@/components/shop/templates/premium-drop-layout";
 import { StreetDropLayout } from "@/components/shop/templates/street-drop-layout";
 import { CosmicDropLayout } from "@/components/shop/templates/cosmic-drop-layout";
+import { TechDropLayout } from "@/components/shop/templates/tech-drop-layout";
 
 type TabType = "servicios" | "productos";
 
@@ -178,6 +179,15 @@ export default function ShopHomePage() {
       case "cosmic-drop-v1":
         return (
           <CosmicDropLayout
+            shop={shop as any}
+            products={products}
+            services={services}
+            loadingData={loadingData}
+          />
+        );
+      case "tech-drop-v1":
+        return (
+          <TechDropLayout
             shop={shop as any}
             products={products}
             services={services}
