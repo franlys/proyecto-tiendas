@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import anime from "animejs";
+import { animate, stagger } from "animejs";
 import {
     Search,
     ShoppingBag,
@@ -36,7 +36,7 @@ interface TechDropLayoutProps {
 type TechView = "products" | "services" | "location";
 
 export function TechDropLayout({ shop, products, services, loadingData }: TechDropLayoutProps) {
-    const { cart, addToCart, removeFromCart, updateQuantity } = useCart();
+    const { items: cart, addProduct: addToCart, removeItem: removeFromCart, updateProductQuantity: updateQuantity } = useCart();
     const [currentView, setCurrentView] = useState<TechView>("products");
     const [activeCategory, setActiveCategory] = useState<string>("todos");
     const [searchQuery, setSearchQuery] = useState("");
@@ -62,11 +62,10 @@ export function TechDropLayout({ shop, products, services, loadingData }: TechDr
     // Page Transitions with Anime.js
     useEffect(() => {
         if (pageRef.current) {
-            anime({
-                targets: pageRef.current,
+            animate(pageRef.current, {
                 opacity: [0, 1],
                 translateY: [20, 0],
-                easing: 'easeOutExpo',
+                easing: 'spring(1, 80, 10, 0)',
                 duration: 800
             });
         }
@@ -161,7 +160,7 @@ export function TechDropLayout({ shop, products, services, loadingData }: TechDr
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                                 <AnimatePresence mode="popLayout">
                                     {filteredProducts.map((product) => (
-                                        <ProductCard key={product.id} product={product} onAdd={() => addToCart(product as any)} />
+                                        <ProductCard key={product.id} product={product} onAdd={() => addToCart(product)} />
                                     ))}
                                 </AnimatePresence>
                             </div>
@@ -266,15 +265,17 @@ function CategoryCarousel({ categories, activeCategory, onSelect }: { categories
 
     useEffect(() => {
         // Reveal animation for items
-        anime({
-            targets: '.category-item',
+        // The instruction provided a conditional check for currentView, but it's not defined in this scope.
+        // Assuming the animation should run when the component mounts or categories change.
+        // Applying the animation properties from the instruction.
+        animate('.category-item', {
+            scale: [0.9, 1.1, 1],
             opacity: [0, 1],
-            scale: [0.8, 1],
-            delay: anime.stagger(50),
-            easing: 'easeOutBack',
-            duration: 600
+            delay: stagger(100),
+            duration: 800,
+            easing: 'spring(1, 80, 10, 0)'
         });
-    }, []);
+    }, [categories]); // Added categories to dependency array for re-trigger if categories change
 
     return (
         <div className="flex flex-col gap-6">
@@ -329,8 +330,7 @@ function ProductCard({ product, onAdd }: { product: Product, onAdd: () => void }
     const handleAddToCart = () => {
         // Anime.js interaction animation
         if (cardRef.current) {
-            anime({
-                targets: cardRef.current,
+            animate(cardRef.current, {
                 scale: [1, 0.95, 1.02, 1],
                 duration: 400,
                 easing: 'easeInOutQuad'
@@ -509,20 +509,18 @@ function CartButton({ cart }: { cart: any[] }) {
         const newTotal = cart.reduce((sum, item) => sum + item.quantity, 0);
         if (newTotal > totalItems && buttonRef.current) {
             // Morph/Pulse animation when adding items
-            anime({
-                targets: buttonRef.current,
+            animate(buttonRef.current, {
                 scale: [1, 1.1, 1],
                 backgroundColor: ['#06b6d4', '#0891b2', '#06b6d4'],
                 duration: 400,
-                easing: 'easeOutElastic(1, .5)'
+                easing: 'spring(1, 80, 10, 0)'
             });
 
             if (iconRef.current) {
-                anime({
-                    targets: iconRef.current,
+                animate(iconRef.current, {
                     rotate: '1turn',
                     duration: 600,
-                    easing: 'easeInOutBack'
+                    easing: 'spring(1, 80, 10, 0)'
                 });
             }
         }
