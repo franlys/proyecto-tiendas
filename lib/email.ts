@@ -499,6 +499,100 @@ export const emailTemplates = {
   },
 
   /**
+   * Appointment reminder email (sent same day or day before)
+   */
+  appointmentReminder: (data: {
+    clientName: string;
+    serviceName: string;
+    date: string;
+    time: string;
+    shopName: string;
+    shopAddress?: string;
+    shopPhone?: string;
+    shopLogo?: string;
+    shopPrimaryColor?: string;
+    shopBackgroundImage?: string;
+    isToday?: boolean;
+  }) => {
+    const branding: BrandingConfig = {
+      name: data.shopName,
+      logo: data.shopLogo,
+      primaryColor: data.shopPrimaryColor || "#06b6d4",
+      backgroundImage: data.shopBackgroundImage,
+    };
+
+    // Format date in Spanish
+    const dateObj = new Date(data.date + "T12:00:00");
+    const dateStr = dateObj.toLocaleDateString("es-MX", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    });
+
+    const urgencyText = data.isToday
+      ? "¡Tu cita es HOY!"
+      : "Tu cita es mañana";
+
+    const urgencyColor = data.isToday ? "#dc2626" : "#f59e0b";
+
+    return generateEmailTemplate(`
+      <h2 style="margin: 0 0 16px; color: #0f172a; font-size: 20px;">
+        ⏰ ${urgencyText}
+      </h2>
+
+      <p style="margin: 0 0 16px;">
+        Hola <strong>${data.clientName}</strong>,
+      </p>
+
+      <p style="margin: 0 0 24px;">
+        Te recordamos que tienes una cita programada en <strong>${data.shopName}</strong>.
+      </p>
+
+      <div style="background: linear-gradient(135deg, ${urgencyColor}15, ${urgencyColor}05); border-left: 4px solid ${urgencyColor}; border-radius: 0 12px 12px 0; padding: 20px; margin-bottom: 24px;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 8px 0; color: #64748b; font-size: 13px;">📅 Fecha</td>
+            <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #0f172a;">${dateStr}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #64748b; font-size: 13px;">🕐 Hora</td>
+            <td style="padding: 8px 0; text-align: right; font-weight: 700; font-size: 18px; color: ${data.shopPrimaryColor || "#06b6d4"};">${data.time}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #64748b; font-size: 13px;">✂️ Servicio</td>
+            <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #0f172a;">${data.serviceName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #64748b; font-size: 13px;">📍 Lugar</td>
+            <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #0f172a;">${data.shopName}</td>
+          </tr>
+          ${data.shopAddress ? `
+          <tr>
+            <td style="padding: 8px 0; color: #64748b; font-size: 13px;">🗺️ Dirección</td>
+            <td style="padding: 8px 0; text-align: right; color: #64748b; font-size: 13px;">${data.shopAddress}</td>
+          </tr>
+          ` : ""}
+        </table>
+      </div>
+
+      ${data.shopPhone ? `
+      <div style="background: #f0fdf4; border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: center;">
+        <p style="margin: 0 0 8px; color: #166534; font-size: 14px;">
+          ¿Necesitas cambiar o cancelar tu cita?
+        </p>
+        <p style="margin: 0; color: #166534; font-size: 13px;">
+          📞 Contáctanos: <strong>${data.shopPhone}</strong>
+        </p>
+      </div>
+      ` : ""}
+
+      <p style="margin: 0; color: #64748b; font-size: 13px; text-align: center;">
+        ¡Te esperamos! 💫
+      </p>
+    `, branding);
+  },
+
+  /**
    * New booking notification for shop owner
    */
   newBookingNotification: (data: {

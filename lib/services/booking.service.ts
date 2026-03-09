@@ -653,9 +653,17 @@ export async function sendReminder(
   const config = await getBookingConfig(shopId);
   const instanceName = getInstanceName(shopId);
 
-  // Obtener nombre de la tienda
+  // Obtener información completa de la tienda
   const shopDoc = await getDoc(doc(db, "shops", shopId));
-  const shopName = shopDoc.exists() ? shopDoc.data().name : "Negocio";
+  const shopData = shopDoc.exists() ? shopDoc.data() : null;
+  const shopName = shopData?.name || "Negocio";
+  const shopLogo = shopData?.logo;
+  const shopPhone = shopData?.contact?.phone;
+  const shopPrimaryColor = shopData?.theme?.primaryColor;
+
+  // Check if appointment is today
+  const today = new Date().toISOString().split("T")[0];
+  const isToday = booking.date === today;
 
   const message = `Hola ${booking.customerName}! 👋
 
@@ -671,16 +679,50 @@ Por favor confirma respondiendo:
 ❌ *CANCELAR* - Cancelar cita`;
 
   try {
+    // 1. Send WhatsApp reminder
     const result = await sendTextMessage(
       instanceName,
       booking.customerPhone,
       message
     );
 
+    // 2. Send Email reminder (if customer has email)
+    const customerEmail = (booking as any).customerEmail;
+    if (customerEmail && customerEmail !== "pending") {
+      try {
+        const { sendEmail, emailTemplates } = await import("@/lib/email");
+
+        const emailContent = emailTemplates.appointmentReminder({
+          clientName: booking.customerName,
+          serviceName: booking.serviceName,
+          date: booking.date,
+          time: booking.time,
+          shopName,
+          shopPhone,
+          shopLogo,
+          shopPrimaryColor,
+          isToday,
+        });
+
+        await sendEmail({
+          to: customerEmail,
+          subject: isToday
+            ? `⏰ ¡Tu cita es HOY en ${shopName}!`
+            : `📅 Recordatorio: Tu cita en ${shopName} es mañana`,
+          html: emailContent,
+        });
+
+        console.log(`[Reminder] 📧 Email sent to ${customerEmail} for booking ${booking.id}`);
+      } catch (emailErr) {
+        console.error("[Reminder] Email error:", emailErr);
+      }
+    }
+
     // Actualizar booking con info del recordatorio
     await updateBooking(shopId, booking.id, {
       reminderSentAt: Timestamp.now(),
       reminderMessageId: result?.key?.id || null,
+      emailReminderSent: !!customerEmail,
     });
 
     // Iniciar tracking de conversación
@@ -691,7 +733,7 @@ Por favor confirma respondiendo:
       "awaiting_confirmation"
     );
 
-    console.log(`Reminder sent for booking ${booking.id}`);
+    console.log(`[Reminder] ✅ Sent for booking ${booking.id} (WhatsApp + ${customerEmail ? "Email" : "No email"})`);
   } catch (error) {
     console.error("Error sending reminder:", error);
   }
