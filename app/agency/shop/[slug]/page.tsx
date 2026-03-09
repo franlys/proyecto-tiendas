@@ -214,7 +214,7 @@ function ShopDetailContent() {
     const [logo, setLogo] = useState("");
     const [banner, setBanner] = useState("");
     const [slogan, setSlogan] = useState("");
-    const [templateType, setTemplateType] = useState<"standard" | "premium-drop-v1" | "street-drop-v1" | "cosmic-drop-v1">("standard");
+    const [templateType, setTemplateType] = useState<"standard" | "premium-drop-v1" | "street-drop-v1" | "cosmic-drop-v1" | "tech-drop-v1">("standard");
     const [description, setDescription] = useState("");
     const [primaryColor, setPrimaryColor] = useState("#22D3EE");
     const [accentColor, setAccentColor] = useState("#3B82F6");
@@ -1096,8 +1096,8 @@ function ShopDetailContent() {
                                         <button
                                             onClick={() => setTemplateType("standard")}
                                             className={`p-4 rounded-xl border-2 transition-all text-left ${templateType === "standard"
-                                                    ? "border-cyan-500 bg-cyan-500/10"
-                                                    : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                                                ? "border-cyan-500 bg-cyan-500/10"
+                                                : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
                                                 }`}
                                         >
                                             <div className="w-full h-16 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/20 mb-3 flex items-center justify-center">
@@ -1113,8 +1113,8 @@ function ShopDetailContent() {
                                         <button
                                             onClick={() => setTemplateType("premium-drop-v1")}
                                             className={`p-4 rounded-xl border-2 transition-all text-left ${templateType === "premium-drop-v1"
-                                                    ? "border-amber-500 bg-amber-500/10"
-                                                    : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                                                ? "border-amber-500 bg-amber-500/10"
+                                                : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
                                                 }`}
                                         >
                                             <div className="w-full h-16 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 mb-3 flex items-center justify-center">
@@ -1132,8 +1132,8 @@ function ShopDetailContent() {
                                         <button
                                             onClick={() => setTemplateType("street-drop-v1")}
                                             className={`p-4 rounded-xl border-2 transition-all text-left ${templateType === "street-drop-v1"
-                                                    ? "border-red-500 bg-red-500/10"
-                                                    : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                                                ? "border-red-500 bg-red-500/10"
+                                                : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
                                                 }`}
                                         >
                                             <div className="w-full h-16 rounded-lg bg-gradient-to-br from-red-500/20 to-pink-500/20 mb-3 flex items-center justify-center relative overflow-hidden">
@@ -1153,8 +1153,8 @@ function ShopDetailContent() {
                                         <button
                                             onClick={() => setTemplateType("cosmic-drop-v1")}
                                             className={`p-4 rounded-xl border-2 transition-all text-left ${templateType === "cosmic-drop-v1"
-                                                    ? "border-violet-500 bg-violet-500/10"
-                                                    : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                                                ? "border-violet-500 bg-violet-500/10"
+                                                : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
                                                 }`}
                                         >
                                             <div className="w-full h-16 rounded-lg bg-gradient-to-br from-violet-500/20 to-cyan-500/20 mb-3 flex items-center justify-center relative overflow-hidden">
@@ -1167,6 +1167,30 @@ function ShopDetailContent() {
                                             <h4 className="text-white font-medium text-sm">Cosmic Galaxy</h4>
                                             <p className="text-xs text-slate-400 mt-1">
                                                 Estrellas, nebulosas y galaxias
+                                            </p>
+                                        </button>
+
+                                        {/* Tech Premium Template */}
+                                        <button
+                                            onClick={() => setTemplateType("tech-drop-v1")}
+                                            className={`p-4 rounded-xl border-2 transition-all text-left ${templateType === "tech-drop-v1"
+                                                ? "border-cyan-400 bg-cyan-400/10"
+                                                : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                                                }`}
+                                        >
+                                            <div className="w-full h-16 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/20 mb-3 flex items-center justify-center relative overflow-hidden">
+                                                <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "radial-gradient(circle, rgba(6,182,212,0.2) 1px, transparent 1px)", backgroundSize: "10px 10px" }} />
+                                                <div className="flex items-center gap-1">
+                                                    <Cpu className="w-6 h-6 text-cyan-400" />
+                                                    <Zap className="w-4 h-4 text-white animate-pulse" />
+                                                </div>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <h4 className="text-white font-medium text-sm">Tech Premium</h4>
+                                                <span className="text-[10px] bg-cyan-500 text-white px-1.5 rounded-full font-bold">NUEVA</span>
+                                            </div>
+                                            <p className="text-xs text-slate-400 mt-1">
+                                                Tecnología, seguridad y animejs v4
                                             </p>
                                         </button>
                                     </div>
@@ -1195,8 +1219,8 @@ function ShopDetailContent() {
                                                             primaryColor: preset.colors?.primary || prev.primaryColor,
                                                         }))}
                                                         className={`p-3 rounded-xl border-2 transition-all text-center ${dropTheme.preset === key
-                                                                ? "border-red-500 bg-red-500/20 scale-105"
-                                                                : "border-white/10 bg-black/30 hover:border-white/30"
+                                                            ? "border-red-500 bg-red-500/20 scale-105"
+                                                            : "border-white/10 bg-black/30 hover:border-white/30"
                                                             }`}
                                                     >
                                                         <div
@@ -2031,8 +2055,8 @@ function ShopDetailContent() {
                                                 slogan,
                                                 description,
                                                 templateType,
-                                                // Save Drop Theme for street-drop and cosmic-drop templates
-                                                dropTheme: (templateType === "street-drop-v1" || templateType === "cosmic-drop-v1") ? dropTheme : undefined,
+                                                // Save Drop Theme for street-drop, cosmic-drop and tech-drop templates
+                                                dropTheme: (templateType === "street-drop-v1" || templateType === "cosmic-drop-v1" || templateType === "tech-drop-v1") ? dropTheme : undefined,
                                                 theme: {
                                                     ...shop.theme,
                                                     primaryColor,
