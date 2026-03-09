@@ -356,28 +356,27 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
 
             {/* Drawer */}
             <div className={cn(
-                "relative flex flex-col w-full sm:max-w-lg max-h-[92vh] sm:max-h-[85vh]",
+                "relative flex flex-col w-full sm:max-w-md md:max-w-lg max-h-[94vh] sm:max-h-[85vh]",
                 "bg-slate-900 border border-white/10 shadow-2xl",
                 "rounded-2xl sm:rounded-3xl",
-                "animate-in slide-in-from-bottom duration-300 ease-out"
+                "animate-in slide-in-from-bottom duration-300 ease-out fill-mode-forwards"
             )}>
-                {/* Header */}
-                <div className="sticky top-0 z-10 bg-slate-900 border-b border-white/10 p-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-md border-b border-white/10 p-3 sm:p-4">
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0">
                                 <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                             </div>
                             <div className="min-w-0">
-                                <h2 className="text-base sm:text-lg font-bold text-white truncate">Tu Pedido</h2>
-                                <p className="text-xs sm:text-sm text-slate-400">
+                                <h2 className="text-sm sm:text-lg font-bold text-white truncate leading-tight">Tu Pedido</h2>
+                                <p className="text-[10px] sm:text-xs text-slate-400">
                                     {products.length} {products.length === 1 ? "item" : "items"}
                                 </p>
                             </div>
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                            className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
                         >
                             <X className="w-5 h-5" />
                         </button>
@@ -406,22 +405,22 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                             className="bg-slate-800/50 rounded-xl border border-white/5 overflow-hidden shadow-sm hover:border-white/10 transition-all"
                                         >
                                             {/* Item header */}
-                                            <div className="p-4 flex items-center gap-4">
+                                            <div className="p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
                                                 {item.image && (
                                                     <img
                                                         src={item.image}
                                                         alt={item.name}
-                                                        className="w-14 h-14 rounded-lg object-cover"
+                                                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover flex-shrink-0"
                                                     />
                                                 )}
-                                                <div className="flex-1 min-w-0 pr-2">
-                                                    <p className="text-sm sm:text-base text-white font-medium truncate">
+                                                <div className="flex-1 min-w-0 pr-1">
+                                                    <p className="text-xs sm:text-base text-white font-medium truncate">
                                                         {item.name}
                                                         {item.variantName && (
                                                             <span className={cn(shop?.theme?.primaryColor ? "" : "text-primary")} style={shop?.theme?.primaryColor ? { color: shop.theme.primaryColor } : {}}> ({item.variantName})</span>
                                                         )}
                                                     </p>
-                                                    <p className="text-xs sm:text-sm text-slate-400">
+                                                    <p className="text-[10px] sm:text-sm text-slate-400">
                                                         ${basePrice.toLocaleString()} c/u
                                                     </p>
                                                 </div>
@@ -584,23 +583,23 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                         <h3 className="text-sm font-medium text-slate-400">
                             Programar entrega (opcional)
                         </h3>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 gap-2 sm:gap-3">
                             <div className="relative">
-                                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                                <Calendar className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-400 pointer-events-none" />
                                 <input
                                     type="date"
                                     value={scheduledDate}
                                     onChange={(e) => setScheduledDate(e.target.value)}
                                     min={today}
-                                    className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-primary/50 [color-scheme:dark]"
+                                    className="w-full pl-9 sm:pl-12 pr-2 sm:pr-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-primary/50 [color-scheme:dark]"
                                 />
                             </div>
                             <div className="relative">
-                                <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                                <Clock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-400 pointer-events-none" />
                                 <select
                                     value={scheduledTime}
                                     onChange={(e) => setScheduledTime(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-primary/50 appearance-none"
+                                    className="w-full pl-9 sm:pl-12 pr-2 sm:pr-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-primary/50 appearance-none"
                                 >
                                     <option value="">Hora</option>
                                     {timeSlots.map(slot => (
@@ -959,9 +958,9 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                     </div>
                 ) : (
                     <>
-                        <div className="flex items-center justify-between mb-4">
-                            <span className="text-slate-400">Total</span>
-                            <span className="text-2xl font-bold text-white">
+                        <div className="flex items-center justify-between mb-3 sm:mb-4">
+                            <span className="text-xs sm:text-sm text-slate-400 uppercase tracking-wider">Total</span>
+                            <span className="text-xl sm:text-2xl font-black text-white">
                                 ${totalPrice.toLocaleString()}
                             </span>
                         </div>
