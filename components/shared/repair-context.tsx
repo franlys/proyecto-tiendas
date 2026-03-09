@@ -96,51 +96,7 @@ function generateFolio(): string {
   return `${prefix}-${timestamp}${random}`.substring(0, 12);
 }
 
-// Demo tickets
-const DEMO_TICKETS: RepairTicket[] = [
-  {
-    id: "rt1",
-    folio: "REP-001ABC",
-    customerName: "Carlos Mendoza",
-    customerPhone: "555-123-4567",
-    deviceType: "Smartphone",
-    deviceModel: "iPhone 14 Pro",
-    issueDescription: "Pantalla rota, no responde al tacto",
-    status: "repairing",
-    estimatedCost: 1500,
-    notes: "Pantalla original en camino",
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "rt2",
-    folio: "REP-002XYZ",
-    customerName: "Ana García",
-    customerPhone: "555-987-6543",
-    deviceType: "Laptop",
-    deviceModel: "MacBook Air M2",
-    issueDescription: "No enciende, posible problema de batería",
-    status: "diagnosing",
-    estimatedCost: 800,
-    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "rt3",
-    folio: "REP-003DEF",
-    customerName: "Roberto Silva",
-    customerPhone: "555-456-7890",
-    deviceType: "Smartphone",
-    deviceModel: "Samsung Galaxy S23",
-    issueDescription: "Batería se descarga muy rápido",
-    status: "ready",
-    estimatedCost: 450,
-    finalCost: 450,
-    notes: "Batería reemplazada. Funcionando correctamente.",
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
+
 
 export function RepairProvider({ children, shopId }: RepairProviderProps) {
   const [tickets, setTickets] = useState<RepairTicket[]>([]);
@@ -154,13 +110,11 @@ export function RepairProvider({ children, shopId }: RepairProviderProps) {
       if (stored) {
         setTickets(JSON.parse(stored));
       } else {
-        // Initialize with demo data
-        setTickets(DEMO_TICKETS);
-        localToken.set(storageKey, JSON.stringify(DEMO_TICKETS));
+        setTickets([]);
       }
     } catch (error) {
       console.error("Error loading repair tickets:", error);
-      setTickets(DEMO_TICKETS);
+      setTickets([]);
     } finally {
       setIsLoading(false);
     }

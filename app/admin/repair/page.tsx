@@ -25,6 +25,9 @@ import {
   REPAIR_STATUS_CONFIG,
   type RepairTicket,
   type RepairStatus,
+  useAuth,
+  useShops,
+  ShopsProvider,
 } from "@/components/shared";
 import { cn } from "@/lib/utils";
 
@@ -536,10 +539,22 @@ function RepairAdminContent() {
   );
 }
 
-export default function RepairAdminPage() {
+function RepairAdminWithShop() {
+  const { user } = useAuth();
+  const { getShop } = useShops();
+  const shop = user?.shopId ? getShop(user.shopId) : null;
+
   return (
-    <RepairProvider shopId="default">
+    <RepairProvider shopId={shop?.slug || shop?.id || "default"}>
       <RepairAdminContent />
     </RepairProvider>
+  );
+}
+
+export default function RepairAdminPage() {
+  return (
+    <ShopsProvider>
+      <RepairAdminWithShop />
+    </ShopsProvider>
   );
 }
