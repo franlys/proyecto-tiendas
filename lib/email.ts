@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
 // Initialize Resend client (lazy initialization to avoid issues in client components)
 let resendClient: Resend | null = null;
@@ -12,6 +13,23 @@ function getResend(): Resend | null {
     resendClient = new Resend(process.env.RESEND_API_KEY);
   }
   return resendClient;
+}
+
+// Gmail transporter (lazy initialization)
+let transporter: nodemailer.Transporter | null = null;
+
+function getTransporter(): nodemailer.Transporter | null {
+  if (typeof window !== "undefined") return null;
+  if (!transporter && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+  }
+  return transporter;
 }
 
 export interface EmailOptions {
@@ -69,8 +87,9 @@ export async function sendEmail(
       }
     }
 
-    // Always use Resend's verified domain for sending
-    const verifiedFrom = `${displayName} <onboarding@resend.dev>`;
+    // Use the verified domain prologix-app.com for sending.
+    // This allows sending to any recipient without sandbox restrictions.
+    const verifiedFrom = `${displayName} <notificaciones@prologix-app.com>`;
 
     console.log(`📧 Sending email from: ${verifiedFrom}, reply-to: ${replyToAddress || 'none'}`);
 
@@ -88,6 +107,14 @@ export async function sendEmail(
 
     if (data.error) {
       console.error("❌ Resend error:", data.error);
+
+      // Check for specific sandbox/verification errors to trigger fallback
+      const errorMessage = String(data.error.message || "").toLowerCase();
+      if (errorMessage.includes("verified") || errorMessage.includes("sandbox") || errorMessage.includes("testing emails")) {
+        console.log("➡️ Falling back to Gmail due to Resend restriction...");
+        return await sendEmailViaGmail(options);
+      }
+
       return { success: false, error: String(data.error) };
     }
 
@@ -95,6 +122,40 @@ export async function sendEmail(
     return { success: true, messageId: data.data?.id };
   } catch (error: any) {
     console.error("❌ Resend error:", error.message);
+
+    // Fallback on catch as well
+    console.log("➡️ Falling back to Gmail due to Resend exception...");
+    return await sendEmailViaGmail(options);
+  }
+}
+
+/**
+ * Fallback function to send email via Gmail/Nodemailer
+ */
+async function sendEmailViaGmail(options: EmailOptions): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const { to, subject, html, from, attachments } = options;
+  const gmailTransporter = getTransporter();
+
+  if (!gmailTransporter) {
+    return { success: false, error: "Nodemailer fallback not configured" };
+  }
+
+  try {
+    const info = await gmailTransporter.sendMail({
+      from: from || process.env.EMAIL_USER || "Linko App <Prologixcompany@gmail.com>",
+      to: Array.isArray(to) ? to.join(", ") : to,
+      subject,
+      html,
+      attachments: attachments?.map((att) => ({
+        filename: att.filename,
+        content: att.content,
+      })),
+    });
+
+    console.log(`📧 Email sent via Gmail to ${to}`);
+    return { success: true, messageId: info.messageId };
+  } catch (error: any) {
+    console.error("❌ Gmail fallback error:", error.message);
     return { success: false, error: error.message };
   }
 }
