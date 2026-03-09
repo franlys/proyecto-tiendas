@@ -119,7 +119,23 @@
       "Bash(cmd.exe:*)",
       "mcp__claude_ai_Vercel__get_access_to_vercel_url",
       "Bash(pnpm run build:*)",
-      "Bash(powershell.exe -Command \"cd ''c:\\\\Users\\\\elmae\\\\proyecto-tiendas''; npm run build 2>&1 | Select-Object -First 100\")"
+      "Bash(powershell.exe -Command \"cd ''c:\\\\Users\\\\elmae\\\\proyecto-tiendas''; npm run build 2>&1 | Select-Object -First 100\")",
+      "Bash(Select-Object -First 50)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" add lib/types/booking.types.ts)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nfix: add emailReminderSent property to Booking type\n\nFixes TypeScript build error by adding the missing emailReminderSent\nproperty that is used when sending email reminders.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" add components/shared/visual-feedback-context.tsx)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nfix: improve fly-to-cart animation with image preloading\n\n- Add PreloadedImage component that shows checkmark while loading\n- Add initial \"hold\" phase \\(0.55s\\) to give image time to load\n- Increase total animation duration to 2.2s for smoother effect\n- Image fades in once loaded, fallback to checkmark if still loading\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nfix: show cached image immediately in fly animation\n\nImage is already loaded in the card, so browser cache serves it\ninstantly. No need for loading state fallback.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nfix: keep fly animation solid until cart arrival\n\n- Image stays at opacity 1 throughout entire flight\n- Only fades out in final 15% of animation \\(after arrival\\)\n- Adjusted timing: 0-20% hold, 20-40% rise, 40-85% fly, 85-100% fade\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" add app/api/debug/email-test/route.ts)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nfeat: add email diagnostics endpoint\n\nAdds /api/debug/email-test?shopId=xxx to diagnose email issues:\n- Checks if RESEND_API_KEY is configured\n- Shows shop contact email configuration\n- Attempts to send a test email\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" add lib/email.ts)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nfix: use Resend default domain until custom domain is verified\n\nChanged default from address to onboarding@resend.dev which works\nwithout domain verification. Custom domain can be set via\nRESEND_FROM_EMAIL env variable once verified.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" add app/api/bookings/route.ts lib/services/booking.service.ts)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nfix: use Prologix email for booking notifications\n\nAdded from: Prologixcompany@gmail.com to all booking email sends:\n- Customer confirmation email\n- Shop owner notification email\n- Appointment reminder email \\(cron\\)\n\nThis matches the order confirmation emails which already use Prologix.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(pnpm run lint:*)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" add app/api/bookings/route.ts)",
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nfix\\(bookings\\): ensure notifications complete before response\n\n- Changed notifications from fire-and-forget to awaited operations\n- Added in-app notification for bookings \\(like orders have\\)\n- Added detailed logging for debugging shop config issues\n\nThis fixes the issue where serverless functions terminated before\nnotifications could be sent, causing emails and WhatsApp messages\nto never be delivered.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }

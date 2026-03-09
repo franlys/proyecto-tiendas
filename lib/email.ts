@@ -19,6 +19,7 @@ export interface EmailOptions {
   subject: string;
   html: string;
   from?: string;
+  replyTo?: string;
   attachments?: Array<{
     filename: string;
     content: Buffer | string;
@@ -40,7 +41,7 @@ export interface BrandingConfig {
 export async function sendEmail(
   options: EmailOptions
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
-  const { to, subject, html, from, attachments } = options;
+  const { to, subject, html, from, replyTo, attachments } = options;
 
   const resend = getResend();
 
@@ -50,15 +51,35 @@ export async function sendEmail(
   }
 
   try {
-    // Use Resend's default domain until linko.app is verified
-    // To use custom domain: verify it at https://resend.com/domains
-    const defaultFrom = process.env.RESEND_FROM_EMAIL || "Linko App <onboarding@resend.dev>";
+    // Resend requires a verified domain. We use onboarding@resend.dev (Resend's default)
+    // but extract the display name from the 'from' parameter for branding.
+    // The original email is set as replyTo so responses go to the right place.
+    let displayName = "Linko App";
+    let replyToAddress = replyTo;
+
+    if (from) {
+      // Parse "Shop Name <email@domain.com>" format
+      const match = from.match(/^(.+?)\s*<(.+?)>$/);
+      if (match) {
+        displayName = match[1].trim();
+        // Use the original email as reply-to if not explicitly set
+        if (!replyToAddress) {
+          replyToAddress = match[2].trim();
+        }
+      }
+    }
+
+    // Always use Resend's verified domain for sending
+    const verifiedFrom = `${displayName} <onboarding@resend.dev>`;
+
+    console.log(`📧 Sending email from: ${verifiedFrom}, reply-to: ${replyToAddress || 'none'}`);
 
     const data = await resend.emails.send({
-      from: from || defaultFrom,
+      from: verifiedFrom,
       to: Array.isArray(to) ? to : [to],
       subject,
       html,
+      replyTo: replyToAddress,
       attachments: attachments?.map((att) => ({
         filename: att.filename,
         content: att.content,
