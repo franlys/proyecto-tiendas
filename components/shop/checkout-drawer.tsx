@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
     X,
     ShoppingBag,
@@ -342,601 +343,636 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
         }
     };
 
-    if (!isOpen) return null;
-
-    const hasItems = products.length > 0 || services.length > 0;
-
     return (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 sm:p-4 overflow-hidden">
-            {/* Backdrop */}
-            <div
-                className="absolute inset-0 bg-black/70 backdrop-blur-md"
-                onClick={onClose}
-            />
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden">
+                    {/* Backdrop */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                        onClick={onClose}
+                    />
 
-            {/* Drawer */}
-            <div className={cn(
-                "relative flex flex-col w-full sm:max-w-md md:max-w-lg max-h-[94vh] sm:max-h-[85vh]",
-                "bg-slate-900 border border-white/10 shadow-2xl",
-                "rounded-2xl sm:rounded-3xl",
-                "animate-in slide-in-from-bottom duration-300 ease-out fill-mode-forwards"
-            )}>
-                <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-md border-b border-white/10 p-3 sm:p-4">
-                    <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0">
-                                <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                            </div>
-                            <div className="min-w-0">
-                                <h2 className="text-sm sm:text-lg font-bold text-white truncate leading-tight">Tu Pedido</h2>
-                                <p className="text-[10px] sm:text-xs text-slate-400">
-                                    {products.length} {products.length === 1 ? "item" : "items"}
-                                </p>
-                            </div>
-                        </div>
-                        <button
-                            onClick={onClose}
-                            className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
-                        >
-                            <X className="w-5 h-5" />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Content - Scrollable area */}
-                <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain pb-safe">
-                    <div className="p-4 space-y-6">
-                        {/* Items */}
-                        {hasItems && (
-                            <div className="space-y-3">
-                                <h3 className="text-sm font-medium text-slate-400">
-                                    Productos
-                                </h3>
-                                {products.map((item, idx) => {
-                                    const itemKey = getItemKey(item, idx);
-                                    const isExpanded = expandedItems[itemKey];
-                                    const basePrice = item.promoPrice || item.price;
-                                    const extrasTotal = item.extrasTotal || 0;
-                                    const itemTotal = (basePrice + extrasTotal) * item.quantity;
-
-                                    return (
-                                        <div
-                                            key={itemKey}
-                                            className="bg-slate-800/50 rounded-xl border border-white/5 overflow-hidden shadow-sm hover:border-white/10 transition-all"
-                                        >
-                                            {/* Item header */}
-                                            <div className="p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
-                                                {item.image && (
-                                                    <img
-                                                        src={item.image}
-                                                        alt={item.name}
-                                                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover flex-shrink-0"
-                                                    />
-                                                )}
-                                                <div className="flex-1 min-w-0 pr-1">
-                                                    <p className="text-xs sm:text-base text-white font-medium truncate">
-                                                        {item.name}
-                                                        {item.variantName && (
-                                                            <span className={cn(shop?.theme?.primaryColor ? "" : "text-primary")} style={shop?.theme?.primaryColor ? { color: shop.theme.primaryColor } : {}}> ({item.variantName})</span>
-                                                        )}
-                                                    </p>
-                                                    <p className="text-[10px] sm:text-sm text-slate-400">
-                                                        ${basePrice.toLocaleString()} c/u
-                                                    </p>
-                                                </div>
-
-                                                {/* Quantity controls */}
-                                                <div className="flex items-center gap-2">
-                                                    <button
-                                                        onClick={() => updateProductQuantity(item.id, item.quantity - 1, item.variantId)}
-                                                        className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
-                                                    >
-                                                        <Minus className="w-4 h-4 text-white" />
-                                                    </button>
-                                                    <span className="w-6 text-center text-white font-medium">
-                                                        {item.quantity}
-                                                    </span>
-                                                    <button
-                                                        onClick={() => updateProductQuantity(item.id, item.quantity + 1, item.variantId)}
-                                                        className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
-                                                    >
-                                                        <Plus className="w-4 h-4 text-white" />
-                                                    </button>
-                                                </div>
-
-                                                <p className="text-white font-bold w-20 text-right">
-                                                    ${itemTotal.toLocaleString()}
-                                                </p>
-                                            </div>
-
-                                            {/* Expand/collapse for notes */}
-                                            <button
-                                                onClick={() => toggleItemExpand(itemKey)}
-                                                className="w-full px-3 py-2 flex items-center justify-between text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-colors border-t border-white/5"
-                                            >
-                                                <span className="flex items-center gap-2">
-                                                    <FileText className="w-4 h-4" />
-                                                    {item.notes ? "Editar instrucciones" : "Agregar instrucciones"}
-                                                </span>
-                                                {isExpanded ? (
-                                                    <ChevronUp className="w-4 h-4" />
-                                                ) : (
-                                                    <ChevronDown className="w-4 h-4" />
-                                                )}
-                                            </button>
-
-                                            {/* Notes input */}
-                                            {isExpanded && (
-                                                <div className="p-3 border-t border-white/5 bg-white/5">
-                                                    <textarea
-                                                        value={item.notes || ""}
-                                                        onChange={(e) => updateItemNotes(item.id, e.target.value, item.variantId)}
-                                                        placeholder="Ej: Sin cebolla, extra proteína, bajo en sodio..."
-                                                        className="w-full px-3 py-2 bg-slate-800 border border-white/10 rounded-lg text-white placeholder:text-slate-500 text-sm resize-none focus:outline-none focus:border-primary/50"
-                                                        rows={2}
-                                                    />
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                    {/* Modal Content */}
+                    <motion.div
+                        initial={{ opacity: 0, y: "100%" }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: "100%" }}
+                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                        className={cn(
+                            "relative flex flex-col w-full sm:max-w-lg md:max-w-xl max-h-[94vh] sm:max-h-[85vh]",
+                            "bg-slate-900 border border-white/10 shadow-2xl overflow-hidden",
+                            "rounded-t-[2.5rem] sm:rounded-3xl"
                         )}
-
-                        {/* Customer Info */}
-                        <div className="space-y-3">
-                            <h3 className="text-sm font-medium text-slate-400">
-                                Tus datos
-                            </h3>
-                            <div className="space-y-3">
-                                <input
-                                    type="text"
-                                    value={customerName}
-                                    onChange={(e) => setCustomerName(e.target.value)}
-                                    placeholder="Tu nombre"
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
-                                />
-                                <input
-                                    type="tel"
-                                    value={customerPhone}
-                                    onChange={(e) => setCustomerPhone(e.target.value)}
-                                    placeholder="Tu teléfono (WhatsApp)"
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
-                                />
-                                <input
-                                    type="email"
-                                    value={customerEmail}
-                                    onChange={(e) => setCustomerEmail(e.target.value)}
-                                    placeholder="Tu email"
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Delivery Type */}
-                        <div className="space-y-3">
-                            <h3 className="text-sm font-medium text-slate-400">
-                                Tipo de entrega
-                            </h3>
-                            <div className="grid grid-cols-2 gap-3">
-                                <button
-                                    onClick={() => setDeliveryType("delivery")}
-                                    className={cn(
-                                        "flex items-center justify-center gap-2 p-3 sm:p-4 rounded-xl border transition-all",
-                                        deliveryType === "delivery"
-                                            ? "bg-primary/20 border-primary text-white"
-                                            : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
-                                    )}
-                                >
-                                    <Truck className="w-4 h-4 sm:w-5 sm:h-5" />
-                                    <span className="text-sm sm:text-base">Delivery</span>
-                                </button>
-                                <button
-                                    onClick={() => setDeliveryType("pickup")}
-                                    className={cn(
-                                        "flex items-center justify-center gap-2 p-3 sm:p-4 rounded-xl border transition-all",
-                                        deliveryType === "pickup"
-                                            ? "bg-primary/20 border-primary text-white"
-                                            : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
-                                    )}
-                                >
-                                    <Store className="w-4 h-4 sm:w-5 sm:h-5" />
-                                    <span className="text-sm sm:text-base">Recoger</span>
-                                </button>
-                            </div>
-
-                            {/* Address for delivery */}
-                            {deliveryType === "delivery" && (
-                                <div className="space-y-2">
-                                    <div className="relative">
-                                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                                        <input
-                                            type="text"
-                                            value={customerAddress}
-                                            onChange={(e) => setCustomerAddress(e.target.value)}
-                                            placeholder="Tu dirección de entrega"
-                                            className="w-full pl-12 pr-12 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
-                                        />
-                                        <button
-                                            onClick={handleDetectLocation}
-                                            disabled={isDetectingLocation}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-white/10 text-primary transition-colors disabled:opacity-50"
-                                            title="Detectar mi ubicación actual"
-                                        >
-                                            {isDetectingLocation ? (
-                                                <Loader2 className="w-5 h-5 animate-spin" />
-                                            ) : (
-                                                <MapPin className={cn("w-5 h-5 fill-current", shop?.theme?.primaryColor ? "" : "text-primary")} />
-                                            )}
-                                        </button>
+                    >
+                        {/* Header */}
+                        <div className="sticky top-0 z-20 bg-slate-900/95 backdrop-blur-md border-b border-white/10 px-6 py-4">
+                            <div className="flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-orange-400 flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/20">
+                                        <ShoppingBag className="w-5 h-5 text-white" />
                                     </div>
-                                    <p className="text-[10px] text-slate-500 px-1 italic">
-                                        * Toca el pin para usar tu ubicación actual por GPS.
-                                    </p>
+                                    <div className="min-w-0">
+                                        <h2 className="text-lg font-bold text-white truncate leading-tight">Tu Pedido</h2>
+                                        <p className="text-xs text-slate-400">
+                                            {products.length + services.length} seleccionados
+                                        </p>
+                                    </div>
                                 </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Schedule */}
-                    <div className="space-y-3">
-                        <h3 className="text-sm font-medium text-slate-400">
-                            Programar entrega (opcional)
-                        </h3>
-                        <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                            <div className="relative">
-                                <Calendar className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-400 pointer-events-none" />
-                                <input
-                                    type="date"
-                                    value={scheduledDate}
-                                    onChange={(e) => setScheduledDate(e.target.value)}
-                                    min={today}
-                                    className="w-full pl-9 sm:pl-12 pr-2 sm:pr-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-primary/50 [color-scheme:dark]"
-                                />
-                            </div>
-                            <div className="relative">
-                                <Clock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-400 pointer-events-none" />
-                                <select
-                                    value={scheduledTime}
-                                    onChange={(e) => setScheduledTime(e.target.value)}
-                                    className="w-full pl-9 sm:pl-12 pr-2 sm:pr-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-primary/50 appearance-none"
+                                <button
+                                    onClick={onClose}
+                                    className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-all"
                                 >
-                                    <option value="">Hora</option>
-                                    {timeSlots.map(slot => (
-                                        <option key={slot} value={slot}>{slot}</option>
-                                    ))}
-                                </select>
+                                    <X className="w-5 h-5" />
+                                </button>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Order Notes */}
-                    <div className="space-y-3">
-                        <h3 className="text-sm font-medium text-slate-400">
-                            Notas adicionales (opcional)
-                        </h3>
-                        <textarea
-                            value={orderNotes}
-                            onChange={(e) => setOrderNotes(e.target.value)}
-                            placeholder="Instrucciones especiales, alergias, etc..."
-                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 text-sm resize-none focus:outline-none focus:border-primary/50"
-                            rows={3}
-                        />
-                    </div>
+                        {/* Content - Scrollable area */}
+                        <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain pb-safe">
+                            <div className="p-4 space-y-6">
+                                {/* Items */}
+                                {hasItems && (
+                                    <div className="space-y-3">
+                                        <h3 className="text-sm font-medium text-slate-400">
+                                            Productos
+                                        </h3>
+                                        {products.map((item, idx) => {
+                                            const itemKey = getItemKey(item, idx);
+                                            const isExpanded = expandedItems[itemKey];
+                                            const basePrice = item.promoPrice || item.price;
+                                            const extrasTotal = item.extrasTotal || 0;
+                                            const itemTotal = (basePrice + extrasTotal) * item.quantity;
 
-                    {/* Payment Timing Selection - ALWAYS SHOW */}
-                    <div className="space-y-3">
-                        <h3 className="text-sm font-medium text-slate-400">
-                            ¿Cuándo deseas pagar?
-                        </h3>
-                        <div className="grid grid-cols-2 gap-3">
-                            <button
-                                onClick={() => {
-                                    setPaymentTiming("pay_now");
-                                    if (!selectedPaymentMethod && activePaymentMethods.length > 0) {
-                                        setSelectedPaymentMethod(activePaymentMethods[0]);
-                                    }
-                                }}
-                                className={cn(
-                                    "flex flex-col items-center justify-center gap-1 p-3 sm:p-4 rounded-xl border transition-all text-center",
-                                    paymentTiming === "pay_now"
-                                        ? "bg-green-500/20 border-green-500 text-white"
-                                        : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10",
-                                    paymentTiming === "pay_now" && shop?.theme?.primaryColor && {
-                                        backgroundColor: `${shop.theme.primaryColor}20`,
-                                        borderColor: shop.theme.primaryColor
-                                    }
+                                            return (
+                                                <div
+                                                    key={itemKey}
+                                                    className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden shadow-sm hover:border-white/20 transition-all group"
+                                                >
+                                                    {/* Item header */}
+                                                    <div className="p-4 flex items-center gap-4">
+                                                        {item.image ? (
+                                                            <img
+                                                                src={item.image}
+                                                                alt={item.name}
+                                                                className="w-16 h-16 rounded-xl object-cover flex-shrink-0 shadow-md transition-transform group-hover:scale-105"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-16 h-16 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0">
+                                                                <ShoppingBag className="w-6 h-6 text-slate-500" />
+                                                            </div>
+                                                        )}
+                                                        <div className="flex-1 min-w-0 pr-2">
+                                                            <p className="text-base text-white font-bold truncate leading-tight mb-1">
+                                                                {item.name}
+                                                                {item.variantName && (
+                                                                    <span className="text-primary font-normal block sm:inline text-xs sm:text-sm" style={shop?.theme?.primaryColor ? { color: shop.theme.primaryColor } : {}}> ({item.variantName})</span>
+                                                                )}
+                                                            </p>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-sm font-bold text-white">${basePrice.toLocaleString()}</span>
+                                                                <span className="text-xs text-slate-500">c/u</span>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Price total for item */}
+                                                        <div className="text-right">
+                                                            <p className="text-lg font-black text-white">
+                                                                ${itemTotal.toLocaleString()}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Item Footer - Controls & Extras */}
+                                                    <div className="px-4 pb-4 flex items-center justify-between gap-4">
+                                                        <div className="flex items-center bg-white/10 rounded-xl p-1">
+                                                            <button
+                                                                onClick={() => updateProductQuantity(item.id, item.quantity - 1, item.variantId)}
+                                                                className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 text-white transition-colors"
+                                                            >
+                                                                <Minus className="w-4 h-4" />
+                                                            </button>
+                                                            <span className="w-10 text-center text-white font-bold text-sm">
+                                                                {item.quantity}
+                                                            </span>
+                                                            <button
+                                                                onClick={() => updateProductQuantity(item.id, item.quantity + 1, item.variantId)}
+                                                                className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 text-white transition-colors"
+                                                            >
+                                                                <Plus className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+
+                                                        {/* Expand/collapse button */}
+                                                        <button
+                                                            onClick={() => setExpandedItems(prev => ({ ...prev, [itemKey]: !isExpanded }))}
+                                                            className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
+                                                        >
+                                                            <ChevronDown className={cn("w-4 h-4 transition-transform", isExpanded ? "rotate-180" : "")} />
+                                                            {isExpanded ? "Ocultar detalles" : "Agregar instrucciones"}
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Expand/collapse for notes */}
+                                                    <button
+                                                        onClick={() => toggleItemExpand(itemKey)}
+                                                        className="w-full px-3 py-2 flex items-center justify-between text-sm text-slate-400 hover:text-white hover:bg-white/5 transition-colors border-t border-white/5"
+                                                    >
+                                                        <span className="flex items-center gap-2">
+                                                            <FileText className="w-4 h-4" />
+                                                            {item.notes ? "Editar instrucciones" : "Agregar instrucciones"}
+                                                        </span>
+                                                        {isExpanded ? (
+                                                            <ChevronUp className="w-4 h-4" />
+                                                        ) : (
+                                                            <ChevronDown className="w-4 h-4" />
+                                                        )}
+                                                    </button>
+
+                                                    {/* Notes input */}
+                                                    {isExpanded && (
+                                                        <div className="p-3 border-t border-white/5 bg-white/5">
+                                                            <textarea
+                                                                value={item.notes || ""}
+                                                                onChange={(e) => updateItemNotes(item.id, e.target.value, item.variantId)}
+                                                                placeholder="Ej: Sin cebolla, extra proteína, bajo en sodio..."
+                                                                className="w-full px-3 py-2 bg-slate-800 border border-white/10 rounded-lg text-white placeholder:text-slate-500 text-sm resize-none focus:outline-none focus:border-primary/50"
+                                                                rows={2}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 )}
-                            >
-                                <CreditCard className="w-5 h-5 sm:w-6 sm:h-6" />
-                                <span className="text-xs sm:text-sm font-medium">Pagar Ahora</span>
-                                <span className="text-[10px] sm:text-xs opacity-70">Transferencia</span>
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setPaymentTiming("pay_on_delivery");
-                                    setSelectedPaymentMethod(null);
-                                    setReceiptFile(null);
-                                    setReceiptPreview(null);
-                                }}
-                                className={cn(
-                                    "flex flex-col items-center justify-center gap-1 p-3 sm:p-4 rounded-xl border transition-all text-center",
-                                    paymentTiming === "pay_on_delivery"
-                                        ? "bg-primary/20 border-primary text-white"
-                                        : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10",
-                                    paymentTiming === "pay_on_delivery" && shop?.theme?.primaryColor ? {
-                                        backgroundColor: `${shop.theme.primaryColor}20`,
-                                        borderColor: shop.theme.primaryColor
-                                    } : {}
-                                )}
-                            >
-                                <Banknote className="w-5 h-5 sm:w-6 sm:h-6" />
-                                <span className="text-xs sm:text-sm font-medium">Pagar al Recibir</span>
-                                <span className="text-[10px] sm:text-xs opacity-70">Efectivo/Tarjeta</span>
-                            </button>
-                        </div>
-                    </div>
 
-                    {/* Payment Method Selection - Only show if paying now */}
-                    {paymentTiming === "pay_now" && (
-                        <div className="space-y-4">
-                            {/* Generic Message if NO active payment methods are configured but user clicked Pay Now */}
-                            {activePaymentMethods.length === 0 && (
-                                <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-center space-y-2">
-                                    <CreditCard className="w-6 h-6 text-green-400 mx-auto" />
-                                    <p className="text-green-400 font-medium">Pago Anticipado</p>
-                                    <p className="text-sm text-slate-300">
-                                        Te enviaremos los datos de transferencia, Zelle o Pago Móvil por WhatsApp al confirmar tu pedido.
-                                    </p>
-                                </div>
-                            )}
-                            {/* Method selector if multiple */}
-                            {activePaymentMethods.length > 1 && (
+                                {/* Customer Info */}
                                 <div className="space-y-3">
                                     <h3 className="text-sm font-medium text-slate-400">
-                                        Método de pago
+                                        Tus datos
                                     </h3>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {activePaymentMethods.map((method) => (
-                                            <button
-                                                key={method.id}
-                                                onClick={() => setSelectedPaymentMethod(method)}
-                                                className={cn(
-                                                    "flex items-center gap-2 p-3 rounded-xl border transition-all text-left",
-                                                    selectedPaymentMethod?.id === method.id
-                                                        ? "bg-green-500/20 border-green-500 text-white"
-                                                        : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10",
-                                                    selectedPaymentMethod?.id === method.id && shop?.theme?.primaryColor && {
-                                                        backgroundColor: `${shop.theme.primaryColor}20`,
-                                                        borderColor: shop.theme.primaryColor
-                                                    }
-                                                )}
-                                            >
-                                                <span className="text-xl">{MANUAL_PAYMENT_METHOD_ICONS[method.type]}</span>
-                                                <span className="text-sm font-medium truncate">{method.name}</span>
-                                            </button>
-                                        ))}
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">Nombre Completo</label>
+                                            <input
+                                                type="text"
+                                                value={customerName}
+                                                onChange={(e) => setCustomerName(e.target.value)}
+                                                placeholder="Tu nombre"
+                                                className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 transition-all focus:bg-white/10"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">WhatsApp</label>
+                                            <input
+                                                type="tel"
+                                                value={customerPhone}
+                                                onChange={(e) => setCustomerPhone(e.target.value)}
+                                                placeholder="Tu teléfono (WhatsApp)"
+                                                className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 transition-all focus:bg-white/10"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">Email</label>
+                                            <input
+                                                type="email"
+                                                value={customerEmail}
+                                                onChange={(e) => setCustomerEmail(e.target.value)}
+                                                placeholder="Tu email"
+                                                className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 transition-all focus:bg-white/10"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
-                            )}
 
-                            {/* Payment Info Display */}
-                            {selectedPaymentMethod && (
-                                <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 space-y-3">
-                                    <div className="flex items-center gap-2 text-green-400 font-medium">
-                                        <span className="text-xl">{MANUAL_PAYMENT_METHOD_ICONS[selectedPaymentMethod.type]}</span>
-                                        <span>{selectedPaymentMethod.name}</span>
+                                {/* Delivery Type */}
+                                <div className="space-y-3">
+                                    <h3 className="text-sm font-medium text-slate-400">
+                                        Tipo de entrega
+                                    </h3>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                            onClick={() => setDeliveryType("delivery")}
+                                            className={cn(
+                                                "flex items-center justify-center gap-2 p-3 sm:p-4 rounded-xl border transition-all",
+                                                deliveryType === "delivery"
+                                                    ? "bg-primary/20 border-primary text-white"
+                                                    : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                                            )}
+                                        >
+                                            <Truck className="w-4 h-4 sm:w-5 sm:h-5" />
+                                            <span className="text-sm sm:text-base">Delivery</span>
+                                        </button>
+                                        <button
+                                            onClick={() => setDeliveryType("pickup")}
+                                            className={cn(
+                                                "flex items-center justify-center gap-2 p-3 sm:p-4 rounded-xl border transition-all",
+                                                deliveryType === "pickup"
+                                                    ? "bg-primary/20 border-primary text-white"
+                                                    : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                                            )}
+                                        >
+                                            <Store className="w-4 h-4 sm:w-5 sm:h-5" />
+                                            <span className="text-sm sm:text-base">Recoger</span>
+                                        </button>
                                     </div>
 
-                                    {/* Bank Transfer Info */}
-                                    {selectedPaymentMethod.type === "bank_transfer" && (
-                                        <div className="space-y-2 text-sm">
-                                            {selectedPaymentMethod.bankName && (
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-slate-400">Banco:</span>
-                                                    <span className="text-white font-medium">{selectedPaymentMethod.bankName}</span>
-                                                </div>
-                                            )}
-                                            {selectedPaymentMethod.accountNumber && (
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-slate-400">Cuenta:</span>
-                                                    <button
-                                                        onClick={() => copyToClipboard(selectedPaymentMethod.accountNumber!, "account")}
-                                                        className="flex items-center gap-2 text-white font-medium hover:text-green-400 transition-colors"
-                                                    >
-                                                        {selectedPaymentMethod.accountNumber}
-                                                        {copiedField === "account" ? (
-                                                            <CheckCircle className="w-4 h-4 text-green-400" />
-                                                        ) : (
-                                                            <Copy className="w-4 h-4" />
-                                                        )}
-                                                    </button>
-                                                </div>
-                                            )}
-                                            {selectedPaymentMethod.accountType && (
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-slate-400">Tipo:</span>
-                                                    <span className="text-white font-medium capitalize">{selectedPaymentMethod.accountType}</span>
-                                                </div>
-                                            )}
-                                            {selectedPaymentMethod.accountHolder && (
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-slate-400">Titular:</span>
-                                                    <span className="text-white font-medium">{selectedPaymentMethod.accountHolder}</span>
-                                                </div>
-                                            )}
-                                            {selectedPaymentMethod.identificationNumber && (
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-slate-400">Cédula/RIF:</span>
-                                                    <button
-                                                        onClick={() => copyToClipboard(selectedPaymentMethod.identificationNumber!, "id")}
-                                                        className="flex items-center gap-2 text-white font-medium hover:text-green-400 transition-colors"
-                                                    >
-                                                        {selectedPaymentMethod.identificationNumber}
-                                                        {copiedField === "id" ? (
-                                                            <CheckCircle className="w-4 h-4 text-green-400" />
-                                                        ) : (
-                                                            <Copy className="w-4 h-4" />
-                                                        )}
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {/* Zelle/PayPal Info */}
-                                    {(selectedPaymentMethod.type === "zelle" || selectedPaymentMethod.type === "paypal_manual") && selectedPaymentMethod.email && (
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="text-slate-400">Email:</span>
-                                            <button
-                                                onClick={() => copyToClipboard(selectedPaymentMethod.email!, "email")}
-                                                className="flex items-center gap-2 text-white font-medium hover:text-green-400 transition-colors"
-                                            >
-                                                {selectedPaymentMethod.email}
-                                                {copiedField === "email" ? (
-                                                    <CheckCircle className="w-4 h-4 text-green-400" />
-                                                ) : (
-                                                    <Copy className="w-4 h-4" />
-                                                )}
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    {/* Mobile Payment Info */}
-                                    {selectedPaymentMethod.type === "mobile_payment" && selectedPaymentMethod.phoneNumber && (
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="text-slate-400">Teléfono:</span>
-                                            <button
-                                                onClick={() => copyToClipboard(selectedPaymentMethod.phoneNumber!, "phone")}
-                                                className="flex items-center gap-2 text-white font-medium hover:text-green-400 transition-colors"
-                                            >
-                                                {selectedPaymentMethod.phoneNumber}
-                                                {copiedField === "phone" ? (
-                                                    <CheckCircle className="w-4 h-4 text-green-400" />
-                                                ) : (
-                                                    <Copy className="w-4 h-4" />
-                                                )}
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    {/* Crypto Info */}
-                                    {selectedPaymentMethod.type === "crypto" && selectedPaymentMethod.walletAddress && (
-                                        <div className="space-y-2 text-sm">
-                                            {selectedPaymentMethod.network && (
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-slate-400">Red:</span>
-                                                    <span className="text-white font-medium">{selectedPaymentMethod.network}</span>
-                                                </div>
-                                            )}
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-slate-400">Wallet:</span>
+                                    {/* Address for delivery */}
+                                    {deliveryType === "delivery" && (
+                                        <div className="space-y-2">
+                                            <div className="relative">
+                                                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                                <input
+                                                    type="text"
+                                                    value={customerAddress}
+                                                    onChange={(e) => setCustomerAddress(e.target.value)}
+                                                    placeholder="Tu dirección de entrega"
+                                                    className="w-full pl-12 pr-12 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                                                />
                                                 <button
-                                                    onClick={() => copyToClipboard(selectedPaymentMethod.walletAddress!, "wallet")}
-                                                    className="flex items-center gap-2 text-white font-medium hover:text-green-400 transition-colors text-xs"
+                                                    onClick={handleDetectLocation}
+                                                    disabled={isDetectingLocation}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-white/10 text-primary transition-colors disabled:opacity-50"
+                                                    title="Detectar mi ubicación actual"
                                                 >
-                                                    {selectedPaymentMethod.walletAddress.slice(0, 10)}...{selectedPaymentMethod.walletAddress.slice(-6)}
-                                                    {copiedField === "wallet" ? (
-                                                        <CheckCircle className="w-4 h-4 text-green-400" />
+                                                    {isDetectingLocation ? (
+                                                        <Loader2 className="w-5 h-5 animate-spin" />
                                                     ) : (
-                                                        <Copy className="w-4 h-4" />
+                                                        <MapPin className={cn("w-5 h-5 fill-current", shop?.theme?.primaryColor ? "" : "text-primary")} />
                                                     )}
                                                 </button>
                                             </div>
+                                            <p className="text-[10px] text-slate-500 px-1 italic">
+                                                * Toca el pin para usar tu ubicación actual por GPS.
+                                            </p>
                                         </div>
                                     )}
+                                </div>
+                            </div>
 
-                                    {/* Custom Instructions */}
-                                    {selectedPaymentMethod.instructions && (
-                                        <div className="pt-2 border-t border-green-500/20">
-                                            <p className="text-xs text-slate-400">{selectedPaymentMethod.instructions}</p>
-                                        </div>
-                                    )}
-
-                                    {/* Amount to pay */}
-                                    <div className="pt-3 border-t border-green-500/20 flex items-center justify-between">
-                                        <span className="text-green-400 font-medium">Monto a pagar:</span>
-                                        <span className="text-2xl font-bold text-white">${totalPrice.toLocaleString()}</span>
+                            {/* Schedule */}
+                            <div className="space-y-3">
+                                <h3 className="text-sm font-medium text-slate-400">
+                                    Programar entrega (opcional)
+                                </h3>
+                                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                                    <div className="relative">
+                                        <Calendar className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-400 pointer-events-none" />
+                                        <input
+                                            type="date"
+                                            value={scheduledDate}
+                                            onChange={(e) => setScheduledDate(e.target.value)}
+                                            min={today}
+                                            className="w-full pl-9 sm:pl-12 pr-2 sm:pr-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-primary/50 [color-scheme:dark]"
+                                        />
+                                    </div>
+                                    <div className="relative">
+                                        <Clock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-400 pointer-events-none" />
+                                        <select
+                                            value={scheduledTime}
+                                            onChange={(e) => setScheduledTime(e.target.value)}
+                                            className="w-full pl-9 sm:pl-12 pr-2 sm:pr-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-primary/50 appearance-none"
+                                        >
+                                            <option value="">Hora</option>
+                                            {timeSlots.map(slot => (
+                                                <option key={slot} value={slot}>{slot}</option>
+                                            ))}
+                                        </select>
                                     </div>
                                 </div>
-                            )}
+                            </div>
 
-                            {/* Receipt Upload */}
-                            {selectedPaymentMethod && (
-                                <div className="space-y-3">
-                                    <h3 className="text-sm font-medium text-slate-400">
-                                        Comprobante de pago {manualPaymentConfig?.requiresReceipt ? "*" : "(opcional)"}
-                                    </h3>
-                                    <label className={cn(
-                                        "flex flex-col items-center justify-center gap-3 p-6 rounded-xl border-2 border-dashed transition-all cursor-pointer relative overflow-hidden",
-                                        receiptFile || isUploadingReceipt
-                                            ? "border-green-500 bg-green-500/10"
-                                            : "border-white/20 hover:border-white/40 bg-white/5",
-                                        (receiptFile || isUploadingReceipt) && shop?.theme?.primaryColor ? {
-                                            borderColor: shop.theme.primaryColor,
-                                            backgroundColor: `${shop.theme.primaryColor}10`
-                                        } : {}
-                                    )}>
-                                        {isUploadingReceipt && (
-                                            <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-2 backdrop-blur-[2px] z-10">
-                                                <Loader2 className="w-8 h-8 animate-spin text-white" />
-                                                <span className="text-xs text-white font-medium uppercase tracking-widest">Subiendo...</span>
-                                            </div>
+                            {/* Order Notes */}
+                            <div className="space-y-3">
+                                <h3 className="text-sm font-medium text-slate-400">
+                                    Notas adicionales (opcional)
+                                </h3>
+                                <textarea
+                                    value={orderNotes}
+                                    onChange={(e) => setOrderNotes(e.target.value)}
+                                    placeholder="Instrucciones especiales, alergias, etc..."
+                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 text-sm resize-none focus:outline-none focus:border-primary/50"
+                                    rows={3}
+                                />
+                            </div>
+
+                            {/* Payment Timing Selection - ALWAYS SHOW */}
+                            <div className="space-y-3">
+                                <h3 className="text-sm font-medium text-slate-400">
+                                    ¿Cuándo deseas pagar?
+                                </h3>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={() => {
+                                            setPaymentTiming("pay_now");
+                                            if (!selectedPaymentMethod && activePaymentMethods.length > 0) {
+                                                setSelectedPaymentMethod(activePaymentMethods[0]);
+                                            }
+                                        }}
+                                        className={cn(
+                                            "flex flex-col items-center justify-center gap-1 p-3 sm:p-4 rounded-xl border transition-all text-center",
+                                            paymentTiming === "pay_now"
+                                                ? "bg-green-500/20 border-green-500 text-white"
+                                                : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10",
+                                            paymentTiming === "pay_now" && shop?.theme?.primaryColor && {
+                                                backgroundColor: `${shop.theme.primaryColor}20`,
+                                                borderColor: shop.theme.primaryColor
+                                            }
                                         )}
-                                        {receiptPreview ? (
-                                            <div className="relative group">
-                                                <img
-                                                    src={receiptPreview}
-                                                    alt="Comprobante"
-                                                    className="max-h-40 rounded-lg object-contain shadow-2xl"
+                                    >
+                                        <CreditCard className="w-5 h-5 sm:w-6 sm:h-6" />
+                                        <span className="text-xs sm:text-sm font-medium">Pagar Ahora</span>
+                                        <span className="text-[10px] sm:text-xs opacity-70">Transferencia</span>
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setPaymentTiming("pay_on_delivery");
+                                            setSelectedPaymentMethod(null);
+                                            setReceiptFile(null);
+                                            setReceiptPreview(null);
+                                        }}
+                                        className={cn(
+                                            "flex flex-col items-center justify-center gap-1 p-3 sm:p-4 rounded-xl border transition-all text-center",
+                                            paymentTiming === "pay_on_delivery"
+                                                ? "bg-primary/20 border-primary text-white"
+                                                : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10",
+                                            paymentTiming === "pay_on_delivery" && shop?.theme?.primaryColor ? {
+                                                backgroundColor: `${shop.theme.primaryColor}20`,
+                                                borderColor: shop.theme.primaryColor
+                                            } : {}
+                                        )}
+                                    >
+                                        <Banknote className="w-5 h-5 sm:w-6 sm:h-6" />
+                                        <span className="text-xs sm:text-sm font-medium">Pagar al Recibir</span>
+                                        <span className="text-[10px] sm:text-xs opacity-70">Efectivo/Tarjeta</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Payment Method Selection - Only show if paying now */}
+                            {paymentTiming === "pay_now" && (
+                                <div className="space-y-4">
+                                    {/* Generic Message if NO active payment methods are configured but user clicked Pay Now */}
+                                    {activePaymentMethods.length === 0 && (
+                                        <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-center space-y-2">
+                                            <CreditCard className="w-6 h-6 text-green-400 mx-auto" />
+                                            <p className="text-green-400 font-medium">Pago Anticipado</p>
+                                            <p className="text-sm text-slate-300">
+                                                Te enviaremos los datos de transferencia, Zelle o Pago Móvil por WhatsApp al confirmar tu pedido.
+                                            </p>
+                                        </div>
+                                    )}
+                                    {/* Method selector if multiple */}
+                                    {activePaymentMethods.length > 1 && (
+                                        <div className="space-y-3">
+                                            <h3 className="text-sm font-medium text-slate-400">
+                                                Método de pago
+                                            </h3>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {activePaymentMethods.map((method) => (
+                                                    <button
+                                                        key={method.id}
+                                                        onClick={() => setSelectedPaymentMethod(method)}
+                                                        className={cn(
+                                                            "flex items-center gap-2 p-3 rounded-xl border transition-all text-left",
+                                                            selectedPaymentMethod?.id === method.id
+                                                                ? "bg-green-500/20 border-green-500 text-white"
+                                                                : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10",
+                                                            selectedPaymentMethod?.id === method.id && shop?.theme?.primaryColor && {
+                                                                backgroundColor: `${shop.theme.primaryColor}20`,
+                                                                borderColor: shop.theme.primaryColor
+                                                            }
+                                                        )}
+                                                    >
+                                                        <span className="text-xl">{MANUAL_PAYMENT_METHOD_ICONS[method.type]}</span>
+                                                        <span className="text-sm font-medium truncate">{method.name}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Payment Info Display */}
+                                    {selectedPaymentMethod && (
+                                        <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 space-y-3">
+                                            <div className="flex items-center gap-2 text-green-400 font-medium">
+                                                <span className="text-xl">{MANUAL_PAYMENT_METHOD_ICONS[selectedPaymentMethod.type]}</span>
+                                                <span>{selectedPaymentMethod.name}</span>
+                                            </div>
+
+                                            {/* Bank Transfer Info */}
+                                            {selectedPaymentMethod.type === "bank_transfer" && (
+                                                <div className="space-y-2 text-sm">
+                                                    {selectedPaymentMethod.bankName && (
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-slate-400">Banco:</span>
+                                                            <span className="text-white font-medium">{selectedPaymentMethod.bankName}</span>
+                                                        </div>
+                                                    )}
+                                                    {selectedPaymentMethod.accountNumber && (
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-slate-400">Cuenta:</span>
+                                                            <button
+                                                                onClick={() => copyToClipboard(selectedPaymentMethod.accountNumber!, "account")}
+                                                                className="flex items-center gap-2 text-white font-medium hover:text-green-400 transition-colors"
+                                                            >
+                                                                {selectedPaymentMethod.accountNumber}
+                                                                {copiedField === "account" ? (
+                                                                    <CheckCircle className="w-4 h-4 text-green-400" />
+                                                                ) : (
+                                                                    <Copy className="w-4 h-4" />
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                    {selectedPaymentMethod.accountType && (
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-slate-400">Tipo:</span>
+                                                            <span className="text-white font-medium capitalize">{selectedPaymentMethod.accountType}</span>
+                                                        </div>
+                                                    )}
+                                                    {selectedPaymentMethod.accountHolder && (
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-slate-400">Titular:</span>
+                                                            <span className="text-white font-medium">{selectedPaymentMethod.accountHolder}</span>
+                                                        </div>
+                                                    )}
+                                                    {selectedPaymentMethod.identificationNumber && (
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-slate-400">Cédula/RIF:</span>
+                                                            <button
+                                                                onClick={() => copyToClipboard(selectedPaymentMethod.identificationNumber!, "id")}
+                                                                className="flex items-center gap-2 text-white font-medium hover:text-green-400 transition-colors"
+                                                            >
+                                                                {selectedPaymentMethod.identificationNumber}
+                                                                {copiedField === "id" ? (
+                                                                    <CheckCircle className="w-4 h-4 text-green-400" />
+                                                                ) : (
+                                                                    <Copy className="w-4 h-4" />
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {/* Zelle/PayPal Info */}
+                                            {(selectedPaymentMethod.type === "zelle" || selectedPaymentMethod.type === "paypal_manual") && selectedPaymentMethod.email && (
+                                                <div className="flex items-center justify-between text-sm">
+                                                    <span className="text-slate-400">Email:</span>
+                                                    <button
+                                                        onClick={() => copyToClipboard(selectedPaymentMethod.email!, "email")}
+                                                        className="flex items-center gap-2 text-white font-medium hover:text-green-400 transition-colors"
+                                                    >
+                                                        {selectedPaymentMethod.email}
+                                                        {copiedField === "email" ? (
+                                                            <CheckCircle className="w-4 h-4 text-green-400" />
+                                                        ) : (
+                                                            <Copy className="w-4 h-4" />
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            )}
+
+                                            {/* Mobile Payment Info */}
+                                            {selectedPaymentMethod.type === "mobile_payment" && selectedPaymentMethod.phoneNumber && (
+                                                <div className="flex items-center justify-between text-sm">
+                                                    <span className="text-slate-400">Teléfono:</span>
+                                                    <button
+                                                        onClick={() => copyToClipboard(selectedPaymentMethod.phoneNumber!, "phone")}
+                                                        className="flex items-center gap-2 text-white font-medium hover:text-green-400 transition-colors"
+                                                    >
+                                                        {selectedPaymentMethod.phoneNumber}
+                                                        {copiedField === "phone" ? (
+                                                            <CheckCircle className="w-4 h-4 text-green-400" />
+                                                        ) : (
+                                                            <Copy className="w-4 h-4" />
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            )}
+
+                                            {/* Crypto Info */}
+                                            {selectedPaymentMethod.type === "crypto" && selectedPaymentMethod.walletAddress && (
+                                                <div className="space-y-2 text-sm">
+                                                    {selectedPaymentMethod.network && (
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-slate-400">Red:</span>
+                                                            <span className="text-white font-medium">{selectedPaymentMethod.network}</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-slate-400">Wallet:</span>
+                                                        <button
+                                                            onClick={() => copyToClipboard(selectedPaymentMethod.walletAddress!, "wallet")}
+                                                            className="flex items-center gap-2 text-white font-medium hover:text-green-400 transition-colors text-xs"
+                                                        >
+                                                            {selectedPaymentMethod.walletAddress.slice(0, 10)}...{selectedPaymentMethod.walletAddress.slice(-6)}
+                                                            {copiedField === "wallet" ? (
+                                                                <CheckCircle className="w-4 h-4 text-green-400" />
+                                                            ) : (
+                                                                <Copy className="w-4 h-4" />
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Custom Instructions */}
+                                            {selectedPaymentMethod.instructions && (
+                                                <div className="pt-2 border-t border-green-500/20">
+                                                    <p className="text-xs text-slate-400">{selectedPaymentMethod.instructions}</p>
+                                                </div>
+                                            )}
+
+                                            {/* Amount to pay */}
+                                            <div className="pt-3 border-t border-green-500/20 flex items-center justify-between">
+                                                <span className="text-green-400 font-medium">Monto a pagar:</span>
+                                                <span className="text-2xl font-bold text-white">${totalPrice.toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Receipt Upload */}
+                                    {selectedPaymentMethod && (
+                                        <div className="space-y-3">
+                                            <h3 className="text-sm font-medium text-slate-400">
+                                                Comprobante de pago {manualPaymentConfig?.requiresReceipt ? "*" : "(opcional)"}
+                                            </h3>
+                                            <label className={cn(
+                                                "flex flex-col items-center justify-center gap-3 p-6 rounded-xl border-2 border-dashed transition-all cursor-pointer relative overflow-hidden",
+                                                receiptFile || isUploadingReceipt
+                                                    ? "border-green-500 bg-green-500/10"
+                                                    : "border-white/20 hover:border-white/40 bg-white/5",
+                                                (receiptFile || isUploadingReceipt) && shop?.theme?.primaryColor ? {
+                                                    borderColor: shop.theme.primaryColor,
+                                                    backgroundColor: `${shop.theme.primaryColor}10`
+                                                } : {}
+                                            )}>
+                                                {isUploadingReceipt && (
+                                                    <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-2 backdrop-blur-[2px] z-10">
+                                                        <Loader2 className="w-8 h-8 animate-spin text-white" />
+                                                        <span className="text-xs text-white font-medium uppercase tracking-widest">Subiendo...</span>
+                                                    </div>
+                                                )}
+                                                {receiptPreview ? (
+                                                    <div className="relative group">
+                                                        <img
+                                                            src={receiptPreview}
+                                                            alt="Comprobante"
+                                                            className="max-h-40 rounded-lg object-contain shadow-2xl"
+                                                        />
+                                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+                                                            <span className="text-xs text-white bg-black/60 px-2 py-1 rounded">Cambiar foto</span>
+                                                        </div>
+                                                    </div>
+                                                ) : receiptFile ? (
+                                                    <div className="flex flex-col items-center gap-2 text-green-400" style={shop?.theme?.primaryColor ? { color: shop.theme.primaryColor } : {}}>
+                                                        <CheckCircle className="w-10 h-10" />
+                                                        <span className="text-sm font-medium">{receiptFile.name}</span>
+                                                        <span className="text-[10px] opacity-70">Toca para cambiar</span>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-1">
+                                                            <ImageIcon className="w-6 h-6 text-slate-400" />
+                                                        </div>
+                                                        <span className="text-sm text-slate-300 font-medium text-center">
+                                                            Subir comprobante de pago
+                                                        </span>
+                                                        <span className="text-[10px] text-slate-500 uppercase tracking-tighter">
+                                                            Imagen o PDF (máx 5MB)
+                                                        </span>
+                                                    </>
+                                                )}
+                                                <input
+                                                    type="file"
+                                                    accept="image/*,.pdf"
+                                                    onChange={handleReceiptChange}
+                                                    className="hidden"
                                                 />
-                                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
-                                                    <span className="text-xs text-white bg-black/60 px-2 py-1 rounded">Cambiar foto</span>
-                                                </div>
-                                            </div>
-                                        ) : receiptFile ? (
-                                            <div className="flex flex-col items-center gap-2 text-green-400" style={shop?.theme?.primaryColor ? { color: shop.theme.primaryColor } : {}}>
-                                                <CheckCircle className="w-10 h-10" />
-                                                <span className="text-sm font-medium">{receiptFile.name}</span>
-                                                <span className="text-[10px] opacity-70">Toca para cambiar</span>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-1">
-                                                    <ImageIcon className="w-6 h-6 text-slate-400" />
-                                                </div>
-                                                <span className="text-sm text-slate-300 font-medium text-center">
-                                                    Subir comprobante de pago
-                                                </span>
-                                                <span className="text-[10px] text-slate-500 uppercase tracking-tighter">
-                                                    Imagen o PDF (máx 5MB)
-                                                </span>
-                                            </>
-                                        )}
-                                        <input
-                                            type="file"
-                                            accept="image/*,.pdf"
-                                            onChange={handleReceiptChange}
-                                            className="hidden"
-                                        />
-                                    </label>
-                                    {receiptFile && (
-                                        <button
-                                            onClick={() => {
-                                                setReceiptFile(null);
-                                                setReceiptPreview(null);
-                                            }}
-                                            className="text-sm text-red-400 hover:text-red-300 transition-colors"
-                                        >
-                                            Eliminar comprobante
-                                        </button>
+                                            </label>
+                                            {receiptFile && (
+                                                <button
+                                                    onClick={() => {
+                                                        setReceiptFile(null);
+                                                        setReceiptPreview(null);
+                                                    }}
+                                                    className="text-sm text-red-400 hover:text-red-300 transition-colors"
+                                                >
+                                                    Eliminar comprobante
+                                                </button>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
                             )}
                         </div>
-                    )}
                 </div>
-            </div>
 
             {/* Footer with total and CTA */}
             <div className="sticky bottom-0 bg-slate-900 border-t border-white/10 p-4">
@@ -1017,40 +1053,52 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                             )}
 
                             {/* Regular Confirm Order Button */}
-                            <Button
-                                onClick={handleSubmit}
-                                disabled={isSubmitting || !hasItems}
-                                className={cn(
-                                    "w-full py-6 text-lg transition-all duration-300",
-                                    isStreetDrop
-                                        ? "bg-red-600 hover:bg-black border-2 border-red-600 hover:text-red-500 rounded-none drop-shadow-[5px_5px_0px_rgba(255,0,51,0.5)] font-black uppercase tracking-widest"
-                                        : !paymentsEnabled
-                                            ? "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-                                            : "bg-white/10 hover:bg-white/20 text-white border border-white/20",
-                                    isSubmitting && "opacity-50"
-                                )}
-                                style={!isStreetDrop && !paymentsEnabled && shop?.theme?.primaryColor ? {
-                                    background: `linear-gradient(to right, ${shop.theme.primaryColor}, ${shop.theme.primaryColor}dd)`
-                                } : {}}
-                            >
-                                {isSubmitting ? (
-                                    <>
-                                        <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                                        {isStreetDrop ? "PROCESSING..." : "Procesando..."}
-                                    </>
-                                ) : (
-                                    <>
-                                        <Truck className="w-5 h-5 mr-3" />
-                                        {isStreetDrop
-                                            ? "SECURE THE DROP"
-                                            : paymentsEnabled ? "Pagar al Recibir" : "Confirmar Pedido"}
-                                    </>
-                                )}
-                            </Button>
+                            {/* Footer with total and CTA */}
+                            <div className="p-6 bg-slate-900/90 backdrop-blur-xl border-t border-white/10 shrink-0">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div>
+                                        <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">Total a pagar</p>
+                                        <p className="text-3xl font-black text-white mt-1">
+                                            ${totalPrice.toLocaleString()}
+                                        </p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">Items</p>
+                                        <p className="text-xl font-bold text-white mt-1">{products.length + services.length}</p>
+                                    </div>
+                                </div>
+
+                                <Button
+                                    onClick={handleSubmit}
+                                    disabled={isSubmitting || !hasItems}
+                                    className={cn(
+                                        "w-full py-8 rounded-2xl font-black text-xl transition-all flex items-center justify-center gap-3 relative overflow-hidden group shadow-xl border-none",
+                                        !shop?.theme?.primaryColor ? "bg-primary text-white" : ""
+                                    )}
+                                    style={shop?.theme?.primaryColor ? {
+                                        background: `linear-gradient(135deg, ${shop.theme.primaryColor} 0%, ${shop.theme.primaryColor}CC 100%)`,
+                                        color: 'white',
+                                        boxShadow: `0 10px 30px -10px ${shop.theme.primaryColor}66`
+                                    } : {}}
+                                >
+                                    <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                                    {isSubmitting ? (
+                                        <Loader2 className="w-6 h-6 animate-spin" />
+                                    ) : (
+                                        <>
+                                            <Check className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                                            <span>Confirmar Pedido</span>
+                                        </>
+                                    )}
+                                </Button>
+                                <p className="text-center text-[10px] text-slate-500 mt-4 px-6 opacity-50">
+                                    Al confirmar, tu pedido será enviado directamente vía WhatsApp.
+                                </p>
+                            </div>
                         </div>
-                    </>
-                )}
-            </div>
-        </div>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
     );
 }
