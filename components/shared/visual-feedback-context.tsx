@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from "react";
+import React, { createContext, useContext, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2, Check } from "lucide-react";
 
@@ -14,31 +14,15 @@ interface FlyElement {
     type: "add" | "remove";
 }
 
-// Preloaded image component that shows once loaded
-function PreloadedImage({ src }: { src: string }) {
-    const [loaded, setLoaded] = useState(false);
-
-    useEffect(() => {
-        const img = new Image();
-        img.onload = () => setLoaded(true);
-        img.src = src;
-    }, [src]);
-
+// Cached image component - shows immediately since image is already in browser cache from the card
+function CachedImage({ src }: { src: string }) {
     return (
-        <div className="w-full h-full relative">
-            {/* Show checkmark while loading */}
-            {!loaded && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary to-orange-500">
-                    <Check className="w-7 h-7 text-white" />
-                </div>
-            )}
-            {/* Image fades in once loaded */}
-            <img
-                src={src}
-                alt=""
-                className={`w-full h-full object-cover transition-opacity duration-200 ${loaded ? 'opacity-100' : 'opacity-0'}`}
-            />
-        </div>
+        <img
+            src={src}
+            alt=""
+            className="w-full h-full object-cover"
+            // Image should load instantly from cache
+        />
     );
 }
 
@@ -145,7 +129,7 @@ export function VisualFeedbackProvider({ children }: { children: React.ReactNode
                                     {/* Main circle - larger for better visibility */}
                                     <div className={`relative w-16 h-16 rounded-full overflow-hidden flex items-center justify-center shadow-2xl border-3 border-white/60 ${el.image ? 'bg-slate-200' : 'bg-gradient-to-br from-primary to-orange-500 shadow-primary/50'}`}>
                                         {el.image ? (
-                                            <PreloadedImage src={el.image} />
+                                            <CachedImage src={el.image} />
                                         ) : (
                                             <Check className="w-7 h-7 text-white" />
                                         )}
