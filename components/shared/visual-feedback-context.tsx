@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useRef } from "react";
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2, Check } from "lucide-react";
 
@@ -12,6 +12,34 @@ interface FlyElement {
     endY: number;
     image?: string;
     type: "add" | "remove";
+}
+
+// Preloaded image component that shows once loaded
+function PreloadedImage({ src }: { src: string }) {
+    const [loaded, setLoaded] = useState(false);
+
+    useEffect(() => {
+        const img = new Image();
+        img.onload = () => setLoaded(true);
+        img.src = src;
+    }, [src]);
+
+    return (
+        <div className="w-full h-full relative">
+            {/* Show checkmark while loading */}
+            {!loaded && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary to-orange-500">
+                    <Check className="w-7 h-7 text-white" />
+                </div>
+            )}
+            {/* Image fades in once loaded */}
+            <img
+                src={src}
+                alt=""
+                className={`w-full h-full object-cover transition-opacity duration-200 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+            />
+        </div>
+    );
 }
 
 interface VisualFeedbackContextValue {
@@ -49,7 +77,7 @@ export function VisualFeedbackProvider({ children }: { children: React.ReactNode
 
         setTimeout(() => {
             setElements((prev) => prev.filter((el) => el.id !== id));
-        }, 1800);
+        }, 2500);
     }, []);
 
     const triggerTrashItem = useCallback((startX: number, startY: number) => {
@@ -84,11 +112,12 @@ export function VisualFeedbackProvider({ children }: { children: React.ReactNode
                                 rotate: 0,
                             }}
                             animate={el.type === "add" ? {
-                                x: [el.startX - 32, el.startX - 32 - 40, el.endX - 32],
-                                y: [el.startY - 32, el.startY - 100, el.endY - 32],
-                                scale: [1, 1.15, 0.35],
-                                opacity: [1, 1, 0],
-                                rotate: [0, -10, 0],
+                                // 4 keyframes: hold -> rise -> fly -> arrive
+                                x: [el.startX - 32, el.startX - 32, el.startX - 32 - 40, el.endX - 32],
+                                y: [el.startY - 32, el.startY - 32, el.startY - 100, el.endY - 32],
+                                scale: [1, 1.1, 1.2, 0.4],
+                                opacity: [1, 1, 1, 0],
+                                rotate: [0, 0, -10, 0],
                             } : {
                                 x: el.endX - 32,
                                 y: el.endY - 32,
@@ -97,8 +126,11 @@ export function VisualFeedbackProvider({ children }: { children: React.ReactNode
                                 rotate: 45,
                             }}
                             transition={el.type === "add" ? {
-                                duration: 1.5,
-                                times: [0, 0.4, 1],
+                                duration: 2.2,
+                                // 0-0.25: hold in place (image loads)
+                                // 0.25-0.5: rise up
+                                // 0.5-1: fly to cart
+                                times: [0, 0.25, 0.5, 1],
                                 ease: [0.22, 0.68, 0.32, 1],
                             } : {
                                 duration: 0.7,
@@ -113,12 +145,7 @@ export function VisualFeedbackProvider({ children }: { children: React.ReactNode
                                     {/* Main circle - larger for better visibility */}
                                     <div className={`relative w-16 h-16 rounded-full overflow-hidden flex items-center justify-center shadow-2xl border-3 border-white/60 ${el.image ? 'bg-slate-200' : 'bg-gradient-to-br from-primary to-orange-500 shadow-primary/50'}`}>
                                         {el.image ? (
-                                            <img
-                                                src={el.image}
-                                                alt=""
-                                                className="w-full h-full object-cover"
-                                                loading="eager"
-                                            />
+                                            <PreloadedImage src={el.image} />
                                         ) : (
                                             <Check className="w-7 h-7 text-white" />
                                         )}
