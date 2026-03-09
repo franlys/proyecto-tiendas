@@ -347,30 +347,30 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
     const hasItems = products.length > 0 || services.length > 0;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 sm:p-4 overflow-hidden">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/70 backdrop-blur-md"
                 onClick={onClose}
             />
 
             {/* Drawer */}
             <div className={cn(
-                "relative flex flex-col w-full sm:max-w-lg max-h-[90vh] sm:max-h-[85vh]",
-                "bg-slate-900 border border-white/10",
-                "rounded-t-3xl sm:rounded-2xl",
-                "animate-in slide-in-from-bottom duration-300"
+                "relative flex flex-col w-full sm:max-w-lg max-h-[92vh] sm:max-h-[85vh]",
+                "bg-slate-900 border border-white/10 shadow-2xl",
+                "rounded-2xl sm:rounded-3xl",
+                "animate-in slide-in-from-bottom duration-300 ease-out"
             )}>
                 {/* Header */}
                 <div className="sticky top-0 z-10 bg-slate-900 border-b border-white/10 p-4">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                                <ShoppingBag className="w-5 h-5 text-primary" />
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0">
+                                <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                             </div>
-                            <div>
-                                <h2 className="text-lg font-bold text-white">Tu Pedido</h2>
-                                <p className="text-sm text-slate-400">
+                            <div className="min-w-0">
+                                <h2 className="text-base sm:text-lg font-bold text-white truncate">Tu Pedido</h2>
+                                <p className="text-xs sm:text-sm text-slate-400">
                                     {products.length} {products.length === 1 ? "item" : "items"}
                                 </p>
                             </div>
@@ -414,14 +414,14 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                                         className="w-14 h-14 rounded-lg object-cover"
                                                     />
                                                 )}
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-white font-medium truncate">
+                                                <div className="flex-1 min-w-0 pr-2">
+                                                    <p className="text-sm sm:text-base text-white font-medium truncate">
                                                         {item.name}
                                                         {item.variantName && (
                                                             <span className={cn(shop?.theme?.primaryColor ? "" : "text-primary")} style={shop?.theme?.primaryColor ? { color: shop.theme.primaryColor } : {}}> ({item.variantName})</span>
                                                         )}
                                                     </p>
-                                                    <p className="text-sm text-slate-400">
+                                                    <p className="text-xs sm:text-sm text-slate-400">
                                                         ${basePrice.toLocaleString()} c/u
                                                     </p>
                                                 </div>
@@ -523,26 +523,26 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                 <button
                                     onClick={() => setDeliveryType("delivery")}
                                     className={cn(
-                                        "flex items-center gap-3 p-4 rounded-xl border transition-all",
+                                        "flex items-center justify-center gap-2 p-3 sm:p-4 rounded-xl border transition-all",
                                         deliveryType === "delivery"
                                             ? "bg-primary/20 border-primary text-white"
                                             : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
                                     )}
                                 >
-                                    <Truck className="w-5 h-5" />
-                                    <span>Delivery</span>
+                                    <Truck className="w-4 h-4 sm:w-5 sm:h-5" />
+                                    <span className="text-sm sm:text-base">Delivery</span>
                                 </button>
                                 <button
                                     onClick={() => setDeliveryType("pickup")}
                                     className={cn(
-                                        "flex items-center gap-3 p-4 rounded-xl border transition-all",
+                                        "flex items-center justify-center gap-2 p-3 sm:p-4 rounded-xl border transition-all",
                                         deliveryType === "pickup"
                                             ? "bg-primary/20 border-primary text-white"
                                             : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
                                     )}
                                 >
-                                    <Store className="w-5 h-5" />
-                                    <span>Recoger</span>
+                                    <Store className="w-4 h-4 sm:w-5 sm:h-5" />
+                                    <span className="text-sm sm:text-base">Recoger</span>
                                 </button>
                             </div>
 
@@ -639,7 +639,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                     }
                                 }}
                                 className={cn(
-                                    "flex flex-col items-center gap-2 p-4 rounded-xl border transition-all",
+                                    "flex flex-col items-center justify-center gap-1 p-3 sm:p-4 rounded-xl border transition-all text-center",
                                     paymentTiming === "pay_now"
                                         ? "bg-green-500/20 border-green-500 text-white"
                                         : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10",
@@ -649,9 +649,9 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                     }
                                 )}
                             >
-                                <CreditCard className="w-6 h-6" />
-                                <span className="text-sm font-medium">Pagar Ahora</span>
-                                <span className="text-xs opacity-70">Transferencia</span>
+                                <CreditCard className="w-5 h-5 sm:w-6 sm:h-6" />
+                                <span className="text-xs sm:text-sm font-medium">Pagar Ahora</span>
+                                <span className="text-[10px] sm:text-xs opacity-70">Transferencia</span>
                             </button>
                             <button
                                 onClick={() => {
@@ -661,7 +661,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                     setReceiptPreview(null);
                                 }}
                                 className={cn(
-                                    "flex flex-col items-center gap-2 p-4 rounded-xl border transition-all",
+                                    "flex flex-col items-center justify-center gap-1 p-3 sm:p-4 rounded-xl border transition-all text-center",
                                     paymentTiming === "pay_on_delivery"
                                         ? "bg-primary/20 border-primary text-white"
                                         : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10",
@@ -671,9 +671,9 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                     } : {}
                                 )}
                             >
-                                <Banknote className="w-6 h-6" />
-                                <span className="text-sm font-medium">Pagar al Recibir</span>
-                                <span className="text-xs opacity-70">Efectivo/Tarjeta</span>
+                                <Banknote className="w-5 h-5 sm:w-6 sm:h-6" />
+                                <span className="text-xs sm:text-sm font-medium">Pagar al Recibir</span>
+                                <span className="text-[10px] sm:text-xs opacity-70">Efectivo/Tarjeta</span>
                             </button>
                         </div>
                     </div>
