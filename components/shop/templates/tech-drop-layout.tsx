@@ -83,23 +83,23 @@ export function TechDropLayout({ shop, products, services, loadingData }: TechDr
 
             {/* Header / Navbar */}
             <header className="sticky top-0 z-50 transition-all duration-300">
-                <div className="backdrop-blur-xl bg-black/40 border-b border-white/5 py-4 px-6 md:px-12 flex items-center justify-between">
+                <div className="backdrop-blur-xl bg-black/60 border-b border-white/5 py-4 px-6 md:px-12 flex items-center justify-between">
                     <div className="flex items-center gap-10">
-                        <div className="flex items-center gap-2 group cursor-pointer">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform duration-300">
+                        <div className="flex items-center gap-3 group cursor-pointer">
+                            <div className="w-12 h-12 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 flex items-center justify-center shadow-2xl group-hover:border-cyan-500/50 group-hover:shadow-cyan-500/20 transition-all duration-500 overflow-hidden">
                                 {shop.logo ? (
-                                    <img src={shop.logo} alt={shop.name} className="w-6 h-6 object-contain" />
+                                    <img src={shop.logo} alt={shop.name} className="w-full h-full object-contain p-1.5" />
                                 ) : (
-                                    <Cpu className="text-white w-6 h-6" />
+                                    <Cpu className="text-cyan-400 w-6 h-6" />
                                 )}
                             </div>
-                            <h1 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 uppercase">
+                            <h1 className="text-xl font-black tracking-tighter text-white uppercase group-hover:text-cyan-400 transition-colors">
                                 {shop.name}
                             </h1>
                         </div>
 
                         {/* Nav Links */}
-                        <nav className="hidden md:flex items-center gap-1">
+                        <nav className="hidden md:flex items-center gap-2">
                             {[
                                 { id: "products", label: "Equipamiento", icon: <Smartphone className="w-4 h-4" /> },
                                 { id: "services", label: "Soporte Técnico", icon: <ShieldCheck className="w-4 h-4" /> },
@@ -109,9 +109,9 @@ export function TechDropLayout({ shop, products, services, loadingData }: TechDr
                                     key={item.id}
                                     onClick={() => setCurrentView(item.id as TechView)}
                                     className={cn(
-                                        "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300",
+                                        "flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300",
                                         currentView === item.id
-                                            ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.1)]"
+                                            ? "bg-cyan-500 text-black shadow-[0_0_20px_rgba(6,182,212,0.4)]"
                                             : "text-slate-400 hover:text-white hover:bg-white/5"
                                     )}
                                 >
@@ -123,9 +123,6 @@ export function TechDropLayout({ shop, products, services, loadingData }: TechDr
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <button className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 border border-white/10 hover:border-cyan-500/30 text-white transition-all duration-300 group">
-                            <Search className="w-5 h-5 group-hover:text-cyan-400" />
-                        </button>
                         <CartButton cart={cart} />
                     </div>
                 </div>
@@ -135,18 +132,76 @@ export function TechDropLayout({ shop, products, services, loadingData }: TechDr
             <main className="relative z-10 p-6 md:p-12 lg:p-20 max-w-screen-2xl mx-auto">
                 <div ref={pageRef} className="opacity-0">
                     {currentView === "products" && (
-                        <div className="space-y-12">
-                            <section className="text-center md:text-left max-w-3xl">
-                                <span className="text-cyan-400 text-xs font-bold tracking-[0.2em] uppercase flex items-center gap-2 mb-4">
-                                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                                    Próxima Generación de Tecnología
-                                </span>
-                                <h2 className="text-5xl md:text-7xl font-black text-white leading-tight mb-6">
-                                    Descubre el Futuro de la <span className="text-gradient decoration-cyan-500/40">Innovación</span>
-                                </h2>
-                                <p className="text-slate-400 text-lg md:text-xl leading-relaxed">
-                                    Experiencia premium en hardware, software y seguridad. Solo productos certificados con la máxima confianza del mercado.
-                                </p>
+                        <div className="space-y-16">
+                            {/* Hero Section with Banner Support */}
+                            <section className="relative rounded-[40px] overflow-hidden border border-white/5 min-h-[400px] flex items-center">
+                                {shop.banner ? (
+                                    <>
+                                        <div className="absolute inset-0 z-0">
+                                            <img src={shop.banner} alt="Banner" className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
+                                            <div className="absolute inset-0 bg-[#05070a]/40 backdrop-blur-[2px]" />
+                                            {/* Tech Overlay */}
+                                            <div className="absolute inset-0 opacity-20 mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+                                            <div className="absolute inset-0 grid-bg opacity-30" />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-950/40 to-black z-0" />
+                                )}
+
+                                <div className="relative z-10 px-8 py-16 md:px-16 max-w-3xl">
+                                    <motion.span
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] font-black tracking-[0.3em] uppercase mb-6"
+                                    >
+                                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                                        {shop.slogan || "Próxima Generación de Tecnología"}
+                                    </motion.span>
+
+                                    <motion.h2
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.1 }}
+                                        className="text-5xl md:text-7xl font-black text-white leading-[0.9] mb-8 uppercase tracking-tighter"
+                                    >
+                                        Descubre el Futuro de la <span className="text-cyan-400 italic">Innovación</span>
+                                    </motion.h2>
+
+                                    <motion.p
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ delay: 0.2 }}
+                                        className="text-slate-400 text-lg md:text-xl leading-relaxed max-w-xl font-medium"
+                                    >
+                                        {shop.description || "Experiencia premium en hardware, software y seguridad. Solo productos certificados con la máxima confianza del mercado."}
+                                    </motion.p>
+                                </div>
+
+                                {/* Floating Tech Element */}
+                                <div className="hidden lg:block absolute right-20 top-1/2 -translate-y-1/2">
+                                    <div className="w-64 h-64 rounded-[60px] border border-white/10 bg-white/5 backdrop-blur-3xl p-8 flex flex-col justify-between animate-float">
+                                        <div className="flex justify-between items-start">
+                                            <Cpu className="w-8 h-8 text-cyan-500" />
+                                            <div className="text-right">
+                                                <div className="text-[10px] text-slate-500 font-mono">STATUS</div>
+                                                <div className="text-xs text-cyan-400 font-black">ONLINE</div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div className="text-[10px] text-slate-500 font-mono mb-1 uppercase tracking-widest">System Core</div>
+                                            <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                                                <motion.div
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: "80%" }}
+                                                    transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
+                                                    className="h-full bg-cyan-500"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </section>
 
                             {/* Enhanced Category Carousel */}
