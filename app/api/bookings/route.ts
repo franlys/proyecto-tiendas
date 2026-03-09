@@ -205,7 +205,8 @@ async function notifyOwnerOfNewBooking(shopId: string, booking: CreateBookingInp
         await sendEmail({
           to: customerEmail,
           subject: `Confirmación de cita en ${shopInfo?.name || shopId}`,
-          html: customerEmailContent
+          html: customerEmailContent,
+          from: `${shopInfo?.name || "Linko"} <Prologixcompany@gmail.com>`
         });
         console.log(`[Booking Notify] 📧 Sent confirmation email to customer: ${customerEmail}`);
       } catch (emailErr) {
@@ -236,7 +237,8 @@ async function notifyOwnerOfNewBooking(shopId: string, booking: CreateBookingInp
         await sendEmail({
           to: shopInfo.contact.email,
           subject: `🗓️ Nueva cita recibida: #${booking.orderNumber}`,
-          html: ownerEmailContent
+          html: ownerEmailContent,
+          from: `${shopInfo.name || "Linko"} <Prologixcompany@gmail.com>`
         });
         console.log(`[Booking Notify] 📧 Sent notification email to shop owner: ${shopInfo.contact.email}`);
       } catch (emailErr) {

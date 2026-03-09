@@ -710,6 +710,7 @@ Por favor confirma respondiendo:
             ? `⏰ ¡Tu cita es HOY en ${shopName}!`
             : `📅 Recordatorio: Tu cita en ${shopName} es mañana`,
           html: emailContent,
+          from: `${shopName} <Prologixcompany@gmail.com>`
         });
 
         console.log(`[Reminder] 📧 Email sent to ${customerEmail} for booking ${booking.id}`);
