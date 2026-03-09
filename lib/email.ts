@@ -1,33 +1,44 @@
-import { Resend } from "resend";
-import nodemailer from "nodemailer";
+// Email service utilities (Server-side only)
+// Note: Imports are dynamic to avoid build errors in client components
 
 // Initialize Resend client (lazy initialization to avoid issues in client components)
-let resendClient: Resend | null = null;
+let resendClient: any = null;
 
-function getResend(): Resend | null {
-  if (typeof window !== "undefined") {
-    // Running in browser - can't use Resend
-    return null;
-  }
+async function getResend(): Promise<any | null> {
+  if (typeof window !== "undefined") return null;
+
   if (!resendClient && process.env.RESEND_API_KEY) {
-    resendClient = new Resend(process.env.RESEND_API_KEY);
+    try {
+      const { Resend } = await import("resend");
+      resendClient = new Resend(process.env.RESEND_API_KEY);
+    } catch (error) {
+      console.error("Failed to load Resend:", error);
+      return null;
+    }
   }
   return resendClient;
 }
 
 // Gmail transporter (lazy initialization)
-let transporter: nodemailer.Transporter | null = null;
+let transporter: any = null;
 
-function getTransporter(): nodemailer.Transporter | null {
+async function getTransporter(): Promise<any | null> {
   if (typeof window !== "undefined") return null;
+
   if (!transporter && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-    transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    try {
+      const nodemailer = await import("nodemailer");
+      transporter = nodemailer.default.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to load Nodemailer:", error);
+      return null;
+    }
   }
   return transporter;
 }
@@ -61,7 +72,7 @@ export async function sendEmail(
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
   const { to, subject, html, from, replyTo, attachments } = options;
 
-  const resend = getResend();
+  const resend = await getResend();
 
   if (!resend) {
     console.warn("📧 Email not sent - Resend not available (client-side or missing API key)");
@@ -134,7 +145,7 @@ export async function sendEmail(
  */
 async function sendEmailViaGmail(options: EmailOptions): Promise<{ success: boolean; messageId?: string; error?: string }> {
   const { to, subject, html, from, attachments } = options;
-  const gmailTransporter = getTransporter();
+  const gmailTransporter = await getTransporter();
 
   if (!gmailTransporter) {
     return { success: false, error: "Nodemailer fallback not configured" };
