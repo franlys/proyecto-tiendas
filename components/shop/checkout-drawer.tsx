@@ -974,8 +974,8 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                         </div>
                 </div>
 
-            {/* Footer with total and CTA */}
-            <div className="sticky bottom-0 bg-slate-900 border-t border-white/10 p-4">
+                        {/* Footer with total and CTA */}
+            <div className="sticky bottom-0 bg-slate-900/90 backdrop-blur-xl border-t border-white/10 p-6 shrink-0 z-30">
                 {orderSuccess ? (
                     <div className="text-center py-6 space-y-4 animate-in zoom-in-95">
                         <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto border-2 border-green-500/50">
@@ -987,30 +987,35 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                         </div>
                         <Button
                             onClick={onClose}
-                            className="w-full bg-primary hover:bg-primary/90 text-white py-6"
+                            className="w-full bg-primary hover:bg-primary/90 text-white py-6 rounded-2xl font-bold"
                         >
                             Entendido
                         </Button>
                     </div>
                 ) : (
                     <>
-                        <div className="flex items-center justify-between mb-3 sm:mb-4">
-                            <span className="text-xs sm:text-sm text-slate-400 uppercase tracking-wider">Total</span>
-                            <span className="text-xl sm:text-2xl font-black text-white">
-                                ${totalPrice.toLocaleString()}
-                            </span>
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">Total a pagar</p>
+                                <p className="text-3xl font-black text-white mt-1">
+                                    ${totalPrice.toLocaleString()}
+                                </p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">Items</p>
+                                <p className="text-xl font-bold text-white mt-1">{products.length + services.length}</p>
+                            </div>
                         </div>
 
                         {/* Stripe Error Message */}
                         {stripeError && (
-                            <div className="mb-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
                                 {stripeError}
                             </div>
                         )}
 
                         {/* Payment Options */}
-                        <div className="space-y-3">
-                            {/* Stripe Payment Button */}
+                        <div className="space-y-3 mb-4">
                             {stripeEnabled && (
                                 <StripePayButton
                                     shopId={shop?.id || shop?.slug || ""}
@@ -1021,19 +1026,13 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                     currency={currency}
                                     disabled={!hasItems || !customerName || !customerPhone || !customerEmail || (deliveryType === "delivery" && !customerAddress)}
                                     onError={(error) => setStripeError(error)}
-                                    className="py-6 text-lg"
+                                    className="py-6 text-lg rounded-2xl"
                                 >
-                                    <CreditCard className="w-5 h-5" />
+                                    <CreditCard className="w-5 h-5 mr-3" />
                                     Pagar con Tarjeta
                                 </StripePayButton>
                             )}
 
-                            {/* PayPal Payment Button */}
-                            {paypalEnabled && !hasItems && (
-                                <div className="p-4 bg-zinc-800 rounded-xl text-center text-slate-400 text-sm">
-                                    Agrega productos para pagar con PayPal
-                                </div>
-                            )}
                             {paypalEnabled && hasItems && (
                                 <div className={cn(
                                     "transition-opacity",
@@ -1051,54 +1050,41 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                     />
                                 </div>
                             )}
-
-                            {/* Regular Confirm Order Button */}
-                            {/* Footer with total and CTA */}
-                            <div className="p-6 bg-slate-900/90 backdrop-blur-xl border-t border-white/10 shrink-0">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div>
-                                        <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">Total a pagar</p>
-                                        <p className="text-3xl font-black text-white mt-1">
-                                            ${totalPrice.toLocaleString()}
-                                        </p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">Items</p>
-                                        <p className="text-xl font-bold text-white mt-1">{products.length + services.length}</p>
-                                    </div>
-                                </div>
-
-                                <Button
-                                    onClick={handleSubmit}
-                                    disabled={isSubmitting || !hasItems}
-                                    className={cn(
-                                        "w-full py-8 rounded-2xl font-black text-xl transition-all flex items-center justify-center gap-3 relative overflow-hidden group shadow-xl border-none",
-                                        !shop?.theme?.primaryColor ? "bg-primary text-white" : ""
-                                    )}
-                                    style={shop?.theme?.primaryColor ? {
-                                        background: `linear-gradient(135deg, ${shop.theme.primaryColor} 0%, ${shop.theme.primaryColor}CC 100%)`,
-                                        color: 'white',
-                                        boxShadow: `0 10px 30px -10px ${shop.theme.primaryColor}66`
-                                    } : {}}
-                                >
-                                    <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                                    {isSubmitting ? (
-                                        <Loader2 className="w-6 h-6 animate-spin" />
-                                    ) : (
-                                        <>
-                                            <Check className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                                            <span>Confirmar Pedido</span>
-                                        </>
-                                    )}
-                                </Button>
-                                <p className="text-center text-[10px] text-slate-500 mt-4 px-6 opacity-50">
-                                    Al confirmar, tu pedido será enviado directamente vía WhatsApp.
-                                </p>
-                            </div>
                         </div>
-                    </motion.div>
-                </div>
-            )}
-        </AnimatePresence>
+
+                        <Button
+                            onClick={handleSubmit}
+                            disabled={isSubmitting || !hasItems}
+                            className={cn(
+                                "w-full py-8 rounded-2xl font-black text-xl transition-all flex items-center justify-center gap-3 relative overflow-hidden group shadow-xl border-none",
+                                !shop?.theme?.primaryColor ? "bg-primary text-white" : ""
+                            )}
+                            style={shop?.theme?.primaryColor ? {
+                                background: `linear-gradient(135deg, ${shop.theme.primaryColor} 0%, ${shop.theme.primaryColor}CC 100%)`,
+                                color: 'white',
+                                boxShadow: `0 10px 30px -10px ${shop.theme.primaryColor}66`
+                            } : {}}
+                        >
+                            <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                            {isSubmitting ? (
+                                <Loader2 className="w-6 h-6 animate-spin" />
+                            ) : (
+                                <>
+                                    <Check className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                                    <span>Confirmar Pedido</span>
+                                </>
+                            )}
+                        </Button>
+                        <p className="text-center text-[10px] text-slate-500 mt-4 px-6 opacity-50">
+                            Al confirmar, tu pedido será enviado directamente vía WhatsApp.
+                        </p>
+                    </>
+                )}
+            </div>
+        </motion.div>
+                </div >
+            )
+}
+        </AnimatePresence >
     );
 }
