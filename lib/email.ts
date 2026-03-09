@@ -50,8 +50,12 @@ export async function sendEmail(
   }
 
   try {
+    // Use Resend's default domain until linko.app is verified
+    // To use custom domain: verify it at https://resend.com/domains
+    const defaultFrom = process.env.RESEND_FROM_EMAIL || "Linko App <onboarding@resend.dev>";
+
     const data = await resend.emails.send({
-      from: from || "Linko App <noreply@linko.app>",
+      from: from || defaultFrom,
       to: Array.isArray(to) ? to : [to],
       subject,
       html,
