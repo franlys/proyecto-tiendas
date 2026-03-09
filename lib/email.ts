@@ -72,60 +72,61 @@ export async function sendEmail(
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
   const { to, subject, html, from, replyTo, attachments } = options;
 
-  const resend = await getResend();
+  // 1. Try Resend if available
+  if (process.env.RESEND_API_KEY) {
+    const resend = await getResend();
+    if (resend) {
+      try {
+        // Use yesterday's from logic: from || default
+        let sendFrom = from || "Linko App <Prologixcompany@gmail.com>";
+        let replyToAddress = replyTo;
 
-  if (!resend) {
-    console.warn("📧 Email not sent - Resend not available (client-side or missing API key)");
-    return { success: false, error: "Email service not available" };
-  }
+        if (from) {
+          const match = from.match(/^(.+?)\s*<(.+?)>$/);
+          if (match) {
+            const displayName = match[1].trim();
+            const email = match[2].trim();
 
-  try {
-    // Determine the best 'from' address for Resend to avoid 403 errors
-    let sendFrom = from || "Linko App <Prologixcompany@gmail.com>";
-    let replyToAddress = replyTo;
-
-    if (from) {
-      const match = from.match(/^(.+?)\s*<(.+?)>$/);
-      if (match) {
-        const displayName = match[1].trim();
-        const email = match[2].trim();
-
-        // If it's a Gmail address, Resend will reject it unless it's the verified owner
-        // In that case, we use the default sender but keep the reply-to
-        if (email.toLowerCase().endsWith("@gmail.com")) {
-          sendFrom = `${displayName} <notificaciones@prologix-app.com>`;
-          if (!replyToAddress) replyToAddress = email;
+            // If it's a Gmail address, Resend will reject it unless it's the verified owner
+            // In that case, we use the verified domain but keep the original as reply-to
+            if (email.toLowerCase().endsWith("@gmail.com")) {
+              sendFrom = `${displayName} <notificaciones@prologix-app.com>`;
+              if (!replyToAddress) replyToAddress = email;
+            }
+          }
         }
+
+        console.log(`📧 Attempting Resend from: ${sendFrom}, reply-to: ${replyToAddress || 'none'}`);
+
+        const data = await resend.emails.send({
+          from: sendFrom,
+          to: Array.isArray(to) ? to : [to],
+          subject,
+          html,
+          replyTo: replyToAddress,
+          attachments: attachments?.map((att: any) => ({
+            filename: att.filename,
+            content: att.content,
+          })),
+        });
+
+        if (!data.error) {
+          console.log(`📧 Email sent via Resend to ${to}`);
+          return { success: true, messageId: data.data?.id };
+        }
+
+        console.error("❌ Resend error:", data.error);
+        // Fall through to Gmail...
+      } catch (error: any) {
+        console.error("❌ Resend exception:", error.message);
+        // Fall through to Gmail...
       }
     }
-
-    console.log(`📧 Attempting Resend from: ${sendFrom}, reply-to: ${replyToAddress || 'none'}`);
-
-    const data = await resend.emails.send({
-      from: sendFrom,
-      to: Array.isArray(to) ? to : [to],
-      subject,
-      html,
-      replyTo: replyToAddress,
-      attachments: attachments?.map((att) => ({
-        filename: att.filename,
-        content: att.content,
-      })),
-    });
-
-    if (data.error) {
-      console.error("❌ Resend error:", data.error);
-      console.log("➡️ Falling back to Gmail due to Resend error...");
-      return await sendEmailViaGmail(options);
-    }
-
-    console.log(`📧 Email sent via Resend to ${to}`);
-    return { success: true, messageId: data.data?.id };
-  } catch (error: any) {
-    console.error("❌ Resend exception:", error.message);
-    console.log("➡️ Falling back to Gmail due to Resend exception...");
-    return await sendEmailViaGmail(options);
   }
+
+  // 2. Fallback to Gmail (Yesterday's core logic)
+  console.log("➡️ Falling back to Gmail/Nodemailer...");
+  return await sendEmailViaGmail(options);
 }
 
 /**
