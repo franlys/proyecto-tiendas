@@ -12,6 +12,7 @@ import {
     BUSINESS_TYPE_CONFIG,
     getBusinessTypeConfig,
 } from "@/lib/types/business.types";
+import { getBusinessType as getV2BusinessType } from "@/lib/types/business-types-v2";
 
 // Tipos de negocio relacionados con belleza
 const BEAUTY_BUSINESS_TYPES = [
@@ -145,6 +146,53 @@ export function useBusinessFeatures(businessType: BusinessType | undefined | nul
  */
 export function getBusinessFeatures(businessType: BusinessType | undefined | null): BusinessFeatures {
     const type = businessType || "otro";
+
+    // 1. Intentar obtener de V2 primero (la nueva fuente de verdad)
+    const v2Config = getV2BusinessType(type);
+
+    if (v2Config) {
+        const features = v2Config.features;
+        return {
+            hasCatalog: features.catalog,
+            hasServices: features.services,
+            hasBookings: features.bookings,
+            hasOrders: features.orders,
+            hasInventory: features.inventory,
+            hasWholesale: features.wholesale,
+            hasRepairs: features.repairs,
+            hasRentals: features.rentals,
+            hasTables: features.tables,
+            hasDelivery: features.delivery,
+            labels: {
+                ...v2Config.labels,
+                booking: "Reservación", // Fallback labels required by type
+                order: "Pedido"
+            },
+            config: v2Config as any,
+            adminModules: {
+                orders: features.orders,
+                bookings: features.bookings,
+                inventory: features.inventory || features.catalog,
+                services: features.services,
+                repairs: features.repairs,
+                rentals: features.rentals,
+                tables: features.tables,
+                wholesale: features.wholesale,
+                delivery: features.delivery,
+                beautyConsultations: isBeautyBusiness(type),
+                trainingPackages: type === "meal_prep" || type === "gimnasio" || type === "entrenador_personal",
+            },
+            dashboardWidgets: {
+                pendingOrders: features.orders,
+                upcomingBookings: features.bookings,
+                inventoryAlerts: features.inventory,
+                repairStatus: features.repairs,
+                tableStatus: features.tables,
+                rentalCalendar: features.rentals,
+            },
+        };
+    }
+
     const config = getBusinessTypeConfig(type);
     const features = config.features;
 

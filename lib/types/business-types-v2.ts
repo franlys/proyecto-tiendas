@@ -277,7 +277,7 @@ export const BUSINESS_TYPES: BusinessTypeConfig[] = [
     { id: "personalizados", label: "Artículos Personalizados", icon: "✨", category: "gifts", subcategory: "other_sub", keywords: ["personalizado", "grabado", "custom"], features: { ...F.retail, services: true }, labels: { cta: "Ver Catálogo", products: "Productos", services: "Personalización" } },
 
     // ========== OTHER ==========
-    { id: "otro", label: "Otro Negocio", icon: "🏬", category: "other", subcategory: "other_sub", keywords: ["otro", "general"], features: F.all, labels: { cta: "Contactar", products: "Productos", services: "Servicios" } },
+    { id: "otro", label: "Otro Negocio", icon: "🏬", category: "other", subcategory: "other_sub", keywords: ["otro", "general"], features: F.retail, labels: { cta: "Contactar", products: "Productos", services: "Servicios" } },
 ];
 
 // ============================================
