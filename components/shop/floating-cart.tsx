@@ -149,11 +149,12 @@ export function FloatingCart() {
                 "w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0",
                 shouldUseAppointmentFlow ? "bg-primary/20" : "bg-gold/20"
               )}
+              style={(shouldUseAppointmentFlow || !isStreetDrop) && shop?.theme?.primaryColor ? { backgroundColor: `${shop.theme.primaryColor}20` } : {}}
             >
               {shouldUseAppointmentFlow ? (
-                <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                <Calendar className={cn("w-4 h-4 sm:w-5 sm:h-5", !shop?.theme?.primaryColor && "text-primary")} style={shop?.theme?.primaryColor ? { color: shop.theme.primaryColor } : {}} />
               ) : (
-                <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-gold" />
+                <ShoppingBag className={cn("w-4 h-4 sm:w-5 sm:h-5", !shop?.theme?.primaryColor && "text-gold")} style={shop?.theme?.primaryColor ? { color: shop.theme.primaryColor } : {}} />
               )}
             </div>
             <div className="min-w-0">
@@ -188,12 +189,15 @@ export function FloatingCart() {
                 "transition-all duration-300",
                 "shadow-lg hover:shadow-xl",
                 shouldUseAppointmentFlow
-                  ? "bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-500/90"
+                  ? "bg-primary hover:opacity-90 transition-opacity"
                   : isStreetDrop
                     ? "bg-red-600 hover:bg-black border border-red-600 hover:text-red-500 !rounded-none"
                     : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700",
                 isSubmitting && "opacity-70 cursor-not-allowed"
               )}
+              style={(shouldUseAppointmentFlow || (!isStreetDrop && !isSubmitting)) && shop?.theme?.primaryColor ? {
+                background: `linear-gradient(to right, ${shop.theme.primaryColor}, ${shop.theme.primaryColor}dd)`
+              } : {}}
             >
               {isSubmitting ? (
                 <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
@@ -308,8 +312,8 @@ export function FloatingCart() {
                           )}
                           <p className={cn(
                             "text-sm font-bold mt-1",
-                            isStreetDrop ? "text-red-400" : "text-gold"
-                          )}>
+                            isStreetDrop ? "text-red-400" : (shop?.theme?.primaryColor ? "" : "text-gold")
+                          )} style={!isStreetDrop && shop?.theme?.primaryColor ? { color: shop.theme.primaryColor } : {}}>
                             ${(itemPrice * product.quantity).toLocaleString()}
                           </p>
                         </div>
