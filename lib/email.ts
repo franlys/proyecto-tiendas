@@ -1,17 +1,18 @@
 import { Resend } from "resend";
-import nodemailer from "nodemailer";
 
-// Initialize Resend client
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend client (lazy initialization to avoid issues in client components)
+let resendClient: Resend | null = null;
 
-// Gmail transporter (fallback)
-const gmailTransporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+function getResend(): Resend | null {
+  if (typeof window !== "undefined") {
+    // Running in browser - can't use Resend
+    return null;
+  }
+  if (!resendClient && process.env.RESEND_API_KEY) {
+    resendClient = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resendClient;
+}
 
 export interface EmailOptions {
   to: string | string[];
@@ -33,63 +34,44 @@ export interface BrandingConfig {
 }
 
 /**
- * Send email using Resend (primary) or Gmail (fallback)
+ * Send email using Resend
+ * NOTE: This function only works server-side (API routes, server components)
  */
 export async function sendEmail(
   options: EmailOptions
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
   const { to, subject, html, from, attachments } = options;
 
-  // Try Resend first
-  if (process.env.RESEND_API_KEY) {
-    try {
-      const data = await resend.emails.send({
-        from: from || "Linko App <Prologixcompany@gmail.com>",
-        to: Array.isArray(to) ? to : [to],
-        subject,
-        html,
-        attachments: attachments?.map((att) => ({
-          filename: att.filename,
-          content: att.content,
-        })),
-      });
+  const resend = getResend();
 
-      if (data.error) {
-        console.error("❌ Resend error:", data.error);
-        // Fall through to Gmail
-      } else {
-        console.log(`📧 Email sent via Resend to ${to}`);
-        return { success: true, messageId: data.data?.id };
-      }
-    } catch (error: any) {
-      console.error("❌ Resend error:", error.message);
-      // Fall through to Gmail
-    }
+  if (!resend) {
+    console.warn("📧 Email not sent - Resend not available (client-side or missing API key)");
+    return { success: false, error: "Email service not available" };
   }
 
-  // Fallback to Gmail
-  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-    try {
-      const info = await gmailTransporter.sendMail({
-        from: from || process.env.EMAIL_FROM || process.env.EMAIL_USER || "Linko App <Prologixcompany@gmail.com>",
-        to: Array.isArray(to) ? to.join(", ") : to,
-        subject,
-        html,
-        attachments: attachments?.map((att) => ({
-          filename: att.filename,
-          content: att.content,
-        })),
-      });
+  try {
+    const data = await resend.emails.send({
+      from: from || "Linko App <noreply@linko.app>",
+      to: Array.isArray(to) ? to : [to],
+      subject,
+      html,
+      attachments: attachments?.map((att) => ({
+        filename: att.filename,
+        content: att.content,
+      })),
+    });
 
-      console.log(`📧 Email sent via Gmail to ${to}`);
-      return { success: true, messageId: info.messageId };
-    } catch (error: any) {
-      console.error("❌ Gmail error:", error.message);
-      return { success: false, error: error.message };
+    if (data.error) {
+      console.error("❌ Resend error:", data.error);
+      return { success: false, error: String(data.error) };
     }
-  }
 
-  return { success: false, error: "No email service configured" };
+    console.log(`📧 Email sent via Resend to ${to}`);
+    return { success: true, messageId: data.data?.id };
+  } catch (error: any) {
+    console.error("❌ Resend error:", error.message);
+    return { success: false, error: error.message };
+  }
 }
 
 /**
