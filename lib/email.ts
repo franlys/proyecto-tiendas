@@ -2,6 +2,9 @@
 // Note: Imports are dynamic to avoid build errors in client components
 
 // Initialize Resend client (lazy initialization to avoid issues in client components)
+const DEFAULT_SENDER = "Linko App <Prologixcompany@gmail.com>";
+const VERIFIED_DOMAIN_SENDER = "notificaciones@prologix-app.com";
+
 let resendClient: any = null;
 
 async function getResend(): Promise<any | null> {
@@ -77,9 +80,8 @@ export async function sendEmail(
     const resend = await getResend();
     if (resend) {
       try {
-        // EXACT LOGIC FROM YESTERDAY: from || default
-        // The user was receiving emails with this default sender
-        let sendFrom = from || "Linko App <Prologixcompany@gmail.com>";
+        // Use the safe default sender if none provided
+        let sendFrom = from || DEFAULT_SENDER;
         let replyToAddress = replyTo;
 
         if (from) {
@@ -89,9 +91,9 @@ export async function sendEmail(
             const email = match[2].trim();
 
             // If it's a Gmail address, Resend might deliver it but it often ends in SPAM
-            // or is blocked by DMARC. In that case, we use our verified domain.
+            // In that case, we use our verified domain with a reply-to
             if (email.toLowerCase().endsWith("@gmail.com")) {
-              sendFrom = `${displayName} <notificaciones@prologix-app.com>`;
+              sendFrom = `${displayName} <${VERIFIED_DOMAIN_SENDER}>`;
               if (!replyToAddress) replyToAddress = email;
             }
           }
@@ -123,7 +125,7 @@ export async function sendEmail(
     }
   }
 
-  // 2. Fallback to Gmail (The 100% reliable method from yesterday)
+  // 2. Fallback to Gmail (The 100% reliable method)
   console.log("➡️ Falling back to Gmail/Nodemailer for guaranteed delivery...");
   return await sendEmailViaGmail(options);
 }
@@ -141,7 +143,7 @@ async function sendEmailViaGmail(options: EmailOptions): Promise<{ success: bool
 
   try {
     const info = await gmailTransporter.sendMail({
-      from: from || process.env.EMAIL_USER || "Linko App <Prologixcompany@gmail.com>",
+      from: from || process.env.EMAIL_USER || DEFAULT_SENDER,
       to: Array.isArray(to) ? to.join(", ") : to,
       subject,
       html,
