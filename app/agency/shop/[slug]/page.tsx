@@ -40,8 +40,9 @@ import {
     MonitorPlay,
     Music,
     Volume2,
-    CreditCard,
     LayoutDashboard,
+    Cpu,
+    Zap,
 } from "lucide-react";
 import {
     AuthProvider,
