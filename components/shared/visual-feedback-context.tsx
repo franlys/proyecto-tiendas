@@ -109,14 +109,14 @@ export function VisualFeedbackProvider({ children }: { children: React.ReactNode
                             {el.type === "add" ? (
                                 <div className="relative">
                                     {/* Glow effect */}
-                                    <div className="absolute inset-0 bg-primary/40 rounded-full blur-lg scale-150" />
+                                    <div className={`absolute inset-0 rounded-full blur-lg scale-150 ${el.image ? 'bg-white/30' : 'bg-primary/40'}`} />
                                     {/* Main circle */}
-                                    <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center shadow-2xl shadow-primary/50 border-2 border-white/30">
+                                    <div className={`relative w-12 h-12 rounded-full overflow-hidden flex items-center justify-center shadow-2xl border-2 border-white/50 ${el.image ? 'bg-white' : 'bg-gradient-to-br from-primary to-orange-500 shadow-primary/50'}`}>
                                         {el.image ? (
                                             <img
                                                 src={el.image}
                                                 alt=""
-                                                className="w-full h-full rounded-full object-cover"
+                                                className="w-full h-full object-cover"
                                             />
                                         ) : (
                                             <Check className="w-6 h-6 text-white" />
