@@ -50,6 +50,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { shopId, ...bookingData } = body;
 
+    console.log(`[Bookings API] POST received for shopId: ${shopId}, customer: ${bookingData.customerName}`);
+
     if (!shopId) {
       return NextResponse.json({ error: "shopId is required" }, { status: 400 });
     }
@@ -145,30 +147,63 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Add loyalty stamps for the booking (non-blocking)
+    // Add loyalty stamps for the booking
     if (bookingData.customerPhone && bookingData.customerPhone !== "pending") {
-      addStampsAdmin(
-        shopId,
-        bookingData.customerPhone,
-        booking.id,
-        `CITA-${booking.id.slice(-6).toUpperCase()}`,
-        bookingData.servicePrice || 0
-      ).then(result => {
+      try {
+        const result = await addStampsAdmin(
+          shopId,
+          bookingData.customerPhone,
+          booking.id,
+          `CITA-${booking.id.slice(-6).toUpperCase()}`,
+          bookingData.servicePrice || 0
+        );
         if (result.success) {
           console.log(`[Booking Loyalty] ✅ Added ${result.stampsAdded} stamp(s) for ${bookingData.customerPhone}. Total: ${result.newTotal}`);
         }
-      }).catch(err => {
+      } catch (err) {
         console.error("[Booking Loyalty] Error adding stamps:", err);
-      });
+      }
     }
 
-    // Send WhatsApp notification to owner (non-blocking)
-    notifyOwnerOfNewBooking(shopId, {
-      ...(bookingData as CreateBookingInput),
-      orderNumber: booking.orderNumber
-    }).catch(err => {
+    // Create in-app notification for admin panel
+    try {
+      const { adminDb } = await import("@/lib/firebase-admin");
+      const db = adminDb();
+      if (db) {
+        await db.collection("shops").doc(shopId).collection("notifications").add({
+          type: "new_booking",
+          title: "Nueva Cita Agendada",
+          message: `Cita #${booking.orderNumber} - ${bookingData.customerName} para ${bookingData.serviceName} el ${bookingData.date} a las ${bookingData.time}`,
+          read: false,
+          createdAt: new Date().toISOString(),
+          data: {
+            bookingId: booking.id,
+            orderNumber: booking.orderNumber,
+            customerName: bookingData.customerName,
+            customerPhone: bookingData.customerPhone,
+            customerEmail: bookingData.customerEmail,
+            serviceName: bookingData.serviceName,
+            servicePrice: bookingData.servicePrice,
+            date: bookingData.date,
+            time: bookingData.time,
+            source: bookingData.source || "web"
+          }
+        });
+        console.log(`[Bookings] ✅ In-app notification created for booking #${booking.orderNumber}`);
+      }
+    } catch (notifError) {
+      console.error("[Bookings] Error creating in-app notification:", notifError);
+    }
+
+    // Send email and WhatsApp notifications (AWAIT to ensure they complete before response)
+    try {
+      await notifyOwnerOfNewBooking(shopId, {
+        ...(bookingData as CreateBookingInput),
+        orderNumber: booking.orderNumber
+      });
+    } catch (err) {
       console.error("Error notifying owner of booking:", err);
-    });
+    }
 
     return NextResponse.json({ booking }, { status: 201 });
   } catch (error) {
@@ -184,8 +219,14 @@ export async function POST(request: NextRequest) {
  * Send WhatsApp notification to shop owner about new booking
  */
 async function notifyOwnerOfNewBooking(shopId: string, booking: CreateBookingInput) {
+  console.log(`[Booking Notify] Starting notifications for shopId: ${shopId}, booking #${booking.orderNumber}`);
+
   try {
     const shopInfo = await getShopBasicInfo(shopId);
+
+    console.log(`[Booking Notify] Shop info loaded: ${shopInfo ? shopInfo.name : 'NOT FOUND'}`);
+    console.log(`[Booking Notify] Shop contact email: ${shopInfo?.contact?.email || 'NOT SET'}`);
+    console.log(`[Booking Notify] Owner notification phone: ${shopInfo?.ownerNotificationPhone || 'NOT SET'}`);
 
     // 1. Send Email Confirmation to CUSTOMER
     const customerEmail = (booking as any).customerEmail;
