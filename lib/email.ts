@@ -27,8 +27,8 @@ async function getTransporter(): Promise<any | null> {
 
   if (!transporter && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
     try {
-      const nodemailer = await import("nodemailer");
-      transporter = nodemailer.default.createTransport({
+      const { default: nodemailer } = await import("nodemailer");
+      transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
           user: process.env.EMAIL_USER,
@@ -80,32 +80,29 @@ export async function sendEmail(
   }
 
   try {
-    // Resend requires a verified domain. We use onboarding@resend.dev (Resend's default)
-    // but extract the display name from the 'from' parameter for branding.
-    // The original email is set as replyTo so responses go to the right place.
-    let displayName = "Linko App";
+    // Determine the best 'from' address for Resend to avoid 403 errors
+    let sendFrom = from || "Linko App <Prologixcompany@gmail.com>";
     let replyToAddress = replyTo;
 
     if (from) {
-      // Parse "Shop Name <email@domain.com>" format
       const match = from.match(/^(.+?)\s*<(.+?)>$/);
       if (match) {
-        displayName = match[1].trim();
-        // Use the original email as reply-to if not explicitly set
-        if (!replyToAddress) {
-          replyToAddress = match[2].trim();
+        const displayName = match[1].trim();
+        const email = match[2].trim();
+
+        // If it's a Gmail address, Resend will reject it unless it's the verified owner
+        // In that case, we use the default sender but keep the reply-to
+        if (email.toLowerCase().endsWith("@gmail.com")) {
+          sendFrom = `${displayName} <notificaciones@prologix-app.com>`;
+          if (!replyToAddress) replyToAddress = email;
         }
       }
     }
 
-    // Use the verified domain prologix-app.com for sending.
-    // This allows sending to any recipient without sandbox restrictions.
-    const verifiedFrom = `${displayName} <notificaciones@prologix-app.com>`;
-
-    console.log(`📧 Sending email from: ${verifiedFrom}, reply-to: ${replyToAddress || 'none'}`);
+    console.log(`📧 Attempting Resend from: ${sendFrom}, reply-to: ${replyToAddress || 'none'}`);
 
     const data = await resend.emails.send({
-      from: verifiedFrom,
+      from: sendFrom,
       to: Array.isArray(to) ? to : [to],
       subject,
       html,
@@ -118,23 +115,14 @@ export async function sendEmail(
 
     if (data.error) {
       console.error("❌ Resend error:", data.error);
-
-      // Check for specific sandbox/verification errors to trigger fallback
-      const errorMessage = String(data.error.message || "").toLowerCase();
-      if (errorMessage.includes("verified") || errorMessage.includes("sandbox") || errorMessage.includes("testing emails")) {
-        console.log("➡️ Falling back to Gmail due to Resend restriction...");
-        return await sendEmailViaGmail(options);
-      }
-
-      return { success: false, error: String(data.error) };
+      console.log("➡️ Falling back to Gmail due to Resend error...");
+      return await sendEmailViaGmail(options);
     }
 
     console.log(`📧 Email sent via Resend to ${to}`);
     return { success: true, messageId: data.data?.id };
   } catch (error: any) {
-    console.error("❌ Resend error:", error.message);
-
-    // Fallback on catch as well
+    console.error("❌ Resend exception:", error.message);
     console.log("➡️ Falling back to Gmail due to Resend exception...");
     return await sendEmailViaGmail(options);
   }
