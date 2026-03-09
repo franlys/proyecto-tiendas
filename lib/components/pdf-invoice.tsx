@@ -267,7 +267,10 @@ export const PDFInvoice = ({ order, shop }: PDFInvoiceProps) => (
                         <Text style={styles.totalLabel}>Impuestos</Text>
                         <Text style={styles.totalValue}>$0</Text>
                     </View>
-                    <View style={[styles.grandTotalRow, shop.primaryColor ? { borderTopColor: shop.primaryColor } : {}]}>
+                    <View style={[
+                        styles.grandTotalRow,
+                        shop.primaryColor ? { borderTopColor: shop.primaryColor, borderTopWidth: 1 } : {}
+                    ]}>
                         <Text style={styles.grandTotalLabel}>TOTAL</Text>
                         <Text style={[styles.grandTotalValue, shop.primaryColor ? { color: shop.primaryColor } : {}]}>
                             ${order.total.toLocaleString()} MXN

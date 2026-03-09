@@ -77,7 +77,8 @@ export async function sendEmail(
     const resend = await getResend();
     if (resend) {
       try {
-        // Use yesterday's from logic: from || default
+        // EXACT LOGIC FROM YESTERDAY: from || default
+        // The user was receiving emails with this default sender
         let sendFrom = from || "Linko App <Prologixcompany@gmail.com>";
         let replyToAddress = replyTo;
 
@@ -87,8 +88,8 @@ export async function sendEmail(
             const displayName = match[1].trim();
             const email = match[2].trim();
 
-            // If it's a Gmail address, Resend will reject it unless it's the verified owner
-            // In that case, we use the verified domain but keep the original as reply-to
+            // If it's a Gmail address, Resend might deliver it but it often ends in SPAM
+            // or is blocked by DMARC. In that case, we use our verified domain.
             if (email.toLowerCase().endsWith("@gmail.com")) {
               sendFrom = `${displayName} <notificaciones@prologix-app.com>`;
               if (!replyToAddress) replyToAddress = email;
@@ -96,7 +97,7 @@ export async function sendEmail(
           }
         }
 
-        console.log(`📧 Attempting Resend from: ${sendFrom}, reply-to: ${replyToAddress || 'none'}`);
+        console.log(`📧 Resend attempt: from=${sendFrom}, replyTo=${replyToAddress || 'none'}`);
 
         const data = await resend.emails.send({
           from: sendFrom,
@@ -116,16 +117,14 @@ export async function sendEmail(
         }
 
         console.error("❌ Resend error:", data.error);
-        // Fall through to Gmail...
       } catch (error: any) {
         console.error("❌ Resend exception:", error.message);
-        // Fall through to Gmail...
       }
     }
   }
 
-  // 2. Fallback to Gmail (Yesterday's core logic)
-  console.log("➡️ Falling back to Gmail/Nodemailer...");
+  // 2. Fallback to Gmail (The 100% reliable method from yesterday)
+  console.log("➡️ Falling back to Gmail/Nodemailer for guaranteed delivery...");
   return await sendEmailViaGmail(options);
 }
 
