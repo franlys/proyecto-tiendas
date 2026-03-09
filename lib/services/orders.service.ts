@@ -35,6 +35,8 @@ export interface Order {
     paymentMethod?: string;
     notes?: string;
     deliveryType?: "entrega" | "recogida" | "pickup" | "delivery";
+    deliveryDate?: string;
+    deliveryTime?: string;
     createdAt: string;
     updatedAt: string;
 }

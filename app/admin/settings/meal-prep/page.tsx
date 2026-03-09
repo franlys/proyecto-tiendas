@@ -15,21 +15,25 @@ import {
     MenuSquare,
     Zap,
     Truck,
+    Clock,
+    Minus,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useAuth, useShops, useInventory, InventoryProvider } from "@/components/shared";
 import type { Product } from "@/lib/constants";
-import type {
+import {
     MealPrepShopConfig,
     MealPrepPackage,
     MealPrepDynamicCategory,
     MealPrepExtraItem,
     MealPrepRule,
     DeliveryConfig,
+    MealPrepSchedule,
+    DEFAULT_MEAL_PREP_SCHEDULE
 } from "@/lib/types/meal-prep.types";
 import { v4 as uuidv4 } from "uuid";
 
-type Tab = "packages" | "categories" | "rules" | "delivery";
+type Tab = "packages" | "categories" | "rules" | "delivery" | "schedule";
 
 // Separamos el contenido para poder usar el contexto de inventario
 function MealPrepSettingsContent() {
@@ -52,6 +56,7 @@ function MealPrepSettingsContent() {
         allowedAreas: [],
         feeScaling: { amount: 30, perMiles: 10 }
     });
+    const [schedule, setSchedule] = useState<MealPrepSchedule>(DEFAULT_MEAL_PREP_SCHEDULE);
     const [customInstructionsEnabled, setCustomInstructionsEnabled] = useState(false);
 
     // Get unique existing categories from catalog
@@ -80,6 +85,7 @@ function MealPrepSettingsContent() {
                     allowedAreas: [],
                     feeScaling: { amount: 30, perMiles: 10 }
                 });
+                setSchedule(shop.mealPrepConfig.schedule || DEFAULT_MEAL_PREP_SCHEDULE);
                 setCustomInstructionsEnabled(
                     shop.mealPrepConfig.customInstructionsEnabled ?? false
                 );
@@ -124,6 +130,7 @@ function MealPrepSettingsContent() {
                 extras,
                 rules,
                 delivery,
+                schedule,
                 customInstructionsEnabled,
             };
 
@@ -380,6 +387,16 @@ function MealPrepSettingsContent() {
                 >
                     <Truck className="w-4 h-4" />
                     Zonas & Envío
+                </button>
+                <button
+                    onClick={() => setActiveTab("schedule")}
+                    className={`px-4 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${activeTab === "schedule"
+                        ? "bg-primary text-white shadow-lg"
+                        : "text-zinc-400 hover:text-white hover:bg-white/5"
+                        }`}
+                >
+                    <Clock className="w-4 h-4" />
+                    Horarios de Entrega
                 </button>
             </div>
 
@@ -879,6 +896,88 @@ function MealPrepSettingsContent() {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* SCHEDULE TAB */}
+                {activeTab === "schedule" && (
+                    <div className="space-y-8">
+                        <div>
+                            <h2 className="text-xl font-semibold text-white">Horarios de Entrega</h2>
+                            <p className="text-sm text-zinc-400">
+                                Configura qué días realizas entregas y en qué ventanas de tiempo.
+                            </p>
+                        </div>
+
+                        <div className="grid gap-4">
+                            {(Object.keys(schedule) as Array<keyof MealPrepSchedule>).map((day) => (
+                                <div key={day} className="p-4 bg-zinc-950 border border-zinc-800 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4">
+                                    <div className="flex items-center gap-4 w-full md:w-auto">
+                                        <div
+                                            onClick={() => setSchedule({
+                                                ...schedule,
+                                                [day]: { ...schedule[day], closed: !schedule[day].closed }
+                                            })}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${!schedule[day].closed ? "bg-primary" : "bg-zinc-700"}`}
+                                        >
+                                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${!schedule[day].closed ? "translate-x-6" : "translate-x-1"}`} />
+                                        </div>
+                                        <span className={`text-sm font-medium capitalize w-24 ${!schedule[day].closed ? "text-white" : "text-zinc-500"}`}>
+                                            {day === "monday" ? "Lunes" :
+                                                day === "tuesday" ? "Martes" :
+                                                    day === "wednesday" ? "Miércoles" :
+                                                        day === "thursday" ? "Jueves" :
+                                                            day === "friday" ? "Viernes" :
+                                                                day === "saturday" ? "Sábado" : "Domingo"}
+                                        </span>
+                                    </div>
+
+                                    {!schedule[day].closed ? (
+                                        <div className="flex items-center gap-3 w-full md:w-auto">
+                                            <div className="flex flex-col gap-1 flex-1 md:flex-none">
+                                                <label className="text-[10px] text-zinc-500 uppercase font-bold">Abre</label>
+                                                <input
+                                                    type="time"
+                                                    value={schedule[day].open}
+                                                    onChange={(e) => setSchedule({
+                                                        ...schedule,
+                                                        [day]: { ...schedule[day], open: e.target.value }
+                                                    })}
+                                                    className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-primary w-full"
+                                                />
+                                            </div>
+                                            <div className="pt-4 text-zinc-600">
+                                                <Minus className="w-4 h-4 rotate-90 md:rotate-0" />
+                                            </div>
+                                            <div className="flex flex-col gap-1 flex-1 md:flex-none">
+                                                <label className="text-[10px] text-zinc-500 uppercase font-bold">Cierra</label>
+                                                <input
+                                                    type="time"
+                                                    value={schedule[day].close}
+                                                    onChange={(e) => setSchedule({
+                                                        ...schedule,
+                                                        [day]: { ...schedule[day], close: e.target.value }
+                                                    })}
+                                                    className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-primary w-full"
+                                                />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="text-zinc-500 text-sm italic flex-1 text-center md:text-right">
+                                            Cerrado - No se realizan entregas
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="p-4 bg-primary/10 border border-primary/20 rounded-xl flex items-start gap-3">
+                            <Clock className="w-5 h-5 text-primary-400 mt-0.5" />
+                            <p className="text-xs text-primary-300 leading-relaxed">
+                                Estos horarios se utilizarán para mostrar al cliente las opciones de entrega disponibles.
+                                Los días marcados como "Cerrado" no aparecerán en el selector de fecha del cliente.
+                            </p>
                         </div>
                     </div>
                 )}

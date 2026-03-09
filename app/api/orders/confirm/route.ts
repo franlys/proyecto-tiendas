@@ -29,6 +29,8 @@ interface ConfirmOrderRequest {
     notes?: string;
     type?: "order" | "training";
     deliveryType?: "entrega" | "recogida" | "pickup" | "delivery";
+    deliveryDate?: string;
+    deliveryTime?: string;
     paymentInfo?: PaymentInfo;
 }
 
@@ -46,6 +48,8 @@ export async function POST(request: NextRequest) {
             notes,
             type = "order",
             deliveryType = "entrega",
+            deliveryDate,
+            deliveryTime,
             paymentInfo
         } = body;
 
@@ -97,6 +101,8 @@ export async function POST(request: NextRequest) {
             status: "pending",
             paymentStatus: "pending",
             deliveryType,
+            deliveryDate,
+            deliveryTime,
             source: "web"
         };
 
@@ -196,9 +202,12 @@ export async function POST(request: NextRequest) {
             items.forEach(item => {
                 clientMsg += `• ${item.name} ($${item.price.toLocaleString()})\n`;
             });
-            clientMsg += `\n📦 Modo: *${deliveryType === "recogida" ? "Pasar a recoger" : "Entrega a domicilio"}*\n`;
             if (deliveryType === "entrega" && customerAddress) {
                 clientMsg += `📍 Dirección: ${customerAddress}\n`;
+            }
+            if (deliveryDate) {
+                clientMsg += `📅 Fecha: *${deliveryDate}*\n`;
+                if (deliveryTime) clientMsg += `⏰ Horario: *${deliveryTime}*\n`;
             }
             clientMsg += `💰 Total: *$${total.toLocaleString()}*\n`;
 
@@ -357,6 +366,10 @@ export async function POST(request: NextRequest) {
                 ownerMsg += `\nTipo: *${ownerDeliveryLabel}*\n`;
                 if (customerAddress) {
                     ownerMsg += `📍 Direcc: ${customerAddress}\n`;
+                }
+                if (deliveryDate) {
+                    ownerMsg += `📅 Fecha: *${deliveryDate}*\n`;
+                    if (deliveryTime) ownerMsg += `⏰ Horario: *${deliveryTime}*\n`;
                 }
                 ownerMsg += `Total: *$${total.toLocaleString()}*\n\n`;
 

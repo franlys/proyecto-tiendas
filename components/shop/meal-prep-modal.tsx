@@ -18,7 +18,8 @@ import {
     MEAL_PREP_PRICES,
     TRAINING_PLANS,
     TrainingPlanConfig,
-    MealPrepShopConfig
+    MealPrepShopConfig,
+    MealPrepSchedule
 } from "@/lib/types/meal-prep.types";
 import { geocodeAddress, getCurrentLocation, calculateDistance, Coordinates, reverseGeocode } from "@/lib/utils/distance";
 import { Loader2, Navigation } from "lucide-react";
@@ -104,6 +105,10 @@ export function MealPrepModal({
     const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
     const [copiedField, setCopiedField] = useState<string | null>(null);
 
+    // Schedule State
+    const [deliveryDate, setDeliveryDate] = useState<string>("");
+    const [deliveryTime, setDeliveryTime] = useState<string>("");
+
     const activePaymentMethods = manualPaymentConfig?.paymentMethods?.filter(m => m.isActive) || [];
 
     // Reset state when modal opens
@@ -124,6 +129,8 @@ export function MealPrepModal({
             setCustomerEmail("");
             setOrderSuccess(null);
             setError(null);
+            setDeliveryDate("");
+            setDeliveryTime("");
         }
     }, [isOpen]);
 
@@ -241,6 +248,30 @@ export function MealPrepModal({
 
         return { ingredientCategories: cats, productsByCategory: grouped };
     }, [catalog, mealPrepConfig]);
+
+    const availableDates = useMemo(() => {
+        if (!mealPrepConfig?.schedule) return [];
+        const days = [];
+        const today = new Date();
+        const dayNames: Array<keyof MealPrepSchedule> = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+
+        // Mostramos los próximos 14 días para elegir
+        for (let i = 1; i <= 14; i++) {
+            const date = new Date();
+            date.setDate(today.getDate() + i);
+            const dayOfWeek = dayNames[date.getDay()] as keyof MealPrepSchedule;
+            const config = mealPrepConfig.schedule[dayOfWeek];
+
+            if (config && !config.closed) {
+                days.push({
+                    date: date.toISOString().split('T')[0],
+                    label: date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }),
+                    window: `${config.open} - ${config.close}`
+                });
+            }
+        }
+        return days;
+    }, [mealPrepConfig?.schedule]);
 
     // Calculate pricing summary
     const pricing = useMemo(() => {
@@ -506,6 +537,8 @@ export function MealPrepModal({
                         paymentTiming: 'pay_on_delivery',
                         status: 'pending'
                     },
+                    deliveryDate,
+                    deliveryTime,
                     items,
                     total: pricing.total,
                     notes: customerNotes
@@ -1277,6 +1310,53 @@ export function MealPrepModal({
                                 </div>
                             )}
 
+                            {/* Schedule Selection */}
+                            <div className="space-y-4 pt-4 border-t border-white/10">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Clock className="w-5 h-5 text-green-400" />
+                                    <h4 className="text-white font-bold text-sm">Programar Entrega / Recogida</h4>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                        Días disponibles próximos
+                                    </label>
+                                    <div className="grid grid-cols-1 gap-2 max-h-[160px] overflow-y-auto pr-2 custom-scrollbar">
+                                        {availableDates.length > 0 ? (
+                                            availableDates.map((d) => (
+                                                <button
+                                                    key={d.date}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setDeliveryDate(d.date);
+                                                        setDeliveryTime(d.window);
+                                                    }}
+                                                    className={cn(
+                                                        "p-3 rounded-xl border-2 transition-all text-left flex justify-between items-center group",
+                                                        deliveryDate === d.date
+                                                            ? "border-green-500 bg-green-500/20"
+                                                            : "border-white/10 bg-white/5 hover:border-white/20"
+                                                    )}
+                                                >
+                                                    <div>
+                                                        <div className="font-bold text-white text-sm capitalize">{d.label}</div>
+                                                        <div className="text-[10px] text-slate-400">Haz clic para seleccionar</div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="text-xs font-bold text-green-400">{d.window}</div>
+                                                        {deliveryDate === d.date && <Check className="w-4 h-4 text-green-400 inline ml-1" />}
+                                                    </div>
+                                                </button>
+                                            ))
+                                        ) : (
+                                            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
+                                                <p className="text-xs text-amber-300">No hay horarios de entrega configurados actualmente.</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
                             {error && (
                                 <p className="text-xs text-red-400 p-3 bg-red-400/10 rounded-xl border border-red-400/20">
                                     {error}
@@ -1293,7 +1373,7 @@ export function MealPrepModal({
                                 </Button>
                                 <Button
                                     onClick={() => setStep("info")}
-                                    disabled={deliveryType === "entrega" && distance === undefined}
+                                    disabled={(deliveryType === "entrega" && (distance === undefined || !deliveryDate)) || (deliveryType === "recogida" && !deliveryDate)}
                                     className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold h-12"
                                 >
                                     Continuar

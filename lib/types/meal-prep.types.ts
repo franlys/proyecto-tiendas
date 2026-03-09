@@ -111,6 +111,8 @@ export interface MealPrepOrder {
     premiumTotal: number;       // Sum of all premium surcharges
     deliveryDistance?: number;  // Distancia en millas
     deliverySurcharge: number;  // $30 si >10 millas
+    deliveryDate?: string;      // Fecha seleccionada (YYYY-MM-DD)
+    deliveryTime?: string;      // Ventana de tiempo seleccionada
     trainingPlan?: TrainingPlanConfig; // Plan de entrenamiento opcional
     totalPrice: number;         // basePrice + premiumTotal + deliverySurcharge + trainingPlan.price
     customerNotes?: string;
@@ -279,6 +281,7 @@ export interface MealPrepShopConfig {
     extras?: MealPrepExtraItem[];
     rules?: MealPrepRule[];
     delivery?: DeliveryConfig;
+    schedule?: MealPrepSchedule;
     customInstructionsEnabled?: boolean;
 }
 
