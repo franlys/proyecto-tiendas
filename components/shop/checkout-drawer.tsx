@@ -27,6 +27,7 @@ import { Button } from "@/components/ui";
 import { useManualPaymentConfig } from "@/lib/hooks";
 import { StripePayButton } from "@/components/shop/stripe-checkout-button";
 import { PayPalPayButton } from "@/components/shop/paypal-checkout-button";
+import { reverseGeocode } from "@/lib/utils/distance";
 import type { Currency, ManualPaymentMethod } from "@/lib/types/payment.types";
 
 interface CheckoutDrawerProps {
@@ -98,10 +99,16 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
         if (!navigator.geolocation) return;
         setIsDetectingLocation(true);
         navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const { latitude, longitude } = position.coords;
-                setCustomerAddress(`${latitude}, ${longitude}`);
-                setIsDetectingLocation(false);
+            async (position) => {
+                const { latitude: lat, longitude: lng } = position.coords;
+                try {
+                    const address = await reverseGeocode({ lat, lng });
+                    setCustomerAddress(address || `${lat}, ${lng}`);
+                } catch (error) {
+                    setCustomerAddress(`${lat}, ${lng}`);
+                } finally {
+                    setIsDetectingLocation(false);
+                }
             },
             () => setIsDetectingLocation(false)
         );
