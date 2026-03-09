@@ -44,6 +44,7 @@ export interface Booking {
   // Tracking de confirmación
   reminderSentAt: Timestamp | null;
   reminderMessageId: string | null;
+  emailReminderSent?: boolean;        // Si se envió recordatorio por email
   customerResponse: CustomerResponse;
   customerRespondedAt: Timestamp | null;
 
