@@ -96,12 +96,12 @@ export function VisualFeedbackProvider({ children }: { children: React.ReactNode
                                 rotate: 0,
                             }}
                             animate={el.type === "add" ? {
-                                // 4 keyframes: hold -> rise -> fly -> arrive
-                                x: [el.startX - 32, el.startX - 32, el.startX - 32 - 40, el.endX - 32],
-                                y: [el.startY - 32, el.startY - 32, el.startY - 100, el.endY - 32],
-                                scale: [1, 1.1, 1.2, 0.4],
-                                opacity: [1, 1, 1, 0],
-                                rotate: [0, 0, -10, 0],
+                                // 5 keyframes: hold -> rise -> fly -> arrive -> fade
+                                x: [el.startX - 32, el.startX - 32, el.startX - 32 - 40, el.endX - 32, el.endX - 32],
+                                y: [el.startY - 32, el.startY - 32, el.startY - 100, el.endY - 32, el.endY - 32],
+                                scale: [1, 1.1, 1.2, 0.5, 0.3],
+                                opacity: [1, 1, 1, 1, 0],  // Stay solid until arrival, then quick fade
+                                rotate: [0, 0, -10, 0, 0],
                             } : {
                                 x: el.endX - 32,
                                 y: el.endY - 32,
@@ -110,11 +110,12 @@ export function VisualFeedbackProvider({ children }: { children: React.ReactNode
                                 rotate: 45,
                             }}
                             transition={el.type === "add" ? {
-                                duration: 2.2,
-                                // 0-0.25: hold in place (image loads)
-                                // 0.25-0.5: rise up
-                                // 0.5-1: fly to cart
-                                times: [0, 0.25, 0.5, 1],
+                                duration: 2.0,
+                                // 0-0.2: hold in place
+                                // 0.2-0.4: rise up
+                                // 0.4-0.85: fly to cart (stays solid)
+                                // 0.85-1: quick fade at destination
+                                times: [0, 0.2, 0.4, 0.85, 1],
                                 ease: [0.22, 0.68, 0.32, 1],
                             } : {
                                 duration: 0.7,
