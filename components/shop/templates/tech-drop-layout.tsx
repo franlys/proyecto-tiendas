@@ -296,10 +296,7 @@ export function TechDropLayout({ shop, products, services, loadingData }: TechDr
                             />
 
                             {/* Product Grid */}
-                            <motion.div
-                                layout
-                                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
-                            >
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                                 <AnimatePresence mode="popLayout">
                                     {filteredProducts.map((product, index) => (
                                         <ProductCard
@@ -309,7 +306,7 @@ export function TechDropLayout({ shop, products, services, loadingData }: TechDr
                                         />
                                     ))}
                                 </AnimatePresence>
-                            </motion.div>
+                            </div>
                         </div>
                     )}
 
@@ -512,7 +509,7 @@ function CategoryCarousel({ categories, activeCategory, onSelect }: { categories
                         {activeCategory === cat && (
                             <motion.div
                                 layoutId="active-category-bg"
-                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                transition={{ type: "spring", bounce: 0.1, duration: 0.4 }}
                                 className="absolute inset-0 bg-gradient-to-br from-cyan-400 to-blue-600 shadow-[0_0_30px_rgba(6,182,212,0.5)] border-t-2 border-cyan-300 -z-10"
                             />
                         )}
@@ -576,22 +573,31 @@ function ProductCard({ product, index }: { product: Product, index: number }) {
     return (
         <motion.div
             layout
-            initial={{ opacity: 0, y: 30, scale: 0.9 }}
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
             animate={{
                 opacity: 1,
                 y: 0,
                 scale: 1,
                 transition: {
                     type: "spring",
-                    damping: 25,
-                    stiffness: 120,
-                    delay: (index % 12) * 0.05 // Staggered by row-ish
+                    damping: 20,
+                    stiffness: 260,
+                    mass: 0.8,
+                    delay: (index % 8) * 0.04 
                 }
             }}
             exit={{
                 opacity: 0,
-                scale: 0.9,
-                transition: { duration: 0.2 }
+                scale: 0.95,
+                transition: { duration: 0.15 }
+            }}
+            transition={{
+                layout: {
+                    type: "spring",
+                    damping: 20,
+                    stiffness: 260,
+                    mass: 0.8
+                }
             }}
             ref={cardRef}
             onMouseEnter={() => {
