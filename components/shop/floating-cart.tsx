@@ -50,6 +50,7 @@ export function FloatingCart() {
   // Phase 22: Appointment modal state
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
   const isTechDrop = shop?.templateType === "tech-drop-v1";
+  const isTech3D = shop?.templateType === "tech-3d-v1";
 
   const hasServices = services.length > 0;
   const hasProducts = products.length > 0;
@@ -133,15 +134,30 @@ export function FloatingCart() {
           "fixed bottom-4 left-2 right-2 z-40",
           "sm:left-4 sm:right-4",
           "md:left-auto md:right-6 md:max-w-md",
-          // Limit max height when expanded to prevent blocking content
-          isTechDrop
-            ? "bg-[#05070a]/90 backdrop-blur-2xl border border-cyan-500/30 shadow-cyan-500/10 rounded-[2rem] p-3 sm:p-4"
-            : isStreetDrop
-              ? "glass-panel bg-black/95 border-2 border-red-500 rounded-none drop-shadow-[5px_5px_0px_rgba(255,0,51,1)] p-3 sm:p-4"
-              : "glass-panel rounded-2xl p-3 sm:p-4"
+          isTech3D
+            ? "backdrop-blur-2xl rounded-[2rem] p-3 sm:p-4"
+            : isTechDrop
+              ? "bg-[#05070a]/90 backdrop-blur-2xl border border-cyan-500/30 shadow-cyan-500/10 rounded-[2rem] p-3 sm:p-4"
+              : isStreetDrop
+                ? "glass-panel bg-black/95 border-2 border-red-500 rounded-none drop-shadow-[5px_5px_0px_rgba(255,0,51,1)] p-3 sm:p-4"
+                : "glass-panel rounded-2xl p-3 sm:p-4"
         )}
+        style={isTech3D ? {
+          background: "linear-gradient(135deg, rgba(4,8,16,0.95) 0%, rgba(3,6,12,0.95) 100%)",
+          border: "1px solid rgba(6,182,212,0.25)",
+          boxShadow: "0 -4px 40px rgba(6,182,212,0.12), 0 8px 40px rgba(0,0,0,0.6)",
+        } : undefined}
       >
-        {isTechDrop && (
+        {isTech3D && (
+          <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-[2rem]">
+            <div className="absolute inset-0 opacity-[0.06]" style={{
+              backgroundImage: "linear-gradient(to right, rgba(6,182,212,1) 1px, transparent 1px), linear-gradient(to bottom, rgba(6,182,212,1) 1px, transparent 1px)",
+              backgroundSize: "48px 48px"
+            }} />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+          </div>
+        )}
+        {isTechDrop && !isTech3D && (
           <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-[2rem]">
             <div className="absolute inset-0 grid-bg opacity-10" />
           </div>
@@ -153,11 +169,13 @@ export function FloatingCart() {
               ref={cartRef}
               className={cn(
                 "w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-                isTechDrop ? "bg-cyan-500/20" : shouldUseAppointmentFlow ? "bg-primary/20" : "bg-gold/20"
+                (isTechDrop || isTech3D) ? "bg-cyan-500/20" : shouldUseAppointmentFlow ? "bg-primary/20" : "bg-gold/20"
               )}
-              style={(isTechDrop || shouldUseAppointmentFlow || !isStreetDrop) && shop?.theme?.primaryColor ? { backgroundColor: isTechDrop ? 'rgba(6, 182, 212, 0.2)' : `${shop.theme.primaryColor}20` } : {}}
+              style={(isTechDrop || isTech3D || shouldUseAppointmentFlow || !isStreetDrop) && shop?.theme?.primaryColor ? { backgroundColor: (isTechDrop || isTech3D) ? 'rgba(6, 182, 212, 0.2)' : `${shop.theme.primaryColor}20` } : {}}
             >
-              {isTechDrop ? (
+              {isTech3D ? (
+                <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              ) : isTechDrop ? (
                 <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400" />
               ) : shouldUseAppointmentFlow ? (
                 <Calendar className={cn("w-4 h-4 sm:w-5 sm:h-5", !shop?.theme?.primaryColor && "text-primary")} style={shop?.theme?.primaryColor ? { color: shop.theme.primaryColor } : {}} />
@@ -196,7 +214,9 @@ export function FloatingCart() {
                 "text-white font-medium text-sm",
                 "transition-all duration-300",
                 "shadow-lg hover:shadow-xl",
-                isTechDrop
+                isTech3D
+                  ? "text-black font-black uppercase tracking-widest hover:opacity-90"
+                  : isTechDrop
                   ? "bg-cyan-500 shadow-cyan-500/20 hover:bg-cyan-400"
                   : shouldUseAppointmentFlow
                     ? "bg-primary hover:opacity-90 transition-opacity"
@@ -205,7 +225,11 @@ export function FloatingCart() {
                       : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700",
                 isSubmitting && "opacity-70 cursor-not-allowed"
               )}
-              style={(!isTechDrop && (shouldUseAppointmentFlow || (!isStreetDrop && !isSubmitting)) && shop?.theme?.primaryColor) ? {
+              style={isTech3D ? {
+                background: "linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #7c3aed 100%)",
+                boxShadow: "0 0 20px rgba(6,182,212,0.4)",
+                color: "white",
+              } : (!isTechDrop && (shouldUseAppointmentFlow || (!isStreetDrop && !isSubmitting)) && shop?.theme?.primaryColor) ? {
                 background: `linear-gradient(to right, ${shop.theme.primaryColor}, ${shop.theme.primaryColor}dd)`
               } : {}}
             >

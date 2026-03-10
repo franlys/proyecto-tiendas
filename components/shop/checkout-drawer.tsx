@@ -47,6 +47,8 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
     const { config } = useShopConfig();
     const { addOrder } = useOrders();
     const isTechDrop = shop?.templateType === "tech-drop-v1";
+    const isTech3D = shop?.templateType === "tech-3d-v1";
+    const isTechTheme = isTechDrop || isTech3D;
 
     // Field states
     const [customerName, setCustomerName] = useState("");
@@ -176,32 +178,76 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                         animate={{ y: 0 }} exit={{ y: "100%" }}
                         className={cn(
                             "relative flex flex-col w-full sm:max-w-xl h-full sm:h-auto sm:max-h-[90vh] border shadow-2xl overflow-hidden",
-                            isTechDrop
-                                ? "bg-[#05070a] border-cyan-500/30 rounded-t-[40px] sm:rounded-[40px] font-sans"
-                                : "bg-slate-950 border-white/10 rounded-t-[2.5rem] sm:rounded-3xl"
+                            isTech3D
+                                ? "border-cyan-500/25 rounded-t-[40px] sm:rounded-[40px] font-sans"
+                                : isTechDrop
+                                    ? "bg-[#05070a] border-cyan-500/30 rounded-t-[40px] sm:rounded-[40px] font-sans"
+                                    : "bg-slate-950 border-white/10 rounded-t-[2.5rem] sm:rounded-3xl"
                         )}
+                        style={isTech3D ? {
+                            background: "linear-gradient(180deg, #040810 0%, #020509 100%)",
+                            boxShadow: "0 -20px 80px rgba(6,182,212,0.12), 0 0 0 1px rgba(6,182,212,0.15)"
+                        } : undefined}
                     >
-                        {isTechDrop && (
+                        {isTech3D && (
+                            <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+                                {/* Cyan grid lines */}
+                                <div className="absolute inset-0 opacity-[0.07]"
+                                    style={{
+                                        backgroundImage: "linear-gradient(to right, rgba(6,182,212,1) 1px, transparent 1px), linear-gradient(to bottom, rgba(6,182,212,1) 1px, transparent 1px)",
+                                        backgroundSize: "48px 48px"
+                                    }}
+                                />
+                                {/* Top glow */}
+                                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-px bg-gradient-to-r from-transparent via-cyan-500/60 to-transparent" />
+                                {/* Corner glows */}
+                                <div className="absolute top-0 right-0 w-48 h-48 bg-violet-600/8 blur-[80px] rounded-full" />
+                                <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-500/8 blur-[80px] rounded-full" />
+                            </div>
+                        )}
+                        {isTechDrop && !isTech3D && (
                             <div className="absolute inset-0 pointer-events-none z-0">
                                 <div className="absolute inset-0 grid-bg opacity-10" />
                                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay" />
                             </div>
                         )}
                         {/* Header Fixed */}
-                        <div className="shrink-0 bg-slate-950/95 backdrop-blur-md border-b border-white/10 px-6 py-4 flex items-center justify-between z-20">
+                        <div className={cn(
+                            "shrink-0 backdrop-blur-md border-b px-6 py-4 flex items-center justify-between z-20",
+                            isTech3D
+                                ? "bg-black/40 border-cyan-500/15"
+                                : "bg-slate-950/95 border-white/10"
+                        )}>
                             <div className="flex items-center gap-3">
                                 <div className={cn(
                                     "w-10 h-10 rounded-xl flex items-center justify-center shadow-lg",
-                                    isTechDrop ? "bg-cyan-500 shadow-cyan-500/20" : "bg-orange-500 shadow-orange-500/20"
-                                )}>
+                                    isTech3D
+                                        ? "shadow-cyan-500/30"
+                                        : isTechDrop
+                                            ? "bg-cyan-500 shadow-cyan-500/20"
+                                            : "bg-orange-500 shadow-orange-500/20"
+                                )}
+                                style={isTech3D ? {
+                                    background: "linear-gradient(135deg, #06b6d4, #3b82f6)",
+                                    boxShadow: "0 0 20px rgba(6,182,212,0.4)"
+                                } : undefined}
+                                >
                                     <ShoppingBag className="w-5 h-5 text-white" />
                                 </div>
                                 <div>
-                                    <h2 className="text-lg font-bold text-white uppercase tracking-tight">Tu Carrito</h2>
-                                    <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">{shop?.name || "Sweet Cravings"}</p>
+                                    <h2 className={cn(
+                                        "text-lg font-bold text-white uppercase tracking-tight",
+                                        isTech3D && "font-black tracking-tighter"
+                                    )}>Tu Carrito</h2>
+                                    <p className="text-[10px] text-slate-500 font-mono uppercase tracking-widest">{shop?.name}</p>
                                 </div>
                             </div>
-                            <button onClick={onClose} className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors">
+                            <button onClick={onClose} className={cn(
+                                "p-2 rounded-xl transition-colors",
+                                isTech3D
+                                    ? "bg-white/5 border border-white/10 hover:border-cyan-500/40 hover:bg-white/10"
+                                    : "rounded-full bg-white/5 hover:bg-white/10"
+                            )}>
                                 <X className="w-5 h-5 text-slate-400" />
                             </button>
                         </div>
@@ -219,19 +265,35 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                 ) : (
                                     <div className="grid gap-3">
                                         {products.map((item: any, idx) => (
-                                            <div key={idx} className="bg-white/5 p-4 rounded-2xl border border-white/10 flex items-center gap-4">
-                                                <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-900 flex-shrink-0">
+                                            <div key={idx} className={cn(
+                                                "p-4 rounded-2xl border flex items-center gap-4 transition-colors",
+                                                isTech3D
+                                                    ? "bg-white/[0.04] border-white/8 hover:border-cyan-500/25"
+                                                    : "bg-white/5 border-white/10"
+                                            )}>
+                                                <div className={cn(
+                                                    "w-14 h-14 rounded-xl overflow-hidden bg-slate-900 flex-shrink-0",
+                                                    isTech3D && "border border-white/10"
+                                                )}>
                                                     {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : <ShoppingBag className="w-5 h-5 text-slate-700 m-auto" />}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-white font-bold truncate text-sm">{item.name}</p>
+                                                    {item.variantName && (
+                                                        <p className="text-cyan-400/70 text-[10px] font-mono truncate">{item.variantName}</p>
+                                                    )}
                                                     <p className={cn(
                                                         "font-bold text-xs mt-1",
-                                                        isTechDrop ? "text-cyan-400" : "text-orange-400"
-                                                    )}>x{item.quantity} - ${item.price}</p>
+                                                        isTech3D ? "text-cyan-400 font-mono" : isTechDrop ? "text-cyan-400" : "text-orange-400"
+                                                    )}>x{item.quantity} — ${(item.price * item.quantity).toLocaleString()}</p>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-white font-black">${(item.price * item.quantity).toLocaleString()}</p>
+                                                    <p className={cn(
+                                                        "font-black text-lg",
+                                                        isTech3D
+                                                            ? "bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-blue-400"
+                                                            : "text-white"
+                                                    )}>${(item.price * item.quantity).toLocaleString()}</p>
                                                 </div>
                                             </div>
                                         ))}
@@ -247,7 +309,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Nombre Completo</label>
                                         <input value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Ej. Juan Pérez" className={cn(
                                             "w-full bg-white/5 border p-4 rounded-xl text-white outline-none transition-all",
-                                            isTechDrop ? "border-cyan-500/20 focus:border-cyan-500" : "border-white/10 focus:border-orange-500"
+                                            isTechTheme ? "border-cyan-500/20 focus:border-cyan-500" : "border-white/10 focus:border-orange-500"
                                         )} />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
@@ -255,14 +317,14 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">WhatsApp</label>
                                             <input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} placeholder="+58 412..." className={cn(
                                                 "w-full bg-white/5 border p-4 rounded-xl text-white outline-none transition-all",
-                                                isTechDrop ? "border-cyan-500/20 focus:border-cyan-500" : "border-white/10 focus:border-orange-500"
+                                                isTechTheme ? "border-cyan-500/20 focus:border-cyan-500" : "border-white/10 focus:border-orange-500"
                                             )} />
                                         </div>
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Email</label>
                                             <input value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} placeholder="juan@email.com" className={cn(
                                                 "w-full bg-white/5 border p-4 rounded-xl text-white outline-none transition-all",
-                                                isTechDrop ? "border-cyan-500/20 focus:border-cyan-500" : "border-white/10 focus:border-orange-500"
+                                                isTechTheme ? "border-cyan-500/20 focus:border-cyan-500" : "border-white/10 focus:border-orange-500"
                                             )} />
                                         </div>
                                     </div>
@@ -297,7 +359,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                                     placeholder="Calle, Número, Referencia..."
                                                     className={cn(
                                                         "w-full bg-white/5 border p-4 rounded-xl text-white outline-none transition-all min-h-[100px] pr-12",
-                                                        isTechDrop ? "border-cyan-500/20 focus:border-cyan-500" : "border-white/10 focus:border-orange-500"
+                                                        isTechTheme ? "border-cyan-500/20 focus:border-cyan-500" : "border-white/10 focus:border-orange-500"
                                                     )}
                                                 />
                                                 <button
@@ -305,7 +367,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                                     onClick={handleDetectLocation}
                                                     className={cn(
                                                         "absolute right-3 top-4 p-2.5 rounded-xl transition-all z-10",
-                                                        isTechDrop ? "bg-cyan-500/10 text-cyan-500 hover:bg-cyan-500 hover:text-white" : "bg-orange-500/10 text-orange-500 hover:bg-orange-500 hover:text-white"
+                                                        isTechTheme ? "bg-cyan-500/10 text-cyan-500 hover:bg-cyan-500 hover:text-white" : "bg-orange-500/10 text-orange-500 hover:bg-orange-500 hover:text-white"
                                                     )}
                                                 >
                                                     <MapPin className="w-5 h-5" />
@@ -339,7 +401,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Sube Comprobante</label>
                                         <label className={cn(
                                             "flex flex-col items-center justify-center gap-3 p-10 rounded-2xl border-2 border-dashed bg-white/5 transition-all cursor-pointer",
-                                            isTechDrop ? "border-cyan-500/20 hover:border-cyan-500/50 hover:bg-cyan-500/5" : "border-white/10 hover:border-orange-500/50 hover:bg-orange-500/5"
+                                            isTechTheme ? "border-cyan-500/20 hover:border-cyan-500/50 hover:bg-cyan-500/5" : "border-white/10 hover:border-orange-500/50 hover:bg-orange-500/5"
                                         )}>
                                             {receiptPreview ? <img src={receiptPreview} className="max-h-40 rounded-lg shadow-2xl" /> : (
                                                 <>
@@ -355,7 +417,10 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                         </div>
 
                         {/* Footer - FIXED NO ABSOLUTE OVERLAP */}
-                        <div className="shrink-0 bg-slate-900 p-6 border-t border-white/10">
+                        <div className={cn(
+                            "shrink-0 p-6 border-t",
+                            isTech3D ? "bg-black/50 border-cyan-500/15" : "bg-slate-900 border-white/10"
+                        )}>
                             {!orderSuccess ? (
                                 <div className="space-y-5">
                                     <div className="flex items-end justify-between">
@@ -373,10 +438,16 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                         disabled={isSubmitting || !hasItems}
                                         className={cn(
                                             "w-full py-9 rounded-2xl text-white font-black text-2xl shadow-2xl transition-all active:scale-95",
-                                            isTechDrop
-                                                ? "bg-cyan-500 shadow-cyan-500/20 hover:bg-cyan-400 hover:scale-[1.02]"
-                                                : "bg-gradient-to-r from-red-500 to-orange-500 shadow-orange-500/40 hover:scale-[1.02]"
+                                            isTech3D
+                                                ? "hover:scale-[1.02] hover:opacity-90"
+                                                : isTechDrop
+                                                    ? "bg-cyan-500 shadow-cyan-500/20 hover:bg-cyan-400 hover:scale-[1.02]"
+                                                    : "bg-gradient-to-r from-red-500 to-orange-500 shadow-orange-500/40 hover:scale-[1.02]"
                                         )}
+                                        style={isTech3D ? {
+                                            background: "linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #7c3aed 100%)",
+                                            boxShadow: "0 4px 30px rgba(6,182,212,0.4)"
+                                        } : undefined}
                                     >
                                         {isSubmitting ? <Loader2 className="w-7 h-7 animate-spin" /> : (
                                             <div className="flex items-center gap-4">
@@ -396,9 +467,17 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                     </div>
                                     <div>
                                         <h3 className="text-2xl font-black text-white">¡Gracias por tu compra!</h3>
-                                        <p className="text-slate-400 mt-2 font-medium">Orden registrada: <span className="text-orange-400 font-bold">#{orderSuccess.number}</span></p>
+                                        <p className="text-slate-400 mt-2 font-medium">Orden registrada: <span className={cn("font-bold", isTech3D ? "text-cyan-400" : "text-orange-400")}>#{orderSuccess.number}</span></p>
                                     </div>
-                                    <Button onClick={onClose} className="w-full bg-orange-500 text-white rounded-2xl py-6 font-black text-xl hover:bg-orange-600 transition-all">
+                                    <Button onClick={onClose} className={cn(
+                                        "w-full text-white rounded-2xl py-6 font-black text-xl transition-all",
+                                        isTech3D ? "hover:opacity-90" : "bg-orange-500 hover:bg-orange-600"
+                                    )}
+                                    style={isTech3D ? {
+                                        background: "linear-gradient(135deg, #06b6d4, #7c3aed)",
+                                        boxShadow: "0 4px 20px rgba(6,182,212,0.3)"
+                                    } : undefined}
+                                    >
                                         Cerrar Carrito
                                     </Button>
                                 </div>
