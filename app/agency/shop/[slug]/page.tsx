@@ -216,7 +216,7 @@ function ShopDetailContent() {
     const [logo, setLogo] = useState("");
     const [banner, setBanner] = useState("");
     const [slogan, setSlogan] = useState("");
-    const [templateType, setTemplateType] = useState<"standard" | "premium-drop-v1" | "street-drop-v1" | "cosmic-drop-v1" | "tech-drop-v1">("standard");
+    const [templateType, setTemplateType] = useState<"standard" | "premium-drop-v1" | "street-drop-v1" | "cosmic-drop-v1" | "tech-drop-v1" | "tech-3d-v1">("standard");
     const [description, setDescription] = useState("");
     const [primaryColor, setPrimaryColor] = useState("#22D3EE");
     const [accentColor, setAccentColor] = useState("#3B82F6");
@@ -1187,12 +1187,44 @@ function ShopDetailContent() {
                                                     <Zap className="w-4 h-4 text-white animate-pulse" />
                                                 </div>
                                             </div>
-                                            <div className="flex justify-between items-center">
-                                                <h4 className="text-white font-medium text-sm">Tech Premium</h4>
-                                                <span className="text-[10px] bg-cyan-500 text-white px-1.5 rounded-full font-bold">NUEVA</span>
-                                            </div>
+                                            <h4 className="text-white font-medium text-sm">Tech Premium</h4>
                                             <p className="text-xs text-slate-400 mt-1">
                                                 Tecnología, seguridad y animejs v4
+                                            </p>
+                                        </button>
+
+                                        {/* Tech 3D Breakout Template */}
+                                        <button
+                                            onClick={() => setTemplateType("tech-3d-v1")}
+                                            className={`p-4 rounded-xl border-2 transition-all text-left ${templateType === "tech-3d-v1"
+                                                ? "border-violet-400 bg-violet-400/10"
+                                                : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                                                }`}
+                                        >
+                                            <div className="w-full h-16 rounded-lg mb-3 flex items-center justify-center relative overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(6,182,212,0.15) 0%, rgba(139,92,246,0.2) 100%)" }}>
+                                                {/* Animated portal rings */}
+                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                    <div className="w-10 h-10 rounded-full border border-cyan-400/40 animate-ping absolute" />
+                                                    <div className="w-7 h-7 rounded-full border border-violet-400/60 animate-pulse absolute" />
+                                                </div>
+                                                {/* Grid bg */}
+                                                <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "linear-gradient(to right, rgba(6,182,212,0.3) 1px, transparent 1px), linear-gradient(to bottom, rgba(6,182,212,0.3) 1px, transparent 1px)", backgroundSize: "10px 10px" }} />
+                                                <div className="relative z-10 flex items-center gap-1">
+                                                    <svg className="w-5 h-5 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                                                        <line x1="12" y1="18" x2="12" y2="18.01" />
+                                                    </svg>
+                                                    <svg className="w-4 h-4 text-violet-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                        <path d="M5 12h14M12 5l7 7-7 7" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            <div className="flex justify-between items-start mb-1">
+                                                <h4 className="text-white font-medium text-sm">Tech 3D Breakout</h4>
+                                                <span className="text-[9px] bg-gradient-to-r from-violet-500 to-cyan-500 text-white px-1.5 py-0.5 rounded-full font-bold ml-1 shrink-0">3D</span>
+                                            </div>
+                                            <p className="text-xs text-slate-400">
+                                                Screen Breakout, Liquid Metal y portal digital
                                             </p>
                                         </button>
                                     </div>
