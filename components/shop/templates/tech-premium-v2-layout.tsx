@@ -196,18 +196,18 @@ function Hero({ shop, onExplore }: { shop: any; onExplore: () => void }) {
                 {/* Text */}
                 <div className="space-y-8">
                     <div className="overflow-hidden">
-                        <p className="v2-hero-line text-[11px] font-mono uppercase tracking-[0.35em] text-white/40 mb-6">
+                        <p className="v2-hero-line text-[10px] font-semibold uppercase tracking-[0.4em] text-white/35 mb-6 font-mono">
                             {shop.slogan || "Tecnología de nueva generación"}
                         </p>
                     </div>
 
                     <div className="overflow-hidden">
-                        <h1 className="v2-hero-line text-[clamp(3rem,8vw,6.5rem)] font-black leading-[0.88] tracking-tighter text-white">
+                        <h1 className="v2-hero-line text-[clamp(3.5rem,9vw,7.5rem)] font-black leading-[0.85] tracking-[-0.04em] text-white">
                             {shop.name}
                         </h1>
                     </div>
 
-                    <p className="v2-hero-sub text-white/40 text-base md:text-lg leading-relaxed max-w-md">
+                    <p className="v2-hero-sub text-white/38 text-[15px] md:text-base leading-[1.7] max-w-md font-light tracking-wide">
                         {shop.description || "Dispositivos de élite. Diseño sin concesiones. La experiencia premium que mereces."}
                     </p>
 
@@ -284,7 +284,7 @@ export function TechPremiumV2Layout({ shop, products, services, loadingData }: T
                         {shop.logo ? (
                             <img src={shop.logo} alt={shop.name} className="h-7 w-auto object-contain" />
                         ) : (
-                            <span className="text-sm font-black uppercase tracking-tighter text-white">{shop.name}</span>
+                            <span className="text-sm font-black uppercase tracking-[-0.04em] text-white">{shop.name}</span>
                         )}
                     </div>
 
@@ -349,17 +349,25 @@ export function TechPremiumV2Layout({ shop, products, services, loadingData }: T
                 {/* Tab + Filter bar */}
                 <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                     {/* View tabs */}
-                    <div className="flex items-center gap-1 bg-white/4 rounded-xl p-1 border border-white/6">
+                    <div className="flex items-center bg-white/[0.04] rounded-2xl p-1 border border-white/[0.07]">
                         {(["products", "services", "location"] as View[]).map(v => (
                             <button
                                 key={v}
                                 onClick={() => setView(v)}
-                                className={cn(
-                                    "px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all",
-                                    view === v ? "bg-white text-black" : "text-white/40 hover:text-white"
-                                )}
+                                className="relative px-5 py-2.5 rounded-xl text-[11px] font-semibold uppercase tracking-[0.12em] transition-colors duration-200"
+                                style={{ color: view === v ? "#000" : "rgba(255,255,255,0.38)" }}
                             >
-                                {v === "products" ? "Productos" : v === "services" ? "Servicios" : "Ubicación"}
+                                {view === v && (
+                                    <motion.span
+                                        layoutId="tab-pill"
+                                        transition={{ type: "spring", stiffness: 380, damping: 34, mass: 0.8 }}
+                                        className="absolute inset-0 bg-white rounded-xl"
+                                        style={{ zIndex: -1 }}
+                                    />
+                                )}
+                                <span className="relative z-10">
+                                    {v === "products" ? "Productos" : v === "services" ? "Servicios" : "Ubicación"}
+                                </span>
                             </button>
                         ))}
                     </div>
@@ -396,10 +404,10 @@ export function TechPremiumV2Layout({ shop, products, services, loadingData }: T
                                             key={cat}
                                             onClick={() => setActiveCategory(cat)}
                                             className={cn(
-                                                "px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider border transition-all",
+                                                "px-4 py-1.5 rounded-full text-[10px] font-semibold uppercase tracking-[0.12em] border transition-all duration-200",
                                                 activeCategory === cat
                                                     ? "bg-white text-black border-white"
-                                                    : "border-white/10 text-white/35 hover:border-white/25 hover:text-white/60"
+                                                    : "border-white/10 text-white/30 hover:border-white/22 hover:text-white/55"
                                             )}
                                         >
                                             {cat}
