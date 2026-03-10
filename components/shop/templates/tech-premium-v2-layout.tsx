@@ -354,20 +354,25 @@ export function TechPremiumV2Layout({ shop, products, services, loadingData }: T
                             <button
                                 key={v}
                                 onClick={() => setView(v)}
-                                className="relative px-5 py-2.5 rounded-xl text-[11px] font-semibold uppercase tracking-[0.12em] transition-colors duration-200"
-                                style={{ color: view === v ? "#000" : "rgba(255,255,255,0.38)" }}
+                                className="relative px-5 py-2.5 rounded-xl text-[11px] font-semibold uppercase tracking-[0.12em]"
                             >
+                                {/* Sliding pill lives inside the active button — layoutId moves it between buttons */}
                                 {view === v && (
                                     <motion.span
                                         layoutId="tab-pill"
-                                        transition={{ type: "spring", stiffness: 380, damping: 34, mass: 0.8 }}
+                                        transition={{ type: "spring", stiffness: 420, damping: 36, mass: 0.7 }}
                                         className="absolute inset-0 bg-white rounded-xl"
-                                        style={{ zIndex: -1 }}
+                                        style={{ zIndex: 0 }}
                                     />
                                 )}
-                                <span className="relative z-10">
+                                <motion.span
+                                    animate={{ color: view === v ? "#000000" : "rgba(255,255,255,0.38)" }}
+                                    transition={{ duration: 0.15 }}
+                                    className="relative block"
+                                    style={{ zIndex: 1 }}
+                                >
                                     {v === "products" ? "Productos" : v === "services" ? "Servicios" : "Ubicación"}
-                                </span>
+                                </motion.span>
                             </button>
                         ))}
                     </div>
