@@ -565,7 +565,8 @@ export default function AdminSettingsPage() {
                       { id: "street-drop-v1", name: "Street Style", desc: "Estética urbana, ideal para moda y accesorios." },
                       { id: "cosmic-drop-v1", name: "Cosmic", desc: "Inspirado en el espacio, efectos galácticos." },
                       { id: "tech-drop-v1", name: "Tech Premium", desc: "Innovación, seguridad y tecnología con animejs v4." },
-                      { id: "tech-3d-v1", name: "Tech 3D Breakout", desc: "Screen Breakout, Liquid Metal y portal digital. El tema más avanzado para tiendas de tecnología.", isNew: true, isPremium: true },
+                      { id: "tech-3d-v1", name: "Tech 3D Breakout", desc: "Screen Breakout, Liquid Metal y portal digital. El tema más avanzado para tiendas de tecnología.", isPremium: true },
+                      { id: "tech-premium-v2", name: "Tech Premium v2", desc: "Minimalismo total tipo Apple/Nothing. Negro profundo, tipografía enorme y espacio negativo.", isNew: true, isPremium: true },
                     ].map((tpl) => (
                       <button
                         key={tpl.id}
@@ -600,8 +601,8 @@ export default function AdminSettingsPage() {
                   </div>
                 </div>
 
-                {/* Tech 3D Breakout — Extra Assets (only when that template is selected) */}
-                {config.templateType === "tech-3d-v1" && (
+                {/* Tech 3D / Tech Premium v2 — Imagen Hero */}
+                {(config.templateType === "tech-3d-v1" || config.templateType === "tech-premium-v2") && (
                   <div className="glass-panel rounded-2xl p-6 border border-cyan-500/20 bg-cyan-500/5">
                     <h2 className="text-white font-semibold mb-2 flex items-center gap-2">
                       <Smartphone className="w-4 h-4 text-cyan-400" />

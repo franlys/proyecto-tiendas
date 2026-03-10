@@ -21,6 +21,7 @@ import { StreetDropLayout } from "@/components/shop/templates/street-drop-layout
 import { CosmicDropLayout } from "@/components/shop/templates/cosmic-drop-layout";
 import { TechDropLayout } from "@/components/shop/templates/tech-drop-layout";
 import { Tech3DLayout } from "@/components/shop/templates/tech-3d-layout";
+import { TechPremiumV2Layout } from "@/components/shop/templates/tech-premium-v2-layout";
 
 type TabType = "servicios" | "productos";
 
@@ -198,6 +199,15 @@ export default function ShopHomePage() {
       case "tech-3d-v1":
         return (
           <Tech3DLayout
+            shop={shop as any}
+            products={products}
+            services={services}
+            loadingData={loadingData}
+          />
+        );
+      case "tech-premium-v2":
+        return (
+          <TechPremiumV2Layout
             shop={shop as any}
             products={products}
             services={services}

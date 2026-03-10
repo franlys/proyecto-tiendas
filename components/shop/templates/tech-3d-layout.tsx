@@ -14,20 +14,11 @@ import {
     Search,
     MapPin,
     Star,
-    X,
-    Minus,
-    Plus,
-    Trash2,
-    MessageCircle,
     Lock,
-    Truck,
-    Sparkles,
-    ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/components/shared";
 import type { Product, Service } from "@/lib/constants";
-import type { ProductCartItem } from "@/components/shared/cart-context";
 import { ProductOptionsModal } from "@/components/shop/product-card";
 import { useVisualFeedback } from "@/components/shared";
 import gsap from "gsap";
@@ -420,22 +411,20 @@ function ScreenBreakoutHero({ shop }: { shop: any }) {
     );
 }
 
-// ─── PORTAL PRODUCT CARD (with 3D tilt) ───────────────────────────────────────
+// ─── PRODUCT CARD ─────────────────────────────────────────────────────────────
 function PortalProductCard({ product, index }: { product: Product; index: number }) {
     const { addProduct } = useCart();
     const { triggerFlyToCart } = useVisualFeedback();
     const cardRef = useRef<HTMLDivElement>(null);
-    const [hovered, setHovered] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [portalVisible, setPortalVisible] = useState(false);
 
-    // 3D tilt
+    // Subtle 3D tilt
     const mouseX = useMotionValue(0.5);
     const mouseY = useMotionValue(0.5);
-    const springX = useSpring(mouseX, { stiffness: 150, damping: 20 });
-    const springY = useSpring(mouseY, { stiffness: 150, damping: 20 });
-    const rotateY = useTransform(springX, [0, 1], [-12, 12]);
-    const rotateX = useTransform(springY, [0, 1], [8, -8]);
+    const springX = useSpring(mouseX, { stiffness: 120, damping: 22 });
+    const springY = useSpring(mouseY, { stiffness: 120, damping: 22 });
+    const rotateY = useTransform(springX, [0, 1], [-6, 6]);
+    const rotateX = useTransform(springY, [0, 1], [4, -4]);
 
     const hasVariants = product.variants && product.variants.length > 0;
     const hasExtras = product.extras && product.extras.length > 0;
@@ -443,24 +432,15 @@ function PortalProductCard({ product, index }: { product: Product; index: number
     const isOutOfStock = !product.infiniteStock && (Number(product.stock) || 0) <= 0 && (!hasVariants || !product.variants!.some(v => (Number(v.stock) || 0) > 0));
 
     useEffect(() => {
-        if (hovered) {
-            const t = setTimeout(() => setPortalVisible(true), 80);
-            return () => clearTimeout(t);
-        } else {
-            setPortalVisible(false);
-        }
-    }, [hovered]);
-
-    useEffect(() => {
         if (!cardRef.current) return;
         gsap.fromTo(cardRef.current,
-            { opacity: 0, y: 50, scale: 0.9 },
+            { opacity: 0, y: 40 },
             {
-                opacity: 1, y: 0, scale: 1,
-                duration: 0.8,
-                delay: index * 0.06,
+                opacity: 1, y: 0,
+                duration: 0.7,
+                delay: index * 0.05,
                 ease: "power3.out",
-                scrollTrigger: { trigger: cardRef.current, start: "top 92%", once: true },
+                scrollTrigger: { trigger: cardRef.current, start: "top 94%", once: true },
             }
         );
     }, [index]);
@@ -492,80 +472,63 @@ function PortalProductCard({ product, index }: { product: Product; index: number
     return (
         <motion.div
             ref={cardRef as any}
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => { setHovered(false); handleMouseLeave(); }}
+            onMouseLeave={handleMouseLeave}
             onMouseMove={handleMouseMove}
             style={{ rotateX, rotateY, transformStyle: "preserve-3d", opacity: 0 }}
-            className="group relative rounded-3xl overflow-hidden bg-white/[0.04] border border-white/10 transition-all duration-500 hover:border-cyan-500/50 hover:shadow-[0_8px_60px_rgba(6,182,212,0.18)] cursor-pointer"
+            className="group relative rounded-2xl overflow-hidden bg-white/[0.03] border border-white/8 transition-all duration-400 hover:border-cyan-500/40 hover:bg-white/[0.05] hover:shadow-[0_4px_40px_rgba(6,182,212,0.12)] cursor-pointer"
         >
             {/* Image */}
-            <div className="relative h-60 overflow-hidden bg-gradient-to-b from-slate-900 to-black">
+            <div className="relative h-56 overflow-hidden bg-black">
                 {product.image ? (
                     <img
                         src={product.image}
                         alt={product.name}
-                        className="w-full h-full object-cover transition-all duration-700 group-hover:scale-108 opacity-85 group-hover:opacity-100"
-                        style={{ transform: hovered ? "scale(1.08)" : "scale(1)", transition: "transform 0.7s ease" }}
+                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                        <Package className="w-16 h-16 text-slate-700" />
+                        <Package className="w-14 h-14 text-slate-800" />
                     </div>
                 )}
 
-                {/* Portal overlay on hover */}
-                <div className={cn("absolute inset-0 transition-opacity duration-500", portalVisible ? "opacity-100" : "opacity-0")}>
-                    <WarpPortalCanvas active={portalVisible} speed={1.5} />
-                </div>
+                {/* Top gradient fade */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
 
-                {/* Scanlines on hover */}
-                <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-25 transition-opacity duration-500"
-                    style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(6,182,212,0.05) 2px, rgba(6,182,212,0.05) 4px)" }}
-                />
-
-                {/* Badges */}
+                {/* Badge */}
                 <div className="absolute top-3 left-3 z-10">
                     {isOutOfStock ? (
-                        <span className="bg-red-950/80 text-red-300 border border-red-500/30 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-sm">
+                        <span className="bg-black/70 text-red-400 border border-red-500/30 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest backdrop-blur-sm">
                             Agotado
                         </span>
                     ) : (
-                        <span className="bg-emerald-950/80 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 backdrop-blur-sm">
-                            <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="bg-black/70 text-emerald-400 border border-emerald-500/25 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 backdrop-blur-sm">
+                            <span className="w-1 h-1 rounded-full bg-emerald-400" />
                             En Stock
                         </span>
                     )}
                 </div>
-
-                {/* Liquid metal corner accent */}
-                <div className="absolute -bottom-10 -right-10 w-32 h-32 opacity-15 group-hover:opacity-35 transition-opacity duration-500">
-                    <LiquidMetalBlob color="#7c3aed" />
-                </div>
             </div>
 
             {/* Content */}
-            <div className="p-5 relative" style={{ transform: "translateZ(20px)" }}>
-                <p className="text-[10px] text-slate-600 font-mono uppercase tracking-[0.2em] mb-1">{product.category || "Tecnología"}</p>
-                <h4 className="text-white font-black uppercase tracking-tight leading-tight mb-2 group-hover:text-cyan-300 transition-colors duration-300 line-clamp-2">
+            <div className="p-5">
+                <p className="text-[9px] text-slate-600 font-mono uppercase tracking-[0.25em] mb-1.5">{product.category || "Tecnología"}</p>
+                <h4 className="text-white font-bold leading-snug mb-2 group-hover:text-cyan-300 transition-colors duration-300 line-clamp-2 text-sm">
                     {product.name}
                 </h4>
-                <p className="text-slate-500 text-xs leading-relaxed line-clamp-2 mb-4">{product.description}</p>
+                <p className="text-slate-600 text-xs leading-relaxed line-clamp-2 mb-5">{product.description}</p>
 
                 <div className="flex items-center justify-between">
-                    <div>
-                        <span className="text-[9px] text-slate-700 font-mono uppercase tracking-widest block">Precio</span>
-                        <span className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-blue-400">
-                            ${product.price.toLocaleString()}
-                        </span>
-                    </div>
+                    <span className="text-lg font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-blue-400">
+                        ${product.price.toLocaleString()}
+                    </span>
                     <button
                         onClick={handleAction}
                         disabled={isOutOfStock && !hasOptions}
                         className={cn(
-                            "flex items-center gap-2 px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all duration-300 active:scale-95",
+                            "flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-[11px] tracking-wide transition-all duration-200 active:scale-95",
                             isOutOfStock && !hasOptions
-                                ? "bg-white/5 text-slate-700 cursor-not-allowed"
-                                : "bg-cyan-500 text-black hover:bg-cyan-300 hover:shadow-[0_0_24px_rgba(6,182,212,0.5)]"
+                                ? "bg-white/4 text-slate-700 cursor-not-allowed"
+                                : "bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500 hover:text-black hover:border-cyan-400"
                         )}
                     >
                         <ShoppingBag className="w-3.5 h-3.5" />
@@ -573,9 +536,6 @@ function PortalProductCard({ product, index }: { product: Product; index: number
                     </button>
                 </div>
             </div>
-
-            {/* Bottom glow line */}
-            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
             <AnimatePresence>
                 {isModalOpen && (
@@ -588,323 +548,42 @@ function PortalProductCard({ product, index }: { product: Product; index: number
 
 // ─── SERVICE CARD ─────────────────────────────────────────────────────────────
 function ServiceCard3D({ service }: { service: Service }) {
-    const [hovered, setHovered] = useState(false);
     return (
         <motion.div
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-            whileHover={{ y: -8, scale: 1.02 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-            className="relative p-7 rounded-3xl bg-white/[0.04] border border-white/10 overflow-hidden group hover:border-violet-500/40 transition-colors duration-500"
+            whileHover={{ y: -4 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="relative p-6 rounded-2xl bg-white/[0.03] border border-white/8 overflow-hidden group hover:border-violet-500/35 hover:bg-white/[0.05] transition-all duration-400"
         >
-            <AnimatePresence>
-                {hovered && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.4 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.4 }}
-                        className="absolute -top-14 -right-14 w-44 h-44 pointer-events-none"
-                    >
-                        <LiquidMetalBlob color="#7c3aed" />
-                    </motion.div>
-                )}
-            </AnimatePresence>
-            {hovered && (
-                <div className="absolute inset-0 pointer-events-none opacity-25">
-                    <WarpPortalCanvas active={hovered} />
+            {/* Subtle top accent */}
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
+
+            <div className="w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mb-5 group-hover:border-violet-400/40 transition-colors duration-300">
+                <span className="text-violet-400 font-black text-xl">{service.name.charAt(0).toUpperCase()}</span>
+            </div>
+            <h4 className="text-white font-bold text-base mb-2 group-hover:text-violet-300 transition-colors duration-300">
+                {service.name}
+            </h4>
+            <p className="text-slate-600 text-sm leading-relaxed mb-6 line-clamp-3">{service.description}</p>
+            <div className="flex items-center justify-between pt-4 border-t border-white/6">
+                <div>
+                    <span className="text-[9px] text-slate-700 font-mono uppercase tracking-widest">Duración</span>
+                    <p className="text-sm font-bold text-slate-400">{service.duration} min</p>
                 </div>
-            )}
-            <div className="relative z-10">
-                <div className="w-14 h-14 rounded-2xl bg-violet-500/15 border border-violet-500/30 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-500">
-                    <span className="text-violet-400 font-black text-2xl">{service.name.charAt(0).toUpperCase()}</span>
-                </div>
-                <h4 className="text-white font-black uppercase tracking-tighter text-lg mb-2 group-hover:text-violet-300 transition-colors">
-                    {service.name}
-                </h4>
-                <p className="text-slate-500 text-sm leading-relaxed mb-6 line-clamp-3">{service.description}</p>
-                <div className="flex items-center justify-between pt-4 border-t border-white/8">
-                    <div>
-                        <span className="text-[9px] text-slate-600 font-mono uppercase tracking-widest">Duración</span>
-                        <p className="text-sm font-bold text-slate-300">{service.duration} min</p>
-                    </div>
-                    <div className="text-right">
-                        <span className="text-[9px] text-slate-600 font-mono uppercase tracking-widest">Precio</span>
-                        <p className="text-2xl font-black text-violet-400">${service.price.toLocaleString()}</p>
-                    </div>
+                <div className="text-right">
+                    <span className="text-[9px] text-slate-700 font-mono uppercase tracking-widest">Precio</span>
+                    <p className="text-xl font-black text-violet-400">${service.price.toLocaleString()}</p>
                 </div>
             </div>
         </motion.div>
     );
 }
 
-// ─── TECH 3D CART ────────────────────────────────────────────────────────────
-function Tech3DCart({ open, onClose, shop }: { open: boolean; onClose: () => void; shop: any }) {
-    const { items, removeItem, updateProductQuantity, clearCart } = useCart();
-    const scrollRef = useRef<HTMLDivElement>(null);
-
-    // Lock body scroll when cart is open
-    useEffect(() => {
-        if (open) {
-            document.body.style.overflow = "hidden";
-        } else {
-            document.body.style.overflow = "";
-        }
-        return () => { document.body.style.overflow = ""; };
-    }, [open]);
-
-    const totalItems = items.reduce((s, i) => s + i.quantity, 0);
-    const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
-
-    const handleWhatsApp = () => {
-        const phone = shop.contact?.whatsapp || shop.contact?.phone || "";
-        if (!phone) return;
-
-        const lines = items.map(i => {
-            const p = i as ProductCartItem;
-            let line = `• ${i.name}`;
-            if (p.variantName) line += ` (${p.variantName})`;
-            if (p.selectedExtras?.length) {
-                const extrasStr = p.selectedExtras.map(e => e.name).join(", ");
-                line += ` + ${extrasStr}`;
-            }
-            line += ` x${i.quantity} — $${(i.price * i.quantity).toLocaleString()}`;
-            return line;
-        });
-
-        const msg = `¡Hola ${shop.name}! 👋\n\nQuiero hacer el siguiente pedido:\n\n${lines.join("\n")}\n\n*Total: $${subtotal.toLocaleString()}*\n\n¿Está disponible?`;
-        const clean = phone.replace(/\D/g, "");
-        window.open(`https://wa.me/${clean}?text=${encodeURIComponent(msg)}`, "_blank");
-    };
-
-    const handleQuantityChange = (item: any, delta: number) => {
-        const newQty = item.quantity + delta;
-        if (newQty <= 0) {
-            removeItem(item.id, item.variantId);
-        } else {
-            updateProductQuantity(item.id, newQty, item.variantId);
-        }
-    };
-
-    return (
-        <AnimatePresence>
-            {open && (
-                <>
-                    {/* Backdrop */}
-                    <motion.div
-                        key="cart-backdrop"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm"
-                        onClick={onClose}
-                    />
-
-                    {/* Cart Panel */}
-                    <motion.div
-                        key="cart-panel"
-                        initial={{ x: "100%" }}
-                        animate={{ x: 0 }}
-                        exit={{ x: "100%" }}
-                        transition={{ type: "spring", stiffness: 300, damping: 32 }}
-                        className="fixed inset-y-0 right-0 z-[70] flex flex-col w-full max-w-[420px]"
-                        style={{
-                            background: "linear-gradient(180deg, #060a12 0%, #040810 100%)",
-                            borderLeft: "1px solid rgba(6,182,212,0.2)",
-                            boxShadow: "-20px 0 80px rgba(0,0,0,0.7), -2px 0 30px rgba(6,182,212,0.1)",
-                        }}
-                        onWheel={e => e.stopPropagation()}
-                    >
-                        {/* Warp portal top decoration */}
-                        <div className="absolute top-0 right-0 w-64 h-64 opacity-20 pointer-events-none overflow-hidden">
-                            <div className="absolute inset-0">
-                                <WarpPortalCanvas active={open} speed={0.6} />
-                            </div>
-                        </div>
-
-                        {/* Header */}
-                        <div className="relative z-10 flex items-center justify-between px-6 py-5 border-b border-white/8">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-2xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center">
-                                    <ShoppingBag className="w-5 h-5 text-cyan-400" />
-                                </div>
-                                <div>
-                                    <h2 className="text-white font-black uppercase tracking-tight text-sm">Tu Carrito</h2>
-                                    <p className="text-slate-500 text-[11px] font-mono">
-                                        {totalItems === 0 ? "Vacío" : `${totalItems} producto${totalItems !== 1 ? "s" : ""}`}
-                                    </p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={onClose}
-                                className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:border-cyan-500/40 transition-all"
-                            >
-                                <X className="w-4 h-4 text-slate-400" />
-                            </button>
-                        </div>
-
-                        {/* Items — scrollable */}
-                        <div
-                            ref={scrollRef}
-                            className="relative z-10 flex-1 overflow-y-auto"
-                            style={{ WebkitOverflowScrolling: "touch" }}
-                        >
-                            {items.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center h-full gap-5 px-6 py-20">
-                                    <div className="w-20 h-20 rounded-3xl bg-white/4 border border-white/8 flex items-center justify-center">
-                                        <ShoppingBag className="w-8 h-8 text-slate-700" />
-                                    </div>
-                                    <div className="text-center">
-                                        <p className="text-white font-bold mb-1">Carrito vacío</p>
-                                        <p className="text-slate-600 text-sm">Agrega productos para comenzar</p>
-                                    </div>
-                                    <button
-                                        onClick={onClose}
-                                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/25 text-cyan-400 text-sm font-bold hover:bg-cyan-500/20 transition-colors"
-                                    >
-                                        Ver Productos <ChevronRight className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="px-5 py-4 space-y-3">
-                                    {items.map((item, i) => {
-                                        const p = item as ProductCartItem;
-                                        return (
-                                            <motion.div
-                                                key={`${item.id}-${p.variantId || ""}-${i}`}
-                                                initial={{ opacity: 0, x: 30 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                exit={{ opacity: 0, x: 30, height: 0 }}
-                                                transition={{ duration: 0.3, delay: i * 0.04 }}
-                                                className="flex items-center gap-4 p-3.5 rounded-2xl bg-white/[0.04] border border-white/8 hover:border-cyan-500/25 transition-colors group/item"
-                                            >
-                                                {/* Image */}
-                                                <div className="w-16 h-16 rounded-xl overflow-hidden bg-black/50 border border-white/10 flex-shrink-0 relative">
-                                                    {item.image ? (
-                                                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center">
-                                                            <Package className="w-6 h-6 text-slate-700" />
-                                                        </div>
-                                                    )}
-                                                    {/* Cyan tint on hover */}
-                                                    <div className="absolute inset-0 bg-cyan-500/0 group-hover/item:bg-cyan-500/10 transition-colors duration-300" />
-                                                </div>
-
-                                                {/* Info */}
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-white font-bold text-sm leading-tight truncate">{item.name}</p>
-                                                    {p.variantName && (
-                                                        <p className="text-cyan-400/70 text-[10px] font-mono mt-0.5 truncate">{p.variantName}</p>
-                                                    )}
-                                                    {p.selectedExtras && p.selectedExtras.length > 0 && (
-                                                        <p className="text-slate-600 text-[10px] truncate">
-                                                            + {p.selectedExtras.map(e => e.name).join(", ")}
-                                                        </p>
-                                                    )}
-                                                    <p className="text-cyan-300 font-black text-sm mt-1">
-                                                        ${(item.price * item.quantity).toLocaleString()}
-                                                    </p>
-                                                </div>
-
-                                                {/* Qty controls */}
-                                                <div className="flex flex-col items-center gap-2 flex-shrink-0">
-                                                    <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl p-1">
-                                                        <button
-                                                            onClick={() => handleQuantityChange(p, -1)}
-                                                            className="w-6 h-6 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors text-slate-400 hover:text-white"
-                                                        >
-                                                            <Minus className="w-3 h-3" />
-                                                        </button>
-                                                        <span className="text-white font-black text-xs w-5 text-center">{item.quantity}</span>
-                                                        <button
-                                                            onClick={() => handleQuantityChange(p, +1)}
-                                                            className="w-6 h-6 rounded-lg flex items-center justify-center hover:bg-cyan-500/20 transition-colors text-slate-400 hover:text-cyan-400"
-                                                        >
-                                                            <Plus className="w-3 h-3" />
-                                                        </button>
-                                                    </div>
-                                                    <button
-                                                        onClick={() => removeItem(item.id, p.variantId)}
-                                                        className="w-6 h-6 rounded-lg flex items-center justify-center hover:bg-red-500/20 transition-colors text-slate-700 hover:text-red-400"
-                                                    >
-                                                        <Trash2 className="w-3 h-3" />
-                                                    </button>
-                                                </div>
-                                            </motion.div>
-                                        );
-                                    })}
-
-                                    {/* Clear cart */}
-                                    {items.length > 1 && (
-                                        <button
-                                            onClick={clearCart}
-                                            className="w-full py-2 text-[10px] font-mono uppercase tracking-widest text-slate-700 hover:text-red-400 transition-colors"
-                                        >
-                                            Vaciar carrito
-                                        </button>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Footer */}
-                        {items.length > 0 && (
-                            <div className="relative z-10 border-t border-white/8 px-5 py-5 space-y-4">
-                                {/* Trust badges */}
-                                <div className="flex items-center justify-center gap-6 py-2">
-                                    {[
-                                        { icon: <Lock className="w-3 h-3 text-emerald-400" />, label: "Pago Seguro" },
-                                        { icon: <Truck className="w-3 h-3 text-blue-400" />, label: "Envío Express" },
-                                        { icon: <Sparkles className="w-3 h-3 text-amber-400" />, label: "Garantía" },
-                                    ].map((b, i) => (
-                                        <div key={i} className="flex items-center gap-1.5 text-[9px] text-slate-600 font-mono uppercase tracking-wider">
-                                            {b.icon} {b.label}
-                                        </div>
-                                    ))}
-                                </div>
-
-                                {/* Subtotal */}
-                                <div className="flex items-center justify-between px-2">
-                                    <span className="text-slate-500 text-sm font-mono uppercase tracking-widest">Subtotal</span>
-                                    <span className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-blue-400">
-                                        ${subtotal.toLocaleString()}
-                                    </span>
-                                </div>
-
-                                {/* WhatsApp CTA */}
-                                <button
-                                    onClick={handleWhatsApp}
-                                    className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black uppercase tracking-widest text-sm transition-all duration-300 active:scale-98"
-                                    style={{
-                                        background: "linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #7c3aed 100%)",
-                                        boxShadow: "0 4px 30px rgba(6,182,212,0.35)",
-                                    }}
-                                >
-                                    <MessageCircle className="w-5 h-5" />
-                                    Pedir por WhatsApp
-                                    <ArrowRight className="w-4 h-4" />
-                                </button>
-
-                                <p className="text-center text-[10px] text-slate-700 font-mono">
-                                    Al continuar, serás redirigido a WhatsApp
-                                </p>
-                            </div>
-                        )}
-                    </motion.div>
-                </>
-            )}
-        </AnimatePresence>
-    );
-}
-
 // ─── MAIN LAYOUT ──────────────────────────────────────────────────────────────
 export function Tech3DLayout({ shop, products, services, loadingData }: Tech3DLayoutProps) {
-    const { items: cart } = useCart();
+    const { items: cart, setIsCartOpen } = useCart();
     const [view, setView] = useState<View>("products");
     const [activeCategory, setActiveCategory] = useState("todos");
     const [search, setSearch] = useState("");
-    const [cartOpen, setCartOpen] = useState(false);
 
     const categories = useMemo(() => {
         const cats = Array.from(new Set(products.map(p => p.category).filter(Boolean)));
@@ -968,7 +647,7 @@ export function Tech3DLayout({ shop, products, services, loadingData }: Tech3DLa
 
                     {/* Cart button */}
                     <button
-                        onClick={() => setCartOpen(true)}
+                        onClick={() => setIsCartOpen(true)}
                         className="relative flex items-center gap-2.5 px-5 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:border-cyan-500/50 hover:bg-white/8 transition-all duration-300 text-sm font-bold text-white"
                     >
                         <ShoppingBag className="w-4 h-4 text-cyan-400" />
@@ -1235,9 +914,6 @@ export function Tech3DLayout({ shop, products, services, loadingData }: Tech3DLa
                     </div>
                 </div>
             </footer>
-
-            {/* ─── CUSTOM CART ─── */}
-            <Tech3DCart open={cartOpen} onClose={() => setCartOpen(false)} shop={shop} />
 
             {/* ─── STYLES ─── */}
             <style jsx global>{`

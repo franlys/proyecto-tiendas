@@ -19,7 +19,7 @@ import {
     AlertCircle,
     ChevronRight,
 } from "lucide-react";
-import { useCart, useShop, useOrders, useShopConfig } from "@/components/shared";
+import { useCart, useShop, useOrders, useShopConfig, useInventory } from "@/components/shared";
 import { cn } from "@/lib/utils";
 import { storage } from "@/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -46,6 +46,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
     const shop = useShop();
     const { config } = useShopConfig();
     const { addOrder } = useOrders();
+    const { decrementStock } = useInventory();
     const isTechDrop = shop?.templateType === "tech-drop-v1";
     const isTech3D = shop?.templateType === "tech-3d-v1";
     const isTechTheme = isTechDrop || isTech3D;
@@ -151,6 +152,28 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
 
             // Generate order number
             const orderNum = Math.floor(1000 + Math.random() * 9000).toString();
+            
+            // Phase: Internal Registration (Remember this for new templates!)
+            addOrder({
+                shopId: shop?.id || "",
+                shopName: shop?.name || "",
+                customerName,
+                customerPhone,
+                items: products.map(p => ({
+                    id: p.id,
+                    name: p.name + (p.variantName ? ` (${p.variantName})` : ""),
+                    price: p.price,
+                    quantity: p.quantity
+                })),
+                total: totalPrice,
+                orderType: deliveryType === "delivery" ? "delivery" : "takeout"
+            });
+
+            // Phase: Stock Decrement (Real-time sync)
+            products.forEach(p => {
+                decrementStock(p.id, p.quantity);
+            });
+
             setOrderSuccess({ id: "order-" + Date.now(), number: orderNum });
             clearCart();
         } catch (e) {
@@ -457,7 +480,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                         )}
                                     </Button>
                                     <p className="text-center text-[10px] text-slate-500 font-bold uppercase tracking-widest opacity-40">
-                                        Tu pedido se enviará automáticamente a WhatsApp
+                                        Procesando pedido de forma segura y privada
                                     </p>
                                 </div>
                             ) : (
