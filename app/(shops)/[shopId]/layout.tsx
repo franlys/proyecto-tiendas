@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { Suspense } from "react";
-import { ThemeProvider, CartProvider, OrdersProvider } from "@/components/shared";
+import { ThemeProvider, CartProvider, OrdersProvider, InventoryProvider } from "@/components/shared";
 import { FloatingCart, ShopLayoutClient, StreetCart } from "@/components/shop";
 import { BackgroundAudio } from "@/components/shop/background-audio";
 import { Loader2 } from "lucide-react";
@@ -209,6 +209,7 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
   return (
     <ThemeProvider shop={shop}>
       <OrdersProvider>
+        <InventoryProvider shopId={shop.id}>
         <CartProvider shopId={shop.id} templateType={shop.templateType}>
           <ShopLayoutClient shop={shop}>
             {shop.templateType === "premium-drop-v1" || shop.templateType === "street-drop-v1" || shop.templateType === "cosmic-drop-v1" ? (
@@ -406,6 +407,7 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
             )}
           </ShopLayoutClient>
         </CartProvider>
+        </InventoryProvider>
       </OrdersProvider>
     </ThemeProvider>
   );
