@@ -22,7 +22,7 @@ import {
     Globe
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCart, useCursor } from "@/components/shared";
+import { useCart, useCursor, CursorProvider } from "@/components/shared";
 import type { Product, Service } from "@/lib/constants";
 import { Button } from "@/components/ui";
 import { ProductOptionsModal } from "@/components/shop/product-card";
@@ -102,6 +102,7 @@ export function TechDropLayout({ shop, products, services, loadingData }: TechDr
     }, [currentView]);
 
     return (
+        <CursorProvider>
         <div className={cn("min-h-screen relative text-slate-100 selection:bg-cyan-500/30 selection:text-cyan-400", theme.fontFamily)} style={{ backgroundColor: theme.colors.background }}>
             {/* Background Decor */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
@@ -463,6 +464,7 @@ export function TechDropLayout({ shop, products, services, loadingData }: TechDr
         }
       `}</style>
         </div>
+        </CursorProvider>
     );
 }
 

@@ -340,7 +340,6 @@ function ScreenBreakoutHero({ shop }: { shop: any }) {
                     className="relative w-52 h-[340px] rounded-[20px] border-2 border-white/12 bg-black/50 overflow-hidden opacity-0"
                     style={{ boxShadow: "0 0 80px rgba(6,182,212,0.18), inset 0 0 40px rgba(6,182,212,0.06)" }}
                 >
-                    <WarpPortalCanvas active={portalActive} speed={1.2} />
                     <div className="absolute inset-0 pointer-events-none opacity-15"
                         style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,255,0.04) 2px, rgba(0,255,255,0.04) 4px)" }}
                     />
@@ -837,9 +836,7 @@ export function Tech3DLayout({ shop, products, services, loadingData }: Tech3DLa
                                     className="w-full h-full object-cover opacity-60"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-tr from-black/70 to-transparent" />
-                                <div className="absolute inset-0">
-                                    <WarpPortalCanvas active={true} speed={0.7} />
-                                </div>
+                                <div className="absolute inset-0 bg-gradient-to-tr from-cyan-900/30 to-transparent" />
                                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-2xl rotate-12 z-10">
                                     <MapPin className="w-7 h-7 text-cyan-500" />
                                 </div>

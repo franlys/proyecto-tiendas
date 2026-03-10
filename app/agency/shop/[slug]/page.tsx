@@ -216,7 +216,7 @@ function ShopDetailContent() {
     const [logo, setLogo] = useState("");
     const [banner, setBanner] = useState("");
     const [slogan, setSlogan] = useState("");
-    const [templateType, setTemplateType] = useState<"standard" | "premium-drop-v1" | "street-drop-v1" | "cosmic-drop-v1" | "tech-drop-v1" | "tech-3d-v1">("standard");
+    const [templateType, setTemplateType] = useState<"standard" | "premium-drop-v1" | "street-drop-v1" | "cosmic-drop-v1" | "tech-drop-v1" | "tech-3d-v1" | "tech-premium-v2">("standard");
     const [description, setDescription] = useState("");
     const [primaryColor, setPrimaryColor] = useState("#22D3EE");
     const [accentColor, setAccentColor] = useState("#3B82F6");
@@ -1225,6 +1225,27 @@ function ShopDetailContent() {
                                             </div>
                                             <p className="text-xs text-slate-400">
                                                 Screen Breakout, Liquid Metal y portal digital
+                                            </p>
+                                        </button>
+
+                                        {/* Tech Premium v2 Template */}
+                                        <button
+                                            onClick={() => setTemplateType("tech-premium-v2")}
+                                            className={`p-4 rounded-xl border-2 transition-all text-left ${templateType === "tech-premium-v2"
+                                                ? "border-white bg-white/10"
+                                                : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                                                }`}
+                                        >
+                                            <div className="w-full h-16 rounded-lg mb-3 flex items-center justify-center relative overflow-hidden bg-[#060606] border border-white/10">
+                                                <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(to right, rgba(255,255,255,0.2) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.2) 1px, transparent 1px)", backgroundSize: "12px 12px" }} />
+                                                <span className="relative z-10 text-white font-black text-lg tracking-[-0.05em]">PREM</span>
+                                            </div>
+                                            <div className="flex justify-between items-start mb-1">
+                                                <h4 className="text-white font-medium text-sm">Tech Premium v2</h4>
+                                                <span className="text-[9px] bg-cyan-500 text-white px-1.5 py-0.5 rounded-full font-bold ml-1 shrink-0">Nuevo</span>
+                                            </div>
+                                            <p className="text-xs text-slate-400">
+                                                Minimalismo tipo Apple/Nothing. Negro profundo y tipografía enorme.
                                             </p>
                                         </button>
                                     </div>
