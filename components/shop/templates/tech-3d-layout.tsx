@@ -8,7 +8,6 @@ import {
     Zap,
     Cpu,
     Smartphone,
-    ChevronRight,
     ArrowRight,
     Package,
     Globe,
@@ -16,10 +15,19 @@ import {
     MapPin,
     Star,
     X,
+    Minus,
+    Plus,
+    Trash2,
+    MessageCircle,
+    Lock,
+    Truck,
+    Sparkles,
+    ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/components/shared";
 import type { Product, Service } from "@/lib/constants";
+import type { ProductCartItem } from "@/components/shared/cart-context";
 import { ProductOptionsModal } from "@/components/shop/product-card";
 import { useVisualFeedback } from "@/components/shared";
 import gsap from "gsap";
@@ -38,8 +46,8 @@ interface Tech3DLayoutProps {
 
 type View = "products" | "services" | "location";
 
-// ─── WARP PORTAL CANVAS (Digital Warp Portal) ───────────────────────────────
-function WarpPortalCanvas({ active }: { active: boolean }) {
+// ─── WARP PORTAL CANVAS ──────────────────────────────────────────────────────
+function WarpPortalCanvas({ active, speed = 1 }: { active: boolean; speed?: number }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const animFrameRef = useRef<number>(0);
     const timeRef = useRef(0);
@@ -64,28 +72,24 @@ function WarpPortalCanvas({ active }: { active: boolean }) {
                 return;
             }
 
-            timeRef.current += 0.015;
+            timeRef.current += 0.018 * speed;
             const t = timeRef.current;
             const cx = canvas.width / 2;
             const cy = canvas.height / 2;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Portal rings - simulating the warp distortion effect
-            const rings = 12;
+            const rings = 16;
             for (let i = rings; i > 0; i--) {
                 const progress = i / rings;
                 const radius = progress * Math.min(canvas.width, canvas.height) * 0.48;
-                const warp = Math.sin(t * 2 + progress * Math.PI * 2) * 8;
-                const alpha = (1 - progress) * 0.6 + 0.05;
+                const warp = Math.sin(t * 2.5 + progress * Math.PI * 2.5) * 10;
+                const alpha = (1 - progress) * 0.7 + 0.04;
+                const hue = (t * 50 + progress * 220) % 360;
 
-                // Hue shift for portal color sweep
-                const hue = (t * 40 + progress * 200) % 360;
                 ctx.beginPath();
-
-                // Distorted circle (warp effect)
-                for (let a = 0; a <= Math.PI * 2; a += 0.05) {
-                    const distort = Math.sin(a * 6 + t * 3) * warp * (1 - progress);
+                for (let a = 0; a <= Math.PI * 2; a += 0.04) {
+                    const distort = Math.sin(a * 7 + t * 4) * warp * (1 - progress);
                     const r = radius + distort;
                     const x = cx + Math.cos(a) * r;
                     const y = cy + Math.sin(a) * r;
@@ -93,33 +97,33 @@ function WarpPortalCanvas({ active }: { active: boolean }) {
                     else ctx.lineTo(x, y);
                 }
                 ctx.closePath();
-                ctx.strokeStyle = `hsla(${hue}, 90%, 65%, ${alpha})`;
-                ctx.lineWidth = 1.5 * (1 - progress * 0.5);
+                ctx.strokeStyle = `hsla(${hue}, 95%, 68%, ${alpha})`;
+                ctx.lineWidth = 1.8 * (1 - progress * 0.5);
                 ctx.stroke();
             }
 
-            // Central portal glow
-            const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, 80);
-            grd.addColorStop(0, `hsla(${(t * 50) % 360}, 100%, 80%, 0.35)`);
-            grd.addColorStop(0.5, `hsla(${(t * 50 + 120) % 360}, 80%, 50%, 0.15)`);
+            // Central glow
+            const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, 90);
+            grd.addColorStop(0, `hsla(${(t * 60) % 360}, 100%, 85%, 0.45)`);
+            grd.addColorStop(0.4, `hsla(${(t * 60 + 120) % 360}, 80%, 55%, 0.2)`);
             grd.addColorStop(1, "transparent");
             ctx.beginPath();
-            ctx.arc(cx, cy, 80, 0, Math.PI * 2);
+            ctx.arc(cx, cy, 90, 0, Math.PI * 2);
             ctx.fillStyle = grd;
             ctx.fill();
 
-            // Scan line sweep
-            const scanAngle = t * 1.5;
+            // Scan sweep
+            const scanAngle = t * 1.8;
             ctx.save();
             ctx.translate(cx, cy);
             ctx.rotate(scanAngle);
             const scanGrd = ctx.createLinearGradient(0, 0, Math.min(canvas.width, canvas.height) * 0.48, 0);
-            scanGrd.addColorStop(0, `hsla(${(t * 60) % 360}, 100%, 70%, 0.0)`);
-            scanGrd.addColorStop(0.6, `hsla(${(t * 60) % 360}, 100%, 70%, 0.3)`);
+            scanGrd.addColorStop(0, `hsla(${(t * 70) % 360}, 100%, 75%, 0.0)`);
+            scanGrd.addColorStop(0.5, `hsla(${(t * 70) % 360}, 100%, 75%, 0.4)`);
             scanGrd.addColorStop(1, "transparent");
             ctx.beginPath();
             ctx.moveTo(0, 0);
-            ctx.arc(0, 0, Math.min(canvas.width, canvas.height) * 0.48, -0.04, 0.04);
+            ctx.arc(0, 0, Math.min(canvas.width, canvas.height) * 0.48, -0.05, 0.05);
             ctx.closePath();
             ctx.fillStyle = scanGrd;
             ctx.fill();
@@ -133,121 +137,123 @@ function WarpPortalCanvas({ active }: { active: boolean }) {
             cancelAnimationFrame(animFrameRef.current);
             window.removeEventListener("resize", resize);
         };
-    }, [active]);
+    }, [active, speed]);
 
     return (
         <canvas
             ref={canvasRef}
             className="absolute inset-0 w-full h-full pointer-events-none"
-            style={{ opacity: active ? 1 : 0, transition: "opacity 0.8s ease" }}
+            style={{ opacity: active ? 1 : 0, transition: "opacity 0.6s ease" }}
         />
     );
 }
 
-// ─── LIQUID METAL BLOB (Liquid Metal Morph) ──────────────────────────────────
+// ─── LIQUID METAL BLOB ───────────────────────────────────────────────────────
 function LiquidMetalBlob({ color = "#06b6d4" }: { color?: string }) {
     return (
         <div className="relative w-full h-full flex items-center justify-center">
             <svg viewBox="0 0 200 200" className="absolute w-full h-full" style={{ filter: "url(#liquid-filter)" }}>
                 <defs>
                     <filter id="liquid-filter">
-                        <feTurbulence
-                            type="fractalNoise"
-                            baseFrequency="0.012"
-                            numOctaves="4"
-                            seed="2"
-                        >
-                            <animate attributeName="baseFrequency" values="0.012;0.018;0.012" dur="8s" repeatCount="indefinite" />
-                            <animate attributeName="seed" values="2;5;8;5;2" dur="12s" repeatCount="indefinite" />
+                        <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="4" seed="2">
+                            <animate attributeName="baseFrequency" values="0.012;0.02;0.012" dur="7s" repeatCount="indefinite" />
+                            <animate attributeName="seed" values="2;6;10;6;2" dur="11s" repeatCount="indefinite" />
                         </feTurbulence>
                         <feDisplacementMap in="SourceGraphic" scale="18" xChannelSelector="R" yChannelSelector="G">
-                            <animate attributeName="scale" values="18;28;18" dur="6s" repeatCount="indefinite" />
+                            <animate attributeName="scale" values="18;32;18" dur="5s" repeatCount="indefinite" />
                         </feDisplacementMap>
                     </filter>
-                    <radialGradient id="metal-grad" cx="50%" cy="50%" r="50%">
-                        <stop offset="0%" stopColor="#e2e8f0" stopOpacity="0.95" />
-                        <stop offset="40%" stopColor={color} stopOpacity="0.85" />
-                        <stop offset="100%" stopColor="#0f172a" stopOpacity="0.6" />
+                    <radialGradient id="metal-grad" cx="45%" cy="40%" r="55%">
+                        <stop offset="0%" stopColor="#e2e8f0" stopOpacity="1" />
+                        <stop offset="30%" stopColor={color} stopOpacity="0.9" />
+                        <stop offset="100%" stopColor="#0f172a" stopOpacity="0.7" />
                     </radialGradient>
                 </defs>
                 <circle cx="100" cy="100" r="78" fill="url(#metal-grad)" />
-                {/* Highlight streaks */}
-                <ellipse cx="80" cy="75" rx="22" ry="10" fill="white" opacity="0.35" transform="rotate(-30 80 75)">
-                    <animate attributeName="opacity" values="0.35;0.55;0.35" dur="4s" repeatCount="indefinite" />
+                <ellipse cx="78" cy="72" rx="24" ry="11" fill="white" opacity="0.4" transform="rotate(-30 78 72)">
+                    <animate attributeName="opacity" values="0.4;0.65;0.4" dur="3.5s" repeatCount="indefinite" />
                 </ellipse>
-                <ellipse cx="115" cy="130" rx="12" ry="5" fill="white" opacity="0.2" transform="rotate(20 115 130)">
-                    <animate attributeName="opacity" values="0.2;0.4;0.2" dur="5s" repeatCount="indefinite" />
+                <ellipse cx="118" cy="132" rx="13" ry="6" fill="white" opacity="0.22" transform="rotate(20 118 132)">
+                    <animate attributeName="opacity" values="0.22;0.45;0.22" dur="4.5s" repeatCount="indefinite" />
                 </ellipse>
             </svg>
         </div>
     );
 }
 
-// ─── SCREEN BREAKOUT HERO (Screen Breakout Animation) ────────────────────────
+// ─── SCREEN BREAKOUT HERO ────────────────────────────────────────────────────
 function ScreenBreakoutHero({ shop }: { shop: any }) {
     const phoneRef = useRef<HTMLDivElement>(null);
     const screenRef = useRef<HTMLDivElement>(null);
     const shatterRef = useRef<HTMLDivElement>(null);
+    const particlesRef = useRef<HTMLDivElement>(null);
     const [portalActive, setPortalActive] = useState(false);
     const [breakoutDone, setBreakoutDone] = useState(false);
+    const [glitchActive, setGlitchActive] = useState(false);
     const mouseX = useMotionValue(0);
     const mouseY = useMotionValue(0);
-    const springX = useSpring(mouseX, { stiffness: 80, damping: 20 });
-    const springY = useSpring(mouseY, { stiffness: 80, damping: 20 });
-    const rotateX = useTransform(springY, [-200, 200], [12, -12]);
-    const rotateY = useTransform(springX, [-200, 200], [-12, 12]);
+    const springX = useSpring(mouseX, { stiffness: 70, damping: 22 });
+    const springY = useSpring(mouseY, { stiffness: 70, damping: 22 });
+    const rotateX = useTransform(springY, [-200, 200], [14, -14]);
+    const rotateY = useTransform(springX, [-200, 200], [-14, 14]);
 
     useEffect(() => {
         if (!phoneRef.current || !screenRef.current) return;
 
-        const tl = gsap.timeline({ delay: 0.4 });
+        // Trigger glitch animation periodically
+        const glitchInterval = setInterval(() => {
+            setGlitchActive(true);
+            setTimeout(() => setGlitchActive(false), 300);
+        }, 4000);
 
-        // Phase 1: Screen is flat, phone inside
-        tl.set(phoneRef.current, { z: -180, scale: 0.55, opacity: 0.3, rotationX: 8 })
+        const tl = gsap.timeline({ delay: 0.3 });
+
+        tl.set(phoneRef.current, { z: -200, scale: 0.5, opacity: 0, rotationX: 10 })
             .set(screenRef.current, { opacity: 1 })
-
-            // Phase 2: Portal activates
             .add(() => setPortalActive(true))
-
-            // Phase 3: Phone pushes toward viewer (breakout)
             .to(phoneRef.current, {
-                z: 0,
-                scale: 1,
-                opacity: 1,
-                rotationX: 0,
-                duration: 1.6,
-                ease: "power3.out",
-            }, "+=0.3")
-
-            // Phase 4: Phone floats past the screen plane (z > 0)
+                z: 0, scale: 1, opacity: 1, rotationX: 0,
+                duration: 1.8, ease: "power3.out",
+            }, "+=0.4")
             .to(phoneRef.current, {
-                z: 60,
-                y: -16,
-                duration: 0.9,
-                ease: "power2.out",
-            }, "-=0.4")
-
-            // Phase 5: Shatter overlay flashes
+                z: 70, y: -20,
+                duration: 1.0, ease: "back.out(1.7)",
+            }, "-=0.5")
+            // Shatter burst
             .add(() => {
                 if (shatterRef.current) {
                     gsap.fromTo(shatterRef.current,
-                        { opacity: 0.9, scale: 1.05 },
-                        { opacity: 0, scale: 1, duration: 0.6, ease: "power2.out" }
+                        { opacity: 1, scale: 1.08 },
+                        { opacity: 0, scale: 1.2, duration: 0.7, ease: "power2.out" }
                     );
                 }
-            }, "-=0.5")
-
-            // Phase 6: Final float state
+                // Particles burst
+                if (particlesRef.current) {
+                    const particles = particlesRef.current.children;
+                    gsap.fromTo(Array.from(particles),
+                        { opacity: 1, x: 0, y: 0, scale: 1 },
+                        {
+                            opacity: 0,
+                            x: () => (Math.random() - 0.5) * 180,
+                            y: () => (Math.random() - 0.5) * 180,
+                            scale: () => Math.random() * 1.5 + 0.5,
+                            duration: 0.9,
+                            stagger: 0.04,
+                            ease: "power2.out",
+                        }
+                    );
+                }
+            }, "-=0.6")
+            // Float loop
             .to(phoneRef.current, {
-                y: -8,
-                duration: 3,
-                ease: "sine.inOut",
-                yoyo: true,
-                repeat: -1,
+                y: -10, duration: 2.8, ease: "sine.inOut", yoyo: true, repeat: -1,
             })
-            .add(() => setBreakoutDone(true), 2);
+            .add(() => setBreakoutDone(true), 1.5);
 
-        return () => { tl.kill(); };
+        return () => {
+            tl.kill();
+            clearInterval(glitchInterval);
+        };
     }, []);
 
     const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -264,140 +270,149 @@ function ScreenBreakoutHero({ shop }: { shop: any }) {
 
     return (
         <section
-            className="relative min-h-[520px] flex items-center overflow-hidden rounded-[40px] border border-white/8"
-            style={{ perspective: "900px", background: "linear-gradient(135deg, #03050a 0%, #0a0f1a 60%, #061018 100%)" }}
+            className="relative min-h-[540px] flex items-center overflow-hidden rounded-[40px] border border-white/8"
+            style={{ perspective: "900px", background: "linear-gradient(135deg, #020408 0%, #080d18 60%, #050c14 100%)" }}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
         >
-            {/* Background grid */}
-            <div className="absolute inset-0 grid-3d-bg opacity-25 pointer-events-none" />
+            {/* Grid bg */}
+            <div className="absolute inset-0 grid-3d-bg opacity-20 pointer-events-none" />
 
             {/* Ambient glows */}
-            <div className="absolute top-[-15%] left-[-5%] w-[50%] h-[70%] bg-cyan-500/8 blur-[120px] rounded-full pointer-events-none" />
-            <div className="absolute bottom-[-15%] right-[-5%] w-[45%] h-[60%] bg-violet-600/8 blur-[100px] rounded-full pointer-events-none" />
+            <div className="absolute top-[-20%] left-[-8%] w-[55%] h-[80%] bg-cyan-500/10 blur-[130px] rounded-full pointer-events-none" />
+            <div className="absolute bottom-[-20%] right-[-8%] w-[50%] h-[70%] bg-violet-600/10 blur-[110px] rounded-full pointer-events-none" />
 
-            {/* Text content */}
-            <div className="relative z-20 px-10 py-16 md:px-16 max-w-[52%]">
+            {/* Text */}
+            <div className="relative z-20 px-10 py-16 md:px-16 max-w-[55%]">
                 <motion.span
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.6, duration: 0.7 }}
+                    transition={{ delay: 0.5, duration: 0.7 }}
                     className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-cyan-400 text-[10px] font-black tracking-[0.35em] uppercase mb-5"
                 >
                     <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
                     {shop.slogan || "Tecnología de Próxima Generación"}
                 </motion.span>
 
-                <motion.h1
-                    initial={{ opacity: 0, y: 40 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.8, duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                    className="text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[0.88] mb-8 uppercase tracking-tighter"
-                >
-                    Rompe los<br />
-                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 via-blue-400 to-violet-400">
-                        Límites
-                    </span>
-                </motion.h1>
+                <div className="relative mb-8">
+                    <motion.h1
+                        initial={{ opacity: 0, y: 40 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.7, duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                        className="text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[0.88] uppercase tracking-tighter"
+                    >
+                        <span className={cn("block", glitchActive && "hero-glitch")}>
+                            {shop.name || "Tech"}
+                        </span>
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 via-blue-400 to-violet-400 block">
+                            Premium
+                        </span>
+                        <span className="text-white/40 text-3xl md:text-4xl block mt-2">
+                            Store
+                        </span>
+                    </motion.h1>
+                </div>
 
                 <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 1.1, duration: 0.8 }}
+                    transition={{ delay: 1.0, duration: 0.8 }}
                     className="text-slate-400 text-base md:text-lg leading-relaxed max-w-md mb-10"
                 >
-                    {shop.description || "Hardware certificado, soporte experto y la experiencia más premium del mercado. Tecnología que supera expectativas."}
+                    {shop.description || "Hardware certificado, soporte experto y la experiencia más premium del mercado."}
                 </motion.p>
 
                 <motion.div
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.3, duration: 0.6 }}
-                    className="flex items-center gap-4"
+                    transition={{ delay: 1.2, duration: 0.6 }}
+                    className="flex flex-wrap items-center gap-4"
                 >
-                    <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-mono uppercase tracking-widest">
-                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Certificado
-                    </div>
-                    <div className="w-1 h-1 bg-white/20 rounded-full" />
-                    <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-mono uppercase tracking-widest">
-                        <Zap className="w-3.5 h-3.5 text-yellow-400" /> Envío Express
-                    </div>
-                    <div className="w-1 h-1 bg-white/20 rounded-full" />
-                    <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-mono uppercase tracking-widest">
-                        <Star className="w-3.5 h-3.5 text-amber-400" /> Garantía Total
-                    </div>
+                    {[
+                        { icon: <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />, label: "Garantía" },
+                        { icon: <Zap className="w-3.5 h-3.5 text-yellow-400" />, label: "Express" },
+                        { icon: <Star className="w-3.5 h-3.5 text-amber-400" />, label: "Premium" },
+                        { icon: <Lock className="w-3.5 h-3.5 text-violet-400" />, label: "Seguro" },
+                    ].map((b, i) => (
+                        <div key={i} className="flex items-center gap-1.5 text-[11px] text-slate-500 font-mono uppercase tracking-widest">
+                            {b.icon} {b.label}
+                        </div>
+                    ))}
                 </motion.div>
             </div>
 
-            {/* Phone / Product Breakout Zone */}
-            <div className="absolute right-[6%] top-0 bottom-0 w-[40%] flex items-center justify-center pointer-events-none">
-                {/* Screen frame (the "monitor" being broken) */}
+            {/* Phone Breakout */}
+            <div className="absolute right-[5%] top-0 bottom-0 w-[42%] flex items-center justify-center pointer-events-none">
+                {/* Screen frame */}
                 <div
                     ref={screenRef}
-                    className="relative w-52 h-[340px] rounded-[20px] border-2 border-white/15 bg-black/40 overflow-hidden opacity-0"
-                    style={{ boxShadow: "0 0 60px rgba(6,182,212,0.15), inset 0 0 30px rgba(6,182,212,0.05)" }}
+                    className="relative w-52 h-[340px] rounded-[20px] border-2 border-white/12 bg-black/50 overflow-hidden opacity-0"
+                    style={{ boxShadow: "0 0 80px rgba(6,182,212,0.18), inset 0 0 40px rgba(6,182,212,0.06)" }}
                 >
-                    {/* Portal inside screen */}
-                    <WarpPortalCanvas active={portalActive} />
-
-                    {/* Screen scanlines */}
-                    <div className="absolute inset-0 pointer-events-none opacity-20"
-                        style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,255,0.03) 2px, rgba(0,255,255,0.03) 4px)" }}
+                    <WarpPortalCanvas active={portalActive} speed={1.2} />
+                    <div className="absolute inset-0 pointer-events-none opacity-15"
+                        style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,255,0.04) 2px, rgba(0,255,255,0.04) 4px)" }}
                     />
-
-                    {/* Screen shatter overlay */}
+                    {/* Shatter */}
                     <div ref={shatterRef} className="absolute inset-0 z-20 opacity-0"
-                        style={{ background: "radial-gradient(circle at 50% 50%, rgba(255,255,255,0.9) 0%, rgba(6,182,212,0.5) 30%, transparent 70%)" }}
+                        style={{ background: "radial-gradient(circle at 50% 50%, rgba(255,255,255,0.95) 0%, rgba(6,182,212,0.6) 25%, rgba(139,92,246,0.3) 55%, transparent 75%)" }}
                     />
-
-                    {/* Screen corner decorations */}
-                    {[["top-1 left-1", "w-4 h-4 border-t-2 border-l-2"], ["top-1 right-1", "w-4 h-4 border-t-2 border-r-2"], ["bottom-1 left-1", "w-4 h-4 border-b-2 border-l-2"], ["bottom-1 right-1", "w-4 h-4 border-b-2 border-r-2"]].map(([pos, cls], i) => (
-                        <div key={i} className={`absolute ${pos} ${cls} border-cyan-500/60`} />
+                    {/* Particles container */}
+                    <div ref={particlesRef} className="absolute inset-0 z-30 flex items-center justify-center">
+                        {[...Array(12)].map((_, i) => (
+                            <div key={i} className="absolute w-2 h-2 rounded-full"
+                                style={{
+                                    background: i % 2 === 0 ? "#06b6d4" : "#7c3aed",
+                                    left: `${45 + (Math.random() - 0.5) * 10}%`,
+                                    top: `${45 + (Math.random() - 0.5) * 10}%`,
+                                    opacity: 0,
+                                    boxShadow: `0 0 8px ${i % 2 === 0 ? "#06b6d4" : "#7c3aed"}`,
+                                }}
+                            />
+                        ))}
+                    </div>
+                    {/* Corner decorations */}
+                    {[["top-1.5 left-1.5", "border-t-2 border-l-2"], ["top-1.5 right-1.5", "border-t-2 border-r-2"], ["bottom-1.5 left-1.5", "border-b-2 border-l-2"], ["bottom-1.5 right-1.5", "border-b-2 border-r-2"]].map(([pos, cls], i) => (
+                        <div key={i} className={`absolute ${pos} w-4 h-4 ${cls} border-cyan-400/70`} />
                     ))}
                 </div>
 
-                {/* Floating phone card (breakout subject) */}
+                {/* Floating product card */}
                 <motion.div
                     ref={phoneRef as any}
                     style={{ rotateX, rotateY, transformStyle: "preserve-3d", position: "absolute" }}
-                    className="w-44 h-80 rounded-[28px] overflow-hidden border border-white/20 shadow-2xl"
-                    whileHover={{ scale: 1.03 }}
+                    className="w-48 h-[320px] rounded-[28px] overflow-hidden border border-white/20 shadow-2xl"
                 >
-                    {/* Liquid Metal background blob */}
                     <div className="absolute inset-0 z-0">
                         <LiquidMetalBlob color="#06b6d4" />
                     </div>
-
-                    {/* Product display */}
                     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-4">
                         {shop.heroProductImage ? (
                             <img
                                 src={shop.heroProductImage}
                                 alt={shop.name}
-                                className="w-full h-[75%] object-contain drop-shadow-2xl"
-                                style={{ filter: "drop-shadow(0 0 24px rgba(6,182,212,0.5))" }}
+                                className="w-full h-[78%] object-contain drop-shadow-2xl"
+                                style={{ filter: "drop-shadow(0 0 30px rgba(6,182,212,0.6))" }}
                             />
                         ) : (
-                            <div className="w-20 h-20 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center mb-4 shadow-xl">
-                                <Smartphone className="w-10 h-10 text-cyan-300" />
+                            <div className="w-24 h-24 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center mb-4">
+                                <Smartphone className="w-12 h-12 text-cyan-300" />
                             </div>
                         )}
                         <span className="text-white text-xs font-black uppercase tracking-widest text-center mt-2">
                             {shop.name || "Tech Store"}
                         </span>
                         <span className="text-cyan-400/70 text-[9px] font-mono mt-0.5 uppercase tracking-[0.2em]">
-                            Premium Edition
+                            Premium
                         </span>
                     </div>
-
                     {/* Metallic sheen */}
                     <div className="absolute inset-0 z-20 pointer-events-none"
-                        style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%, rgba(6,182,212,0.08) 100%)" }}
+                        style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 50%, rgba(6,182,212,0.1) 100%)" }}
                     />
-
-                    {/* Z-axis glow (depth cue) */}
+                    {/* Depth glow */}
                     <div className="absolute -inset-1 rounded-[30px] z-[-1] pointer-events-none"
-                        style={{ background: "radial-gradient(circle, rgba(6,182,212,0.3) 0%, transparent 70%)", filter: "blur(12px)" }}
+                        style={{ background: "radial-gradient(circle, rgba(6,182,212,0.35) 0%, transparent 70%)", filter: "blur(14px)" }}
                     />
                 </motion.div>
             </div>
@@ -405,7 +420,7 @@ function ScreenBreakoutHero({ shop }: { shop: any }) {
     );
 }
 
-// ─── PORTAL PRODUCT CARD ──────────────────────────────────────────────────────
+// ─── PORTAL PRODUCT CARD (with 3D tilt) ───────────────────────────────────────
 function PortalProductCard({ product, index }: { product: Product; index: number }) {
     const { addProduct } = useCart();
     const { triggerFlyToCart } = useVisualFeedback();
@@ -414,39 +429,53 @@ function PortalProductCard({ product, index }: { product: Product; index: number
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [portalVisible, setPortalVisible] = useState(false);
 
+    // 3D tilt
+    const mouseX = useMotionValue(0.5);
+    const mouseY = useMotionValue(0.5);
+    const springX = useSpring(mouseX, { stiffness: 150, damping: 20 });
+    const springY = useSpring(mouseY, { stiffness: 150, damping: 20 });
+    const rotateY = useTransform(springX, [0, 1], [-12, 12]);
+    const rotateX = useTransform(springY, [0, 1], [8, -8]);
+
     const hasVariants = product.variants && product.variants.length > 0;
     const hasExtras = product.extras && product.extras.length > 0;
     const hasOptions = hasVariants || hasExtras;
     const isOutOfStock = !product.infiniteStock && (Number(product.stock) || 0) <= 0 && (!hasVariants || !product.variants!.some(v => (Number(v.stock) || 0) > 0));
 
-    // Warp portal appears on hover
     useEffect(() => {
         if (hovered) {
-            const t = setTimeout(() => setPortalVisible(true), 100);
+            const t = setTimeout(() => setPortalVisible(true), 80);
             return () => clearTimeout(t);
         } else {
             setPortalVisible(false);
         }
     }, [hovered]);
 
-    // GSAP entrance animation
     useEffect(() => {
         if (!cardRef.current) return;
         gsap.fromTo(cardRef.current,
-            { opacity: 0, y: 40, scale: 0.92 },
+            { opacity: 0, y: 50, scale: 0.9 },
             {
                 opacity: 1, y: 0, scale: 1,
-                duration: 0.7,
-                delay: index * 0.07,
+                duration: 0.8,
+                delay: index * 0.06,
                 ease: "power3.out",
-                scrollTrigger: {
-                    trigger: cardRef.current,
-                    start: "top 90%",
-                    once: true,
-                }
+                scrollTrigger: { trigger: cardRef.current, start: "top 92%", once: true },
             }
         );
     }, [index]);
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!cardRef.current) return;
+        const rect = cardRef.current.getBoundingClientRect();
+        mouseX.set((e.clientX - rect.left) / rect.width);
+        mouseY.set((e.clientY - rect.top) / rect.height);
+    };
+
+    const handleMouseLeave = () => {
+        mouseX.set(0.5);
+        mouseY.set(0.5);
+    };
 
     const handleAction = () => {
         if (hasOptions) {
@@ -461,78 +490,82 @@ function PortalProductCard({ product, index }: { product: Product; index: number
     };
 
     return (
-        <div
-            ref={cardRef}
+        <motion.div
+            ref={cardRef as any}
             onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-            className="group relative rounded-3xl overflow-hidden bg-white/4 border border-white/10 transition-all duration-500 hover:border-cyan-500/50 hover:shadow-[0_0_40px_rgba(6,182,212,0.15)] cursor-pointer"
-            style={{ opacity: 0 }}
+            onMouseLeave={() => { setHovered(false); handleMouseLeave(); }}
+            onMouseMove={handleMouseMove}
+            style={{ rotateX, rotateY, transformStyle: "preserve-3d", opacity: 0 }}
+            className="group relative rounded-3xl overflow-hidden bg-white/[0.04] border border-white/10 transition-all duration-500 hover:border-cyan-500/50 hover:shadow-[0_8px_60px_rgba(6,182,212,0.18)] cursor-pointer"
         >
-            {/* Product Image with Portal Overlay */}
-            <div className="relative h-56 overflow-hidden bg-gradient-to-b from-slate-900 to-black">
+            {/* Image */}
+            <div className="relative h-60 overflow-hidden bg-gradient-to-b from-slate-900 to-black">
                 {product.image ? (
                     <img
                         src={product.image}
                         alt={product.name}
-                        className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100"
+                        className="w-full h-full object-cover transition-all duration-700 group-hover:scale-108 opacity-85 group-hover:opacity-100"
+                        style={{ transform: hovered ? "scale(1.08)" : "scale(1)", transition: "transform 0.7s ease" }}
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                        <Package className="w-16 h-16 text-slate-600" />
+                        <Package className="w-16 h-16 text-slate-700" />
                     </div>
                 )}
 
-                {/* Digital Warp Portal overlay on hover */}
+                {/* Portal overlay on hover */}
                 <div className={cn("absolute inset-0 transition-opacity duration-500", portalVisible ? "opacity-100" : "opacity-0")}>
-                    <WarpPortalCanvas active={portalVisible} />
+                    <WarpPortalCanvas active={portalVisible} speed={1.5} />
                 </div>
 
-                {/* Scanline effect */}
-                <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-30 transition-opacity duration-500"
-                    style={{ background: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(6,182,212,0.04) 2px, rgba(6,182,212,0.04) 4px)" }}
+                {/* Scanlines on hover */}
+                <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-25 transition-opacity duration-500"
+                    style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(6,182,212,0.05) 2px, rgba(6,182,212,0.05) 4px)" }}
                 />
 
-                {/* Stock badge */}
+                {/* Badges */}
                 <div className="absolute top-3 left-3 z-10">
                     {isOutOfStock ? (
-                        <span className="bg-red-900/70 text-red-300 border border-red-500/30 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-sm">
+                        <span className="bg-red-950/80 text-red-300 border border-red-500/30 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-sm">
                             Agotado
                         </span>
                     ) : (
-                        <span className="bg-emerald-900/70 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 backdrop-blur-sm">
+                        <span className="bg-emerald-950/80 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 backdrop-blur-sm">
                             <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
                             En Stock
                         </span>
                     )}
                 </div>
 
-                {/* Liquid Metal corner accent */}
-                <div className="absolute -bottom-8 -right-8 w-28 h-28 opacity-20 group-hover:opacity-40 transition-opacity duration-500">
+                {/* Liquid metal corner accent */}
+                <div className="absolute -bottom-10 -right-10 w-32 h-32 opacity-15 group-hover:opacity-35 transition-opacity duration-500">
                     <LiquidMetalBlob color="#7c3aed" />
                 </div>
             </div>
 
-            {/* Card content */}
-            <div className="p-5">
+            {/* Content */}
+            <div className="p-5 relative" style={{ transform: "translateZ(20px)" }}>
                 <p className="text-[10px] text-slate-600 font-mono uppercase tracking-[0.2em] mb-1">{product.category || "Tecnología"}</p>
-                <h4 className="text-white font-black uppercase tracking-tight leading-tight mb-2 group-hover:text-cyan-300 transition-colors line-clamp-2">
+                <h4 className="text-white font-black uppercase tracking-tight leading-tight mb-2 group-hover:text-cyan-300 transition-colors duration-300 line-clamp-2">
                     {product.name}
                 </h4>
                 <p className="text-slate-500 text-xs leading-relaxed line-clamp-2 mb-4">{product.description}</p>
 
                 <div className="flex items-center justify-between">
-                    <span className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-blue-400">
-                        ${product.price.toLocaleString()}
-                    </span>
-
+                    <div>
+                        <span className="text-[9px] text-slate-700 font-mono uppercase tracking-widest block">Precio</span>
+                        <span className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-blue-400">
+                            ${product.price.toLocaleString()}
+                        </span>
+                    </div>
                     <button
                         onClick={handleAction}
                         disabled={isOutOfStock && !hasOptions}
                         className={cn(
-                            "flex items-center gap-2 px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all duration-300",
+                            "flex items-center gap-2 px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all duration-300 active:scale-95",
                             isOutOfStock && !hasOptions
-                                ? "bg-white/5 text-slate-600 cursor-not-allowed"
-                                : "bg-cyan-500 text-black hover:bg-cyan-300 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] active:scale-95"
+                                ? "bg-white/5 text-slate-700 cursor-not-allowed"
+                                : "bg-cyan-500 text-black hover:bg-cyan-300 hover:shadow-[0_0_24px_rgba(6,182,212,0.5)]"
                         )}
                     >
                         <ShoppingBag className="w-3.5 h-3.5" />
@@ -541,12 +574,15 @@ function PortalProductCard({ product, index }: { product: Product; index: number
                 </div>
             </div>
 
+            {/* Bottom glow line */}
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
             <AnimatePresence>
                 {isModalOpen && (
                     <ProductOptionsModal product={product} onClose={() => setIsModalOpen(false)} />
                 )}
             </AnimatePresence>
-        </div>
+        </motion.div>
     );
 }
 
@@ -557,36 +593,30 @@ function ServiceCard3D({ service }: { service: Service }) {
         <motion.div
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
-            whileHover={{ y: -6, scale: 1.02 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            className="relative p-7 rounded-3xl bg-white/4 border border-white/10 overflow-hidden group hover:border-violet-500/40 transition-colors duration-500"
+            whileHover={{ y: -8, scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+            className="relative p-7 rounded-3xl bg-white/[0.04] border border-white/10 overflow-hidden group hover:border-violet-500/40 transition-colors duration-500"
         >
-            {/* Liquid metal background on hover */}
             <AnimatePresence>
                 {hovered && (
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.5 }}
+                        initial={{ opacity: 0, scale: 0.4 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.5 }}
-                        className="absolute -top-12 -right-12 w-40 h-40 pointer-events-none"
+                        exit={{ opacity: 0, scale: 0.4 }}
+                        className="absolute -top-14 -right-14 w-44 h-44 pointer-events-none"
                     >
                         <LiquidMetalBlob color="#7c3aed" />
                     </motion.div>
                 )}
             </AnimatePresence>
-
-            {/* Warp portal background on hover */}
             {hovered && (
-                <div className="absolute inset-0 pointer-events-none opacity-30">
+                <div className="absolute inset-0 pointer-events-none opacity-25">
                     <WarpPortalCanvas active={hovered} />
                 </div>
             )}
-
             <div className="relative z-10">
                 <div className="w-14 h-14 rounded-2xl bg-violet-500/15 border border-violet-500/30 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-500">
-                    <span className="text-violet-400 font-black text-xl">
-                        {service.name.charAt(0).toUpperCase()}
-                    </span>
+                    <span className="text-violet-400 font-black text-2xl">{service.name.charAt(0).toUpperCase()}</span>
                 </div>
                 <h4 className="text-white font-black uppercase tracking-tighter text-lg mb-2 group-hover:text-violet-300 transition-colors">
                     {service.name}
@@ -599,7 +629,7 @@ function ServiceCard3D({ service }: { service: Service }) {
                     </div>
                     <div className="text-right">
                         <span className="text-[9px] text-slate-600 font-mono uppercase tracking-widest">Precio</span>
-                        <p className="text-xl font-black text-violet-400">${service.price.toLocaleString()}</p>
+                        <p className="text-2xl font-black text-violet-400">${service.price.toLocaleString()}</p>
                     </div>
                 </div>
             </div>
@@ -607,12 +637,274 @@ function ServiceCard3D({ service }: { service: Service }) {
     );
 }
 
+// ─── TECH 3D CART ────────────────────────────────────────────────────────────
+function Tech3DCart({ open, onClose, shop }: { open: boolean; onClose: () => void; shop: any }) {
+    const { items, removeItem, updateProductQuantity, clearCart } = useCart();
+    const scrollRef = useRef<HTMLDivElement>(null);
+
+    // Lock body scroll when cart is open
+    useEffect(() => {
+        if (open) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "";
+        }
+        return () => { document.body.style.overflow = ""; };
+    }, [open]);
+
+    const totalItems = items.reduce((s, i) => s + i.quantity, 0);
+    const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
+
+    const handleWhatsApp = () => {
+        const phone = shop.contact?.whatsapp || shop.contact?.phone || "";
+        if (!phone) return;
+
+        const lines = items.map(i => {
+            const p = i as ProductCartItem;
+            let line = `• ${i.name}`;
+            if (p.variantName) line += ` (${p.variantName})`;
+            if (p.selectedExtras?.length) {
+                const extrasStr = p.selectedExtras.map(e => e.name).join(", ");
+                line += ` + ${extrasStr}`;
+            }
+            line += ` x${i.quantity} — $${(i.price * i.quantity).toLocaleString()}`;
+            return line;
+        });
+
+        const msg = `¡Hola ${shop.name}! 👋\n\nQuiero hacer el siguiente pedido:\n\n${lines.join("\n")}\n\n*Total: $${subtotal.toLocaleString()}*\n\n¿Está disponible?`;
+        const clean = phone.replace(/\D/g, "");
+        window.open(`https://wa.me/${clean}?text=${encodeURIComponent(msg)}`, "_blank");
+    };
+
+    const handleQuantityChange = (item: any, delta: number) => {
+        const newQty = item.quantity + delta;
+        if (newQty <= 0) {
+            removeItem(item.id, item.variantId);
+        } else {
+            updateProductQuantity(item.id, newQty, item.variantId);
+        }
+    };
+
+    return (
+        <AnimatePresence>
+            {open && (
+                <>
+                    {/* Backdrop */}
+                    <motion.div
+                        key="cart-backdrop"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm"
+                        onClick={onClose}
+                    />
+
+                    {/* Cart Panel */}
+                    <motion.div
+                        key="cart-panel"
+                        initial={{ x: "100%" }}
+                        animate={{ x: 0 }}
+                        exit={{ x: "100%" }}
+                        transition={{ type: "spring", stiffness: 300, damping: 32 }}
+                        className="fixed inset-y-0 right-0 z-[70] flex flex-col w-full max-w-[420px]"
+                        style={{
+                            background: "linear-gradient(180deg, #060a12 0%, #040810 100%)",
+                            borderLeft: "1px solid rgba(6,182,212,0.2)",
+                            boxShadow: "-20px 0 80px rgba(0,0,0,0.7), -2px 0 30px rgba(6,182,212,0.1)",
+                        }}
+                        onWheel={e => e.stopPropagation()}
+                    >
+                        {/* Warp portal top decoration */}
+                        <div className="absolute top-0 right-0 w-64 h-64 opacity-20 pointer-events-none overflow-hidden">
+                            <div className="absolute inset-0">
+                                <WarpPortalCanvas active={open} speed={0.6} />
+                            </div>
+                        </div>
+
+                        {/* Header */}
+                        <div className="relative z-10 flex items-center justify-between px-6 py-5 border-b border-white/8">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-2xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center">
+                                    <ShoppingBag className="w-5 h-5 text-cyan-400" />
+                                </div>
+                                <div>
+                                    <h2 className="text-white font-black uppercase tracking-tight text-sm">Tu Carrito</h2>
+                                    <p className="text-slate-500 text-[11px] font-mono">
+                                        {totalItems === 0 ? "Vacío" : `${totalItems} producto${totalItems !== 1 ? "s" : ""}`}
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={onClose}
+                                className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:border-cyan-500/40 transition-all"
+                            >
+                                <X className="w-4 h-4 text-slate-400" />
+                            </button>
+                        </div>
+
+                        {/* Items — scrollable */}
+                        <div
+                            ref={scrollRef}
+                            className="relative z-10 flex-1 overflow-y-auto"
+                            style={{ WebkitOverflowScrolling: "touch" }}
+                        >
+                            {items.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center h-full gap-5 px-6 py-20">
+                                    <div className="w-20 h-20 rounded-3xl bg-white/4 border border-white/8 flex items-center justify-center">
+                                        <ShoppingBag className="w-8 h-8 text-slate-700" />
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="text-white font-bold mb-1">Carrito vacío</p>
+                                        <p className="text-slate-600 text-sm">Agrega productos para comenzar</p>
+                                    </div>
+                                    <button
+                                        onClick={onClose}
+                                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/25 text-cyan-400 text-sm font-bold hover:bg-cyan-500/20 transition-colors"
+                                    >
+                                        Ver Productos <ChevronRight className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="px-5 py-4 space-y-3">
+                                    {items.map((item, i) => {
+                                        const p = item as ProductCartItem;
+                                        return (
+                                            <motion.div
+                                                key={`${item.id}-${p.variantId || ""}-${i}`}
+                                                initial={{ opacity: 0, x: 30 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: 30, height: 0 }}
+                                                transition={{ duration: 0.3, delay: i * 0.04 }}
+                                                className="flex items-center gap-4 p-3.5 rounded-2xl bg-white/[0.04] border border-white/8 hover:border-cyan-500/25 transition-colors group/item"
+                                            >
+                                                {/* Image */}
+                                                <div className="w-16 h-16 rounded-xl overflow-hidden bg-black/50 border border-white/10 flex-shrink-0 relative">
+                                                    {item.image ? (
+                                                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center">
+                                                            <Package className="w-6 h-6 text-slate-700" />
+                                                        </div>
+                                                    )}
+                                                    {/* Cyan tint on hover */}
+                                                    <div className="absolute inset-0 bg-cyan-500/0 group-hover/item:bg-cyan-500/10 transition-colors duration-300" />
+                                                </div>
+
+                                                {/* Info */}
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-white font-bold text-sm leading-tight truncate">{item.name}</p>
+                                                    {p.variantName && (
+                                                        <p className="text-cyan-400/70 text-[10px] font-mono mt-0.5 truncate">{p.variantName}</p>
+                                                    )}
+                                                    {p.selectedExtras && p.selectedExtras.length > 0 && (
+                                                        <p className="text-slate-600 text-[10px] truncate">
+                                                            + {p.selectedExtras.map(e => e.name).join(", ")}
+                                                        </p>
+                                                    )}
+                                                    <p className="text-cyan-300 font-black text-sm mt-1">
+                                                        ${(item.price * item.quantity).toLocaleString()}
+                                                    </p>
+                                                </div>
+
+                                                {/* Qty controls */}
+                                                <div className="flex flex-col items-center gap-2 flex-shrink-0">
+                                                    <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl p-1">
+                                                        <button
+                                                            onClick={() => handleQuantityChange(p, -1)}
+                                                            className="w-6 h-6 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors text-slate-400 hover:text-white"
+                                                        >
+                                                            <Minus className="w-3 h-3" />
+                                                        </button>
+                                                        <span className="text-white font-black text-xs w-5 text-center">{item.quantity}</span>
+                                                        <button
+                                                            onClick={() => handleQuantityChange(p, +1)}
+                                                            className="w-6 h-6 rounded-lg flex items-center justify-center hover:bg-cyan-500/20 transition-colors text-slate-400 hover:text-cyan-400"
+                                                        >
+                                                            <Plus className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => removeItem(item.id, p.variantId)}
+                                                        className="w-6 h-6 rounded-lg flex items-center justify-center hover:bg-red-500/20 transition-colors text-slate-700 hover:text-red-400"
+                                                    >
+                                                        <Trash2 className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            </motion.div>
+                                        );
+                                    })}
+
+                                    {/* Clear cart */}
+                                    {items.length > 1 && (
+                                        <button
+                                            onClick={clearCart}
+                                            className="w-full py-2 text-[10px] font-mono uppercase tracking-widest text-slate-700 hover:text-red-400 transition-colors"
+                                        >
+                                            Vaciar carrito
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Footer */}
+                        {items.length > 0 && (
+                            <div className="relative z-10 border-t border-white/8 px-5 py-5 space-y-4">
+                                {/* Trust badges */}
+                                <div className="flex items-center justify-center gap-6 py-2">
+                                    {[
+                                        { icon: <Lock className="w-3 h-3 text-emerald-400" />, label: "Pago Seguro" },
+                                        { icon: <Truck className="w-3 h-3 text-blue-400" />, label: "Envío Express" },
+                                        { icon: <Sparkles className="w-3 h-3 text-amber-400" />, label: "Garantía" },
+                                    ].map((b, i) => (
+                                        <div key={i} className="flex items-center gap-1.5 text-[9px] text-slate-600 font-mono uppercase tracking-wider">
+                                            {b.icon} {b.label}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Subtotal */}
+                                <div className="flex items-center justify-between px-2">
+                                    <span className="text-slate-500 text-sm font-mono uppercase tracking-widest">Subtotal</span>
+                                    <span className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-blue-400">
+                                        ${subtotal.toLocaleString()}
+                                    </span>
+                                </div>
+
+                                {/* WhatsApp CTA */}
+                                <button
+                                    onClick={handleWhatsApp}
+                                    className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black uppercase tracking-widest text-sm transition-all duration-300 active:scale-98"
+                                    style={{
+                                        background: "linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #7c3aed 100%)",
+                                        boxShadow: "0 4px 30px rgba(6,182,212,0.35)",
+                                    }}
+                                >
+                                    <MessageCircle className="w-5 h-5" />
+                                    Pedir por WhatsApp
+                                    <ArrowRight className="w-4 h-4" />
+                                </button>
+
+                                <p className="text-center text-[10px] text-slate-700 font-mono">
+                                    Al continuar, serás redirigido a WhatsApp
+                                </p>
+                            </div>
+                        )}
+                    </motion.div>
+                </>
+            )}
+        </AnimatePresence>
+    );
+}
+
 // ─── MAIN LAYOUT ──────────────────────────────────────────────────────────────
 export function Tech3DLayout({ shop, products, services, loadingData }: Tech3DLayoutProps) {
-    const { items: cart, addProduct, setIsCartOpen } = useCart();
+    const { items: cart } = useCart();
     const [view, setView] = useState<View>("products");
     const [activeCategory, setActiveCategory] = useState("todos");
     const [search, setSearch] = useState("");
+    const [cartOpen, setCartOpen] = useState(false);
 
     const categories = useMemo(() => {
         const cats = Array.from(new Set(products.map(p => p.category).filter(Boolean)));
@@ -636,17 +928,16 @@ export function Tech3DLayout({ shop, products, services, loadingData }: Tech3DLa
     return (
         <div className="min-h-screen text-slate-100" style={{ background: "#03050a" }}>
 
-            {/* Animated background - subtle grid */}
+            {/* Animated bg */}
             <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-                <div className="absolute inset-0 grid-3d-bg opacity-15" />
-                <div className="absolute top-0 left-0 w-[60%] h-[50%] bg-cyan-500/5 blur-[160px] rounded-full" />
-                <div className="absolute bottom-0 right-0 w-[50%] h-[45%] bg-violet-600/5 blur-[140px] rounded-full" />
+                <div className="absolute inset-0 grid-3d-bg opacity-12" />
+                <div className="absolute top-0 left-0 w-[60%] h-[50%] bg-cyan-500/4 blur-[180px] rounded-full" />
+                <div className="absolute bottom-0 right-0 w-[50%] h-[45%] bg-violet-600/4 blur-[160px] rounded-full" />
             </div>
 
             {/* ─── NAVBAR ─── */}
-            <header className="sticky top-0 z-50 backdrop-blur-2xl bg-black/70 border-b border-white/6">
+            <header className="sticky top-0 z-50 backdrop-blur-2xl bg-black/75 border-b border-white/6">
                 <div className="max-w-screen-2xl mx-auto px-6 md:px-12 py-4 flex items-center justify-between">
-                    {/* Logo */}
                     <div className="flex items-center gap-3">
                         <div className="w-11 h-11 rounded-2xl bg-white/5 border border-white/12 flex items-center justify-center overflow-hidden shadow-xl">
                             {shop.logo ? (
@@ -658,7 +949,6 @@ export function Tech3DLayout({ shop, products, services, loadingData }: Tech3DLa
                         <span className="text-white font-black uppercase tracking-tighter text-lg">{shop.name}</span>
                     </div>
 
-                    {/* Nav */}
                     <nav className="hidden md:flex items-center gap-1">
                         {navItems.map(n => (
                             <button
@@ -676,19 +966,20 @@ export function Tech3DLayout({ shop, products, services, loadingData }: Tech3DLa
                         ))}
                     </nav>
 
-                    {/* Cart */}
+                    {/* Cart button */}
                     <button
-                        onClick={() => setIsCartOpen(true)}
-                        className="relative flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/6 border border-white/10 hover:border-cyan-500/50 hover:bg-white/10 transition-all duration-300 text-sm font-bold text-white"
+                        onClick={() => setCartOpen(true)}
+                        className="relative flex items-center gap-2.5 px-5 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:border-cyan-500/50 hover:bg-white/8 transition-all duration-300 text-sm font-bold text-white"
                     >
                         <ShoppingBag className="w-4 h-4 text-cyan-400" />
-                        Carrito
+                        <span className="hidden sm:inline">Carrito</span>
                         {totalItems > 0 && (
                             <motion.span
                                 key={totalItems}
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
-                                className="w-5 h-5 rounded-full bg-cyan-500 text-black text-[10px] font-black flex items-center justify-center"
+                                transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                                className="w-5 h-5 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-[10px] font-black flex items-center justify-center shadow-[0_0_10px_rgba(6,182,212,0.5)]"
                             >
                                 {totalItems}
                             </motion.span>
@@ -700,7 +991,6 @@ export function Tech3DLayout({ shop, products, services, loadingData }: Tech3DLa
             {/* ─── MAIN ─── */}
             <main className="relative z-10 max-w-screen-2xl mx-auto px-6 md:px-12 py-10 space-y-16">
 
-                {/* Screen Breakout Hero */}
                 <ScreenBreakoutHero shop={shop} />
 
                 {/* Mobile nav */}
@@ -711,9 +1001,7 @@ export function Tech3DLayout({ shop, products, services, loadingData }: Tech3DLa
                             onClick={() => setView(n.id as View)}
                             className={cn(
                                 "flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-black uppercase whitespace-nowrap transition-all",
-                                view === n.id
-                                    ? "bg-cyan-500 text-black"
-                                    : "bg-white/5 text-slate-400"
+                                view === n.id ? "bg-cyan-500 text-black" : "bg-white/5 text-slate-400"
                             )}
                         >
                             {n.icon}{n.label}
@@ -721,7 +1009,7 @@ export function Tech3DLayout({ shop, products, services, loadingData }: Tech3DLa
                     ))}
                 </div>
 
-                {/* ── PRODUCTS VIEW ── */}
+                {/* ── PRODUCTS ── */}
                 <AnimatePresence mode="wait">
                     {view === "products" && (
                         <motion.div
@@ -732,16 +1020,15 @@ export function Tech3DLayout({ shop, products, services, loadingData }: Tech3DLa
                             transition={{ duration: 0.4 }}
                             className="space-y-10"
                         >
-                            {/* Search + Filter bar */}
                             <div className="flex flex-col sm:flex-row gap-4">
                                 <div className="relative flex-1">
-                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
                                     <input
                                         type="text"
                                         value={search}
                                         onChange={e => setSearch(e.target.value)}
                                         placeholder="Buscar productos..."
-                                        className="w-full pl-11 pr-5 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-cyan-500/50 transition-colors"
+                                        className="w-full pl-11 pr-5 py-3.5 rounded-2xl bg-white/4 border border-white/8 text-white placeholder-slate-700 text-sm focus:outline-none focus:border-cyan-500/50 focus:bg-white/6 transition-all"
                                     />
                                 </div>
                                 <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
@@ -752,8 +1039,8 @@ export function Tech3DLayout({ shop, products, services, loadingData }: Tech3DLa
                                             className={cn(
                                                 "whitespace-nowrap px-5 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all duration-300",
                                                 activeCategory === cat
-                                                    ? "bg-cyan-500 text-black shadow-[0_0_20px_rgba(6,182,212,0.35)]"
-                                                    : "bg-white/5 text-slate-400 border border-white/8 hover:border-cyan-500/30 hover:text-white"
+                                                    ? "bg-cyan-500 text-black shadow-[0_0_20px_rgba(6,182,212,0.4)]"
+                                                    : "bg-white/4 text-slate-500 border border-white/8 hover:border-cyan-500/30 hover:text-white"
                                             )}
                                         >
                                             {cat}
@@ -762,25 +1049,24 @@ export function Tech3DLayout({ shop, products, services, loadingData }: Tech3DLa
                                 </div>
                             </div>
 
-                            {/* Section header */}
                             <div className="flex items-center gap-4">
-                                <div className="flex-1 h-px bg-white/6" />
-                                <span className="text-[11px] font-mono text-slate-600 uppercase tracking-[0.3em]">
+                                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
+                                <span className="text-[11px] font-mono text-slate-700 uppercase tracking-[0.3em]">
                                     {filtered.length} producto{filtered.length !== 1 ? "s" : ""}
                                 </span>
-                                <div className="flex-1 h-px bg-white/6" />
+                                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
                             </div>
 
                             {loadingData ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                     {[...Array(8)].map((_, i) => (
-                                        <div key={i} className="h-80 rounded-3xl bg-white/4 border border-white/8 animate-pulse" />
+                                        <div key={i} className="h-80 rounded-3xl bg-white/3 border border-white/6 animate-pulse" />
                                     ))}
                                 </div>
                             ) : filtered.length === 0 ? (
                                 <div className="py-24 text-center">
-                                    <Package className="w-12 h-12 text-slate-700 mx-auto mb-4" />
-                                    <p className="text-slate-500 font-mono text-sm uppercase tracking-widest">Sin productos encontrados</p>
+                                    <Package className="w-12 h-12 text-slate-800 mx-auto mb-4" />
+                                    <p className="text-slate-600 font-mono text-sm uppercase tracking-widest">Sin productos encontrados</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -792,7 +1078,7 @@ export function Tech3DLayout({ shop, products, services, loadingData }: Tech3DLa
                         </motion.div>
                     )}
 
-                    {/* ── SERVICES VIEW ── */}
+                    {/* ── SERVICES ── */}
                     {view === "services" && (
                         <motion.div
                             key="services"
@@ -812,11 +1098,10 @@ export function Tech3DLayout({ shop, products, services, loadingData }: Tech3DLa
                                 </motion.h2>
                                 <p className="text-slate-500 leading-relaxed">Diagnóstico, reparación y configuración por técnicos certificados.</p>
                             </div>
-
                             {services.length === 0 ? (
                                 <div className="py-16 text-center">
-                                    <Cpu className="w-12 h-12 text-slate-700 mx-auto mb-4" />
-                                    <p className="text-slate-500 font-mono text-sm uppercase tracking-widest">No hay servicios disponibles</p>
+                                    <Cpu className="w-12 h-12 text-slate-800 mx-auto mb-4" />
+                                    <p className="text-slate-600 font-mono text-sm uppercase tracking-widest">No hay servicios disponibles</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -826,7 +1111,7 @@ export function Tech3DLayout({ shop, products, services, loadingData }: Tech3DLa
                         </motion.div>
                     )}
 
-                    {/* ── LOCATION VIEW ── */}
+                    {/* ── LOCATION ── */}
                     {view === "location" && (
                         <motion.div
                             key="location"
@@ -866,16 +1151,15 @@ export function Tech3DLayout({ shop, products, services, loadingData }: Tech3DLa
                                     Obtener Indicaciones <ArrowRight className="w-4 h-4" />
                                 </a>
                             </div>
-
                             <div className="relative aspect-[4/3] rounded-[40px] overflow-hidden border border-white/10">
                                 <img
                                     src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&q=80"
                                     alt="Office"
-                                    className="w-full h-full object-cover opacity-70"
+                                    className="w-full h-full object-cover opacity-60"
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-tr from-black/60 to-transparent" />
+                                <div className="absolute inset-0 bg-gradient-to-tr from-black/70 to-transparent" />
                                 <div className="absolute inset-0">
-                                    <WarpPortalCanvas active={true} />
+                                    <WarpPortalCanvas active={true} speed={0.7} />
                                 </div>
                                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-2xl rotate-12 z-10">
                                     <MapPin className="w-7 h-7 text-cyan-500" />
@@ -898,7 +1182,7 @@ export function Tech3DLayout({ shop, products, services, loadingData }: Tech3DLa
                                 initial={{ opacity: 0, y: 30 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
-                                transition={{ delay: i * 0.15, duration: 0.6 }}
+                                transition={{ delay: i * 0.15, duration: 0.7 }}
                                 className="group space-y-4"
                             >
                                 <div className={`w-12 h-12 rounded-2xl bg-${item.color}-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500`}>
@@ -913,17 +1197,17 @@ export function Tech3DLayout({ shop, products, services, loadingData }: Tech3DLa
             </main>
 
             {/* ─── FOOTER ─── */}
-            <footer className="relative z-10 border-t border-white/6 py-16 px-6 md:px-12 bg-black/50 mt-10">
+            <footer className="relative z-10 border-t border-white/6 py-16 px-6 md:px-12 bg-black/60 mt-10">
                 <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between gap-10">
                     <div className="max-w-xs">
                         <div className="flex items-center gap-2 mb-4">
-                            <div className="w-8 h-8 rounded-lg bg-cyan-500 flex items-center justify-center">
-                                <Cpu className="text-black w-4 h-4" />
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 flex items-center justify-center shadow-[0_0_15px_rgba(6,182,212,0.4)]">
+                                <Cpu className="text-white w-4 h-4" />
                             </div>
                             <span className="text-white font-black uppercase tracking-widest">{shop.name}</span>
                         </div>
-                        <p className="text-slate-600 text-sm leading-relaxed">
-                            Tecnología de élite para quienes exigen lo mejor. Calidad, seguridad y rendimiento sin compromisos.
+                        <p className="text-slate-700 text-sm leading-relaxed">
+                            Tecnología de élite para quienes exigen lo mejor.
                         </p>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-10 text-sm">
@@ -934,7 +1218,7 @@ export function Tech3DLayout({ shop, products, services, loadingData }: Tech3DLa
                         ].map(col => (
                             <div key={col.title}>
                                 <h5 className="text-white font-black text-xs uppercase tracking-widest mb-5 border-l-2 border-cyan-500 pl-3">{col.title}</h5>
-                                <ul className="space-y-3 text-slate-600">
+                                <ul className="space-y-3 text-slate-700">
                                     {col.items.map(item => (
                                         <li key={item} className="hover:text-cyan-400 cursor-pointer transition-colors">{item}</li>
                                     ))}
@@ -952,16 +1236,32 @@ export function Tech3DLayout({ shop, products, services, loadingData }: Tech3DLa
                 </div>
             </footer>
 
-            {/* ─── GLOBAL STYLES ─── */}
+            {/* ─── CUSTOM CART ─── */}
+            <Tech3DCart open={cartOpen} onClose={() => setCartOpen(false)} shop={shop} />
+
+            {/* ─── STYLES ─── */}
             <style jsx global>{`
                 .grid-3d-bg {
                     background-image:
-                        linear-gradient(to right, rgba(6,182,212,0.07) 1px, transparent 1px),
-                        linear-gradient(to bottom, rgba(6,182,212,0.07) 1px, transparent 1px);
+                        linear-gradient(to right, rgba(6,182,212,0.06) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(6,182,212,0.06) 1px, transparent 1px);
                     background-size: 48px 48px;
                 }
                 .no-scrollbar::-webkit-scrollbar { display: none; }
                 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+                @keyframes glitch-anim {
+                    0%   { clip-path: inset(40% 0 61% 0); transform: translate(-4px, 0); }
+                    20%  { clip-path: inset(92% 0 1% 0);  transform: translate(4px, 0); }
+                    40%  { clip-path: inset(43% 0 1% 0);  transform: translate(0, 0); }
+                    60%  { clip-path: inset(25% 0 58% 0); transform: translate(2px, 2px); color: #06b6d4; }
+                    80%  { clip-path: inset(54% 0 7% 0);  transform: translate(-2px, 0); color: #7c3aed; }
+                    100% { clip-path: inset(58% 0 43% 0); transform: translate(0, 0); color: white; }
+                }
+                .hero-glitch {
+                    animation: glitch-anim 0.3s linear forwards;
+                    text-shadow: 2px 0 #06b6d4, -2px 0 #7c3aed;
+                }
             `}</style>
         </div>
     );

@@ -28,6 +28,7 @@ import {
   FileText,
   Smartphone,
   HelpCircle,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import {
@@ -327,6 +328,29 @@ export default function AdminSettingsPage() {
             {/* BRAND TAB */}
             {activeTab === "brand" && (
               <>
+                {/* Tech 3D Breakout — Banner when template is active */}
+                {config.templateType === "tech-3d-v1" && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("design")}
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl border border-cyan-500/30 bg-cyan-500/8 hover:bg-cyan-500/12 transition-colors text-left group"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 flex items-center justify-center flex-shrink-0 shadow-[0_0_15px_rgba(6,182,212,0.4)]">
+                      <Smartphone className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-cyan-300 font-black text-sm uppercase tracking-wider flex items-center gap-2">
+                        Tech 3D Breakout activo
+                        <span className="bg-gradient-to-r from-violet-500 to-cyan-500 text-white text-[9px] px-2 py-0.5 rounded-full font-black">3D</span>
+                      </p>
+                      <p className="text-slate-400 text-xs mt-0.5">
+                        Ve a <strong className="text-cyan-400">Diseño Visual</strong> para subir la foto del producto hero (la imagen que "rompe la pantalla")
+                      </p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-cyan-500 group-hover:translate-x-1 transition-transform flex-shrink-0" />
+                  </button>
+                )}
+
                 {/* Shop Name */}
                 <div className="glass-panel rounded-2xl p-6">
                   <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
