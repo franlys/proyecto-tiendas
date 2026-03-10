@@ -21,8 +21,9 @@ import {
 } from "lucide-react";
 import { useCart, useShop, useOrders, useShopConfig, useInventory } from "@/components/shared";
 import { cn } from "@/lib/utils";
-import { storage } from "@/lib/firebase";
+import { storage, db } from "@/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui";
 import { useManualPaymentConfig } from "@/lib/hooks";
 import { StripePayButton } from "@/components/shop/stripe-checkout-button";
@@ -151,23 +152,43 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
             }
 
             // Generate order number
-            const orderNum = Math.floor(1000 + Math.random() * 9000).toString();
-            
-            // Phase: Internal Registration (Remember this for new templates!)
-            addOrder({
-                shopId: shop?.id || "",
-                shopName: shop?.name || "",
-                customerName,
-                customerPhone,
-                items: products.map(p => ({
-                    id: p.id,
-                    name: p.name + (p.variantName ? ` (${p.variantName})` : ""),
-                    price: p.price,
-                    quantity: p.quantity
-                })),
-                total: totalPrice,
-                orderType: deliveryType === "delivery" ? "delivery" : "takeout"
-            });
+            const date = new Date();
+            const datePart = date.toISOString().slice(2, 10).replace(/-/g, "");
+            const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+            const orderNum = `ORD-${datePart}-${random}`;
+
+            const shopId = shop?.id || "";
+            const orderItems = products.map(p => ({
+                id: p.id,
+                name: p.name + (p.variantName ? ` (${p.variantName})` : ""),
+                price: p.price,
+                quantity: p.quantity,
+                image: p.image || "",
+            }));
+
+            // Write to Firestore so admin panel can see the order
+            if (shopId) {
+                await addDoc(collection(db, "shops", shopId, "orders"), {
+                    orderNumber: orderNum,
+                    customerName,
+                    customerPhone,
+                    customerEmail,
+                    customerAddress: deliveryType === "delivery" ? customerAddress : "",
+                    items: orderItems,
+                    subtotal: totalPrice,
+                    tax: 0,
+                    total: totalPrice,
+                    status: "pending",
+                    paymentStatus: paymentTiming === "pay_now" ? "paid" : "pending",
+                    paymentMethod: paymentTiming,
+                    source: "storefront",
+                    orderType: deliveryType === "delivery" ? "delivery" : "takeout",
+                    receiptUrl: receiptUrl || null,
+                    notes: "",
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                });
+            }
 
             // Phase: Stock Decrement (Real-time sync)
             products.forEach(p => {
