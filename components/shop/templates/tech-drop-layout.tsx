@@ -296,13 +296,20 @@ export function TechDropLayout({ shop, products, services, loadingData }: TechDr
                             />
 
                             {/* Product Grid */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                            <motion.div
+                                layout
+                                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+                            >
                                 <AnimatePresence mode="popLayout">
-                                    {filteredProducts.map((product) => (
-                                        <ProductCard key={product.id} product={product} />
+                                    {filteredProducts.map((product, index) => (
+                                        <ProductCard
+                                            key={product.id}
+                                            product={product}
+                                            index={index}
+                                        />
                                     ))}
                                 </AnimatePresence>
-                            </div>
+                            </motion.div>
                         </div>
                     )}
 
@@ -495,17 +502,18 @@ function CategoryCarousel({ categories, activeCategory, onSelect }: { categories
                         key={cat}
                         onClick={() => onSelect(cat)}
                         className={cn(
-                            "category-item relative flex-shrink-0 px-8 py-5 rounded-2xl transition-all duration-700 overflow-hidden group min-w-[150px] text-center",
+                            "category-item relative flex-shrink-0 px-8 py-5 rounded-2xl transition-all duration-300 overflow-hidden group min-w-[150px] text-center",
                             activeCategory === cat
-                                ? "bg-cyan-500 text-white shadow-[0_0_30px_rgba(6,182,212,0.5)] scale-110 z-20 border-t-2 border-cyan-300"
+                                ? "text-white scale-110 z-20"
                                 : "bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:border-cyan-500/30 hover:scale-105"
                         )}
                     >
                         {/* Animated BG on Active */}
                         {activeCategory === cat && (
                             <motion.div
-                                layoutId="active-bg"
-                                className="absolute inset-0 bg-gradient-to-br from-cyan-400 to-blue-600 -z-10"
+                                layoutId="active-category-bg"
+                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                className="absolute inset-0 bg-gradient-to-br from-cyan-400 to-blue-600 shadow-[0_0_30px_rgba(6,182,212,0.5)] border-t-2 border-cyan-300 -z-10"
                             />
                         )}
 
@@ -523,7 +531,7 @@ function CategoryCarousel({ categories, activeCategory, onSelect }: { categories
     );
 }
 
-function ProductCard({ product }: { product: Product }) {
+function ProductCard({ product, index }: { product: Product, index: number }) {
     const { addProduct } = useCart();
     const { triggerFlyToCart } = useVisualFeedback();
     const [isHovered, setIsHovered] = useState(false);
@@ -568,6 +576,23 @@ function ProductCard({ product }: { product: Product }) {
     return (
         <motion.div
             layout
+            initial={{ opacity: 0, y: 30, scale: 0.9 }}
+            animate={{
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                transition: {
+                    type: "spring",
+                    damping: 25,
+                    stiffness: 120,
+                    delay: (index % 12) * 0.05 // Staggered by row-ish
+                }
+            }}
+            exit={{
+                opacity: 0,
+                scale: 0.9,
+                transition: { duration: 0.2 }
+            }}
             ref={cardRef}
             onMouseEnter={() => {
                 setIsHovered(true);
@@ -584,12 +609,17 @@ function ProductCard({ product }: { product: Product }) {
                 <img
                     src={product.image}
                     alt={product.name}
-                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110 opacity-70 group-hover:opacity-100 grayscale group-hover:grayscale-0"
+                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110 opacity-80 group-hover:opacity-100"
                 />
 
-                {/* Scanline Effect */}
-                <div className="absolute inset-0 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity">
-                    <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,255,255,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.02),rgba(0,255,0,0.01),rgba(0,0,255,0.02))] bg-[length:100%_4px,3px_100%]" />
+                {/* Premium Glass Reflection Effect */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none overflow-hidden">
+                    <motion.div 
+                        initial={{ x: "-100%", skewX: -20 }}
+                        animate={isHovered ? { x: "200%" } : { x: "-100%" }}
+                        transition={{ duration: 1.5, ease: "easeInOut", repeat: Infinity, repeatDelay: 3 }}
+                        className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/10 to-transparent h-full"
+                    />
                 </div>
 
                 {/* Overlay Badges */}
@@ -625,12 +655,12 @@ function ProductCard({ product }: { product: Product }) {
                     </div>
                 </div>
 
-                {/* Zoomed Featured View on Hover (Premium Tech Feel) */}
+                {/* Ambient Glow on Hover */}
                 {isHovered && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="absolute inset-0 bg-cyan-600/10 pointer-events-none mix-blend-screen"
+                        className="absolute inset-0 bg-cyan-500/5 pointer-events-none"
                     />
                 )}
             </div>
