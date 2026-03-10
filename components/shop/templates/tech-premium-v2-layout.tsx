@@ -201,8 +201,9 @@ function Hero({ shop, onExplore }: { shop: any; onExplore: () => void }) {
                         </p>
                     </div>
 
-                    <div className="overflow-hidden">
-                        <h1 className="v2-hero-line text-[clamp(3.5rem,9vw,7.5rem)] font-black leading-[0.85] tracking-[-0.04em] text-white">
+                    <div style={{ overflow: "hidden clip" }}>
+                        <h1 className="v2-hero-line font-black leading-[0.88] tracking-[-0.04em] text-white"
+                            style={{ fontSize: "clamp(2.4rem, 5.5vw, 5.2rem)" }}>
                             {shop.name}
                         </h1>
                     </div>
