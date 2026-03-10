@@ -35,7 +35,9 @@ export function FloatingCart() {
     tableId,
     clearCart,
     updateProductQuantity,
-    removeItem
+    removeItem,
+    isCartOpen: isCheckoutDrawerOpen,
+    setIsCartOpen: setIsCheckoutDrawerOpen
   } = useCart();
   const shop = useShop();
   const { config } = useShopConfig();
@@ -47,9 +49,7 @@ export function FloatingCart() {
 
   // Phase 22: Appointment modal state
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
-
-  // Checkout drawer state (for meal prep, catering, etc.)
-  const [isCheckoutDrawerOpen, setIsCheckoutDrawerOpen] = useState(false);
+  const isTechDrop = shop?.templateType === "tech-drop-v1";
 
   const hasServices = services.length > 0;
   const hasProducts = products.length > 0;
@@ -134,24 +134,32 @@ export function FloatingCart() {
           "sm:left-4 sm:right-4",
           "md:left-auto md:right-6 md:max-w-md",
           // Limit max height when expanded to prevent blocking content
-          isCartExpanded && "max-h-[70vh] overflow-hidden",
-          isStreetDrop
-            ? "glass-panel bg-black/95 border-2 border-red-500 rounded-none drop-shadow-[5px_5px_0px_rgba(255,0,51,1)] p-3 sm:p-4"
-            : "glass-panel rounded-2xl p-3 sm:p-4"
+          isTechDrop
+            ? "bg-[#05070a]/90 backdrop-blur-2xl border border-cyan-500/30 shadow-cyan-500/10 rounded-[2rem] p-3 sm:p-4"
+            : isStreetDrop
+              ? "glass-panel bg-black/95 border-2 border-red-500 rounded-none drop-shadow-[5px_5px_0px_rgba(255,0,51,1)] p-3 sm:p-4"
+              : "glass-panel rounded-2xl p-3 sm:p-4"
         )}
       >
-        <div className="flex items-center justify-between gap-2 sm:gap-4">
+        {isTechDrop && (
+          <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden rounded-[2rem]">
+            <div className="absolute inset-0 grid-bg opacity-10" />
+          </div>
+        )}
+        <div className="flex items-center justify-between gap-2 sm:gap-4 relative z-10">
           {/* Left: Item count */}
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <div
               ref={cartRef}
               className={cn(
                 "w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-                shouldUseAppointmentFlow ? "bg-primary/20" : "bg-gold/20"
+                isTechDrop ? "bg-cyan-500/20" : shouldUseAppointmentFlow ? "bg-primary/20" : "bg-gold/20"
               )}
-              style={(shouldUseAppointmentFlow || !isStreetDrop) && shop?.theme?.primaryColor ? { backgroundColor: `${shop.theme.primaryColor}20` } : {}}
+              style={(isTechDrop || shouldUseAppointmentFlow || !isStreetDrop) && shop?.theme?.primaryColor ? { backgroundColor: isTechDrop ? 'rgba(6, 182, 212, 0.2)' : `${shop.theme.primaryColor}20` } : {}}
             >
-              {shouldUseAppointmentFlow ? (
+              {isTechDrop ? (
+                <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400" />
+              ) : shouldUseAppointmentFlow ? (
                 <Calendar className={cn("w-4 h-4 sm:w-5 sm:h-5", !shop?.theme?.primaryColor && "text-primary")} style={shop?.theme?.primaryColor ? { color: shop.theme.primaryColor } : {}} />
               ) : (
                 <ShoppingBag className={cn("w-4 h-4 sm:w-5 sm:h-5", !shop?.theme?.primaryColor && "text-gold")} style={shop?.theme?.primaryColor ? { color: shop.theme.primaryColor } : {}} />
@@ -188,14 +196,16 @@ export function FloatingCart() {
                 "text-white font-medium text-sm",
                 "transition-all duration-300",
                 "shadow-lg hover:shadow-xl",
-                shouldUseAppointmentFlow
-                  ? "bg-primary hover:opacity-90 transition-opacity"
-                  : isStreetDrop
-                    ? "bg-red-600 hover:bg-black border border-red-600 hover:text-red-500 !rounded-none"
-                    : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700",
+                isTechDrop
+                  ? "bg-cyan-500 shadow-cyan-500/20 hover:bg-cyan-400"
+                  : shouldUseAppointmentFlow
+                    ? "bg-primary hover:opacity-90 transition-opacity"
+                    : isStreetDrop
+                      ? "bg-red-600 hover:bg-black border border-red-600 hover:text-red-500 !rounded-none"
+                      : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700",
                 isSubmitting && "opacity-70 cursor-not-allowed"
               )}
-              style={(shouldUseAppointmentFlow || (!isStreetDrop && !isSubmitting)) && shop?.theme?.primaryColor ? {
+              style={(!isTechDrop && (shouldUseAppointmentFlow || (!isStreetDrop && !isSubmitting)) && shop?.theme?.primaryColor) ? {
                 background: `linear-gradient(to right, ${shop.theme.primaryColor}, ${shop.theme.primaryColor}dd)`
               } : {}}
             >
@@ -205,10 +215,12 @@ export function FloatingCart() {
                 <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
               ) : isStreetDrop ? (
                 <svg className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7" /><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4" /><path d="M2 7h20" /><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7" /></svg>
+              ) : isTechDrop ? (
+                <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
               ) : (
                 <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
               )}
-              <span className={cn("hidden sm:inline", isStreetDrop && "uppercase tracking-widest font-black")}>
+              <span className={cn("hidden sm:inline", (isStreetDrop || isTechDrop) && "uppercase tracking-widest font-black")}>
                 {getButtonText()}
               </span>
             </button>

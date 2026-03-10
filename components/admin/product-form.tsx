@@ -9,6 +9,7 @@ import {
   Image as ImageIcon,
   Tag,
   Hash,
+  Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useInventory, MediaUploader } from "@/components/shared";
@@ -16,6 +17,7 @@ import {
   PRODUCT_CATEGORY_LABELS,
   type Product,
   type ProductCategory,
+  type ProductVariant,
 } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -67,6 +69,7 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
     category: "cabello" as ProductCategory,
     image: "",
     featured: false,
+    variants: [] as ProductVariant[],
   });
 
   useEffect(() => {
@@ -81,6 +84,7 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
         category: product.category,
         image: product.image,
         featured: product.featured || false,
+        variants: product.variants || [],
       });
     }
   }, [product]);
@@ -346,6 +350,140 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
               />
             </button>
             <span className="text-sm text-slate-300">Producto Destacado</span>
+          </div>
+
+          {/* Premium Variant Manager */}
+          <div className="border-t border-white/10 pt-6 mt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-bold flex items-center gap-2">
+                <Layers className="w-4 h-4 text-cyan-400" />
+                Variantes Premium (Colores/Modelos)
+              </h3>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const newVariant: ProductVariant = {
+                    id: Math.random().toString(36).substr(2, 9),
+                    name: "",
+                    price: formData.price,
+                    stock: 0,
+                    color: "#6366f1",
+                  };
+                  updateField("variants", [...formData.variants, newVariant]);
+                }}
+                className="h-8 text-xs border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+              >
+                + Añadir Variante
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {formData.variants.map((variant, idx) => (
+                <div key={variant.id} className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-4 relative group/variant">
+                  <button
+                    type="button"
+                    onClick={() => updateField("variants", formData.variants.filter((_, i) => i !== idx))}
+                    className="absolute top-2 right-2 p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition-colors opacity-0 group-hover/variant:opacity-100"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] text-slate-500 uppercase font-black tracking-widest block mb-1">Nombre (ej: Rojo, Pro, 256GB)</label>
+                      <input
+                        type="text"
+                        value={variant.name}
+                        onChange={(e) => {
+                          const newVariants = [...formData.variants];
+                          newVariants[idx] = { ...variant, name: e.target.value };
+                          updateField("variants", newVariants);
+                        }}
+                        className="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/10 text-white text-sm focus:outline-none focus:border-cyan-500/50"
+                        placeholder="Nombre"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-slate-500 uppercase font-black tracking-widest block mb-1">Color (Opcional)</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={variant.color || "#6366f1"}
+                          onChange={(e) => {
+                            const newVariants = [...formData.variants];
+                            newVariants[idx] = { ...variant, color: e.target.value };
+                            updateField("variants", newVariants);
+                          }}
+                          className="w-8 h-8 rounded-lg bg-transparent cursor-pointer border-none"
+                        />
+                        <input
+                          type="text"
+                          value={variant.color || ""}
+                          onChange={(e) => {
+                            const newVariants = [...formData.variants];
+                            newVariants[idx] = { ...variant, color: e.target.value };
+                            updateField("variants", newVariants);
+                          }}
+                          className="flex-1 px-3 py-2 rounded-lg bg-black/20 border border-white/10 text-white text-xs font-mono"
+                          placeholder="#HEX"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] text-slate-500 uppercase font-black tracking-widest block mb-1">Precio</label>
+                      <input
+                        type="number"
+                        value={variant.price}
+                        onChange={(e) => {
+                          const newVariants = [...formData.variants];
+                          newVariants[idx] = { ...variant, price: parseFloat(e.target.value) || 0 };
+                          updateField("variants", newVariants);
+                        }}
+                        className="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/10 text-white text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-slate-500 uppercase font-black tracking-widest block mb-1">Stock</label>
+                      <input
+                        type="number"
+                        value={variant.stock}
+                        onChange={(e) => {
+                          const newVariants = [...formData.variants];
+                          newVariants[idx] = { ...variant, stock: parseInt(e.target.value) || 0 };
+                          updateField("variants", newVariants);
+                        }}
+                        className="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/10 text-white text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-slate-500 uppercase font-black tracking-widest block mb-2">Imagen Específica</label>
+                    <MediaUploader
+                      type="image"
+                      preset="product"
+                      currentUrl={variant.image}
+                      onUploadComplete={(url) => {
+                        const newVariants = [...formData.variants];
+                        newVariants[idx] = { ...variant, image: url };
+                        updateField("variants", newVariants);
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+
+              {formData.variants.length === 0 && (
+                <div className="p-8 rounded-2xl border-2 border-dashed border-white/5 text-center">
+                  <p className="text-slate-500 text-sm">Sin variantes asignadas. Útil para colores o modelos diferentes.</p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Actions */}

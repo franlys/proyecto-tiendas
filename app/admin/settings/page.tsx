@@ -26,6 +26,8 @@ import {
   Globe,
   Type,
   FileText,
+  Smartphone,
+  HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import {
@@ -67,6 +69,9 @@ interface ShopConfig {
   tiktok: string;
   website: string;
   templateType: string;
+  // Tech 3D Breakout assets
+  heroProductImage: string;
+  requestQuoteEnabled: boolean;
 }
 
 const BACKGROUND_OPTIONS: { id: BackgroundEffect; name: string; description: string }[] = [
@@ -105,6 +110,8 @@ export default function AdminSettingsPage() {
     tiktok: "",
     website: "",
     templateType: "standard",
+    heroProductImage: "",
+    requestQuoteEnabled: false,
   });
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -142,6 +149,8 @@ export default function AdminSettingsPage() {
           tiktok: shop.social?.tiktok || "",
           website: shop.social?.website || "",
           templateType: shop.templateType || "standard",
+          heroProductImage: shop.heroProductImage || "",
+          requestQuoteEnabled: shop.requestQuoteEnabled || false,
         });
       }
     }
@@ -189,6 +198,8 @@ export default function AdminSettingsPage() {
           website: config.website,
         },
         templateType: config.templateType,
+        heroProductImage: config.heroProductImage,
+        requestQuoteEnabled: config.requestQuoteEnabled,
       };
 
       // Add URL based on type
@@ -529,7 +540,8 @@ export default function AdminSettingsPage() {
                       { id: "premium-drop-v1", name: "Premium Drop", desc: "Enfoque en productos destacados y elegancia." },
                       { id: "street-drop-v1", name: "Street Style", desc: "Estética urbana, ideal para moda y accesorios." },
                       { id: "cosmic-drop-v1", name: "Cosmic", desc: "Inspirado en el espacio, efectos galácticos." },
-                      { id: "tech-drop-v1", name: "Tech Premium", desc: "Innovación, seguridad y tecnología con animejs v4.", isNew: true },
+                      { id: "tech-drop-v1", name: "Tech Premium", desc: "Innovación, seguridad y tecnología con animejs v4." },
+                      { id: "tech-3d-v1", name: "Tech 3D Breakout", desc: "Screen Breakout, Liquid Metal y portal digital. El tema más avanzado para tiendas de tecnología.", isNew: true, isPremium: true },
                     ].map((tpl) => (
                       <button
                         key={tpl.id}
@@ -544,9 +556,14 @@ export default function AdminSettingsPage() {
                       >
                         <div className="flex justify-between items-start mb-2">
                           <p className="text-white font-bold tracking-tight">{tpl.name}</p>
-                          {tpl.isNew && (
-                            <span className="bg-cyan-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase shadow-[0_0_10px_#06b6d4]">Nuevo</span>
-                          )}
+                          <div className="flex items-center gap-1.5">
+                            {(tpl as any).isPremium && (
+                              <span className="bg-gradient-to-r from-violet-500 to-cyan-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase shadow-[0_0_12px_rgba(139,92,246,0.6)]">3D</span>
+                            )}
+                            {tpl.isNew && (
+                              <span className="bg-cyan-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase shadow-[0_0_10px_#06b6d4]">Nuevo</span>
+                            )}
+                          </div>
                         </div>
                         <p className="text-[11px] text-slate-500 leading-relaxed font-medium">{tpl.desc}</p>
                         {config.templateType === tpl.id && (
@@ -556,6 +573,101 @@ export default function AdminSettingsPage() {
                         )}
                       </button>
                     ))}
+                  </div>
+                </div>
+
+                {/* Tech 3D Breakout — Extra Assets (only when that template is selected) */}
+                {config.templateType === "tech-3d-v1" && (
+                  <div className="glass-panel rounded-2xl p-6 border border-cyan-500/20 bg-cyan-500/5">
+                    <h2 className="text-white font-semibold mb-2 flex items-center gap-2">
+                      <Smartphone className="w-4 h-4 text-cyan-400" />
+                      Imagen del Producto Hero
+                      <span className="ml-auto bg-gradient-to-r from-violet-500 to-cyan-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase">
+                        Tech 3D
+                      </span>
+                    </h2>
+                    <p className="text-sm text-slate-400 mb-5 leading-relaxed">
+                      Esta imagen es la que <span className="text-cyan-300 font-semibold">"rompe la pantalla"</span> en la animación Screen Breakout del hero. Sube una foto de tu producto estrella — un celular, tablet, laptop, etc. Idealmente con fondo oscuro o transparente (PNG).
+                    </p>
+
+                    <div className="grid sm:grid-cols-2 gap-6 items-start">
+                      <FirebaseImageUpload
+                        value={config.heroProductImage}
+                        onChange={(url) => updateConfig({ heroProductImage: url })}
+                        folder="shops/hero-products"
+                        shopId={user?.shopId || "temp"}
+                        label="Foto del producto principal"
+                        aspectRatio="square"
+                        maxSizeMB={8}
+                      />
+
+                      <div className="space-y-3">
+                        <div className="p-4 rounded-xl bg-black/40 border border-white/8 space-y-3">
+                          <p className="text-xs text-slate-400 font-semibold uppercase tracking-widest">Recomendaciones</p>
+                          <ul className="space-y-2 text-xs text-slate-500 leading-relaxed">
+                            <li className="flex items-start gap-2">
+                              <span className="text-cyan-400 mt-0.5">✦</span>
+                              <span>Formato <strong className="text-slate-300">PNG con fondo transparente</strong> para el mejor efecto 3D</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-cyan-400 mt-0.5">✦</span>
+                              <span>Resolución mínima <strong className="text-slate-300">500×500px</strong></span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-cyan-400 mt-0.5">✦</span>
+                              <span>Producto centrado, toma frontal o en ángulo ligero</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-cyan-400 mt-0.5">✦</span>
+                              <span>Ideal para: celulares, laptops, tablets, cámaras, auriculares</span>
+                            </li>
+                          </ul>
+                        </div>
+
+                        {config.heroProductImage && (
+                          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-xl overflow-hidden border border-white/10 flex-shrink-0">
+                              <img src={config.heroProductImage} alt="Hero" className="w-full h-full object-contain" />
+                            </div>
+                            <div>
+                              <p className="text-emerald-400 text-xs font-black uppercase tracking-widest">Imagen cargada</p>
+                              <p className="text-slate-500 text-[10px] mt-0.5">Aparecerá en la animación Screen Breakout</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Custom Tech Request Toggle */}
+                <div className="glass-panel rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all group">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "p-2 rounded-xl transition-colors",
+                        config.requestQuoteEnabled ? "bg-cyan-500/20 text-cyan-400" : "bg-white/5 text-slate-500"
+                      )}>
+                        <HelpCircle className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-white font-bold tracking-tight">¿No ves lo que buscas?</h3>
+                        <p className="text-xs text-slate-500">Habilita una sección para pedidos personalizados de tecnología.</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => updateConfig({ requestQuoteEnabled: !config.requestQuoteEnabled })}
+                      className={cn(
+                        "relative w-12 h-6 rounded-full transition-colors font-sans",
+                        config.requestQuoteEnabled ? "bg-cyan-500" : "bg-white/20"
+                      )}
+                    >
+                      <div className={cn(
+                        "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
+                        config.requestQuoteEnabled ? "translate-x-7" : "translate-x-1"
+                      )} />
+                    </button>
                   </div>
                 </div>
 

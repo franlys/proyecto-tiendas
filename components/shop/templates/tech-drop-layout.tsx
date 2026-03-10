@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { animate, stagger } from "animejs";
+import { getThemeConfig } from "@/lib/theme-config";
 import {
     Search,
     ShoppingBag,
@@ -22,9 +22,17 @@ import {
     Globe
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCart } from "@/components/shared";
+import { useCart, useCursor } from "@/components/shared";
 import type { Product, Service } from "@/lib/constants";
 import { Button } from "@/components/ui";
+import { ProductOptionsModal } from "@/components/shop/product-card";
+import { useVisualFeedback } from "@/components/shared";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+if (typeof window !== "undefined") {
+    gsap.registerPlugin(ScrollTrigger);
+}
 
 interface TechDropLayoutProps {
     shop: any;
@@ -36,12 +44,27 @@ interface TechDropLayoutProps {
 type TechView = "products" | "services" | "location";
 
 export function TechDropLayout({ shop, products, services, loadingData }: TechDropLayoutProps) {
-    const { items: cart, addProduct: addToCart, removeItem: removeFromCart, updateProductQuantity: updateQuantity } = useCart();
+    const { items: cart, addProduct: addToCart, removeItem: removeFromCart, updateProductQuantity: updateQuantity, setIsCartOpen } = useCart();
     const [currentView, setCurrentView] = useState<TechView>("products");
     const [activeCategory, setActiveCategory] = useState<string>("todos");
     const [searchQuery, setSearchQuery] = useState("");
+    const [showStickyBar, setShowStickyBar] = useState(false);
+    const { setType } = useCursor();
 
-    // Ref for anime.js animations
+    const theme = getThemeConfig(shop.templateType || "tech-drop-v1");
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (window.scrollY > 600) {
+                setShowStickyBar(true);
+            } else {
+                setShowStickyBar(false);
+            }
+        };
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+    // Ref for GSAP animations
     const pageRef = useRef<HTMLDivElement>(null);
     const cartRef = useRef<HTMLDivElement>(null);
 
@@ -59,33 +82,55 @@ export function TechDropLayout({ shop, products, services, loadingData }: TechDr
         });
     }, [products, activeCategory, searchQuery]);
 
-    // Page Transitions with Anime.js
+    // Page Transitions with GSAP
     useEffect(() => {
         if (pageRef.current) {
-            animate(pageRef.current, {
-                opacity: [0, 1],
-                translateY: [20, 0],
-                easing: 'spring(1, 80, 10, 0)',
-                duration: 800
-            });
+            gsap.fromTo(pageRef.current,
+                { opacity: 0, y: 20 },
+                { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" }
+            );
+        }
+
+        // GSAP Hero Choreography
+        if (currentView === "products") {
+            const tl = gsap.timeline();
+            tl.from(".hero-slogan", { opacity: 0, x: -30, duration: 0.8, ease: "power3.out" })
+                .from(".hero-title", { opacity: 0, y: 50, duration: 1, ease: "power4.out" }, "-=0.4")
+                .from(".hero-desc", { opacity: 0, duration: 0.8 }, "-=0.6")
+                .from(".hero-card", { scale: 0.8, opacity: 0, duration: 1, ease: "back.out(1.7)" }, "-=0.8");
         }
     }, [currentView]);
 
     return (
-        <div className="min-h-screen bg-[#05070a] text-slate-100 font-sans selection:bg-cyan-500/30 selection:text-cyan-400">
+        <div className={cn("min-h-screen relative text-slate-100 selection:bg-cyan-500/30 selection:text-cyan-400", theme.fontFamily)} style={{ backgroundColor: theme.colors.background }}>
             {/* Background Decor */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 blur-[120px] rounded-full" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
-                <div className="absolute inset-0 grid-bg opacity-20" />
+                {theme.effects.grid && <div className="absolute inset-0 grid-bg opacity-20" />}
+                {theme.effects.scanlines && (
+                    <div
+                        className="absolute inset-0 pointer-events-none z-10"
+                        style={{
+                            background: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))',
+                            backgroundSize: '100% 4px, 6px 100%',
+                            opacity: 0.04,
+                            mixBlendMode: 'overlay'
+                        }}
+                    />
+                )}
             </div>
 
             {/* Header / Navbar */}
             <header className="sticky top-0 z-50 transition-all duration-300">
                 <div className="backdrop-blur-xl bg-black/60 border-b border-white/5 py-4 px-6 md:px-12 flex items-center justify-between">
                     <div className="flex items-center gap-10">
-                        <div className="flex items-center gap-3 group cursor-pointer">
+                        <div
+                            className="flex items-center gap-3 group cursor-pointer"
+                            onMouseEnter={() => setType("button")}
+                            onMouseLeave={() => setType("default")}
+                        >
                             <div className="w-12 h-12 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 flex items-center justify-center shadow-2xl group-hover:border-cyan-500/50 group-hover:shadow-cyan-500/20 transition-all duration-500 overflow-hidden">
                                 {shop.logo ? (
                                     <img src={shop.logo} alt={shop.name} className="w-full h-full object-contain p-1.5" />
@@ -108,6 +153,8 @@ export function TechDropLayout({ shop, products, services, loadingData }: TechDr
                                 <button
                                     key={item.id}
                                     onClick={() => setCurrentView(item.id as TechView)}
+                                    onMouseEnter={() => setType("button")}
+                                    onMouseLeave={() => setType("default")}
                                     className={cn(
                                         "flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300",
                                         currentView === item.id
@@ -123,25 +170,70 @@ export function TechDropLayout({ shop, products, services, loadingData }: TechDr
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <CartButton cart={cart} />
+                        <CartButton cart={cart} onOpen={() => setIsCartOpen(true)} />
                     </div>
                 </div>
             </header>
+
+            {/* Sticky Checkout Bar */}
+            <AnimatePresence>
+                {showStickyBar && (
+                    <motion.div
+                        initial={{ y: 100 }}
+                        animate={{ y: 0 }}
+                        exit={{ y: 100 }}
+                        className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6 bg-black/80 backdrop-blur-2xl border-t border-white/10 flex items-center justify-between"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center">
+                                <ShoppingBag className="text-cyan-400 w-6 h-6" />
+                            </div>
+                            <div>
+                                <div className="text-[10px] text-slate-500 font-mono uppercase tracking-[0.2em]">Resumen de Compra</div>
+                                <div className="text-white font-black text-sm uppercase tracking-tight">
+                                    {cart.length} Productos // Total: ${cart.reduce((s, i) => s + (i.price * i.quantity), 0).toLocaleString()}
+                                </div>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setIsCartOpen(true)}
+                            className="bg-white text-black px-8 py-3 rounded-full font-black uppercase text-xs tracking-widest hover:bg-cyan-400 transition-all active:scale-95"
+                        >
+                            Ver Carrito
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Main Content */}
             <main className="relative z-10 p-6 md:p-12 lg:p-20 max-w-screen-2xl mx-auto">
                 <div ref={pageRef} className="opacity-0">
                     {currentView === "products" && (
                         <div className="space-y-16">
-                            {/* Hero Section with Banner Support */}
-                            <section className="relative rounded-[40px] overflow-hidden border border-white/5 min-h-[400px] flex items-center">
+                            {/* Hero Section */}
+                            <section className={cn(
+                                "relative rounded-[40px] overflow-hidden border border-white/5 min-h-[500px] flex items-center",
+                                shop.templateType === "tech-3d-v1" ? "perspective-3d" : ""
+                            )}>
+                                {shop.templateType === "tech-3d-v1" && shop.heroProductImage && (
+                                    <div className="absolute right-[-10%] top-1/2 -translate-y-1/2 w-1/2 h-full z-20 pointer-events-none preserve-3d">
+                                        <motion.img
+                                            initial={{ x: 100, opacity: 0, rotateY: -30 }}
+                                            animate={{ x: 0, opacity: 1, rotateY: 0 }}
+                                            transition={{ duration: 1.2, ease: "easeOut", delay: 0.5 }}
+                                            src={shop.heroProductImage}
+                                            alt="Featured Product"
+                                            className="w-full h-full object-contain filter drop-shadow-[0_0_30px_rgba(6,182,212,0.3)]"
+                                        />
+                                    </div>
+                                )}
+
                                 {shop.banner ? (
                                     <>
                                         <div className="absolute inset-0 z-0">
                                             <img src={shop.banner} alt="Banner" className="w-full h-full object-cover" />
                                             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
                                             <div className="absolute inset-0 bg-[#05070a]/40 backdrop-blur-[2px]" />
-                                            {/* Tech Overlay */}
                                             <div className="absolute inset-0 opacity-20 mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
                                             <div className="absolute inset-0 grid-bg opacity-30" />
                                         </div>
@@ -151,36 +243,28 @@ export function TechDropLayout({ shop, products, services, loadingData }: TechDr
                                 )}
 
                                 <div className="relative z-10 px-8 py-16 md:px-16 max-w-3xl">
-                                    <motion.span
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] font-black tracking-[0.3em] uppercase mb-6"
+                                    <span
+                                        className="hero-slogan inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[10px] font-black tracking-[0.3em] uppercase mb-6"
                                     >
                                         <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
                                         {shop.slogan || "Próxima Generación de Tecnología"}
-                                    </motion.span>
+                                    </span>
 
-                                    <motion.h2
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.1 }}
-                                        className="text-5xl md:text-7xl font-black text-white leading-[0.9] mb-8 uppercase tracking-tighter"
+                                    <h2
+                                        className="hero-title text-5xl md:text-7xl font-black text-white leading-[0.9] mb-8 uppercase tracking-tighter"
                                     >
                                         Descubre el Futuro de la <span className="text-cyan-400 italic">Innovación</span>
-                                    </motion.h2>
+                                    </h2>
 
-                                    <motion.p
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{ delay: 0.2 }}
-                                        className="text-slate-400 text-lg md:text-xl leading-relaxed max-w-xl font-medium"
+                                    <p
+                                        className="hero-desc text-slate-400 text-lg md:text-xl leading-relaxed max-w-xl font-medium"
                                     >
                                         {shop.description || "Experiencia premium en hardware, software y seguridad. Solo productos certificados con la máxima confianza del mercado."}
-                                    </motion.p>
+                                    </p>
                                 </div>
 
                                 {/* Floating Tech Element */}
-                                <div className="hidden lg:block absolute right-20 top-1/2 -translate-y-1/2">
+                                <div className="hero-card hidden lg:block absolute right-20 top-1/2 -translate-y-1/2">
                                     <div className="w-64 h-64 rounded-[60px] border border-white/10 bg-white/5 backdrop-blur-3xl p-8 flex flex-col justify-between animate-float">
                                         <div className="flex justify-between items-start">
                                             <Cpu className="w-8 h-8 text-cyan-500" />
@@ -215,7 +299,7 @@ export function TechDropLayout({ shop, products, services, loadingData }: TechDr
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                                 <AnimatePresence mode="popLayout">
                                     {filteredProducts.map((product) => (
-                                        <ProductCard key={product.id} product={product} onAdd={() => addToCart(product)} />
+                                        <ProductCard key={product.id} product={product} />
                                     ))}
                                 </AnimatePresence>
                             </div>
@@ -288,6 +372,71 @@ export function TechDropLayout({ shop, products, services, loadingData }: TechDr
                 </section>
             </main>
 
+            {/* Request Quote Section */}
+            {shop.requestQuoteEnabled && (
+                <section className="py-24 px-6 md:px-12 bg-zinc-950 relative overflow-hidden">
+                    <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none" />
+                    <div className="max-w-4xl mx-auto backdrop-blur-md bg-white/5 border border-white/10 rounded-[40px] p-8 md:p-16 relative z-10">
+                        <div className="grid md:grid-cols-2 gap-12 items-center">
+                            <div>
+                                <span className="text-cyan-400 text-[10px] font-black tracking-widest uppercase mb-4 block">Personalización Elite</span>
+                                <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-6 leading-none">
+                                    ¿No ves lo que <br /> <span className="text-cyan-400 italic">buscas</span>?
+                                </h2>
+                                <p className="text-slate-400 text-lg leading-relaxed mb-8">
+                                    Dinos qué modelo o accesorio necesitas y te lo conseguiremos al mejor precio del mercado. Respuesta garantizada en minutos.
+                                </p>
+                                <div className="flex items-center gap-4 text-xs font-mono text-slate-500">
+                                    <span className="flex items-center gap-2 italic">
+                                        <Zap className="w-3 h-3 text-cyan-400" /> Concierge Tech 24/7
+                                    </span>
+                                </div>
+                            </div>
+                            <form className="space-y-4" onSubmit={(e) => {
+                                e.preventDefault();
+                                (e.target as HTMLFormElement).reset();
+                                alert("Solicitud recibida. Un asesor técnico te contactará en breve con la mejor cotización.");
+                            }}>
+                                <div className="grid grid-cols-1 gap-4">
+                                    <input
+                                        type="text"
+                                        required
+                                        placeholder="Nombre completo"
+                                        className="bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white focus:border-cyan-500/50 outline-none transition-all"
+                                    />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <input
+                                            type="tel"
+                                            required
+                                            placeholder="WhatsApp / Tel"
+                                            className="bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white focus:border-cyan-500/50 outline-none transition-all"
+                                        />
+                                        <input
+                                            type="email"
+                                            required
+                                            placeholder="Email"
+                                            className="bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white focus:border-cyan-500/50 outline-none transition-all"
+                                        />
+                                    </div>
+                                    <textarea
+                                        required
+                                        rows={4}
+                                        placeholder="Dinos exactamente qué necesitas..."
+                                        className="bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white focus:border-cyan-500/50 outline-none transition-all resize-none"
+                                    />
+                                    <button
+                                        type="submit"
+                                        className="w-full py-5 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-black font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(6,182,212,0.3)]"
+                                    >
+                                        Enviar Petición <ArrowRight className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+            )}
+
             <Footer shop={shop} />
 
             <style jsx global>{`
@@ -319,17 +468,13 @@ function CategoryCarousel({ categories, activeCategory, onSelect }: { categories
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        // Reveal animation for items
-        // The instruction provided a conditional check for currentView, but it's not defined in this scope.
-        // Assuming the animation should run when the component mounts or categories change.
-        // Applying the animation properties from the instruction.
-        animate('.category-item', {
-            scale: [0.9, 1.1, 1],
-            opacity: [0, 1],
-            delay: stagger(100),
-            duration: 800,
-            easing: 'spring(1, 80, 10, 0)'
-        });
+        // Reveal animation for items with GSAP
+        if (containerRef.current) {
+            gsap.fromTo('.category-item',
+                { scale: 0.9, opacity: 0 },
+                { scale: 1, opacity: 1, duration: 0.8, stagger: 0.1, ease: "back.out(1.7)" }
+            );
+        }
     }, [categories]); // Added categories to dependency array for re-trigger if categories change
 
     return (
@@ -378,28 +523,60 @@ function CategoryCarousel({ categories, activeCategory, onSelect }: { categories
     );
 }
 
-function ProductCard({ product, onAdd }: { product: Product, onAdd: () => void }) {
+function ProductCard({ product }: { product: Product }) {
+    const { addProduct } = useCart();
+    const { triggerFlyToCart } = useVisualFeedback();
     const [isHovered, setIsHovered] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
 
-    const handleAddToCart = () => {
-        // Anime.js interaction animation
+    const hasVariants = product.variants && product.variants.length > 0;
+    const hasExtras = product.extras && product.extras.length > 0;
+    const hasOptions = hasVariants || hasExtras;
+
+    const { setType } = useCursor();
+
+    // Stock check for visual label
+    const isOutOfStock = !product.infiniteStock && (Number(product.stock) || 0) <= 0 && (!hasVariants || !product.variants!.some(v => (Number(v.stock) || 0) > 0));
+
+    useEffect(() => {
         if (cardRef.current) {
-            animate(cardRef.current, {
-                scale: [1, 0.95, 1.02, 1],
-                duration: 400,
-                easing: 'easeInOutQuad'
+            // Floating Idle Animation with GSAP
+            gsap.to(cardRef.current, {
+                y: -10,
+                rotation: 1,
+                duration: 2 + Math.random(),
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut"
             });
         }
-        onAdd();
+    }, []);
+
+    const handleAction = () => {
+        if (hasOptions) {
+            setIsModalOpen(true);
+        } else if (!isOutOfStock) {
+            if (cardRef.current) {
+                const rect = cardRef.current.getBoundingClientRect();
+                triggerFlyToCart(rect.left + rect.width / 2, rect.top + rect.height / 3, product.image);
+            }
+            addProduct(product, 1);
+        }
     };
 
     return (
         <motion.div
             layout
             ref={cardRef}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            onMouseEnter={() => {
+                setIsHovered(true);
+                setType("product");
+            }}
+            onMouseLeave={() => {
+                setIsHovered(false);
+                setType("default");
+            }}
             className="group relative h-[480px] rounded-3xl overflow-hidden bg-white/5 border border-white/10 hover:border-cyan-500/40 transition-all duration-500"
         >
             {/* Product Image Wrapper */}
@@ -417,7 +594,12 @@ function ProductCard({ product, onAdd }: { product: Product, onAdd: () => void }
 
                 {/* Overlay Badges */}
                 <div className="absolute top-4 left-4 flex gap-2">
-                    {product.stock > 0 ? (
+                    {product.infiniteStock ? (
+                        <span className="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1 backdrop-blur-md">
+                            <span className="w-1 h-1 rounded-full bg-cyan-400 animate-pulse" />
+                            Disponible
+                        </span>
+                    ) : !isOutOfStock ? (
                         <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1 backdrop-blur-md">
                             <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
                             Stock Disponible
@@ -427,6 +609,20 @@ function ProductCard({ product, onAdd }: { product: Product, onAdd: () => void }
                             Agotado
                         </span>
                     )}
+                </div>
+
+                {/* Spec Highlight Overlay (Premium Tech Feel) */}
+                <div className="absolute inset-0 z-10 pointer-events-none p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2">
+                            <div className="w-1 h-1 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,1)]" />
+                            <span className="text-[8px] font-mono text-cyan-400 uppercase tracking-widest">PREMIUM BUILD</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-1 h-1 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,1)]" />
+                            <span className="text-[8px] font-mono text-cyan-400 uppercase tracking-widest">CERTIFIED HW</span>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Zoomed Featured View on Hover (Premium Tech Feel) */}
@@ -446,9 +642,13 @@ function ProductCard({ product, onAdd }: { product: Product, onAdd: () => void }
                         <h4 className="text-lg font-black text-white uppercase tracking-tighter group-hover:text-cyan-400 transition-colors">
                             {product.name}
                         </h4>
-                        <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
-                            ${product.price.toLocaleString()}
-                        </span>
+                        <div className="flex flex-col items-end">
+                            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
+                                ${product.price.toLocaleString()}
+                            </span>
+                            {/* Pricing Pulse for Tech Theme */}
+                            <div className="w-2 h-2 rounded-full bg-cyan-500 animate-ping opacity-75 mt-1" />
+                        </div>
                     </div>
                     <p className="text-slate-500 text-xs line-clamp-1 mb-4">
                         {product.description}
@@ -456,21 +656,41 @@ function ProductCard({ product, onAdd }: { product: Product, onAdd: () => void }
                 </div>
 
                 <button
-                    onClick={handleAddToCart}
-                    className="w-full py-4 rounded-xl bg-white text-black font-black uppercase text-xs tracking-widest hover:bg-cyan-400 transition-all duration-300 flex items-center justify-center gap-2 group/btn"
+                    onClick={handleAction}
+                    disabled={isOutOfStock && !hasOptions}
+                    className={cn(
+                        "w-full py-4 rounded-xl font-black uppercase text-xs tracking-widest transition-all duration-300 flex items-center justify-center gap-2 group/btn",
+                        isOutOfStock && !hasOptions
+                            ? "bg-zinc-800 text-zinc-500 cursor-not-allowed"
+                            : "bg-white text-black hover:bg-cyan-400"
+                    )}
                 >
                     <ShoppingBag className="w-4 h-4" />
-                    Agregar al Carrito
+                    {hasOptions ? "Opciones" : "Agregar al Carrito"}
                     <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
                 </button>
             </div>
+
+            <AnimatePresence>
+                {isModalOpen && (
+                    <ProductOptionsModal
+                        product={product}
+                        onClose={() => setIsModalOpen(false)}
+                    />
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 }
 
 function ServiceCard({ service }: { service: Service }) {
+    const { setType } = useCursor();
     return (
-        <div className="relative p-8 rounded-[40px] bg-white/5 border border-white/10 overflow-hidden group hover:bg-white/10 transition-all duration-500">
+        <div
+            className="relative p-8 rounded-[40px] bg-white/5 border border-white/10 overflow-hidden group hover:bg-white/10 transition-all duration-500"
+            onMouseEnter={() => setType("button")}
+            onMouseLeave={() => setType("default")}
+        >
             <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:opacity-10 group-hover:scale-110 transition-all duration-700">
                 <Zap className="w-32 h-32" />
             </div>
@@ -532,9 +752,11 @@ function LocationView({ shop }: { shop: any }) {
                     </div>
                 </div>
 
-                <button className="flex items-center gap-4 bg-white text-black px-8 py-5 rounded-full font-black uppercase text-sm tracking-widest hover:bg-cyan-400 transition-all duration-300">
-                    Obtener Indicaciones <ArrowRight className="w-5 h-5" />
-                </button>
+                <MagneticButton>
+                    <button className="flex items-center gap-4 bg-white text-black px-8 py-5 rounded-full font-black uppercase text-sm tracking-widest hover:bg-cyan-400 transition-all duration-300">
+                        Obtener Indicaciones <ArrowRight className="w-5 h-5" />
+                    </button>
+                </MagneticButton>
             </div>
 
             <div className="order-1 lg:order-2">
@@ -555,7 +777,7 @@ function LocationView({ shop }: { shop: any }) {
     );
 }
 
-function CartButton({ cart }: { cart: any[] }) {
+function CartButton({ cart, onOpen }: { cart: any[]; onOpen: () => void }) {
     const [totalItems, setTotalItems] = useState(0);
     const buttonRef = useRef<HTMLButtonElement>(null);
     const iconRef = useRef<HTMLDivElement>(null);
@@ -563,19 +785,20 @@ function CartButton({ cart }: { cart: any[] }) {
     useEffect(() => {
         const newTotal = cart.reduce((sum, item) => sum + item.quantity, 0);
         if (newTotal > totalItems && buttonRef.current) {
-            // Morph/Pulse animation when adding items
-            animate(buttonRef.current, {
-                scale: [1, 1.1, 1],
-                backgroundColor: ['#06b6d4', '#0891b2', '#06b6d4'],
-                duration: 400,
-                easing: 'spring(1, 80, 10, 0)'
+            // GSAP Pulse animation when adding items
+            gsap.to(buttonRef.current, {
+                scale: 1.1,
+                duration: 0.2,
+                yoyo: true,
+                repeat: 1,
+                ease: "power2.out"
             });
 
             if (iconRef.current) {
-                animate(iconRef.current, {
-                    rotate: '1turn',
-                    duration: 600,
-                    easing: 'spring(1, 80, 10, 0)'
+                gsap.to(iconRef.current, {
+                    rotation: 360,
+                    duration: 0.5,
+                    ease: "power2.inOut"
                 });
             }
         }
@@ -585,6 +808,7 @@ function CartButton({ cart }: { cart: any[] }) {
     return (
         <button
             ref={buttonRef}
+            onClick={onOpen}
             className="relative px-6 py-2.5 rounded-full bg-cyan-500 text-white font-bold text-sm flex items-center gap-2 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all duration-300 active:scale-95 overflow-hidden group"
         >
             <div ref={iconRef} className="relative z-10">
@@ -668,5 +892,56 @@ function Footer({ shop }: { shop: any }) {
                 </div>
             </div>
         </footer>
+    );
+}
+
+function MagneticButton({ children }: { children: React.ReactElement }) {
+    const ref = useRef<HTMLDivElement>(null);
+    const { setType } = useCursor();
+
+    useEffect(() => {
+        const element = ref.current;
+        if (!element) return;
+
+        const handleMouseMove = (e: MouseEvent) => {
+            const { clientX, clientY } = e;
+            const { left, top, width, height } = element.getBoundingClientRect();
+            const centerX = left + width / 2;
+            const centerY = top + height / 2;
+            const deltaX = clientX - centerX;
+            const deltaY = clientY - centerY;
+
+            gsap.to(element, {
+                x: deltaX * 0.2,
+                y: deltaY * 0.2,
+                duration: 0.3,
+                ease: "power2.out"
+            });
+        };
+
+        const handleMouseLeave = () => {
+            gsap.to(element, {
+                x: 0,
+                y: 0,
+                duration: 0.5,
+                ease: "elastic.out(1, 0.3)"
+            });
+            setType("default");
+        };
+
+        element.addEventListener("mousemove", handleMouseMove);
+        element.addEventListener("mouseleave", handleMouseLeave);
+        element.addEventListener("mouseenter", () => setType("button"));
+
+        return () => {
+            element.removeEventListener("mousemove", handleMouseMove);
+            element.removeEventListener("mouseleave", handleMouseLeave);
+        };
+    }, [setType]);
+
+    return (
+        <div ref={ref} className="inline-block transition-transform duration-200">
+            {children}
+        </div>
     );
 }

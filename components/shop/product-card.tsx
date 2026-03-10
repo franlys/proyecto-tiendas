@@ -11,6 +11,7 @@ import type { SelectedExtra } from "@/lib/types/product-extra.types";
 import { ExtrasSelector } from "@/components/shop/extras-selector";
 import { motion, AnimatePresence } from "framer-motion";
 import { InteractiveCartButton } from "./interactive-cart-button";
+import { gsap } from "gsap";
 
 interface ProductCardProps {
   product: Product;
@@ -259,7 +260,7 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
   );
 }
 
-function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: Product, onClose: () => void, hidePriceIfZero?: boolean }) {
+export function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: Product, onClose: () => void, hidePriceIfZero?: boolean }) {
   const { addProduct, getVariantQuantity, removeVariant, updateVariantQuantity } = useCart();
   const { triggerFlyToCart } = useVisualFeedback();
   const modalRef = useRef<HTMLDivElement>(null);
@@ -271,9 +272,40 @@ function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: P
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
     hasVariants ? null : null // Will be set when user selects
   );
+  const [displayImage, setDisplayImage] = useState(product.image);
+  const imageRef = useRef<HTMLDivElement>(null);
+
+  // Handle variant selection with animation
+  const handleVariantSelect = (variant: ProductVariant) => {
+    if (selectedVariant?.id === variant.id) return;
+
+    if (variant.image && variant.image !== displayImage) {
+      // Premium GSAP Transition
+      const tl = gsap.timeline();
+
+      // Rotate out, swap image, rotate in
+      tl.to(imageRef.current, {
+        rotateY: 90,
+        duration: 0.3,
+        ease: "power2.in",
+        onComplete: () => {
+          setDisplayImage(variant.image!);
+          setSelectedVariant(variant);
+        }
+      }).to(imageRef.current, {
+        rotateY: 0,
+        duration: 0.4,
+        ease: "power2.out"
+      });
+    } else {
+      setSelectedVariant(variant);
+    }
+  };
+
   const [selectedExtras, setSelectedExtras] = useState<SelectedExtra[]>([]);
   const [quantity, setQuantity] = useState(1);
   const shop = useShop();
+  const isTechDrop = shop?.templateType === "tech-drop-v1";
   const { hasInventory } = useCombinedBusinessFeatures(shop?.businessTypes || [shop?.businessType || "otro"]);
 
   // Check if product has intentional stock management (stock > 0 means it was set intentionally)
@@ -296,7 +328,7 @@ function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: P
       const rect = modalRef.current.getBoundingClientRect();
       const startX = rect.left + rect.width / 2;
       const startY = rect.top + rect.height / 3;
-      triggerFlyToCart(startX, startY, product.image);
+      triggerFlyToCart(startX, startY, displayImage);
     }
 
     addProduct(product, quantity, selectedVariant || undefined, selectedExtras.length > 0 ? selectedExtras : undefined);
@@ -320,18 +352,25 @@ function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: P
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
-        className="relative w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl"
+        className={cn(
+          "relative w-full max-w-md overflow-hidden shadow-2xl",
+          isTechDrop
+            ? "bg-[#05070a] border border-cyan-500/30 rounded-[32px] font-sans"
+            : "bg-zinc-900 border border-zinc-800 rounded-2xl"
+        )}
       >
         {/* Header with Image */}
-        <div className="relative h-32 bg-zinc-800">
-          {product.image && (
-            <Image
-              src={product.image}
-              alt={product.name}
-              fill
-              className="object-cover opacity-50"
-            />
-          )}
+        <div className="relative h-48 bg-zinc-800 perspective-1000">
+          <div ref={imageRef} className="relative w-full h-full transform-style-3d">
+            {displayImage && (
+              <Image
+                src={displayImage}
+                alt={product.name}
+                fill
+                className="object-contain p-4"
+              />
+            )}
+          </div>
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent" />
           <button
             onClick={onClose}
@@ -340,7 +379,7 @@ function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: P
             <X className="w-5 h-5" />
           </button>
           <div className="absolute bottom-3 left-4">
-            <h3 className="text-xl font-bold text-white">{product.name}</h3>
+            <h3 className="text-xl font-bold text-white uppercase tracking-tighter">{product.name}</h3>
             <p className="text-sm text-zinc-400">{product.description}</p>
           </div>
         </div>
@@ -349,8 +388,8 @@ function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: P
           {/* Variants Section */}
           {hasVariants && (
             <div className="space-y-2">
-              <h4 className="text-sm font-medium text-white">
-                Tamaño / Tipo <span className="text-red-400">*</span>
+              <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                Seleccionar Color / Modelo <span className="text-red-400">*</span>
               </h4>
               <div className="grid grid-cols-2 gap-2">
                 {product.variants!.map(variant => {
@@ -364,30 +403,47 @@ function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: P
                   return (
                     <button
                       key={variant.id}
-                      onClick={() => !isOutOfStock && setSelectedVariant(variant)}
+                      onClick={() => !isOutOfStock && handleVariantSelect(variant)}
                       disabled={isOutOfStock}
                       className={cn(
-                        "p-3 rounded-xl border text-left transition-all",
+                        "p-3 rounded-xl border text-left transition-all relative overflow-hidden group/opt",
                         isSelected
-                          ? "border-primary bg-primary/10"
+                          ? isTechDrop ? "border-cyan-500 bg-cyan-500/10 shadow-[0_0_15px_rgba(6,182,212,0.2)]" : "border-primary bg-primary/10"
                           : isOutOfStock
                             ? "border-zinc-700 bg-zinc-800/50 opacity-50 cursor-not-allowed"
                             : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
                       )}
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-white text-sm">{variant.name}</span>
-                        {isSelected && <Check className="w-4 h-4 text-primary" />}
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          {variant.color && (
+                            <div
+                              className="w-3 h-3 rounded-full border border-white/20 shadow-sm"
+                              style={{ backgroundColor: variant.color }}
+                            />
+                          )}
+                          <span className="font-bold text-white text-xs uppercase tracking-tight">{variant.name}</span>
+                        </div>
+                        {isSelected && <Check className={cn("w-3 h-3", isTechDrop ? "text-cyan-400" : "text-primary")} />}
                       </div>
-                      {variant.description && (
-                        <p className="text-xs text-zinc-400 mt-0.5">{variant.description}</p>
+
+                      <div className="flex items-center justify-between mt-2">
+                        {variant.price > 0 ? (
+                          <p className={cn("text-xs font-black", isTechDrop ? "text-cyan-400" : "text-emerald-400")}>
+                            ${variant.price.toLocaleString()}
+                          </p>
+                        ) : <div />}
+                        {isOutOfStock ? (
+                          <span className="text-[8px] font-black text-red-400 uppercase tracking-widest">Agotado</span>
+                        ) : variant.stock !== undefined && (
+                          <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Stock: {variant.stock}</span>
+                        )}
+                      </div>
+
+                      {/* Hover Glow for Tech Theme */}
+                      {isTechDrop && !isOutOfStock && (
+                        <div className="absolute inset-0 bg-cyan-500/5 opacity-0 group-hover/opt:opacity-100 transition-opacity pointer-events-none" />
                       )}
-                      {variant.price > 0 && (
-                        <p className="text-sm font-semibold text-emerald-400 mt-1">
-                          ${variant.price.toLocaleString()}
-                        </p>
-                      )}
-                      {isOutOfStock && <span className="text-xs text-red-400">Agotado</span>}
                     </button>
                   );
                 })}
@@ -417,7 +473,7 @@ function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: P
 
             return (
               <div className="flex items-center justify-between pt-2 border-t border-zinc-800">
-                <span className="text-sm text-zinc-400">Cantidad:</span>
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Cantidad</span>
                 <div className="flex items-center gap-3 bg-zinc-800 rounded-lg p-1">
                   <button
                     onClick={() => quantity > 1 && setQuantity(q => q - 1)}
@@ -447,8 +503,8 @@ function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: P
         {/* Footer with Total and Add Button */}
         <div className="p-4 border-t border-zinc-800 bg-zinc-900/50">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-zinc-400">Total:</span>
-            <span className="text-2xl font-bold text-white">
+            <span className="text-zinc-400 text-xs uppercase tracking-widest font-bold">Inversión Final:</span>
+            <span className={cn("text-2xl font-black", isTechDrop ? "text-cyan-400" : "text-white")}>
               {hidePriceIfZero && totalPrice === 0 ? "Seleccionable" : `$${totalPrice.toLocaleString()}`}
             </span>
           </div>
@@ -456,14 +512,14 @@ function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: P
             onClick={handleAddToCart}
             disabled={!canAdd}
             className={cn(
-              "w-full py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2",
+              "w-full py-4 rounded-xl font-black uppercase text-sm tracking-widest transition-all shadow-xl flex items-center justify-center gap-2",
               canAdd
-                ? "bg-primary hover:bg-primary/90 text-white"
+                ? isTechDrop ? "bg-cyan-500 hover:bg-cyan-400 text-black shadow-cyan-500/20" : "bg-primary hover:bg-primary/90 text-white shadow-primary/20"
                 : "bg-zinc-800 text-zinc-500 cursor-not-allowed"
             )}
           >
             <ShoppingBag className="w-5 h-5" />
-            Agregar al Carrito
+            Configurar & Comprar
           </button>
           {!canAdd && hasVariants && !selectedVariant && (
             <p className="text-xs text-amber-400 text-center mt-2">Selecciona un tamaño/tipo</p>

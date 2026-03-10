@@ -656,6 +656,18 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideSt
                                                         />
                                                     </div>
                                                 )}
+                                                <div className="w-24">
+                                                    <label className="block text-xs text-zinc-500 mb-1">Foto Color</label>
+                                                    <FirebaseImageUpload
+                                                        value={variant.image}
+                                                        onChange={(url) => updateVariant(index, "image", url)}
+                                                        folder="variants"
+                                                        shopId={shopId}
+                                                        aspectRatio="square"
+                                                        maxSizeMB={5}
+                                                        label=""
+                                                    />
+                                                </div>
                                                 <button
                                                     type="button"
                                                     onClick={() => removeVariant(index)}
@@ -680,117 +692,117 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideSt
 
                                 {/* Extras Section - Only for food businesses */}
                                 {isFoodBusiness && (
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-lg font-semibold text-white">Extras / Toppings</h3>
-                                        <div className="flex items-center gap-2">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-lg font-semibold text-white">Extras / Toppings</h3>
                                             <div className="flex items-center gap-2">
-                                                {/* Toggle switch style for better visibility */}
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setHasExtras(!hasExtras)}
-                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-zinc-900 ${hasExtras ? 'bg-indigo-600' : 'bg-zinc-700'}`}
-                                                >
+                                                <div className="flex items-center gap-2">
+                                                    {/* Toggle switch style for better visibility */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setHasExtras(!hasExtras)}
+                                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-zinc-900 ${hasExtras ? 'bg-indigo-600' : 'bg-zinc-700'}`}
+                                                    >
+                                                        <span
+                                                            className={`${hasExtras ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                                                        />
+                                                    </button>
                                                     <span
-                                                        className={`${hasExtras ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-                                                    />
-                                                </button>
-                                                <span
-                                                    onClick={() => setHasExtras(!hasExtras)}
-                                                    className="text-sm text-zinc-300 cursor-pointer select-none hover:text-white transition-colors"
-                                                >
-                                                    Activar Extras (Toppings, Opciones)
-                                                </span>
+                                                        onClick={() => setHasExtras(!hasExtras)}
+                                                        className="text-sm text-zinc-300 cursor-pointer select-none hover:text-white transition-colors"
+                                                    >
+                                                        Activar Extras (Toppings, Opciones)
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {hasExtras && (
-                                        <div className="space-y-4">
-                                            <p className="text-sm text-zinc-500">
-                                                Agrega extras opcionales que el cliente puede añadir a su pedido (ej: Oreo, Nutella, Queso extra).
-                                            </p>
+                                        {hasExtras && (
+                                            <div className="space-y-4">
+                                                <p className="text-sm text-zinc-500">
+                                                    Agrega extras opcionales que el cliente puede añadir a su pedido (ej: Oreo, Nutella, Queso extra).
+                                                </p>
 
-                                            {/* Extras config */}
-                                            <div className="flex gap-4 items-center bg-zinc-800/30 p-3 rounded-lg">
-                                                <div className="flex items-center gap-2">
-                                                    <input
-                                                        type="checkbox"
-                                                        id="extrasRequired"
-                                                        checked={formData.extrasRequired || false}
-                                                        onChange={(e) => setFormData({ ...formData, extrasRequired: e.target.checked })}
-                                                        className="w-4 h-4 rounded bg-zinc-800 border-zinc-600 text-indigo-500 focus:ring-indigo-500"
-                                                    />
-                                                    <label htmlFor="extrasRequired" className="text-sm text-zinc-400 cursor-pointer">
-                                                        Obligatorio elegir al menos 1
-                                                    </label>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <label className="text-sm text-zinc-400">Máx extras:</label>
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        value={formData.maxExtras || ""}
-                                                        onChange={(e) => setFormData({ ...formData, maxExtras: e.target.value ? Number(e.target.value) : undefined })}
-                                                        className="w-16 bg-zinc-900 border-zinc-700 rounded px-2 py-1 text-white text-sm"
-                                                        placeholder="∞"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            {/* Extras list */}
-                                            {formData.extras?.map((extra, index) => (
-                                                <div key={extra.id} className="flex gap-2 items-end bg-zinc-800/30 p-3 rounded-lg border border-zinc-800">
-                                                    <div className="flex-1">
-                                                        <label className="block text-xs text-zinc-500 mb-1">Nombre del Extra</label>
+                                                {/* Extras config */}
+                                                <div className="flex gap-4 items-center bg-zinc-800/30 p-3 rounded-lg">
+                                                    <div className="flex items-center gap-2">
                                                         <input
-                                                            type="text"
-                                                            value={extra.name}
-                                                            onChange={(e) => updateExtra(index, "name", e.target.value)}
-                                                            className="w-full bg-zinc-900 border-zinc-700 rounded px-3 py-1.5 text-white text-sm"
-                                                            placeholder="Ej. Oreo, Nutella, Queso extra"
+                                                            type="checkbox"
+                                                            id="extrasRequired"
+                                                            checked={formData.extrasRequired || false}
+                                                            onChange={(e) => setFormData({ ...formData, extrasRequired: e.target.checked })}
+                                                            className="w-4 h-4 rounded bg-zinc-800 border-zinc-600 text-indigo-500 focus:ring-indigo-500"
                                                         />
+                                                        <label htmlFor="extrasRequired" className="text-sm text-zinc-400 cursor-pointer">
+                                                            Obligatorio elegir al menos 1
+                                                        </label>
                                                     </div>
-                                                    <div className="w-24">
-                                                        <label className="block text-xs text-emerald-400 mb-1">Precio +</label>
+                                                    <div className="flex items-center gap-2">
+                                                        <label className="text-sm text-zinc-400">Máx extras:</label>
                                                         <input
                                                             type="number"
                                                             min="0"
-                                                            value={extra.price}
-                                                            onChange={(e) => updateExtra(index, "price", Number(e.target.value))}
-                                                            className="w-full bg-zinc-900 border-zinc-700 rounded px-3 py-1.5 text-white text-sm"
+                                                            value={formData.maxExtras || ""}
+                                                            onChange={(e) => setFormData({ ...formData, maxExtras: e.target.value ? Number(e.target.value) : undefined })}
+                                                            className="w-16 bg-zinc-900 border-zinc-700 rounded px-2 py-1 text-white text-sm"
+                                                            placeholder="∞"
                                                         />
                                                     </div>
-                                                    <div className="w-20">
-                                                        <label className="block text-xs text-zinc-500 mb-1">Máx Cant.</label>
-                                                        <input
-                                                            type="number"
-                                                            min="1"
-                                                            value={extra.maxQuantity || 1}
-                                                            onChange={(e) => updateExtra(index, "maxQuantity", Number(e.target.value))}
-                                                            className="w-full bg-zinc-900 border-zinc-700 rounded px-3 py-1.5 text-white text-sm text-center"
-                                                        />
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeExtra(index)}
-                                                        className="p-2 mb-0.5 text-red-400 hover:bg-red-500/20 rounded"
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </button>
                                                 </div>
-                                            ))}
 
-                                            <button
-                                                type="button"
-                                                onClick={addExtra}
-                                                className="flex items-center gap-2 text-sm text-emerald-400 hover:text-emerald-300 font-medium px-2 py-1"
-                                            >
-                                                <Plus size={16} /> Añadir Extra
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
+                                                {/* Extras list */}
+                                                {formData.extras?.map((extra, index) => (
+                                                    <div key={extra.id} className="flex gap-2 items-end bg-zinc-800/30 p-3 rounded-lg border border-zinc-800">
+                                                        <div className="flex-1">
+                                                            <label className="block text-xs text-zinc-500 mb-1">Nombre del Extra</label>
+                                                            <input
+                                                                type="text"
+                                                                value={extra.name}
+                                                                onChange={(e) => updateExtra(index, "name", e.target.value)}
+                                                                className="w-full bg-zinc-900 border-zinc-700 rounded px-3 py-1.5 text-white text-sm"
+                                                                placeholder="Ej. Oreo, Nutella, Queso extra"
+                                                            />
+                                                        </div>
+                                                        <div className="w-24">
+                                                            <label className="block text-xs text-emerald-400 mb-1">Precio +</label>
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                value={extra.price}
+                                                                onChange={(e) => updateExtra(index, "price", Number(e.target.value))}
+                                                                className="w-full bg-zinc-900 border-zinc-700 rounded px-3 py-1.5 text-white text-sm"
+                                                            />
+                                                        </div>
+                                                        <div className="w-20">
+                                                            <label className="block text-xs text-zinc-500 mb-1">Máx Cant.</label>
+                                                            <input
+                                                                type="number"
+                                                                min="1"
+                                                                value={extra.maxQuantity || 1}
+                                                                onChange={(e) => updateExtra(index, "maxQuantity", Number(e.target.value))}
+                                                                className="w-full bg-zinc-900 border-zinc-700 rounded px-3 py-1.5 text-white text-sm text-center"
+                                                            />
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeExtra(index)}
+                                                            className="p-2 mb-0.5 text-red-400 hover:bg-red-500/20 rounded"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+
+                                                <button
+                                                    type="button"
+                                                    onClick={addExtra}
+                                                    className="flex items-center gap-2 text-sm text-emerald-400 hover:text-emerald-300 font-medium px-2 py-1"
+                                                >
+                                                    <Plus size={16} /> Añadir Extra
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
                                 )}
 
                                 <div className="h-px bg-zinc-800 my-6" />

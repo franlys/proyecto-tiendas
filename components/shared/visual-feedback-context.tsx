@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useRef } from "react";
+import React, { createContext, useContext, useState, useCallback, useRef, Fragment } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2, Check } from "lucide-react";
 
@@ -21,7 +21,7 @@ function CachedImage({ src }: { src: string }) {
             src={src}
             alt=""
             className="w-full h-full object-cover"
-            // Image should load instantly from cache
+        // Image should load instantly from cache
         />
     );
 }
@@ -86,74 +86,89 @@ export function VisualFeedbackProvider({ children }: { children: React.ReactNode
             <div className="fixed inset-0 pointer-events-none z-[9999] overflow-hidden">
                 <AnimatePresence>
                     {elements.map((el) => (
-                        <motion.div
-                            key={el.id}
-                            initial={{
-                                x: el.startX - 32,
-                                y: el.startY - 32,
-                                scale: 1,
-                                opacity: 1,
-                                rotate: 0,
-                            }}
-                            animate={el.type === "add" ? {
-                                // 5 keyframes: hold -> rise -> fly -> arrive -> fade
-                                x: [el.startX - 32, el.startX - 32, el.startX - 32 - 40, el.endX - 32, el.endX - 32],
-                                y: [el.startY - 32, el.startY - 32, el.startY - 100, el.endY - 32, el.endY - 32],
-                                scale: [1, 1.1, 1.2, 0.5, 0.3],
-                                opacity: [1, 1, 1, 1, 0],  // Stay solid until arrival, then quick fade
-                                rotate: [0, 0, -10, 0, 0],
-                            } : {
-                                x: el.endX - 32,
-                                y: el.endY - 32,
-                                scale: 0.3,
-                                opacity: 0,
-                                rotate: 45,
-                            }}
-                            transition={el.type === "add" ? {
-                                duration: 2.0,
-                                // 0-0.2: hold in place
-                                // 0.2-0.4: rise up
-                                // 0.4-0.85: fly to cart (stays solid)
-                                // 0.85-1: quick fade at destination
-                                times: [0, 0.2, 0.4, 0.85, 1],
-                                ease: [0.22, 0.68, 0.32, 1],
-                            } : {
-                                duration: 0.7,
-                                ease: [0.4, 0, 1, 1],
-                            }}
-                            className="absolute top-0 left-0"
-                        >
-                            {el.type === "add" ? (
-                                <div className="relative">
-                                    {/* Glow effect */}
-                                    <div className={`absolute inset-0 rounded-full blur-lg scale-150 ${el.image ? 'bg-white/30' : 'bg-primary/40'}`} />
-                                    {/* Main circle - larger for better visibility */}
-                                    <div className={`relative w-16 h-16 rounded-full overflow-hidden flex items-center justify-center shadow-2xl border-3 border-white/60 ${el.image ? 'bg-slate-200' : 'bg-gradient-to-br from-primary to-orange-500 shadow-primary/50'}`}>
-                                        {el.image ? (
-                                            <CachedImage src={el.image} />
-                                        ) : (
-                                            <Check className="w-7 h-7 text-white" />
-                                        )}
+                        <Fragment key={el.id}>
+                            <motion.div
+                                initial={{
+                                    x: el.startX - 32,
+                                    y: el.startY - 32,
+                                    scale: 1,
+                                    opacity: 1,
+                                    rotate: 0,
+                                }}
+                                animate={el.type === "add" ? {
+                                    // 5 keyframes: hold -> rise -> fly -> arrive -> fade
+                                    x: [el.startX - 32, el.startX - 32, el.startX - 32 - 40, el.endX - 32, el.endX - 32],
+                                    y: [el.startY - 32, el.startY - 32, el.startY - 100, el.endY - 32, el.endY - 32],
+                                    scale: [1, 1.1, 1.2, 0.5, 0.3],
+                                    opacity: [1, 1, 1, 1, 0],  // Stay solid until arrival, then quick fade
+                                    rotate: [0, 0, -10, 0, 0],
+                                } : {
+                                    x: el.endX - 32,
+                                    y: el.endY - 32,
+                                    scale: 0.3,
+                                    opacity: 0,
+                                    rotate: 45,
+                                }}
+                                transition={el.type === "add" ? {
+                                    duration: 2.0,
+                                    // 0-0.2: hold in place
+                                    // 0.2-0.4: rise up
+                                    // 0.4-0.85: fly to cart (stays solid)
+                                    // 0.85-1: quick fade at destination
+                                    times: [0, 0.2, 0.4, 0.85, 1],
+                                    ease: [0.22, 0.68, 0.32, 1],
+                                } : {
+                                    duration: 0.7,
+                                    ease: [0.4, 0, 1, 1],
+                                }}
+                                className="absolute top-0 left-0"
+                            >
+                                {el.type === "add" ? (
+                                    <div className="relative">
+                                        {/* Glow effect */}
+                                        <div className={`absolute inset-0 rounded-full blur-lg scale-150 ${el.image ? 'bg-cyan-500/30' : 'bg-primary/40'}`} />
+                                        {/* Main circle - larger for better visibility */}
+                                        <div className={`relative w-16 h-16 rounded-full overflow-hidden flex items-center justify-center shadow-2xl border-2 border-cyan-400/60 ${el.image ? 'bg-slate-900/80 backdrop-blur-md' : 'bg-gradient-to-br from-cyan-400 to-blue-600 shadow-cyan-500/50'}`}>
+                                            {el.image ? (
+                                                <CachedImage src={el.image} />
+                                            ) : (
+                                                <Check className="w-7 h-7 text-white" />
+                                            )}
+                                        </div>
                                     </div>
-                                    {/* Sparkle particles */}
-                                    <motion.div
-                                        initial={{ scale: 0, opacity: 1 }}
-                                        animate={{ scale: 2, opacity: 0 }}
-                                        transition={{ duration: 0.4 }}
-                                        className="absolute inset-0 rounded-full border-2 border-primary/50"
-                                    />
-                                </div>
-                            ) : (
-                                <div className="relative">
-                                    {/* Red glow for trash */}
-                                    <div className="absolute inset-0 bg-red-500/30 rounded-full blur-md scale-125" />
-                                    {/* Trash icon */}
-                                    <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg shadow-red-500/40 border border-red-400/50">
-                                        <Trash2 className="w-5 h-5 text-white" />
+                                ) : (
+                                    <div className="relative">
+                                        {/* Red glow for trash */}
+                                        <div className="absolute inset-0 bg-red-500/30 rounded-full blur-md scale-125" />
+                                        {/* Trash icon */}
+                                        <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg shadow-red-500/40 border border-red-400/50">
+                                            <Trash2 className="w-5 h-5 text-white" />
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-                        </motion.div>
+                                )}
+                            </motion.div>
+
+                            {/* Particle Burst for Tech Themes */}
+                            {el.type === "add" && Array.from({ length: 8 }).map((_, i) => (
+                                <motion.div
+                                    key={`particle-${el.id}-${i}`}
+                                    initial={{
+                                        x: el.startX,
+                                        y: el.startY,
+                                        scale: 1,
+                                        opacity: 1
+                                    }}
+                                    animate={{
+                                        x: el.startX + (Math.cos(i * 45 * (Math.PI / 180)) * 100),
+                                        y: el.startY + (Math.sin(i * 45 * (Math.PI / 180)) * 100),
+                                        scale: 0,
+                                        opacity: 0
+                                    }}
+                                    transition={{ duration: 0.6, ease: "easeOut" }}
+                                    className="absolute w-2 h-2 bg-cyan-400 rounded-full blur-[1px]"
+                                />
+                            ))}
+                        </Fragment>
                     ))}
                 </AnimatePresence>
             </div>

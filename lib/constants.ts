@@ -258,7 +258,8 @@ export interface ShopConfig {
   banner?: string; // Cover/header image
   slogan?: string; // Short tagline
   theme: ShopTheme;
-  templateType?: "standard" | "premium-drop-v1" | "street-drop-v1" | "cosmic-drop-v1" | "tech-drop-v1"; // Custom storefront layout
+  templateType?: "standard" | "premium-drop-v1" | "street-drop-v1" | "cosmic-drop-v1" | "tech-drop-v1" | "tech-3d-v1"; // Custom storefront layout
+  heroProductImage?: string; // Image used in Screen Breakout hero animation (tech-3d-v1)
   dropTheme?: DropThemeConfig; // Drop theme configuration for premium templates
   background?: ShopBackground; // Background configuration
   contact: {
@@ -293,6 +294,7 @@ export interface ShopConfig {
   backgroundAudio?: BackgroundAudio;
   // Stripe Connect payments configuration
   payments?: ShopPaymentConfig;
+  requestQuoteEnabled?: boolean; // New: Custom tech request section ("No ves lo que buscas?")
 }
 
 // ============================================
@@ -745,6 +747,8 @@ export interface ProductVariant {
   price: number;
   wholesalePrice?: number; // Precio B2B
   stock?: number; // Optional per variant stock
+  image?: string; // Variant specific image (e.g. phone color)
+  color?: string; // Hex color for swatches (e.g. #FF0000)
 }
 
 export interface Product {

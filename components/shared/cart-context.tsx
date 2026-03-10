@@ -80,6 +80,10 @@ interface CartContextValue {
 
   // Cart notifications for visual feedback
   notifications: CartNotification[];
+
+  // Global cart visibility
+  isCartOpen: boolean;
+  setIsCartOpen: (open: boolean) => void;
 }
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
@@ -92,6 +96,7 @@ export function CartProvider({ children, shopId, templateType }: CartProviderPro
   const [items, setItems] = useState<CartItem[]>([]);
   const [tableId, setTableId] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<CartNotification[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const notificationIdRef = { current: 0 };
 
   // Add notification helper
@@ -341,6 +346,8 @@ export function CartProvider({ children, shopId, templateType }: CartProviderPro
         tableId,
         setTableId,
         notifications,
+        isCartOpen,
+        setIsCartOpen,
       }}
     >
       {children}

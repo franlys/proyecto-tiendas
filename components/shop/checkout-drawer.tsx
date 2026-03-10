@@ -46,6 +46,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
     const shop = useShop();
     const { config } = useShopConfig();
     const { addOrder } = useOrders();
+    const isTechDrop = shop?.templateType === "tech-drop-v1";
 
     // Field states
     const [customerName, setCustomerName] = useState("");
@@ -173,12 +174,26 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                     <motion.div
                         initial={{ y: "100%" }}
                         animate={{ y: 0 }} exit={{ y: "100%" }}
-                        className="relative flex flex-col w-full sm:max-w-xl h-full sm:h-auto sm:max-h-[90vh] bg-slate-950 border border-white/10 rounded-t-[2.5rem] sm:rounded-3xl shadow-2xl overflow-hidden"
+                        className={cn(
+                            "relative flex flex-col w-full sm:max-w-xl h-full sm:h-auto sm:max-h-[90vh] border shadow-2xl overflow-hidden",
+                            isTechDrop
+                                ? "bg-[#05070a] border-cyan-500/30 rounded-t-[40px] sm:rounded-[40px] font-sans"
+                                : "bg-slate-950 border-white/10 rounded-t-[2.5rem] sm:rounded-3xl"
+                        )}
                     >
+                        {isTechDrop && (
+                            <div className="absolute inset-0 pointer-events-none z-0">
+                                <div className="absolute inset-0 grid-bg opacity-10" />
+                                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay" />
+                            </div>
+                        )}
                         {/* Header Fixed */}
                         <div className="shrink-0 bg-slate-950/95 backdrop-blur-md border-b border-white/10 px-6 py-4 flex items-center justify-between z-20">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/20">
+                                <div className={cn(
+                                    "w-10 h-10 rounded-xl flex items-center justify-center shadow-lg",
+                                    isTechDrop ? "bg-cyan-500 shadow-cyan-500/20" : "bg-orange-500 shadow-orange-500/20"
+                                )}>
                                     <ShoppingBag className="w-5 h-5 text-white" />
                                 </div>
                                 <div>
@@ -210,7 +225,10 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-white font-bold truncate text-sm">{item.name}</p>
-                                                    <p className="text-orange-400 font-bold text-xs mt-1">x{item.quantity} - ${item.price}</p>
+                                                    <p className={cn(
+                                                        "font-bold text-xs mt-1",
+                                                        isTechDrop ? "text-cyan-400" : "text-orange-400"
+                                                    )}>x{item.quantity} - ${item.price}</p>
                                                 </div>
                                                 <div className="text-right">
                                                     <p className="text-white font-black">${(item.price * item.quantity).toLocaleString()}</p>
@@ -227,16 +245,25 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                 <div className="grid gap-5">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Nombre Completo</label>
-                                        <input value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Ej. Juan Pérez" className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-white outline-none focus:border-orange-500 transition-all" />
+                                        <input value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Ej. Juan Pérez" className={cn(
+                                            "w-full bg-white/5 border p-4 rounded-xl text-white outline-none transition-all",
+                                            isTechDrop ? "border-cyan-500/20 focus:border-cyan-500" : "border-white/10 focus:border-orange-500"
+                                        )} />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">WhatsApp</label>
-                                            <input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} placeholder="+58 412..." className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-white outline-none focus:border-orange-500 transition-all" />
+                                            <input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} placeholder="+58 412..." className={cn(
+                                                "w-full bg-white/5 border p-4 rounded-xl text-white outline-none transition-all",
+                                                isTechDrop ? "border-cyan-500/20 focus:border-cyan-500" : "border-white/10 focus:border-orange-500"
+                                            )} />
                                         </div>
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Email</label>
-                                            <input value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} placeholder="juan@email.com" className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-white outline-none focus:border-orange-500 transition-all" />
+                                            <input value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} placeholder="juan@email.com" className={cn(
+                                                "w-full bg-white/5 border p-4 rounded-xl text-white outline-none transition-all",
+                                                isTechDrop ? "border-cyan-500/20 focus:border-cyan-500" : "border-white/10 focus:border-orange-500"
+                                            )} />
                                         </div>
                                     </div>
 
@@ -268,12 +295,18 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                                     value={customerAddress}
                                                     onChange={e => setCustomerAddress(e.target.value)}
                                                     placeholder="Calle, Número, Referencia..."
-                                                    className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-white outline-none focus:border-orange-500 transition-all min-h-[100px] pr-12"
+                                                    className={cn(
+                                                        "w-full bg-white/5 border p-4 rounded-xl text-white outline-none transition-all min-h-[100px] pr-12",
+                                                        isTechDrop ? "border-cyan-500/20 focus:border-cyan-500" : "border-white/10 focus:border-orange-500"
+                                                    )}
                                                 />
                                                 <button
                                                     type="button"
                                                     onClick={handleDetectLocation}
-                                                    className="absolute right-3 top-4 p-2.5 rounded-xl bg-orange-500/10 text-orange-500 hover:bg-orange-500 hover:text-white transition-all z-10"
+                                                    className={cn(
+                                                        "absolute right-3 top-4 p-2.5 rounded-xl transition-all z-10",
+                                                        isTechDrop ? "bg-cyan-500/10 text-cyan-500 hover:bg-cyan-500 hover:text-white" : "bg-orange-500/10 text-orange-500 hover:bg-orange-500 hover:text-white"
+                                                    )}
                                                 >
                                                     <MapPin className="w-5 h-5" />
                                                 </button>
@@ -304,7 +337,10 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                 {paymentTiming === "pay_now" && (
                                     <div className="space-y-4 animate-in slide-in-from-top-2">
                                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Sube Comprobante</label>
-                                        <label className="flex flex-col items-center justify-center gap-3 p-10 rounded-2xl border-2 border-dashed border-white/10 bg-white/5 hover:border-orange-500/50 hover:bg-orange-500/5 transition-all cursor-pointer">
+                                        <label className={cn(
+                                            "flex flex-col items-center justify-center gap-3 p-10 rounded-2xl border-2 border-dashed bg-white/5 transition-all cursor-pointer",
+                                            isTechDrop ? "border-cyan-500/20 hover:border-cyan-500/50 hover:bg-cyan-500/5" : "border-white/10 hover:border-orange-500/50 hover:bg-orange-500/5"
+                                        )}>
                                             {receiptPreview ? <img src={receiptPreview} className="max-h-40 rounded-lg shadow-2xl" /> : (
                                                 <>
                                                     <ImageIcon className="w-8 h-8 text-slate-600 mb-1" />
@@ -335,7 +371,12 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                     <Button
                                         onClick={handleSubmit}
                                         disabled={isSubmitting || !hasItems}
-                                        className="w-full py-9 rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-black text-2xl shadow-2xl shadow-orange-500/40 hover:scale-[1.02] active:scale-95 transition-all"
+                                        className={cn(
+                                            "w-full py-9 rounded-2xl text-white font-black text-2xl shadow-2xl transition-all active:scale-95",
+                                            isTechDrop
+                                                ? "bg-cyan-500 shadow-cyan-500/20 hover:bg-cyan-400 hover:scale-[1.02]"
+                                                : "bg-gradient-to-r from-red-500 to-orange-500 shadow-orange-500/40 hover:scale-[1.02]"
+                                        )}
                                     >
                                         {isSubmitting ? <Loader2 className="w-7 h-7 animate-spin" /> : (
                                             <div className="flex items-center gap-4">
