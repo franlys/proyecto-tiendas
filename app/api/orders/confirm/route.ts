@@ -15,7 +15,10 @@ interface PaymentInfo {
     paymentMethodName?: string;
     paymentMethodType?: string;
     receiptUrl?: string;
-    status: "pending" | "pending_verification" | "verified" | "rejected";
+    upfrontAmount?: number;
+    upfrontPercentage?: number;
+    remainingBalance?: number;
+    status: "pending" | "pending_verification" | "verified" | "rejected" | "partial_payment";
 }
 
 interface ConfirmOrderRequest {
@@ -99,7 +102,7 @@ export async function POST(request: NextRequest) {
             tax: 0,
             total,
             status: "pending",
-            paymentStatus: "pending",
+            paymentStatus: paymentInfo?.status === 'partial_payment' ? "partially_paid" : "pending",
             deliveryType,
             deliveryDate,
             deliveryTime,
@@ -113,6 +116,10 @@ export async function POST(request: NextRequest) {
         if (customerEmail) orderData.customerEmail = customerEmail;
         if (notes) orderData.notes = notes;
         if (paymentInfo) orderData.paymentInfo = paymentInfo;
+        if (paymentInfo?.upfrontAmount) {
+            orderData.upfrontAmount = paymentInfo.upfrontAmount;
+            orderData.remainingBalance = paymentInfo.remainingBalance ?? (total - paymentInfo.upfrontAmount);
+        }
 
         const order = await createOrder(shop.id, shop.slug, orderData);
 

@@ -465,8 +465,13 @@ export function MealPrepModal({
             let finalReceiptUrl = null;
             let receiptFileName = null;
 
-            // Upload receipt if required and payment is pay_now
-            if (paymentTiming === 'pay_now' && manualPaymentConfig?.requiresReceipt && receiptFile) {
+            const requireUpfront = manualPaymentConfig?.requireUpfrontPayment || false;
+            const upfrontPct = requireUpfront ? (manualPaymentConfig?.upfrontPaymentPercentage ?? 50) : 0;
+            const upfrontAmt = requireUpfront ? Math.round((pricing.total * upfrontPct / 100) * 100) / 100 : 0;
+
+            // Upload receipt if required (pay_now OR pay_later with upfront payment)
+            const shouldUploadReceipt = (paymentTiming === 'pay_now' || (paymentTiming === 'pay_later' && requireUpfront));
+            if (shouldUploadReceipt && manualPaymentConfig?.requiresReceipt && receiptFile) {
                 setIsUploadingReceipt(true);
                 const fileExtension = receiptFile.name.split('.').pop();
                 const fileName = `receipts/${shopId}/${Date.now()}.${fileExtension}`;
@@ -533,6 +538,16 @@ export function MealPrepModal({
                         paymentMethodType: selectedPaymentMethod?.type,
                         receiptUrl: finalReceiptUrl || undefined,
                         status: 'pending_verification'
+                    } : requireUpfront ? {
+                        paymentTiming: 'pay_on_delivery',
+                        paymentMethodId: selectedPaymentMethod?.id,
+                        paymentMethodName: selectedPaymentMethod?.name,
+                        paymentMethodType: selectedPaymentMethod?.type,
+                        receiptUrl: finalReceiptUrl || undefined,
+                        upfrontAmount: upfrontAmt,
+                        upfrontPercentage: upfrontPct,
+                        remainingBalance: Math.round((pricing.total - upfrontAmt) * 100) / 100,
+                        status: 'partial_payment'
                     } : {
                         paymentTiming: 'pay_on_delivery',
                         status: 'pending'
