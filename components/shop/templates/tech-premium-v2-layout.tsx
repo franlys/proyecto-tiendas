@@ -53,15 +53,17 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
         if (!el) return;
         gsap.fromTo(
             el,
-            { opacity: 0, y: 30 },
+            { opacity: 0, y: 24 },
             {
                 opacity: 1, y: 0,
-                duration: 0.6,
-                delay: index * 0.04,
+                duration: 0.5,
+                delay: Math.min(index * 0.035, 0.3), // cap delay so late cards don't wait too long
                 ease: "power2.out",
-                scrollTrigger: { trigger: el, start: "top 95%", once: true },
+                scrollTrigger: { trigger: el, start: "top 96%", once: true },
+                clearProps: "willChange", // release GPU layer after animation
             }
         );
+        el.style.willChange = "transform, opacity";
     }, [index]);
 
     const handleAction = (e: React.MouseEvent) => {
@@ -82,7 +84,7 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
             <div
                 ref={cardRef}
                 className="group relative flex flex-col bg-[#0c0c0c] border border-white/6 rounded-2xl overflow-hidden hover:border-white/12 transition-colors duration-300 cursor-pointer"
-                style={{ opacity: 0 }}
+                style={{ opacity: 0, transform: "translateZ(0)" }}
             >
                 {/* Image area */}
                 <div className="relative bg-[#0f0f0f] overflow-hidden" style={{ paddingTop: "100%" }}>

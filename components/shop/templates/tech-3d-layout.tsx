@@ -420,8 +420,8 @@ function PortalProductCard({ product, index }: { product: Product; index: number
     // Subtle 3D tilt
     const mouseX = useMotionValue(0.5);
     const mouseY = useMotionValue(0.5);
-    const springX = useSpring(mouseX, { stiffness: 120, damping: 22 });
-    const springY = useSpring(mouseY, { stiffness: 120, damping: 22 });
+    const springX = useSpring(mouseX, { stiffness: 200, damping: 30, mass: 0.5 });
+    const springY = useSpring(mouseY, { stiffness: 200, damping: 30, mass: 0.5 });
     const rotateY = useTransform(springX, [0, 1], [-6, 6]);
     const rotateX = useTransform(springY, [0, 1], [4, -4]);
 
@@ -431,15 +431,18 @@ function PortalProductCard({ product, index }: { product: Product; index: number
     const isOutOfStock = !product.infiniteStock && (Number(product.stock) || 0) <= 0 && (!hasVariants || !product.variants!.some(v => (Number(v.stock) || 0) > 0));
 
     useEffect(() => {
-        if (!cardRef.current) return;
-        gsap.fromTo(cardRef.current,
-            { opacity: 0, y: 40 },
+        const el = cardRef.current;
+        if (!el) return;
+        el.style.willChange = "transform, opacity";
+        gsap.fromTo(el,
+            { opacity: 0, y: 30 },
             {
                 opacity: 1, y: 0,
-                duration: 0.7,
-                delay: index * 0.05,
-                ease: "power3.out",
-                scrollTrigger: { trigger: cardRef.current, start: "top 94%", once: true },
+                duration: 0.55,
+                delay: Math.min(index * 0.04, 0.28),
+                ease: "power2.out",
+                scrollTrigger: { trigger: el, start: "top 95%", once: true },
+                clearProps: "willChange",
             }
         );
     }, [index]);
@@ -473,7 +476,7 @@ function PortalProductCard({ product, index }: { product: Product; index: number
             ref={cardRef as any}
             onMouseLeave={handleMouseLeave}
             onMouseMove={handleMouseMove}
-            style={{ rotateX, rotateY, transformStyle: "preserve-3d", opacity: 0 }}
+            style={{ rotateX, rotateY, transformStyle: "preserve-3d", opacity: 0, willChange: "transform" }}
             className="group relative rounded-2xl overflow-hidden bg-white/[0.03] border border-white/8 transition-all duration-400 hover:border-cyan-500/40 hover:bg-white/[0.05] hover:shadow-[0_4px_40px_rgba(6,182,212,0.12)] cursor-pointer"
         >
             {/* Image */}
