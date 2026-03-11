@@ -1541,7 +1541,12 @@ export function MealPrepModal({
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-2 gap-3">
                                             <button
-                                                onClick={() => setPaymentTiming("pay_later")}
+                                                onClick={() => {
+                                                    setPaymentTiming("pay_later");
+                                                    if (manualPaymentConfig?.requireUpfrontPayment && !selectedPaymentMethod && activePaymentMethods.length > 0) {
+                                                        setSelectedPaymentMethod(activePaymentMethods[0]);
+                                                    }
+                                                }}
                                                 className={cn(
                                                     "flex flex-col items-center gap-2 p-3 rounded-xl border transition-all text-sm",
                                                     paymentTiming === "pay_later"
@@ -1571,8 +1576,13 @@ export function MealPrepModal({
                                             </button>
                                         </div>
 
-                                        {paymentTiming === "pay_now" && (
+                                        {(paymentTiming === "pay_now" || (paymentTiming === "pay_later" && manualPaymentConfig?.requireUpfrontPayment)) && (
                                             <div className="space-y-4 bg-black/20 p-4 rounded-xl border border-white/5">
+                                                {paymentTiming === "pay_later" && manualPaymentConfig?.requireUpfrontPayment && (
+                                                    <p className="text-xs text-amber-400 font-medium">
+                                                        Selecciona cómo pagar el {manualPaymentConfig.upfrontPaymentPercentage ?? 50}% anticipado (${((pricing.total * (manualPaymentConfig.upfrontPaymentPercentage ?? 50)) / 100).toFixed(2)})
+                                                    </p>
+                                                )}
                                                 <div className="grid grid-cols-2 gap-2">
                                                     {activePaymentMethods.map((method) => (
                                                         <button
