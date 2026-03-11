@@ -498,20 +498,22 @@ function OrderDetailModal({
           </div>
 
           {/* Manual Payment Information */}
-          {order.paymentInfo && order.paymentInfo.paymentTiming === "pay_now" && (
+          {order.paymentInfo && (order.paymentInfo.paymentTiming === "pay_now" || order.paymentInfo.status === "partial_payment") && (
             <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-medium text-blue-400 flex items-center gap-2">
                   <CheckCircle className="w-4 h-4" />
-                  Información de Pago (Transferencia)
+                  {order.paymentInfo.status === "partial_payment" ? "Anticipo Pagado (50%)" : "Información de Pago (Transferencia)"}
                 </h4>
                 <span className={cn(
                   "px-2 py-0.5 rounded-full text-[10px] font-medium uppercase",
                   order.paymentInfo.status === "pending_verification" && "bg-amber-500/20 text-amber-400",
+                  order.paymentInfo.status === "partial_payment" && "bg-amber-500/20 text-amber-400",
                   order.paymentInfo.status === "verified" && "bg-green-500/20 text-green-400",
                   order.paymentInfo.status === "rejected" && "bg-red-500/20 text-red-400"
                 )}>
                   {order.paymentInfo.status === "pending_verification" ? "⏳ Por Verificar" :
+                    order.paymentInfo.status === "partial_payment" ? "⏳ Por Verificar" :
                     order.paymentInfo.status === "verified" ? "✅ Verificado" : "❌ Rechazado"}
                 </span>
               </div>
@@ -557,15 +559,15 @@ function OrderDetailModal({
                 </div>
               )}
 
-              {order.paymentInfo.status === "pending_verification" && (
+              {(order.paymentInfo.status === "pending_verification" || order.paymentInfo.status === "partial_payment") && (
                 <div className="flex gap-2">
                   <Button
                     size="sm"
                     onClick={async () => {
-                      // Mark as verified AND move order to confirmed
+                      const isPartial = order.paymentInfo!.status === "partial_payment";
                       await updateOrder(order.id, {
                         status: "confirmed",
-                        paymentStatus: "paid",
+                        paymentStatus: isPartial ? "partially_paid" : "paid",
                         paymentInfo: { ...order.paymentInfo!, status: "verified" }
                       });
 
@@ -574,12 +576,12 @@ function OrderDetailModal({
                         await sendStatusNotification("confirmed");
                       }
 
-                      alert("✅ Pago verificado y pedido confirmado");
+                      alert(isPartial ? "✅ Anticipo verificado y pedido confirmado" : "✅ Pago verificado y pedido confirmado");
                     }}
                     className="flex-1 bg-green-600 hover:bg-green-700"
                   >
                     <CheckCircle className="w-4 h-4 mr-2" />
-                    Verificar Pago
+                    {order.paymentInfo.status === "partial_payment" ? "Verificar Anticipo" : "Verificar Pago"}
                   </Button>
                 </div>
               )}
