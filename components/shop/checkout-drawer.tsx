@@ -185,8 +185,8 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                     items: orderItems,
                     total: totalPrice,
                     deliveryType: deliveryType === "delivery" ? "entrega" : "recogida",
-                    scheduledDate: scheduledDate || undefined,
-                    scheduledTime: scheduledTime || undefined,
+                    deliveryDate: scheduledDate || undefined,
+                    deliveryTime: scheduledTime || undefined,
                     paymentInfo: {
                         paymentTiming,
                         status: paymentTiming === "pay_now" ? "pending_verification" : "pending",
