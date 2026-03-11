@@ -756,7 +756,11 @@ export function PaymentSettings({
                             )}
                         </div>
                         <button
-                            onClick={() => saveConfig({ ...manualConfig, requireUpfrontPayment: !manualConfig.requireUpfrontPayment })}
+                            onClick={() => saveConfig({
+                                ...manualConfig,
+                                requireUpfrontPayment: !manualConfig.requireUpfrontPayment,
+                                upfrontPaymentPercentage: manualConfig.upfrontPaymentPercentage ?? 50,
+                            })}
                             className={`relative w-14 h-7 rounded-full transition-colors flex-shrink-0 ${
                                 manualConfig.requireUpfrontPayment ? "bg-amber-500" : "bg-zinc-700"
                             }`}

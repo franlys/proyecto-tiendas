@@ -84,8 +84,8 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
     }, [isOpen]);
 
     // Upfront Payment Calculation
-    const upfrontPercentage = manualPaymentConfig?.upfrontPaymentPercentage || 0;
     const requireUpfront = manualPaymentConfig?.requireUpfrontPayment || false;
+    const upfrontPercentage = requireUpfront ? (manualPaymentConfig?.upfrontPaymentPercentage ?? 50) : 0;
     const upfrontAmount = (totalPrice * upfrontPercentage) / 100;
     const remainingBalance = totalPrice - upfrontAmount;
 
