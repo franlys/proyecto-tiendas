@@ -402,10 +402,19 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        // If Evolution not configured, provide fallback WhatsApp URL so the client
+        // can show a "save confirmation on WhatsApp" button
+        let whatsappUrl: string | undefined;
+        if (!isEvolutionConfigured()) {
+            const msg = `¡Hola! Acabo de realizar un pedido en *${shop.name}*.\n\n🧾 *Pedido #${order.orderNumber}*\n💰 Total: $${total.toLocaleString()}\n\nPor favor confírmame cuando esté listo. ¡Gracias!`;
+            whatsappUrl = `https://wa.me/${formatPhoneForWhatsApp(shop.contact?.whatsapp || shop.contact?.phone || customerPhone)}?text=${encodeURIComponent(msg)}`;
+        }
+
         return NextResponse.json({
             success: true,
             orderId: order.id,
             orderNumber: order.orderNumber,
+            whatsappUrl,
             message: "Pedido procesado y notificaciones enviadas"
         });
 

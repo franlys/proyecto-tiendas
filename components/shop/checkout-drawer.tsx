@@ -21,9 +21,8 @@ import {
 } from "lucide-react";
 import { useCart, useShop, useOrders, useShopConfig, useInventory } from "@/components/shared";
 import { cn } from "@/lib/utils";
-import { storage, db } from "@/lib/firebase";
+import { storage } from "@/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui";
 import { useManualPaymentConfig } from "@/lib/hooks";
 import { StripePayButton } from "@/components/shop/stripe-checkout-button";
@@ -157,6 +156,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
         }
         setIsSubmitting(true);
         try {
+            // Upload receipt first if needed
             let receiptUrl = "";
             if (receiptFile && paymentTiming === "pay_now") {
                 const storageRef = ref(storage, `receipts/${shop?.id || 'default'}/${Date.now()}`);
@@ -164,13 +164,6 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                 receiptUrl = await getDownloadURL(storageRef);
             }
 
-            // Generate order number
-            const date = new Date();
-            const datePart = date.toISOString().slice(2, 10).replace(/-/g, "");
-            const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-            const orderNum = `ORD-${datePart}-${random}`;
-
-            const shopId = shop?.id || "";
             const orderItems = products.map(p => ({
                 id: p.id,
                 name: p.name + (p.variantName ? ` (${p.variantName})` : ""),
@@ -179,71 +172,52 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                 image: p.image || "",
             }));
 
-            // Write to Firestore so admin panel can see the order
-            if (shopId) {
-                await addDoc(collection(db, "shops", shopId, "orders"), {
-                    orderNumber: orderNum,
+            // Use /api/orders/confirm — generates PDF, sends email + WhatsApp, writes to Firestore
+            const confirmRes = await fetch("/api/orders/confirm", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    shopId: shop?.id || shop?.slug || "",
                     customerName,
                     customerPhone,
                     customerEmail,
-                    customerAddress: deliveryType === "delivery" ? customerAddress : "",
+                    customerAddress: deliveryType === "delivery" ? customerAddress : undefined,
                     items: orderItems,
-                    subtotal: totalPrice,
-                    tax: 0,
                     total: totalPrice,
-                    status: "pending",
-                    paymentStatus: (paymentTiming === "pay_now" && !requireUpfront) ? "paid" : (requireUpfront && paymentTiming === "pay_now" ? "partially_paid" : "pending"),
-                    paymentMethod: paymentTiming,
-                    source: "storefront",
-                    orderType: deliveryType === "delivery" ? "delivery" : "takeout",
-                    receiptUrl: receiptUrl || null,
-                    scheduledDate: scheduledDate || null,
-                    scheduledTime: scheduledTime || null,
-                    upfrontAmount: requireUpfront ? upfrontAmount : 0,
-                    remainingBalance: requireUpfront ? remainingBalance : totalPrice,
-                    notes: "",
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp(),
-                });
+                    deliveryType: deliveryType === "delivery" ? "entrega" : "recogida",
+                    scheduledDate: scheduledDate || undefined,
+                    scheduledTime: scheduledTime || undefined,
+                    paymentInfo: {
+                        paymentTiming,
+                        status: paymentTiming === "pay_now" ? "pending_verification" : "pending",
+                        receiptUrl: receiptUrl || undefined,
+                    },
+                }),
+            });
+
+            const confirmData = await confirmRes.json();
+
+            if (!confirmRes.ok) {
+                throw new Error(confirmData.error || "Error al procesar el pedido");
             }
 
-            // Phase: Stock Decrement (Real-time sync)
+            const orderNum = confirmData.orderNumber;
+
+            // Stock Decrement (client-side real-time sync)
             products.forEach(p => {
                 decrementStock(p.id, p.quantity);
             });
 
-            // Phase: Customer Notification via WhatsApp
-            try {
-                const notifyRes = await fetch("/api/orders/notify", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        shopId,
-                        orderId: orderNum,
-                        orderNumber: orderNum,
-                        customerPhone,
-                        customerName,
-                        status: "confirmed",
-                        total: totalPrice,
-                        scheduledDate,
-                        scheduledTime,
-                        upfrontAmount: requireUpfront ? upfrontAmount : 0,
-                    }),
-                });
-                const notifyData = await notifyRes.json();
-                // If Evolution bot is not configured, use fallback WhatsApp URL
-                if (notifyData.whatsappUrl) {
-                    setWhatsappConfirmUrl(notifyData.whatsappUrl);
-                }
-            } catch (_) {
-                // Notification failure doesn't block the order
+            // If Evolution not configured, show fallback WhatsApp confirmation button
+            if (confirmData.whatsappUrl) {
+                setWhatsappConfirmUrl(confirmData.whatsappUrl);
             }
 
-            setOrderSuccess({ id: "order-" + Date.now(), number: orderNum });
+            setOrderSuccess({ id: confirmData.orderId || "order-" + Date.now(), number: orderNum });
             clearCart();
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            alert("Error al procesar el pedido");
+            alert(e.message || "Error al procesar el pedido");
         } finally {
             setIsSubmitting(false);
         }
