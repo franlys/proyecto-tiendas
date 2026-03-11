@@ -121,6 +121,7 @@ export function initAdmin() {
                 privateKey: formattedKey,
             }),
             projectId: projectId,
+            storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || `${projectId}.appspot.com`,
         });
     } catch (error: any) {
         console.error("❌ [FIREBASE ADMIN] Init Failed:", error);
