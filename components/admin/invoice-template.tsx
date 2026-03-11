@@ -191,6 +191,19 @@ export function InvoiceTemplate({ order, shop }: InvoiceTemplateProps) {
                         <Text style={styles.bold}>TOTAL:</Text>
                         <Text style={styles.bold}>${order.total.toFixed(2)}</Text>
                     </View>
+
+                    {(order.upfrontAmount ?? 0) > 0 && (
+                        <>
+                            <View style={[styles.totalRow, { marginTop: 10 }]}>
+                                <Text style={{ color: "green" }}>Adelanto Pagado:</Text>
+                                <Text style={{ color: "green" }}>-${(order.upfrontAmount ?? 0).toFixed(2)}</Text>
+                            </View>
+                            <View style={styles.grandTotal}>
+                                <Text style={styles.bold}>SALDO PENDIENTE:</Text>
+                                <Text style={styles.bold}>${(order.remainingBalance || (order.total - (order.upfrontAmount ?? 0))).toFixed(2)}</Text>
+                            </View>
+                        </>
+                    )}
                 </View>
 
                 {/* Footer */}

@@ -189,6 +189,10 @@ export function SalesOrdersProvider({ children, shopId }: SalesOrdersProviderPro
           deliveredAt: data.deliveredAt ? formatDate(data.deliveredAt) : undefined,
           tableId: data.tableId,
           source: data.source,
+          scheduledDate: data.scheduledDate,
+          scheduledTime: data.scheduledTime,
+          upfrontAmount: data.upfrontAmount || 0,
+          remainingBalance: data.remainingBalance || 0,
           paymentInfo: data.paymentInfo
         });
       });

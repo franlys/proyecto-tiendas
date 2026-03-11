@@ -18,12 +18,33 @@ interface NotifyRequest {
     customerName: string;
     status: string;
     total: number;
+    scheduledDate?: string;
+    scheduledTime?: string;
+    upfrontAmount?: number;
 }
 
 // Status messages in Spanish
-const STATUS_MESSAGES: Record<string, (name: string, orderNum: string, total: number) => string> = {
-    confirmed: (name, orderNum, total) =>
-        `Hola ${name} 👋\n\n✅ Tu pedido *#${orderNum}* ha sido *CONFIRMADO*.\n\nEstamos preparando tu orden.\n💰 Total: $${total.toLocaleString()}\n\n¡Gracias por tu compra!`,
+const STATUS_MESSAGES: Record<string, (name: string, orderNum: string, total: number, extra?: any) => string> = {
+    confirmed: (name, orderNum, total, extra) => {
+        let msg = `Hola ${name} 👋\n\n✅ Tu pedido *#${orderNum}* ha sido *CONFIRMADO*.\n\nEstamos preparando tu orden.`;
+        
+        if (extra?.scheduledDate) {
+            msg += `\n📅 *Fecha de entrega:* ${extra.scheduledDate}`;
+        }
+        if (extra?.scheduledTime) {
+            msg += `\n⏰ *Horario:* ${extra.scheduledTime}`;
+        }
+        
+        msg += `\n\n💰 Total: $${total.toLocaleString()}`;
+        
+        if (extra?.upfrontAmount > 0) {
+            msg += `\n💳 Pago inicial: $${extra.upfrontAmount.toLocaleString()}`;
+            msg += `\n🔹 Restante: $${(total - extra.upfrontAmount).toLocaleString()}`;
+        }
+        
+        msg += `\n\n¡Gracias por tu compra!`;
+        return msg;
+    },
 
     preparing: (name, orderNum, total) =>
         `Hola ${name} 👋\n\n📦 Tu pedido *#${orderNum}* está siendo *PREPARADO*.\n\nPronto estará listo.\n💰 Total: $${total.toLocaleString()}`,
@@ -53,7 +74,7 @@ const STATUS_MESSAGES: Record<string, (name: string, orderNum: string, total: nu
 export async function POST(request: NextRequest) {
     try {
         const body: NotifyRequest = await request.json();
-        const { shopId, orderId, orderNumber, customerPhone, customerName, status, total } = body;
+        const { shopId, orderId, orderNumber, customerPhone, customerName, status, total, scheduledDate, scheduledTime, upfrontAmount } = body;
 
         // Validate required fields
         if (!shopId || !customerPhone || !status) {
@@ -88,7 +109,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Generate message
-        const message = messageGenerator(customerName || "Cliente", orderNumber || orderId, total || 0);
+        const message = messageGenerator(customerName || "Cliente", orderNumber || orderId, total || 0, { scheduledDate, scheduledTime, upfrontAmount });
 
         // Send via Evolution API
         try {
@@ -115,7 +136,7 @@ export async function POST(request: NextRequest) {
             const instanceName = getInstanceName(shopSlug);
 
             // Generate message
-            let message = messageGenerator(customerName || "Cliente", orderNumber || orderId, total || 0);
+            let message = messageGenerator(customerName || "Cliente", orderNumber || orderId, total || 0, { scheduledDate, scheduledTime, upfrontAmount });
 
             // Add PDF link fallback if available
             if (invoiceUrl) {
@@ -193,7 +214,7 @@ function generateWhatsAppUrl(
     const messageGenerator = STATUS_MESSAGES[status];
     if (!messageGenerator) return "";
 
-    const message = messageGenerator(name || "Cliente", orderNumber, total || 0);
+    const message = messageGenerator(name || "Cliente", orderNumber, total || 0, {});
     const cleanPhone = formatPhoneForWhatsApp(phone);
 
     return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;

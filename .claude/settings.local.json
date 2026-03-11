@@ -135,7 +135,8 @@
       "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nfix: use Prologix email for booking notifications\n\nAdded from: Prologixcompany@gmail.com to all booking email sends:\n- Customer confirmation email\n- Shop owner notification email\n- Appointment reminder email \\(cron\\)\n\nThis matches the order confirmation emails which already use Prologix.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(pnpm run lint:*)",
       "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" add app/api/bookings/route.ts)",
-      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nfix\\(bookings\\): ensure notifications complete before response\n\n- Changed notifications from fire-and-forget to awaited operations\n- Added in-app notification for bookings \\(like orders have\\)\n- Added detailed logging for debugging shop config issues\n\nThis fixes the issue where serverless functions terminated before\nnotifications could be sent, causing emails and WhatsApp messages\nto never be delivered.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nfix\\(bookings\\): ensure notifications complete before response\n\n- Changed notifications from fire-and-forget to awaited operations\n- Added in-app notification for bookings \\(like orders have\\)\n- Added detailed logging for debugging shop config issues\n\nThis fixes the issue where serverless functions terminated before\nnotifications could be sent, causing emails and WhatsApp messages\nto never be delivered.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git add \"app/\\(shops\\)/[shopId]/layout.tsx\")"
     ]
   }
 }

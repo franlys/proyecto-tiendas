@@ -1,6 +1,6 @@
 
 export type OrderStatus = "pending" | "confirmed" | "preparing" | "dispatched" | "delivered" | "cancelled";
-export type PaymentStatus = "pending" | "paid" | "refunded";
+export type PaymentStatus = "pending" | "paid" | "partially_paid" | "refunded";
 
 export interface SalesOrderItem {
     productId: string;
@@ -41,6 +41,8 @@ export interface SalesOrder {
     deliveryDistance?: number; // Distance in miles
     deliveryFee?: number; // Extra fee for distance
     deliveryCoordinates?: { lat: number; lng: number }; // Customer location
+    upfrontAmount?: number; // Amount paid upfront
+    remainingBalance?: number; // Remaining balance to be paid
     paymentInfo?: {
         paymentTiming: "pay_now" | "pay_on_delivery";
         paymentMethodId?: string;

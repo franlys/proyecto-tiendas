@@ -63,6 +63,8 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
     const [whatsappConfirmUrl, setWhatsappConfirmUrl] = useState<string | null>(null);
     const [stripeError, setStripeError] = useState<string | null>(null);
     const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+    const [scheduledDate, setScheduledDate] = useState("");
+    const [scheduledTime, setScheduledTime] = useState("");
 
     // Manual Payment States
     const [paymentTiming, setPaymentTiming] = useState<"pay_now" | "pay_on_delivery">("pay_now"); // Defaulted to now for better testing
@@ -81,6 +83,12 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
         }
         return () => { document.body.style.overflow = "unset"; };
     }, [isOpen]);
+
+    // Upfront Payment Calculation
+    const upfrontPercentage = manualPaymentConfig?.upfrontPaymentPercentage || 0;
+    const requireUpfront = manualPaymentConfig?.requireUpfrontPayment || false;
+    const upfrontAmount = (totalPrice * upfrontPercentage) / 100;
+    const remainingBalance = totalPrice - upfrontAmount;
 
     const hasItems = products.length > 0 || services.length > 0;
     const stripeEnabled = shop?.payments?.enabled && shop?.payments?.stripeAccountId && shop?.payments?.provider === "stripe";
@@ -143,6 +151,10 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
             alert("Por favor completa todos tus datos");
             return;
         }
+        if (shop?.businessType === "meal_prep" && (!scheduledDate || !scheduledTime)) {
+            alert("Por favor selecciona una fecha y horario de entrega");
+            return;
+        }
         setIsSubmitting(true);
         try {
             let receiptUrl = "";
@@ -180,11 +192,15 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                     tax: 0,
                     total: totalPrice,
                     status: "pending",
-                    paymentStatus: paymentTiming === "pay_now" ? "paid" : "pending",
+                    paymentStatus: (paymentTiming === "pay_now" && !requireUpfront) ? "paid" : (requireUpfront && paymentTiming === "pay_now" ? "partially_paid" : "pending"),
                     paymentMethod: paymentTiming,
                     source: "storefront",
                     orderType: deliveryType === "delivery" ? "delivery" : "takeout",
                     receiptUrl: receiptUrl || null,
+                    scheduledDate: scheduledDate || null,
+                    scheduledTime: scheduledTime || null,
+                    upfrontAmount: requireUpfront ? upfrontAmount : 0,
+                    remainingBalance: requireUpfront ? remainingBalance : totalPrice,
                     notes: "",
                     createdAt: serverTimestamp(),
                     updatedAt: serverTimestamp(),
@@ -209,6 +225,9 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                         customerName,
                         status: "confirmed",
                         total: totalPrice,
+                        scheduledDate,
+                        scheduledTime,
+                        upfrontAmount: requireUpfront ? upfrontAmount : 0,
                     }),
                 });
                 const notifyData = await notifyRes.json();
@@ -444,6 +463,44 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                             </div>
                                         </div>
                                     )}
+
+                                    {/* Delivery Scheduling (for Meal Prep) */}
+                                    {shop?.businessType === "meal_prep" && (
+                                        <div className="space-y-4 animate-in slide-in-from-top-2">
+                                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">Horario de Entrega</h3>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Fecha</label>
+                                                    <input 
+                                                        type="date" 
+                                                        value={scheduledDate} 
+                                                        onChange={e => setScheduledDate(e.target.value)}
+                                                        min={new Date().toISOString().split("T")[0]}
+                                                        className={cn(
+                                                            "w-full bg-white/5 border p-4 rounded-xl text-white outline-none transition-all",
+                                                            isTechTheme ? "border-cyan-500/20 focus:border-cyan-500" : "border-white/10 focus:border-orange-500"
+                                                        )}
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Horario</label>
+                                                    <select 
+                                                        value={scheduledTime} 
+                                                        onChange={e => setScheduledTime(e.target.value)}
+                                                        className={cn(
+                                                            "w-full bg-white/5 border p-4 rounded-xl text-white outline-none transition-all appearance-none",
+                                                            isTechTheme ? "border-cyan-500/20 focus:border-cyan-500" : "border-white/10 focus:border-orange-500"
+                                                        )}
+                                                    >
+                                                        <option value="" className="bg-slate-900">Seleccionar...</option>
+                                                        <option value="08:00 - 12:00" className="bg-slate-900">Mañana (8am - 12pm)</option>
+                                                        <option value="12:00 - 16:00" className="bg-slate-900">Tarde (12pm - 4pm)</option>
+                                                        <option value="16:00 - 20:00" className="bg-slate-900">Noche (4pm - 8pm)</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -494,8 +551,17 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                 <div className="space-y-5">
                                     <div className="flex items-end justify-between">
                                         <div>
-                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mb-1">Total a pagar</p>
-                                            <p className="text-4xl font-black text-white leading-none">${totalPrice.toLocaleString()}</p>
+                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mb-1">
+                                                {requireUpfront ? "Monto a pagar hoy" : "Total a pagar"}
+                                            </p>
+                                            <p className="text-4xl font-black text-white leading-none">
+                                                ${(requireUpfront ? upfrontAmount : totalPrice).toLocaleString()}
+                                            </p>
+                                            {requireUpfront && (
+                                                <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mt-2">
+                                                    Restante al recibir: ${remainingBalance.toLocaleString()}
+                                                </p>
+                                            )}
                                         </div>
                                         <div className="text-right">
                                             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Items</p>

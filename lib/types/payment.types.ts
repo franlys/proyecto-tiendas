@@ -93,6 +93,8 @@ export interface ShopPaymentConfig {
     // Settings
     requirePaymentBeforeOrder?: boolean; // If false, allows "pay later" / cash on delivery
     applicationFeePercent?: number;       // Platform fee (optional)
+    requireUpfrontPayment?: boolean;     // If true, requires an upfront percentage
+    upfrontPaymentPercentage?: number;   // Percentage required upfront (e.g. 50)
 }
 
 /**
@@ -104,6 +106,8 @@ export const DEFAULT_PAYMENT_CONFIG: ShopPaymentConfig = {
     methods: [],
     currency: "USD",
     requirePaymentBeforeOrder: false,
+    requireUpfrontPayment: false,
+    upfrontPaymentPercentage: 50,
 };
 
 /**
@@ -322,6 +326,8 @@ export interface ShopManualPaymentConfig {
     paymentInstructions?: string;  // General instructions shown to customer
     requiresReceipt: boolean;      // If true, customer must upload receipt
     autoApprove: boolean;          // If false, owner must manually approve
+    requireUpfrontPayment?: boolean;
+    upfrontPaymentPercentage?: number;
 }
 
 // A payment receipt submitted by customer
@@ -390,6 +396,8 @@ export const DEFAULT_MANUAL_PAYMENT_CONFIG: ShopManualPaymentConfig = {
     acceptedCurrencies: ["USD"],
     requiresReceipt: true,
     autoApprove: false,
+    requireUpfrontPayment: false,
+    upfrontPaymentPercentage: 50,
 };
 
 // Receipt status labels

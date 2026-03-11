@@ -114,6 +114,9 @@ function OrderDetailModal({
           customerName: order.customerName,
           status,
           total: order.total,
+          scheduledDate: order.scheduledDate,
+          scheduledTime: order.scheduledTime,
+          upfrontAmount: order.upfrontAmount,
         }),
       });
 
@@ -368,6 +371,26 @@ function OrderDetailModal({
             </div>
           </div>
 
+          {/* Delivery Scheduling Info */}
+          {(order.scheduledDate || order.scheduledTime) && (
+            <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 space-y-3">
+              <h4 className="text-sm font-medium text-purple-400 flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                Entrega Programada
+              </h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-slate-400">Fecha</p>
+                  <p className="text-white font-medium">{order.scheduledDate || "No especificada"}</p>
+                </div>
+                <div>
+                  <p className="text-slate-400">Horario</p>
+                  <p className="text-white font-medium">{order.scheduledTime || "No especificado"}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Payment Status */}
           <div className="p-4 rounded-xl bg-white/5 space-y-3">
             <div className="flex items-center justify-between">
@@ -378,14 +401,29 @@ function OrderDetailModal({
               <span className={cn(
                 "px-2 py-1 rounded-full text-xs font-medium",
                 order.paymentStatus === "paid" && "bg-green-500/20 text-green-400",
+                order.paymentStatus === "partially_paid" && "bg-blue-500/20 text-blue-400",
                 order.paymentStatus === "pending" && "bg-amber-500/20 text-amber-400",
                 order.paymentStatus === "refunded" && "bg-red-500/20 text-red-400"
               )}>
                 {order.paymentStatus === "paid" && "💰 Pagado"}
+                {order.paymentStatus === "partially_paid" && "💳 Pago Parcial"}
                 {order.paymentStatus === "pending" && "⏳ Pendiente"}
                 {order.paymentStatus === "refunded" && "↩️ Reembolsado"}
               </span>
             </div>
+
+            {(order.upfrontAmount ?? 0) > 0 && (
+              <div className="grid grid-cols-2 gap-4 text-sm border-t border-white/5 pt-3">
+                <div>
+                  <p className="text-slate-400">Pagado (Adelanto)</p>
+                  <p className="text-emerald-400 font-bold">${(order.upfrontAmount ?? 0).toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-slate-400">Restante</p>
+                  <p className="text-white font-bold">${(order.remainingBalance || (order.total - (order.upfrontAmount ?? 0))).toLocaleString()}</p>
+                </div>
+              </div>
+            )}
 
             {/* Regular Payment Buttons (for non-manual or cash-on-delivery) */}
             {order.paymentStatus === "pending" && (!order.paymentInfo || order.paymentInfo.paymentTiming === "pay_on_delivery") && (
@@ -744,7 +782,7 @@ function OrderDetailModal({
           </div>
         </div>
       </div>
-    </div >
+    </div>
   );
 }
 

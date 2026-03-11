@@ -113,7 +113,7 @@ export async function updateOrderStatusAction(shopId: string, orderId: string, s
 /**
  * Updates payment status and triggers side effects (Invoice).
  */
-export async function updatePaymentStatusAction(shopId: string, orderId: string, paymentStatus: "pending" | "paid" | "refunded") {
+export async function updatePaymentStatusAction(shopId: string, orderId: string, paymentStatus: "pending" | "paid" | "partially_paid" | "refunded") {
     const db = adminDb();
     if (!db) return { success: false, error: "Database unavailable" };
 
