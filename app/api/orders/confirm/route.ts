@@ -218,7 +218,15 @@ export async function POST(request: NextRequest) {
             }
             clientMsg += `💰 Total: *$${total.toLocaleString()}*\n`;
 
-            if (paymentInfo?.paymentTiming === "pay_now") {
+            if (paymentInfo?.status === "partial_payment") {
+                const upfrontAmt = paymentInfo.upfrontAmount ?? 0;
+                const remaining = paymentInfo.remainingBalance ?? (total - upfrontAmt);
+                clientMsg += `💳 Pago: *Anticipo enviado*\n`;
+                clientMsg += `✅ Pagado ahora: *$${upfrontAmt.toLocaleString()}* (${paymentInfo.upfrontPercentage ?? 50}%)\n`;
+                clientMsg += `⏳ Restante al recibir: *$${remaining.toLocaleString()}*\n`;
+                clientMsg += `📝 Estado: *Verificando comprobante de anticipo*\n\n`;
+                clientMsg += `Estamos revisando tu comprobante. Te confirmaremos pronto. ¡Gracias!`;
+            } else if (paymentInfo?.paymentTiming === "pay_now") {
                 clientMsg += `💳 Pago: *Transferencia enviada*\n`;
                 clientMsg += `📝 Estado: *Verificando comprobante*\n\n`;
                 clientMsg += `Estamos revisando tu comprobante de pago. Te confirmaremos pronto.`;
@@ -272,7 +280,9 @@ export async function POST(request: NextRequest) {
                     shopPrimaryColor: shop.theme?.primaryColor,
                     shopBackgroundImage: shop.banner || shop.background?.image || shop.hero,
                     deliveryType: deliveryTypeLabel,
-                    paymentStatus: paymentInfo?.paymentTiming === "pay_now" ? "Comprobante enviado" : "Pendiente"
+                    paymentStatus: paymentInfo?.status === "partial_payment"
+                        ? `Anticipo pagado $${paymentInfo.upfrontAmount} (${paymentInfo.upfrontPercentage ?? 50}%) — Resta $${paymentInfo.remainingBalance}`
+                        : paymentInfo?.paymentTiming === "pay_now" ? "Comprobante enviado" : "Pendiente"
                 });
 
                 for (const email of emailsToNotify) {
@@ -289,8 +299,10 @@ export async function POST(request: NextRequest) {
         }
 
         // 5.5. If payment receipt uploaded, send payment notification email to owner
-        if (paymentInfo?.paymentTiming === "pay_now" && paymentInfo.receiptUrl && emailsToNotify.length > 0) {
+        const hasReceipt = (paymentInfo?.paymentTiming === "pay_now" || paymentInfo?.status === "partial_payment") && paymentInfo?.receiptUrl;
+        if (hasReceipt && emailsToNotify.length > 0) {
             try {
+                const isPartial = paymentInfo!.status === "partial_payment";
                 const paymentEmailContent = emailTemplates.paymentReceiptNotification({
                     shopName: shop.name,
                     shopLogo: shop.logo,
@@ -299,10 +311,10 @@ export async function POST(request: NextRequest) {
                     customerName,
                     customerPhone,
                     customerEmail,
-                    amount: total,
+                    amount: isPartial ? (paymentInfo!.upfrontAmount ?? total) : total,
                     currency: "MXN",
-                    paymentMethod: paymentInfo.paymentMethodName || "Transferencia",
-                    receiptUrl: paymentInfo.receiptUrl,
+                    paymentMethod: paymentInfo!.paymentMethodName || "Transferencia",
+                    receiptUrl: paymentInfo!.receiptUrl!,
                     orderId: order.id,
                     orderNumber: order.orderNumber
                 });
@@ -332,7 +344,9 @@ export async function POST(request: NextRequest) {
                     shopPrimaryColor: shop.theme?.primaryColor,
                     shopBackgroundImage: shop.banner || shop.background?.image || shop.hero,
                     deliveryType: deliveryTypeLabel,
-                    paymentStatus: paymentInfo?.paymentTiming === "pay_now" ? "Comprobante enviado" : "Pendiente"
+                    paymentStatus: paymentInfo?.status === "partial_payment"
+                        ? `Anticipo pagado $${paymentInfo.upfrontAmount} (${paymentInfo.upfrontPercentage ?? 50}%) — Resta $${paymentInfo.remainingBalance} al recibir`
+                        : paymentInfo?.paymentTiming === "pay_now" ? "Comprobante enviado" : "Pendiente"
                 });
 
                 console.log(`[Orders] Sending confirmation email to customer: ${customerEmail}`);
@@ -382,7 +396,18 @@ export async function POST(request: NextRequest) {
 
                 // Add payment info
                 if (paymentInfo) {
-                    if (paymentInfo.paymentTiming === "pay_now") {
+                    if (paymentInfo.status === "partial_payment") {
+                        const upfrontAmt = paymentInfo.upfrontAmount ?? 0;
+                        const remaining = paymentInfo.remainingBalance ?? (total - upfrontAmt);
+                        ownerMsg += `💳 *ANTICIPO RECIBIDO (${paymentInfo.upfrontPercentage ?? 50}%)*\n`;
+                        ownerMsg += `Método: ${paymentInfo.paymentMethodName || "Transferencia"}\n`;
+                        ownerMsg += `✅ Pagado: *$${upfrontAmt.toLocaleString()}*\n`;
+                        ownerMsg += `⏳ Restante al entregar: *$${remaining.toLocaleString()}*\n`;
+                        if (paymentInfo.receiptUrl) {
+                            ownerMsg += `📎 *Comprobante adjunto* - Ver en panel admin\n`;
+                        }
+                        ownerMsg += `Estado: ⏳ Pendiente de verificación\n\n`;
+                    } else if (paymentInfo.paymentTiming === "pay_now") {
                         ownerMsg += `💳 *PAGO ANTICIPADO*\n`;
                         ownerMsg += `Método: ${paymentInfo.paymentMethodName || "Transferencia"}\n`;
                         if (paymentInfo.receiptUrl) {
