@@ -1508,6 +1508,18 @@ export function MealPrepModal({
                                     <span>Total Final</span>
                                     <span className="text-green-400">${pricing.total}</span>
                                 </div>
+                                {manualPaymentConfig?.requireUpfrontPayment && paymentTiming === "pay_later" && (
+                                    <div className="mt-2 pt-2 border-t border-amber-500/20 space-y-1">
+                                        <div className="flex justify-between text-sm text-amber-400 font-medium">
+                                            <span>Monto a pagar hoy ({manualPaymentConfig.upfrontPaymentPercentage ?? 50}%)</span>
+                                            <span>${((pricing.total * (manualPaymentConfig.upfrontPaymentPercentage ?? 50)) / 100).toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm text-slate-400">
+                                            <span>Restante al recibir</span>
+                                            <span>${(pricing.total - (pricing.total * (manualPaymentConfig.upfrontPaymentPercentage ?? 50)) / 100).toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Delivery Summary */}
@@ -1754,6 +1766,16 @@ export function MealPrepModal({
                                 </div>
                             ) : (
                                 <div className="flex flex-col gap-3">
+                                    {manualPaymentConfig?.requireUpfrontPayment && paymentTiming === "pay_later" && (
+                                        <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center">
+                                            <p className="text-amber-400 text-sm font-bold">
+                                                Pagas ${((pricing.total * (manualPaymentConfig.upfrontPaymentPercentage ?? 50)) / 100).toFixed(2)} ahora ({manualPaymentConfig.upfrontPaymentPercentage ?? 50}%)
+                                            </p>
+                                            <p className="text-slate-400 text-xs mt-0.5">
+                                                + ${(pricing.total - (pricing.total * (manualPaymentConfig.upfrontPaymentPercentage ?? 50)) / 100).toFixed(2)} al recibir tu pedido
+                                            </p>
+                                        </div>
+                                    )}
                                     <div className="flex gap-3">
                                         <Button
                                             variant="outline"
