@@ -700,6 +700,7 @@ export function PaymentSettings({
 
                 {/* Settings */}
                 <div className="mt-6 pt-6 border-t border-white/10 space-y-4">
+                    {/* Require Receipt */}
                     <div className="flex items-center justify-between">
                         <div>
                             <h4 className="text-white font-medium">Requerir Comprobante</h4>
@@ -716,6 +717,53 @@ export function PaymentSettings({
                             <div
                                 className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${
                                     manualConfig.requiresReceipt ? "left-8" : "left-1"
+                                }`}
+                            />
+                        </button>
+                    </div>
+
+                    {/* Upfront Payment */}
+                    <div className="flex items-center justify-between pt-3 border-t border-white/10">
+                        <div className="flex-1 pr-4">
+                            <h4 className="text-white font-medium flex items-center gap-2">
+                                Pago Anticipado (%)
+                                {manualConfig.requireUpfrontPayment && (
+                                    <span className="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full font-bold">
+                                        Activo
+                                    </span>
+                                )}
+                            </h4>
+                            <p className="text-sm text-slate-400">
+                                {manualConfig.requireUpfrontPayment
+                                    ? `El cliente paga ${manualConfig.upfrontPaymentPercentage ?? 50}% ahora y el resto al recibir`
+                                    : "El cliente paga el total al ordenar"}
+                            </p>
+                            {manualConfig.requireUpfrontPayment && (
+                                <div className="flex items-center gap-2 mt-2">
+                                    <input
+                                        type="number"
+                                        min="10"
+                                        max="90"
+                                        value={manualConfig.upfrontPaymentPercentage ?? 50}
+                                        onChange={(e) => {
+                                            const val = parseInt(e.target.value);
+                                            saveConfig({ ...manualConfig, upfrontPaymentPercentage: isNaN(val) ? 50 : val });
+                                        }}
+                                        className="w-20 px-3 py-1.5 text-center rounded-lg bg-zinc-800 border border-zinc-700 text-white focus:outline-none focus:border-amber-500 text-sm"
+                                    />
+                                    <span className="text-slate-400 text-sm font-medium">%</span>
+                                </div>
+                            )}
+                        </div>
+                        <button
+                            onClick={() => saveConfig({ ...manualConfig, requireUpfrontPayment: !manualConfig.requireUpfrontPayment })}
+                            className={`relative w-14 h-7 rounded-full transition-colors flex-shrink-0 ${
+                                manualConfig.requireUpfrontPayment ? "bg-amber-500" : "bg-zinc-700"
+                            }`}
+                        >
+                            <div
+                                className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${
+                                    manualConfig.requireUpfrontPayment ? "left-8" : "left-1"
                                 }`}
                             />
                         </button>
