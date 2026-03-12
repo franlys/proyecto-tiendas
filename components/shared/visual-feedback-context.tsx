@@ -45,10 +45,11 @@ export function VisualFeedbackProvider({ children }: { children: React.ReactNode
     };
 
     const triggerFlyToCart = useCallback((startX: number, startY: number, image?: string) => {
-        const { x: endX, y: endY } = getCartPosition();
+        // Leer posición en el momento exacto del click para evitar posición stale
+        const pos = getCartPosition();
         const id = Math.random().toString(36).substring(7);
-        setElements(prev => [...prev, { id, startX, startY, endX, endY, image, type: "add" }]);
-        setTimeout(() => setElements(prev => prev.filter(el => el.id !== id)), 2200);
+        setElements(prev => [...prev, { id, startX, startY, endX: pos.x, endY: pos.y, image, type: "add" }]);
+        setTimeout(() => setElements(prev => prev.filter(el => el.id !== id)), 1200);
     }, []);
 
     const triggerTrashItem = useCallback((startX: number, startY: number) => {
@@ -71,8 +72,8 @@ export function VisualFeedbackProvider({ children }: { children: React.ReactNode
                             {el.type === "add" && (
                                 <motion.div
                                     initial={{ x: el.startX - 32, y: el.startY - 32, scale: 0.3, opacity: 0.8 }}
-                                    animate={{ x: el.startX - 32, y: el.startY - 32, scale: 3, opacity: 0 }}
-                                    transition={{ duration: 0.5, ease: "easeOut" }}
+                                    animate={{ x: el.startX - 32, y: el.startY - 32, scale: 2.5, opacity: 0 }}
+                                    transition={{ duration: 0.35, ease: "easeOut" }}
                                     style={{ willChange: "transform, opacity" }}
                                     className="absolute top-0 left-0 w-16 h-16 rounded-full border-2 border-cyan-400/70"
                                 />
@@ -82,9 +83,9 @@ export function VisualFeedbackProvider({ children }: { children: React.ReactNode
                             <motion.div
                                 initial={{ x: el.startX - 28, y: el.startY - 28, scale: 1, opacity: 1 }}
                                 animate={el.type === "add" ? {
-                                    x: [el.startX - 28, el.startX - 60, el.endX - 28],
-                                    y: [el.startY - 28, el.startY - 120, el.endY - 28],
-                                    scale: [1, 1.2, 0.2],
+                                    x: [el.startX - 28, el.startX - 20, el.endX - 28],
+                                    y: [el.startY - 28, el.startY - 70, el.endY - 28],
+                                    scale: [1, 1.1, 0.3],
                                     opacity: [1, 1, 0],
                                 } : {
                                     x: el.endX - 28,
@@ -94,11 +95,11 @@ export function VisualFeedbackProvider({ children }: { children: React.ReactNode
                                     rotate: 60,
                                 }}
                                 transition={el.type === "add" ? {
-                                    duration: 1.7,
-                                    times: [0, 0.4, 1],
-                                    ease: [0.22, 0.68, 0.32, 1],
+                                    duration: 0.75,
+                                    times: [0, 0.3, 1],
+                                    ease: [0.25, 0.46, 0.45, 0.94],
                                 } : {
-                                    duration: 0.55,
+                                    duration: 0.45,
                                     ease: [0.4, 0, 1, 1],
                                 }}
                                 style={{ willChange: "transform, opacity" }}
@@ -143,7 +144,7 @@ export function VisualFeedbackProvider({ children }: { children: React.ReactNode
                                 <motion.div
                                     initial={{ x: el.endX - 20, y: el.endY - 20, scale: 0, opacity: 0 }}
                                     animate={{ x: el.endX - 20, y: el.endY - 20, scale: [0, 1.6, 0], opacity: [0, 0.8, 0] }}
-                                    transition={{ duration: 0.35, delay: 1.5, ease: "easeOut" }}
+                                    transition={{ duration: 0.3, delay: 0.65, ease: "easeOut" }}
                                     style={{ willChange: "transform, opacity", background: "radial-gradient(circle, rgba(6,182,212,0.9) 0%, transparent 70%)" }}
                                     className="absolute top-0 left-0 w-10 h-10 rounded-full"
                                 />

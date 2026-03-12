@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { MessageCircle, X, ShoppingBag, Calendar, Loader2, ChevronUp, ChevronDown, Minus, Plus, Trash2 } from "lucide-react";
 import { useCart, useShop, useOrders, useShopConfig, useVisualFeedback } from "@/components/shared";
 import { AppointmentModal } from "./appointment-modal";
@@ -46,6 +46,17 @@ export function FloatingCart() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCartExpanded, setIsCartExpanded] = useState(false);
+  const [isPulsing, setIsPulsing] = useState(false);
+  const prevTotalItems = useRef(totalItems);
+
+  // Pulso suave al agregar items — sin remontar el componente
+  useEffect(() => {
+    if (totalItems > prevTotalItems.current) {
+      setIsPulsing(true);
+      setTimeout(() => setIsPulsing(false), 400);
+    }
+    prevTotalItems.current = totalItems;
+  }, [totalItems]);
 
   // Phase 22: Appointment modal state
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
@@ -116,19 +127,12 @@ export function FloatingCart() {
   return (
     <>
       <motion.div
-        key={`cart-${totalItems}`}
         initial={{ y: 20, opacity: 0, scale: 0.95 }}
-        animate={{ y: 0, opacity: 1, scale: 1 }}
+        animate={{ y: 0, opacity: 1, scale: isPulsing ? 1.025 : 1 }}
         transition={{
           type: "spring",
-          damping: 15,
-          stiffness: 300,
-          scale: {
-            type: "spring",
-            damping: 10,
-            stiffness: 400,
-            restDelta: 0.001
-          }
+          damping: 20,
+          stiffness: 400,
         }}
         className={cn(
           "fixed bottom-4 left-2 right-2 z-40",
