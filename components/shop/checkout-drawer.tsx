@@ -77,11 +77,31 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
 
     useEffect(() => {
         if (isOpen) {
+            // iOS Safari ignores overflow:hidden on body — must use position:fixed
+            const scrollY = window.scrollY;
+            document.body.style.position = "fixed";
+            document.body.style.top = `-${scrollY}px`;
+            document.body.style.left = "0";
+            document.body.style.right = "0";
             document.body.style.overflow = "hidden";
         } else {
-            document.body.style.overflow = "unset";
+            const scrollY = Math.abs(parseInt(document.body.style.top || "0", 10));
+            document.body.style.position = "";
+            document.body.style.top = "";
+            document.body.style.left = "";
+            document.body.style.right = "";
+            document.body.style.overflow = "";
+            window.scrollTo(0, scrollY);
         }
-        return () => { document.body.style.overflow = "unset"; };
+        return () => {
+            const scrollY = Math.abs(parseInt(document.body.style.top || "0", 10));
+            document.body.style.position = "";
+            document.body.style.top = "";
+            document.body.style.left = "";
+            document.body.style.right = "";
+            document.body.style.overflow = "";
+            window.scrollTo(0, scrollY);
+        };
     }, [isOpen]);
 
     // Upfront Payment Calculation

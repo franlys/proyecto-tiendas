@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Plus, Minus, ShoppingBag, Tag, ChevronDown, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -269,6 +269,25 @@ export function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { pro
   const { addProduct, getVariantQuantity, removeVariant, updateVariantQuantity } = useCart();
   const { triggerFlyToCart } = useVisualFeedback();
   const modalRef = useRef<HTMLDivElement>(null);
+
+  // Lock body scroll when modal is open (iOS Safari fix)
+  useEffect(() => {
+    const scrollY = window.scrollY;
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.overflow = "hidden";
+    return () => {
+      const savedY = Math.abs(parseInt(document.body.style.top || "0", 10));
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.overflow = "";
+      window.scrollTo(0, savedY);
+    };
+  }, []);
 
   const hasVariants = product.variants && product.variants.length > 0;
   const hasExtras = product.extras && product.extras.length > 0;
