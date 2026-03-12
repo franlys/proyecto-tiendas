@@ -45,6 +45,9 @@ import {
 } from "@/components/shared";
 import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
 import { cn } from "@/lib/utils";
+import { BUILT_IN_TEMPLATES, TemplateDefinition } from "@/lib/templates/registry";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 interface ShopConfig {
   shopName: string;
@@ -118,6 +121,28 @@ export default function AdminSettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"brand" | "design" | "social">("brand");
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
+  const [activeTemplates, setActiveTemplates] = useState<TemplateDefinition[]>([]);
+
+  // Load active templates (built-in + custom, respecting hidden overrides)
+  useEffect(() => {
+    async function loadTemplates() {
+      try {
+        const snap = await getDoc(doc(db, "system", "templates"));
+        const customTemplates: TemplateDefinition[] = snap.exists() ? (snap.data().customTemplates ?? []) : [];
+        // Merge: custom overrides win over built-in
+        const merged = BUILT_IN_TEMPLATES.map(t => {
+          const override = customTemplates.find(c => c.id === t.id);
+          return override ?? t;
+        });
+        // Add custom-only templates (not in built-in)
+        const customOnly = customTemplates.filter(c => !BUILT_IN_TEMPLATES.some(b => b.id === c.id));
+        setActiveTemplates([...merged, ...customOnly].filter(t => t.status === "active"));
+      } catch {
+        setActiveTemplates(BUILT_IN_TEMPLATES.filter(t => t.status === "active"));
+      }
+    }
+    loadTemplates();
+  }, []);
 
   // Load from Firestore
   useEffect(() => {
@@ -560,15 +585,7 @@ export default function AdminSettingsPage() {
                         Elige el estilo visual. Usa <strong className="text-white">/admin/templates</strong> para gestión avanzada.
                       </p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {[
-                          { id: "standard", name: "Estándar", desc: "Diseño limpio y funcional para todo tipo de negocios." },
-                          { id: "premium-drop-v1", name: "Premium Drop", desc: "Enfoque en productos destacados y elegancia." },
-                          { id: "street-drop-v1", name: "Street Style", desc: "Estética urbana, ideal para moda y accesorios." },
-                          { id: "cosmic-drop-v1", name: "Cosmic", desc: "Inspirado en el espacio, efectos galácticos." },
-                          { id: "tech-drop-v1", name: "Tech Premium", desc: "Innovación, seguridad y tecnología con animejs v4." },
-                          { id: "tech-3d-v1", name: "Tech 3D Breakout", desc: "El tema más avanzado.", isPremium: true },
-                          { id: "tech-premium-v2", name: "Tech Premium v2", desc: "Minimalismo total tipo Apple/Nothing.", isNew: true, isPremium: true },
-                        ].map((tpl) => (
+                        {activeTemplates.map((tpl) => (
                           <button
                             key={tpl.id}
                             type="button"
@@ -583,15 +600,15 @@ export default function AdminSettingsPage() {
                             <div className="flex justify-between items-start mb-2">
                               <p className="text-white font-bold tracking-tight">{tpl.name}</p>
                               <div className="flex items-center gap-1.5">
-                                {(tpl as any).isPremium && (
-                                  <span className="bg-gradient-to-r from-violet-500 to-cyan-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase">3D</span>
+                                {tpl.isPremium && (
+                                  <span className="bg-gradient-to-r from-violet-500 to-cyan-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase">Premium</span>
                                 )}
-                                {tpl.isNew && (
-                                  <span className="bg-cyan-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase">Nuevo</span>
+                                {tpl.category === "custom" && (
+                                  <span className="bg-purple-500/80 text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase">Custom</span>
                                 )}
                               </div>
                             </div>
-                            <p className="text-[11px] text-slate-500 leading-relaxed font-medium">{tpl.desc}</p>
+                            <p className="text-[11px] text-slate-500 leading-relaxed font-medium">{tpl.description}</p>
                             {config.templateType === tpl.id && (
                               <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
                                 <Check className="w-3 h-3 text-white" />

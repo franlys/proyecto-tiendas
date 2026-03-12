@@ -39,6 +39,7 @@ import {
   Building2,
   Bot,
   Activity,
+  Layers,
 } from "lucide-react";
 import {
   AuthProvider,
@@ -858,6 +859,13 @@ function AgencyContent() {
                 <Button variant="ghost" size="sm" className="px-2 sm:px-3 whitespace-nowrap">
                   <Store className="w-4 h-4" />
                   <span className="hidden sm:inline ml-2">Tipos</span>
+                </Button>
+              </Link>
+
+              <Link href="/admin/templates">
+                <Button variant="ghost" size="sm" className="px-2 sm:px-3 whitespace-nowrap text-violet-400 hover:text-violet-300 hover:bg-violet-400/10">
+                  <Layers className="w-4 h-4" />
+                  <span className="hidden sm:inline ml-2">Plantillas</span>
                 </Button>
               </Link>
 
