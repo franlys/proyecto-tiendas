@@ -115,6 +115,7 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.3 }}
         className="group relative"
       >
         {/* Image Container with 3D Tilt */}
@@ -126,6 +127,7 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
             transition: { duration: 0.4, ease: "easeOut" }
           }}
           style={{ perspective: 1000 }}
+          // Note: consumers should use <motion.div> with prefers-reduced-motion media query if needed
           className="relative aspect-square overflow-hidden rounded-2xl bg-surface"
         >
           <motion.div
@@ -175,12 +177,13 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
               {hasOptions ? (
                 /* Options Button (Variants and/or Extras) */
                 <button
+                  aria-label={`Ver opciones de ${product.name}`}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     setIsModalOpen(true);
                   }}
-                  className="px-4 py-2 rounded-full bg-white/90 hover:bg-white text-black text-xs font-bold uppercase tracking-wide shadow-lg transition-all active:scale-95"
+                  className="px-4 py-2 rounded-full bg-white/90 hover:bg-white text-black text-xs font-bold uppercase tracking-wide shadow-lg transition-colors active:scale-95"
                 >
                   {hasExtras ? "Personalizar" : "Opciones"}
                 </button>
@@ -189,15 +192,17 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
                 simpleInCart && !(hidePriceIfZero && basePrice === 0) ? (
                   <div className="flex items-center gap-0.5 sm:gap-1 bg-white rounded-full shadow-lg p-0.5 sm:p-1">
                     <button
+                      aria-label={`Reducir cantidad de ${product.name}`}
                       onClick={(e) => handleSimpleRemove(e)}
                       className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
                     >
-                      <Minus className="w-3 h-3 sm:w-4 sm:h-4 text-slate-900" />
+                      <Minus className="w-3 h-3 sm:w-4 sm:h-4 text-slate-900" aria-hidden="true" />
                     </button>
-                    <span className="w-5 sm:w-8 text-center font-semibold text-slate-900 text-xs sm:text-base">
+                    <span aria-label={`Cantidad: ${simpleQuantity}`} className="w-5 sm:w-8 text-center font-semibold text-slate-900 text-xs sm:text-base">
                       {simpleQuantity}
                     </span>
                     <button
+                      aria-label={`Aumentar cantidad de ${product.name}`}
                       onClick={() => handleSimpleAdd()}
                       disabled={simpleQuantity >= effectiveStock}
                       className={cn(
@@ -207,7 +212,7 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
                           : "bg-primary hover:bg-primary/90 text-white"
                       )}
                     >
-                      <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <Plus className="w-3 h-3 sm:w-4 sm:h-4" aria-hidden="true" />
                     </button>
                   </div>
                 ) : (
@@ -373,10 +378,11 @@ export function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { pro
           </div>
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent" />
           <button
+            aria-label="Cerrar opciones"
             onClick={onClose}
-            className="absolute top-3 right-3 p-2 rounded-full bg-black/50 text-white hover:bg-black/70"
+            className="absolute top-3 right-3 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
           <div className="absolute bottom-3 left-4">
             <h3 className="text-xl font-bold text-white uppercase tracking-tighter">{product.name}</h3>
@@ -476,23 +482,25 @@ export function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { pro
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Cantidad</span>
                 <div className="flex items-center gap-3 bg-zinc-800 rounded-lg p-1">
                   <button
+                    aria-label="Reducir cantidad"
                     onClick={() => quantity > 1 && setQuantity(q => q - 1)}
-                    className="w-8 h-8 flex items-center justify-center rounded bg-zinc-700 text-white hover:bg-zinc-600"
+                    className="w-8 h-8 flex items-center justify-center rounded bg-zinc-700 text-white hover:bg-zinc-600 transition-colors"
                   >
-                    <Minus className="w-4 h-4" />
+                    <Minus className="w-4 h-4" aria-hidden="true" />
                   </button>
-                  <span className="w-8 text-center text-white font-bold">{quantity}</span>
+                  <span aria-label={`Cantidad: ${quantity}`} className="w-8 text-center text-white font-bold">{quantity}</span>
                   <button
+                    aria-label="Aumentar cantidad"
                     onClick={() => canIncrement && setQuantity(q => q + 1)}
                     disabled={!canIncrement}
                     className={cn(
-                      "w-8 h-8 flex items-center justify-center rounded",
+                      "w-8 h-8 flex items-center justify-center rounded transition-colors",
                       canIncrement
                         ? "bg-zinc-700 text-white hover:bg-zinc-600"
                         : "bg-zinc-800 text-zinc-500 cursor-not-allowed"
                     )}
                   >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-4 h-4" aria-hidden="true" />
                   </button>
                 </div>
               </div>

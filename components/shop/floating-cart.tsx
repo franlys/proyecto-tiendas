@@ -216,7 +216,7 @@ export function FloatingCart() {
               className={cn(
                 "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl",
                 "text-white font-medium text-sm",
-                "transition-all duration-300",
+                "transition-colors duration-200",
                 "shadow-lg hover:shadow-xl",
                 isTech3D
                   ? "text-black font-black uppercase tracking-widest hover:opacity-90"
@@ -361,6 +361,7 @@ export function FloatingCart() {
                         {/* Quantity Controls */}
                         <div className="flex items-center gap-1">
                           <button
+                            aria-label={product.quantity === 1 ? `Eliminar ${product.name}` : `Reducir cantidad de ${product.name}`}
                             onClick={(e) => {
                               if (product.quantity > 1) {
                                 updateProductQuantity(product.id, product.quantity - 1, product.variantId);
@@ -376,15 +377,19 @@ export function FloatingCart() {
                                 : "bg-white/10 text-white hover:bg-white/20"
                             )}
                           >
-                            {product.quantity === 1 ? <Trash2 className="w-3.5 h-3.5" /> : <Minus className="w-3.5 h-3.5" />}
+                            {product.quantity === 1 ? <Trash2 className="w-3.5 h-3.5" aria-hidden="true" /> : <Minus className="w-3.5 h-3.5" aria-hidden="true" />}
                           </button>
-                          <span className={cn(
-                            "w-8 text-center text-sm font-medium",
-                            isStreetDrop ? "text-white font-black" : "text-white"
-                          )}>
+                          <span
+                            aria-label={`Cantidad: ${product.quantity}`}
+                            className={cn(
+                              "w-8 text-center text-sm font-medium",
+                              isStreetDrop ? "text-white font-black" : "text-white"
+                            )}
+                          >
                             {product.quantity}
                           </span>
                           <button
+                            aria-label={`Aumentar cantidad de ${product.name}`}
                             onClick={() => updateProductQuantity(product.id, product.quantity + 1, product.variantId)}
                             className={cn(
                               "w-7 h-7 rounded-lg flex items-center justify-center transition-colors",
@@ -393,7 +398,7 @@ export function FloatingCart() {
                                 : "bg-white/10 text-white hover:bg-white/20"
                             )}
                           >
-                            <Plus className="w-3.5 h-3.5" />
+                            <Plus className="w-3.5 h-3.5" aria-hidden="true" />
                           </button>
                         </div>
                       </motion.div>
@@ -421,13 +426,14 @@ export function FloatingCart() {
                         <p className="text-sm font-bold text-primary mt-1">${service.price.toLocaleString()}</p>
                       </div>
                       <button
+                        aria-label={`Eliminar ${service.name}`}
                         onClick={(e) => {
                           triggerTrashItem(e.clientX, e.clientY);
                           removeItem(service.id);
                         }}
                         className="w-7 h-7 rounded-lg bg-white/10 text-white hover:bg-red-500/20 hover:text-red-400 flex items-center justify-center transition-colors"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </button>
                     </motion.div>
                   ))}
@@ -436,7 +442,7 @@ export function FloatingCart() {
                 {/* Duration indicator for beauty services */}
                 {shouldUseAppointmentFlow && totalDuration > 0 && (
                   <div className="flex items-center gap-2 text-xs text-slate-400 pt-2 border-t border-white/10">
-                    <span>⏱️ Duración estimada:</span>
+                    <span><span aria-hidden="true">⏱️</span> Duración estimada:</span>
                     <span className="text-white font-medium">
                       {Math.floor(totalDuration / 60) > 0 && `${Math.floor(totalDuration / 60)}h `}
                       {totalDuration % 60 > 0 && `${totalDuration % 60}min`}

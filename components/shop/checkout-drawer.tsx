@@ -73,6 +73,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
     const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
     const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
     const [copiedField, setCopiedField] = useState<string | null>(null);
+    const [formError, setFormError] = useState<string | null>(null);
 
     useEffect(() => {
         if (isOpen) {
@@ -146,12 +147,13 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
     };
 
     const handleSubmit = async () => {
+        setFormError(null);
         if (!customerName || !customerPhone || !customerEmail || (deliveryType === "delivery" && !customerAddress)) {
-            alert("Por favor completa todos tus datos");
+            setFormError("Por favor completa todos los campos requeridos.");
             return;
         }
         if (shop?.businessType === "meal_prep" && (!scheduledDate || !scheduledTime)) {
-            alert("Por favor selecciona una fecha y horario de entrega");
+            setFormError("Por favor selecciona una fecha y horario de entrega.");
             return;
         }
         setIsSubmitting(true);
@@ -217,7 +219,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
             clearCart();
         } catch (e: any) {
             console.error(e);
-            alert(e.message || "Error al procesar el pedido");
+            setFormError(e.message || "Error al procesar el pedido. Intenta nuevamente.");
         } finally {
             setIsSubmitting(false);
         }
@@ -304,7 +306,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                     <p className="text-[10px] text-slate-500 font-mono uppercase tracking-widest">{shop?.name}</p>
                                 </div>
                             </div>
-                            <button onClick={onClose} className={cn(
+                            <button onClick={onClose} aria-label="Cerrar carrito" className={cn(
                                 "p-2 rounded-xl transition-colors",
                                 isTech3D
                                     ? "bg-white/5 border border-white/10 hover:border-cyan-500/40 hover:bg-white/10"
@@ -337,7 +339,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                                     "w-14 h-14 rounded-xl overflow-hidden bg-slate-900 flex-shrink-0",
                                                     isTech3D && "border border-white/10"
                                                 )}>
-                                                    {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : <ShoppingBag className="w-5 h-5 text-slate-700 m-auto" />}
+                                                    {item.image ? <img src={item.image} alt={item.name} width={56} height={56} className="w-full h-full object-cover" /> : <ShoppingBag className="w-5 h-5 text-slate-700 m-auto" />}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-white font-bold truncate text-sm">{item.name}</p>
@@ -368,24 +370,24 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                 <h3 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">Información de entrega</h3>
                                 <div className="grid gap-5">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Nombre Completo</label>
-                                        <input value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Ej. Juan Pérez" className={cn(
-                                            "w-full bg-white/5 border p-4 rounded-xl text-white outline-none transition-all",
+                                        <label htmlFor="customerName" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Nombre Completo</label>
+                                        <input id="customerName" value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Ej. Juan Pérez" autoComplete="name" className={cn(
+                                            "w-full bg-white/5 border p-4 rounded-xl text-white outline-none focus-visible:ring-2 focus-visible:ring-white/20 transition-colors",
                                             isTechTheme ? "border-cyan-500/20 focus:border-cyan-500" : "border-white/10 focus:border-orange-500"
                                         )} />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">WhatsApp</label>
-                                            <input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} placeholder="+58 412..." className={cn(
-                                                "w-full bg-white/5 border p-4 rounded-xl text-white outline-none transition-all",
+                                            <label htmlFor="customerPhone" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">WhatsApp</label>
+                                            <input id="customerPhone" type="tel" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} placeholder="+58 412..." autoComplete="tel" className={cn(
+                                                "w-full bg-white/5 border p-4 rounded-xl text-white outline-none focus-visible:ring-2 focus-visible:ring-white/20 transition-colors",
                                                 isTechTheme ? "border-cyan-500/20 focus:border-cyan-500" : "border-white/10 focus:border-orange-500"
                                             )} />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Email</label>
-                                            <input value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} placeholder="juan@email.com" className={cn(
-                                                "w-full bg-white/5 border p-4 rounded-xl text-white outline-none transition-all",
+                                            <label htmlFor="customerEmail" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Email</label>
+                                            <input id="customerEmail" type="email" value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} placeholder="juan@email.com" autoComplete="email" className={cn(
+                                                "w-full bg-white/5 border p-4 rounded-xl text-white outline-none focus-visible:ring-2 focus-visible:ring-white/20 transition-colors",
                                                 isTechTheme ? "border-cyan-500/20 focus:border-cyan-500" : "border-white/10 focus:border-orange-500"
                                             )} />
                                         </div>
@@ -413,14 +415,16 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                     {/* Address Field - FIXED Z-INDEX/CLICK */}
                                     {deliveryType === "delivery" && (
                                         <div className="space-y-2 animate-in slide-in-from-top-2">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Dirección de Envío</label>
+                                            <label htmlFor="customerAddress" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Dirección de Envío</label>
                                             <div className="relative group">
                                                 <textarea
+                                                    id="customerAddress"
                                                     value={customerAddress}
                                                     onChange={e => setCustomerAddress(e.target.value)}
                                                     placeholder="Calle, Número, Referencia..."
+                                                    autoComplete="street-address"
                                                     className={cn(
-                                                        "w-full bg-white/5 border p-4 rounded-xl text-white outline-none transition-all min-h-[100px] pr-12",
+                                                        "w-full bg-white/5 border p-4 rounded-xl text-white outline-none focus-visible:ring-2 focus-visible:ring-white/20 transition-colors min-h-[100px] pr-12",
                                                         isTechTheme ? "border-cyan-500/20 focus:border-cyan-500" : "border-white/10 focus:border-orange-500"
                                                     )}
                                                 />
@@ -444,25 +448,27 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">Horario de Entrega</h3>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="space-y-2">
-                                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Fecha</label>
-                                                    <input 
-                                                        type="date" 
-                                                        value={scheduledDate} 
+                                                    <label htmlFor="scheduledDate" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Fecha</label>
+                                                    <input
+                                                        id="scheduledDate"
+                                                        type="date"
+                                                        value={scheduledDate}
                                                         onChange={e => setScheduledDate(e.target.value)}
                                                         min={new Date().toISOString().split("T")[0]}
                                                         className={cn(
-                                                            "w-full bg-white/5 border p-4 rounded-xl text-white outline-none transition-all",
+                                                            "w-full bg-white/5 border p-4 rounded-xl text-white outline-none focus-visible:ring-2 focus-visible:ring-white/20 transition-colors",
                                                             isTechTheme ? "border-cyan-500/20 focus:border-cyan-500" : "border-white/10 focus:border-orange-500"
                                                         )}
                                                     />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Horario</label>
-                                                    <select 
-                                                        value={scheduledTime} 
+                                                    <label htmlFor="scheduledTime" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Horario</label>
+                                                    <select
+                                                        id="scheduledTime"
+                                                        value={scheduledTime}
                                                         onChange={e => setScheduledTime(e.target.value)}
                                                         className={cn(
-                                                            "w-full bg-white/5 border p-4 rounded-xl text-white outline-none transition-all appearance-none",
+                                                            "w-full bg-white/5 border p-4 rounded-xl text-white outline-none focus-visible:ring-2 focus-visible:ring-white/20 transition-colors appearance-none",
                                                             isTechTheme ? "border-cyan-500/20 focus:border-cyan-500" : "border-white/10 focus:border-orange-500"
                                                         )}
                                                     >
@@ -503,7 +509,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                             "flex flex-col items-center justify-center gap-3 p-10 rounded-2xl border-2 border-dashed bg-white/5 transition-all cursor-pointer",
                                             isTechTheme ? "border-cyan-500/20 hover:border-cyan-500/50 hover:bg-cyan-500/5" : "border-white/10 hover:border-orange-500/50 hover:bg-orange-500/5"
                                         )}>
-                                            {receiptPreview ? <img src={receiptPreview} className="max-h-40 rounded-lg shadow-2xl" /> : (
+                                            {receiptPreview ? <img src={receiptPreview} alt="Vista previa del comprobante" width={320} height={160} className="max-h-40 rounded-lg shadow-2xl object-contain" /> : (
                                                 <>
                                                     <ImageIcon className="w-8 h-8 text-slate-600 mb-1" />
                                                     <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Toca para cargar foto</span>
@@ -542,6 +548,12 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                             <p className="text-xl font-bold text-white">{products.length + services.length}</p>
                                         </div>
                                     </div>
+                                    {formError && (
+                                        <div role="alert" aria-live="polite" className="flex items-start gap-2 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+                                            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
+                                            <span>{formError}</span>
+                                        </div>
+                                    )}
                                     <Button
                                         onClick={handleSubmit}
                                         disabled={isSubmitting || !hasItems}

@@ -163,6 +163,8 @@ export interface UpdateShopInput {
   payments?: Partial<ShopPaymentConfig>;
   // Configuración global Meal Prep
   mealPrepConfig?: Partial<MealPrepShopConfig>;
+  // Plantilla visual asignada por Super Admin
+  templateType?: string;
 }
 
 // Respuesta de API
