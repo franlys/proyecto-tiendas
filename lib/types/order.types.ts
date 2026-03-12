@@ -49,6 +49,9 @@ export interface SalesOrder {
         paymentMethodName?: string;
         paymentMethodType?: string;
         receiptUrl?: string;
-        status: "pending" | "pending_verification" | "verified" | "rejected";
+        status: "pending" | "pending_verification" | "verified" | "rejected" | "partial_payment";
+        upfrontAmount?: number;
+        upfrontPercentage?: number;
+        remainingBalance?: number;
     };
 }
