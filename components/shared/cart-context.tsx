@@ -9,7 +9,7 @@ import {
   useEffect
 } from "react";
 import { localToken } from "@/lib/utils/safe-storage";
-import type { Service, Product, ProductVariant } from "@/lib/constants";
+import type { Service, Product, ProductVariant, ProductColor } from "@/lib/constants";
 import type { SelectedExtra } from "@/lib/types/product-extra.types";
 
 // Cart item types
@@ -27,6 +27,9 @@ export interface ProductCartItem {
 
   name: string;
   variantName?: string; // "Original", "OLED", etc.
+
+  colorName?: string; // Optional Color Name
+  colorHex?: string;  // Optional Color Hex
 
   price: number; // Unit price (Product or Variant price)
   promoPrice?: number;
@@ -55,7 +58,7 @@ interface CartContextValue {
   services: ServiceCartItem[];
   products: ProductCartItem[];
   addService: (service: Service) => void;
-  addProduct: (product: Product, quantity?: number, variant?: ProductVariant, extras?: SelectedExtra[], notes?: string) => void;
+  addProduct: (product: Product, quantity?: number, variant?: ProductVariant, extras?: SelectedExtra[], notes?: string, color?: ProductColor) => void;
   removeItem: (id: string, variantId?: string, extrasKey?: string) => void;
   updateProductQuantity: (productId: string, quantity: number, variantId?: string) => void;
 
@@ -170,20 +173,22 @@ export function CartProvider({ children, shopId, templateType }: CartProviderPro
   };
 
   // Add product to cart (with quantity, variant, extras, and notes)
-  const addProduct = useCallback((product: Product, quantity: number = 1, variant?: ProductVariant, extras?: SelectedExtra[], notes?: string) => {
+  const addProduct = useCallback((product: Product, quantity: number = 1, variant?: ProductVariant, extras?: SelectedExtra[], notes?: string, color?: ProductColor) => {
     // Trigger notification
-    const itemName = variant ? `${product.name} (${variant.name})` : product.name;
+    let itemName = variant ? `${product.name} (${variant.name})` : product.name;
+    if (color) itemName += ` - ${color.name}`;
     addNotification(`${itemName} añadido al carrito`, "add");
 
     setItems((prev) => {
       const extrasKey = getExtrasKey(extras);
 
-      // Find existing item matching ProductID, VariantID, AND same extras combination
+      // Find existing item matching ProductID, VariantID, Color AND same extras combination
       const existingIndex = prev.findIndex(
         (item) =>
           item.itemType === "product" &&
           item.id === product.id &&
           item.variantId === variant?.id &&
+          (item as ProductCartItem).colorName === color?.name &&
           getExtrasKey((item as ProductCartItem).selectedExtras) === extrasKey
       );
 
@@ -202,6 +207,9 @@ export function CartProvider({ children, shopId, templateType }: CartProviderPro
       const unitPrice = variant ? variant.price : product.price;
       const unitPromo = variant ? undefined : product.promoPrice;
       const extrasTotal = calculateExtrasTotal(extras);
+      
+      // Select best image
+      const finalImage = color?.image || variant?.image || product.image;
 
       // Add new product
       const productItem: ProductCartItem = {
@@ -210,9 +218,11 @@ export function CartProvider({ children, shopId, templateType }: CartProviderPro
         variantId: variant?.id,
         name: product.name,
         variantName: variant?.name,
+        colorName: color?.name,
+        colorHex: color?.hex,
         price: unitPrice,
         promoPrice: unitPromo,
-        image: product.image,
+        image: finalImage,
         quantity,
         selectedExtras: extras,
         extrasTotal,

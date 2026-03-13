@@ -337,7 +337,11 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                         </div>
 
                         {/* Scrollable Area */}
-                        <div data-lenis-prevent className="flex-1 overflow-y-auto p-6 space-y-10 custom-scrollbar overscroll-contain">
+                        <div 
+                            onWheel={(e) => e.stopPropagation()} 
+                            onTouchMove={(e) => e.stopPropagation()} 
+                            className="flex-1 overflow-y-auto p-6 space-y-10 custom-scrollbar overscroll-contain"
+                        >
                             {/* Products */}
                             <div className="space-y-4">
                                 <h3 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">Productos en carrito</h3>

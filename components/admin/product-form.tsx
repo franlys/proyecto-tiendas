@@ -18,6 +18,7 @@ import {
   type Product,
   type ProductCategory,
   type ProductVariant,
+  type ProductColor,
 } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -69,6 +70,7 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
     category: "cabello" as ProductCategory,
     image: "",
     featured: false,
+    colors: [] as ProductColor[],
     variants: [] as ProductVariant[],
   });
 
@@ -84,6 +86,7 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
         category: product.category,
         image: product.image,
         featured: product.featured || false,
+        colors: product.colors || [],
         variants: product.variants || [],
       });
     }
@@ -352,12 +355,148 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
             <span className="text-sm text-slate-300">Producto Destacado</span>
           </div>
 
+          {/* Premium Colors Manager (Apple Style) */}
+          <div className="border-t border-white/10 pt-6 mt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-bold flex items-center gap-2">
+                <div className="flex gap-1">
+                  <div className="w-3 h-3 rounded-full bg-red-400" />
+                  <div className="w-3 h-3 rounded-full bg-blue-400" />
+                  <div className="w-3 h-3 rounded-full bg-emerald-400" />
+                </div>
+                Colores Disponibles
+              </h3>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const newColor: ProductColor = {
+                    id: Math.random().toString(36).substr(2, 9),
+                    name: "",
+                    hex: "#ffffff",
+                    image: "",
+                  };
+                  updateField("colors", [...formData.colors, newColor]);
+                }}
+                className="h-8 text-xs border-white/20 text-white hover:bg-white/10"
+              >
+                + Añadir Color
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {formData.colors.map((color, idx) => (
+                <div key={color.id} className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-4 relative group/color">
+                  <button
+                    type="button"
+                    onClick={() => updateField("colors", formData.colors.filter((_, i) => i !== idx))}
+                    className="absolute top-2 right-2 p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition-colors opacity-0 group-hover/color:opacity-100"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+
+                  <div className="flex gap-4">
+                    {/* Color Image Upload */}
+                    <div className="w-24 flex-shrink-0">
+                      <label className="text-[10px] text-slate-500 uppercase font-black tracking-widest block mb-1">Foto Base</label>
+                      <div className="h-24 relative rounded-xl overflow-hidden bg-black/40 border border-white/10 group cursor-pointer">
+                        {color.image ? (
+                          <>
+                            <Image src={color.image} alt="Color variant" fill className="object-cover" />
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <MediaUploader
+                                type="image"
+                                preset="product"
+                                currentUrl={color.image}
+                                onUploadComplete={(url) => {
+                                  const newColors = [...formData.colors];
+                                  newColors[idx] = { ...color, image: url };
+                                  updateField("colors", newColors);
+                                }}
+                              />
+                            </div>
+                          </>
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <MediaUploader
+                                type="image"
+                                preset="product"
+                                currentUrl=""
+                                onUploadComplete={(url) => {
+                                  const newColors = [...formData.colors];
+                                  newColors[idx] = { ...color, image: url };
+                                  updateField("colors", newColors);
+                                }}
+                              />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex-1 space-y-4">
+                      {/* Color Name */}
+                      <div>
+                        <label className="text-[10px] text-slate-500 uppercase font-black tracking-widest block mb-1">Nombre (ej: Titanio Natural)</label>
+                        <input
+                          type="text"
+                          value={color.name}
+                          onChange={(e) => {
+                            const newColors = [...formData.colors];
+                            newColors[idx] = { ...color, name: e.target.value };
+                            updateField("colors", newColors);
+                          }}
+                          className="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/10 text-white text-sm focus:outline-none focus:border-cyan-500/50"
+                          placeholder="Nombre del color"
+                        />
+                      </div>
+                      
+                      {/* Color Hex */}
+                      <div>
+                        <label className="text-[10px] text-slate-500 uppercase font-black tracking-widest block mb-1">Color HEX (Para el botón)</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="color"
+                            value={color.hex || "#ffffff"}
+                            onChange={(e) => {
+                              const newColors = [...formData.colors];
+                              newColors[idx] = { ...color, hex: e.target.value };
+                              updateField("colors", newColors);
+                            }}
+                            className="w-8 h-8 rounded-lg bg-transparent cursor-pointer border-none"
+                          />
+                          <input
+                            type="text"
+                            value={color.hex || "#ffffff"}
+                            onChange={(e) => {
+                              const newColors = [...formData.colors];
+                              newColors[idx] = { ...color, hex: e.target.value };
+                              updateField("colors", newColors);
+                            }}
+                            className="flex-1 px-3 py-2 rounded-lg bg-black/20 border border-white/10 text-white text-xs font-mono"
+                            placeholder="#HEX"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {formData.colors.length === 0 && (
+                <div className="p-6 rounded-2xl border-2 border-dashed border-white/5 text-center">
+                  <p className="text-slate-500 text-sm">Sin colores independientes. (La foto principal se usará por defecto)</p>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Premium Variant Manager */}
           <div className="border-t border-white/10 pt-6 mt-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-white font-bold flex items-center gap-2">
                 <Layers className="w-4 h-4 text-cyan-400" />
-                Variantes Premium (Colores/Modelos)
+                Variantes de Capacidad / Modelo
               </h3>
               <Button
                 type="button"
@@ -369,7 +508,6 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
                     name: "",
                     price: formData.price,
                     stock: 0,
-                    color: "#6366f1",
                   };
                   updateField("variants", [...formData.variants, newVariant]);
                 }}
@@ -381,7 +519,7 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
 
             <div className="space-y-4">
               {formData.variants.map((variant, idx) => (
-                <div key={variant.id} className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-4 relative group/variant">
+                <div key={variant.id} className="p-4 rounded-2xl bg-white/5 border border-white/10 relative group/variant">
                   <button
                     type="button"
                     onClick={() => updateField("variants", formData.variants.filter((_, i) => i !== idx))}
@@ -390,47 +528,19 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
                     <X className="w-4 h-4" />
                   </button>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-[10px] text-slate-500 uppercase font-black tracking-widest block mb-1">Nombre (ej: Rojo, Pro, 256GB)</label>
-                      <input
-                        type="text"
-                        value={variant.name}
-                        onChange={(e) => {
-                          const newVariants = [...formData.variants];
-                          newVariants[idx] = { ...variant, name: e.target.value };
-                          updateField("variants", newVariants);
-                        }}
-                        className="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/10 text-white text-sm focus:outline-none focus:border-cyan-500/50"
-                        placeholder="Nombre"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-slate-500 uppercase font-black tracking-widest block mb-1">Color (Opcional)</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="color"
-                          value={variant.color || "#6366f1"}
-                          onChange={(e) => {
-                            const newVariants = [...formData.variants];
-                            newVariants[idx] = { ...variant, color: e.target.value };
-                            updateField("variants", newVariants);
-                          }}
-                          className="w-8 h-8 rounded-lg bg-transparent cursor-pointer border-none"
-                        />
-                        <input
-                          type="text"
-                          value={variant.color || ""}
-                          onChange={(e) => {
-                            const newVariants = [...formData.variants];
-                            newVariants[idx] = { ...variant, color: e.target.value };
-                            updateField("variants", newVariants);
-                          }}
-                          className="flex-1 px-3 py-2 rounded-lg bg-black/20 border border-white/10 text-white text-xs font-mono"
-                          placeholder="#HEX"
-                        />
-                      </div>
-                    </div>
+                  <div className="pr-8 mb-4">
+                    <label className="text-[10px] text-slate-500 uppercase font-black tracking-widest block mb-1">Nombre Variante (ej: 256GB, 512GB)</label>
+                    <input
+                      type="text"
+                      value={variant.name}
+                      onChange={(e) => {
+                        const newVariants = [...formData.variants];
+                        newVariants[idx] = { ...variant, name: e.target.value };
+                        updateField("variants", newVariants);
+                      }}
+                      className="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/10 text-white text-sm focus:outline-none focus:border-cyan-500/50"
+                      placeholder="Capacidad o versión..."
+                    />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -448,10 +558,10 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-slate-500 uppercase font-black tracking-widest block mb-1">Stock</label>
+                      <label className="text-[10px] text-slate-500 uppercase font-black tracking-widest block mb-1">Stock Asignado</label>
                       <input
                         type="number"
-                        value={variant.stock}
+                        value={variant.stock || 0}
                         onChange={(e) => {
                           const newVariants = [...formData.variants];
                           newVariants[idx] = { ...variant, stock: parseInt(e.target.value) || 0 };
@@ -460,20 +570,6 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
                         className="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/10 text-white text-sm"
                       />
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] text-slate-500 uppercase font-black tracking-widest block mb-2">Imagen Específica</label>
-                    <MediaUploader
-                      type="image"
-                      preset="product"
-                      currentUrl={variant.image}
-                      onUploadComplete={(url) => {
-                        const newVariants = [...formData.variants];
-                        newVariants[idx] = { ...variant, image: url };
-                        updateField("variants", newVariants);
-                      }}
-                    />
                   </div>
                 </div>
               ))}

@@ -136,7 +136,30 @@
       "Bash(pnpm run lint:*)",
       "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" add app/api/bookings/route.ts)",
       "Bash(git -C \"c:/Users/elmae/proyecto-tiendas\" commit -m \"$\\(cat <<''EOF''\nfix\\(bookings\\): ensure notifications complete before response\n\n- Changed notifications from fire-and-forget to awaited operations\n- Added in-app notification for bookings \\(like orders have\\)\n- Added detailed logging for debugging shop config issues\n\nThis fixes the issue where serverless functions terminated before\nnotifications could be sent, causing emails and WhatsApp messages\nto never be delivered.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git add \"app/\\(shops\\)/[shopId]/layout.tsx\")"
+      "Bash(git add \"app/\\(shops\\)/[shopId]/layout.tsx\")",
+      "Bash(vercel deploy --prod)",
+      "Bash(npx skills add majiayu000/claude-skill-registry)",
+      "Read(//c/Users/elmae/.claude/**)",
+      "Bash(npx skills list)",
+      "Bash(npx skills list --global)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:majiayu000.github.io)",
+      "Bash(npx skills add https://github.com/vercel-labs/agent-skills --skill vercel-react-native-skills --global)",
+      "Bash(npx skills add https://github.com/sickn33/antigravity-awesome-skills --skill vercel-deploy-claimable --global)",
+      "Bash(npx skills add https://github.com/vercel-labs/agent-skills --skill react-best-practices --global)",
+      "Bash(npx skills add https://github.com/vercel-labs/agent-skills --skill composition-patterns --global)",
+      "Bash(npx skills add https://github.com/vercel-labs/agent-skills --skill vercel-react-best-practices --global --yes)",
+      "Bash(npx skills add https://github.com/vercel-labs/agent-skills --skill vercel-composition-patterns --global --yes)",
+      "Bash(npx skills add https://github.com/vercel-labs/agent-skills --skill vercel-react-native-skills --global --yes)",
+      "Bash(npx skills add https://github.com/vercel-labs/agent-skills --skill deploy-to-vercel --global --yes)",
+      "Bash(npx skills add https://github.com/vercel-labs/agent-skills --skill vercel-react-best-practices -g -y)",
+      "Bash(npx skills add https://github.com/vercel-labs/agent-skills --skill vercel-composition-patterns -g -y)",
+      "Bash(npx skills add https://github.com/vercel-labs/agent-skills --skill vercel-react-native-skills -g -y)",
+      "Bash(npx skills add https://github.com/vercel-labs/agent-skills --skill deploy-to-vercel -g -y)",
+      "Bash(cp \"C:/Users/elmae/.gemini/antigravity/brain/41c717f1-f69f-49d0-a3cf-21fd3a92a271/tech_premium_frame1_start_1773421821512.png\" \"c:/Users/elmae/proyecto-tiendas/public/assets/tech-premium-animation/frame1.png\")",
+      "Bash(cp \"C:/Users/elmae/.gemini/antigravity/brain/41c717f1-f69f-49d0-a3cf-21fd3a92a271/tech_premium_frame2_mid_1773421838435.png\" \"c:/Users/elmae/proyecto-tiendas/public/assets/tech-premium-animation/frame2.png\")",
+      "Bash(cp \"C:/Users/elmae/.gemini/antigravity/brain/41c717f1-f69f-49d0-a3cf-21fd3a92a271/tech_premium_frame3_preimpact_1773421853827.png\" \"c:/Users/elmae/proyecto-tiendas/public/assets/tech-premium-animation/frame3.png\")",
+      "Bash(cp \"C:/Users/elmae/.gemini/antigravity/brain/41c717f1-f69f-49d0-a3cf-21fd3a92a271/tech_premium_frame4_final_1773421803985.png\" \"c:/Users/elmae/proyecto-tiendas/public/assets/tech-premium-animation/frame4.png\")"
     ]
   }
 }

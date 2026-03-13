@@ -740,15 +740,22 @@ export type ProductCategory =
 
 
 
+export interface ProductColor {
+  id: string;
+  name: string; // "Titanio Natural", "Rojo Salvaje"
+  hex: string; // "#A5A5A5"
+  image?: string; // Image specific to this color
+}
+
 export interface ProductVariant {
   id: string;
-  name: string; // "Original", "OLED", "Genérica AAA"
+  name: string; // "Original", "OLED", "Genérica AAA", "256GB"
   description?: string; // Phase 7 Refinement: Mini-description
   price: number;
   wholesalePrice?: number; // Precio B2B
   stock?: number; // Optional per variant stock
-  image?: string; // Variant specific image (e.g. phone color)
-  color?: string; // Hex color for swatches (e.g. #FF0000)
+  image?: string; // Variant specific image (Legacy/Fallback)
+  color?: string; // Hex color for swatches (Legacy/Fallback)
 }
 
 export interface Product {
@@ -763,7 +770,9 @@ export interface Product {
   category: ProductCategory;
   image: string;
   featured?: boolean;
-  // Variants support (sizes, types)
+  // Colors support (Apple Style)
+  colors?: ProductColor[];
+  // Variants support (sizes, types, capacities)
   variants?: ProductVariant[];
   // Extras/Addons support (toppings, additions)
   extras?: ProductExtra[];

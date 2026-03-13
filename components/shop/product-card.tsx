@@ -6,7 +6,7 @@ import { Plus, Minus, ShoppingBag, Tag, ChevronDown, Check, X } from "lucide-rea
 import { cn } from "@/lib/utils";
 import { useCart, useShop, useVisualFeedback } from "@/components/shared";
 import { useBusinessFeatures, useCombinedBusinessFeatures } from "@/lib/hooks/use-business-features";
-import type { Product, ProductVariant } from "@/lib/constants";
+import type { Product, ProductVariant, ProductColor } from "@/lib/constants";
 import type { SelectedExtra } from "@/lib/types/product-extra.types";
 import { ExtrasSelector } from "@/components/shop/extras-selector";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,8 +28,9 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const hasVariants = product.variants && product.variants.length > 0;
+  const hasColors = product.colors && product.colors.length > 0;
   const hasExtras = product.extras && product.extras.length > 0;
-  const hasOptions = hasVariants || hasExtras; // Show "Options" button if variants OR extras
+  const hasOptions = hasVariants || hasExtras || hasColors; // Show "Options" button if variants, extras OR colors
 
   // Base price (lowest)
   const basePrice = hasVariants
@@ -291,39 +292,51 @@ export function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { pro
 
   const hasVariants = product.variants && product.variants.length > 0;
   const hasExtras = product.extras && product.extras.length > 0;
+  const hasColors = product.colors && product.colors.length > 0;
 
   // State for selection
+  const [selectedColor, setSelectedColor] = useState<ProductColor | null>(
+    hasColors ? product.colors![0] : null
+  );
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
     hasVariants ? null : null // Will be set when user selects
   );
-  const [displayImage, setDisplayImage] = useState(product.image);
+  const [displayImage, setDisplayImage] = useState(selectedColor?.image || product.image);
   const imageRef = useRef<HTMLDivElement>(null);
+  const isAnimating = useRef(false);
 
-  // Handle variant selection with animation
-  const handleVariantSelect = (variant: ProductVariant) => {
-    if (selectedVariant?.id === variant.id) return;
+  // Handle color selection with animation
+  const handleColorSelect = (color: ProductColor) => {
+    if (selectedColor?.id === color.id || isAnimating.current) return;
 
-    if (variant.image && variant.image !== displayImage) {
-      // Premium GSAP Transition
+    if (color.image && color.image !== displayImage) {
+      isAnimating.current = true;
       const tl = gsap.timeline();
 
-      // Rotate out, swap image, rotate in
       tl.to(imageRef.current, {
         rotateY: 90,
         duration: 0.3,
         ease: "power2.in",
         onComplete: () => {
-          setDisplayImage(variant.image!);
-          setSelectedVariant(variant);
+          setDisplayImage(color.image!);
+          setSelectedColor(color);
         }
       }).to(imageRef.current, {
         rotateY: 0,
         duration: 0.4,
-        ease: "power2.out"
+        ease: "power2.out",
+        onComplete: () => {
+          isAnimating.current = false;
+        }
       });
     } else {
-      setSelectedVariant(variant);
+      setSelectedColor(color);
     }
+  };
+
+  // Handle variant selection
+  const handleVariantSelect = (variant: ProductVariant) => {
+    setSelectedVariant(variant);
   };
 
   const [selectedExtras, setSelectedExtras] = useState<SelectedExtra[]>([]);
@@ -343,8 +356,8 @@ export function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { pro
 
   // Handle add to cart
   const handleAddToCart = () => {
+    if (hasColors && !selectedColor) return; // Must select color
     if (hasVariants && !selectedVariant) return; // Must select variant
-
     if (product.extrasRequired && selectedExtras.length === 0) return; // Must select extras
 
     // Trigger fly-to-cart animation from modal center
@@ -355,12 +368,12 @@ export function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { pro
       triggerFlyToCart(startX, startY, displayImage);
     }
 
-    addProduct(product, quantity, selectedVariant || undefined, selectedExtras.length > 0 ? selectedExtras : undefined);
+    addProduct(product, quantity, selectedVariant || undefined, selectedExtras.length > 0 ? selectedExtras : undefined, undefined, selectedColor || undefined);
     onClose();
   };
 
   // Check if can add
-  const canAdd = (!hasVariants || selectedVariant) && (!product.extrasRequired || selectedExtras.length > 0);
+  const canAdd = (!hasVariants || selectedVariant) && (!hasColors || selectedColor) && (!product.extrasRequired || selectedExtras.length > 0);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4">
@@ -409,7 +422,45 @@ export function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { pro
           </div>
         </div>
 
-        <div data-lenis-prevent className="p-4 space-y-4 max-h-[50vh] overflow-y-auto">
+        <div 
+          onWheel={(e) => e.stopPropagation()} 
+          onTouchMove={(e) => e.stopPropagation()} 
+          className="p-4 space-y-4 max-h-[50vh] overflow-y-auto"
+        >
+          {/* Colors Section (Apple Style) */}
+          {hasColors && (
+            <div className="space-y-3">
+              <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                Color Seleccionado <span className="text-red-400">*</span>
+              </h4>
+              <div className="flex flex-wrap gap-3">
+                {product.colors!.map(color => {
+                  const isSelected = selectedColor?.id === color.id;
+                  return (
+                    <button
+                      key={color.id}
+                      onClick={() => handleColorSelect(color)}
+                      className={cn(
+                        "w-10 h-10 rounded-full border-[3px] transition-all p-0.5 relative group outline-none",
+                        isSelected ? "border-cyan-500 scale-110 shadow-[0_0_15px_rgba(6,182,212,0.4)]" : "border-transparent hover:border-zinc-500"
+                      )}
+                      aria-label={`Seleccionar color ${color.name}`}
+                    >
+                      <div 
+                        className="w-full h-full rounded-full shadow-inner border border-black/20"
+                        style={{ backgroundColor: color.hex }}
+                      />
+                      {/* Tooltip on hover */}
+                      <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-zinc-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 shadow-xl border border-white/10">
+                        {color.name}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Variants Section */}
           {hasVariants && (
             <div className="space-y-2">
