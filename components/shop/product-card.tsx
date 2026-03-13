@@ -11,7 +11,6 @@ import type { SelectedExtra } from "@/lib/types/product-extra.types";
 import { ExtrasSelector } from "@/components/shop/extras-selector";
 import { motion, AnimatePresence } from "framer-motion";
 import { InteractiveCartButton } from "./interactive-cart-button";
-import { gsap } from "gsap";
 
 interface ProductCardProps {
   product: Product;
@@ -302,35 +301,22 @@ export function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { pro
     hasVariants ? null : null // Will be set when user selects
   );
   const [displayImage, setDisplayImage] = useState(selectedColor?.image || product.image);
-  const imageRef = useRef<HTMLDivElement>(null);
-  const isAnimating = useRef(false);
+  const [fadingImage, setFadingImage] = useState<string | null>(null);
 
-  // Handle color selection with animation
+  // Handle color selection with a subtle cross-fade
+  // Looks like a color change, not a photo swap
   const handleColorSelect = (color: ProductColor) => {
-    if (selectedColor?.id === color.id || isAnimating.current) return;
+    if (selectedColor?.id === color.id) return;
+    setSelectedColor(color);
 
     if (color.image && color.image !== displayImage) {
-      isAnimating.current = true;
-      const tl = gsap.timeline();
-
-      tl.to(imageRef.current, {
-        rotateY: 90,
-        duration: 0.3,
-        ease: "power2.in",
-        onComplete: () => {
-          setDisplayImage(color.image!);
-          setSelectedColor(color);
-        }
-      }).to(imageRef.current, {
-        rotateY: 0,
-        duration: 0.4,
-        ease: "power2.out",
-        onComplete: () => {
-          isAnimating.current = false;
-        }
-      });
-    } else {
-      setSelectedColor(color);
+      // Overlay the new image on top, fade it in, then swap base
+      setFadingImage(color.image);
+      const timer = setTimeout(() => {
+        setDisplayImage(color.image!);
+        setFadingImage(null);
+      }, 180);
+      return () => clearTimeout(timer);
     }
   };
 
@@ -397,18 +383,39 @@ export function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { pro
         )}
       >
         {/* Header with Image */}
-        <div className="relative h-48 bg-zinc-800 perspective-1000">
-          <div ref={imageRef} className="relative w-full h-full transform-style-3d">
-            {displayImage && (
-              <Image
-                src={displayImage}
-                alt={product.name}
-                fill
-                className="object-contain p-4"
-              />
+        <div className="relative h-64 bg-zinc-900">
+          {/* Base image */}
+          {displayImage && (
+            <Image
+              src={displayImage}
+              alt={product.name}
+              fill
+              className="object-contain py-4 px-8"
+              priority
+            />
+          )}
+          {/* Cross-fade overlay — new color image fades in on top */}
+          <AnimatePresence>
+            {fadingImage && (
+              <motion.div
+                key={fadingImage}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.18, ease: "easeInOut" }}
+                className="absolute inset-0"
+              >
+                <Image
+                  src={fadingImage}
+                  alt={product.name}
+                  fill
+                  className="object-contain py-4 px-8"
+                  priority
+                />
+              </motion.div>
             )}
-          </div>
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent" />
+          </AnimatePresence>
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-zinc-900 to-transparent" />
           <button
             aria-label="Cerrar opciones"
             onClick={onClose}
