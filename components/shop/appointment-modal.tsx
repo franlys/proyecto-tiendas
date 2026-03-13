@@ -490,8 +490,9 @@ export function AppointmentModal({
 
           {/* Content */}
           <div 
-            onWheel={(e) => e.stopPropagation()} 
-            onTouchMove={(e) => e.stopPropagation()} 
+            data-lenis-prevent
+            onWheel={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
             className="p-6 overflow-y-auto max-h-[50vh]"
           >
             {/* Step 1: Services Summary */}

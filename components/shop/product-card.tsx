@@ -423,8 +423,9 @@ export function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { pro
         </div>
 
         <div 
-          onWheel={(e) => e.stopPropagation()} 
-          onTouchMove={(e) => e.stopPropagation()} 
+          data-lenis-prevent
+          onWheel={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
           className="p-4 space-y-4 max-h-[50vh] overflow-y-auto"
         >
           {/* Colors Section (Apple Style) */}

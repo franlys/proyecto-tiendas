@@ -338,8 +338,9 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
 
                         {/* Scrollable Area */}
                         <div 
-                            onWheel={(e) => e.stopPropagation()} 
-                            onTouchMove={(e) => e.stopPropagation()} 
+                            data-lenis-prevent
+                            onWheel={(e) => e.stopPropagation()}
+                            onTouchMove={(e) => e.stopPropagation()}
                             className="flex-1 overflow-y-auto p-6 space-y-10 custom-scrollbar overscroll-contain"
                         >
                             {/* Products */}
