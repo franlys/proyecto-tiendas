@@ -409,7 +409,7 @@ export function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { pro
           </div>
         </div>
 
-        <div className="p-4 space-y-4 max-h-[50vh] overflow-y-auto">
+        <div data-lenis-prevent className="p-4 space-y-4 max-h-[50vh] overflow-y-auto">
           {/* Variants Section */}
           {hasVariants && (
             <div className="space-y-2">

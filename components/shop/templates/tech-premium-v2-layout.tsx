@@ -10,7 +10,6 @@ import {
     Globe,
     ChevronRight,
     ArrowUpRight,
-    Cpu,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/components/shared";
@@ -19,6 +18,7 @@ import { ProductOptionsModal } from "@/components/shop/product-card";
 import { useVisualFeedback } from "@/components/shared";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { TechPremiumLogoAnimation } from "@/components/shop/templates/custom/tech-premium-logo-animation";
 
 if (typeof window !== "undefined") {
     gsap.registerPlugin(ScrollTrigger);
@@ -224,21 +224,9 @@ function Hero({ shop, onExplore }: { shop: any; onExplore: () => void }) {
                     </div>
                 </div>
 
-                {/* Product image */}
+                {/* Animated Logo */}
                 <div className="relative flex items-center justify-center">
-                    <div className="absolute inset-0 bg-white/4 blur-[100px] rounded-full scale-75 pointer-events-none" />
-                    {shop.heroProductImage ? (
-                        <img
-                            src={shop.heroProductImage}
-                            alt={shop.name}
-                            className="v2-hero-img relative z-10 w-full max-w-sm mx-auto object-contain drop-shadow-2xl"
-                            style={{ filter: "drop-shadow(0 20px 60px rgba(255,255,255,0.06))" }}
-                        />
-                    ) : (
-                        <div className="v2-hero-img relative z-10 w-64 h-64 rounded-3xl bg-white/3 border border-white/8 flex items-center justify-center">
-                            <Cpu className="w-20 h-20 text-white/15" />
-                        </div>
-                    )}
+                    <TechPremiumLogoAnimation />
                 </div>
             </div>
 

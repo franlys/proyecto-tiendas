@@ -15,13 +15,7 @@ import {
   FREQUENCY_LABELS,
   BILLING_CYCLE_LABELS
 } from "@/lib/types/training-package.types";
-import { StandardShopLayout } from "@/components/shop/templates/standard-shop-layout";
-import { PremiumDropLayout } from "@/components/shop/templates/premium-drop-layout";
-import { StreetDropLayout } from "@/components/shop/templates/street-drop-layout";
-import { CosmicDropLayout } from "@/components/shop/templates/cosmic-drop-layout";
-import { TechDropLayout } from "@/components/shop/templates/tech-drop-layout";
-import { Tech3DLayout } from "@/components/shop/templates/tech-3d-layout";
-import { TechPremiumV2Layout } from "@/components/shop/templates/tech-premium-v2-layout";
+import { resolveTemplate } from "@/lib/templates/component-registry";
 
 type TabType = "servicios" | "productos";
 
@@ -156,76 +150,15 @@ export default function ShopHomePage() {
     loadShopData();
   }, [shop?.id, shop?.slug]);
   // 2. Render appropriate template based on settings
-  // Pass the loaded catalog to the respective layout component
-  const templateRoot = () => {
-    console.log("🎨 [TEMPLATE] Current templateType:", shop?.templateType, "| Shop:", shop?.name);
-    switch (shop?.templateType) {
-      case "premium-drop-v1":
-        return (
-          <PremiumDropLayout
-            shop={shop as any}
-            products={products}
-            services={services}
-            loadingData={loadingData}
-          />
-        );
-      case "street-drop-v1":
-        return (
-          <StreetDropLayout
-            shop={shop as any}
-            products={products}
-            services={services}
-            loadingData={loadingData}
-          />
-        );
-      case "cosmic-drop-v1":
-        return (
-          <CosmicDropLayout
-            shop={shop as any}
-            products={products}
-            services={services}
-            loadingData={loadingData}
-          />
-        );
-      case "tech-drop-v1":
-        return (
-          <TechDropLayout
-            shop={shop as any}
-            products={products}
-            services={services}
-            loadingData={loadingData}
-          />
-        );
-      case "tech-3d-v1":
-        return (
-          <Tech3DLayout
-            shop={shop as any}
-            products={products}
-            services={services}
-            loadingData={loadingData}
-          />
-        );
-      case "tech-premium-v2":
-        return (
-          <TechPremiumV2Layout
-            shop={shop as any}
-            products={products}
-            services={services}
-            loadingData={loadingData}
-          />
-        );
-      case "standard":
-      default:
-        return (
-          <StandardShopLayout
-            shop={shop as any}
-            products={products}
-            services={services}
-            loadingData={loadingData}
-          />
-        );
-    }
-  };
+  const Layout = resolveTemplate(shop?.templateType);
+  console.log("🎨 [TEMPLATE] Current templateType:", shop?.templateType, "| Shop:", shop?.name);
 
-  return templateRoot();
+  return (
+    <Layout
+      shop={shop as any}
+      products={products}
+      services={services}
+      loadingData={loadingData}
+    />
+  );
 }

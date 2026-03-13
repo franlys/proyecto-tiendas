@@ -489,7 +489,7 @@ export function AppointmentModal({
           </div>
 
           {/* Content */}
-          <div className="p-6 overflow-y-auto max-h-[50vh]">
+          <div data-lenis-prevent className="p-6 overflow-y-auto max-h-[50vh]">
             {/* Step 1: Services Summary */}
             {step === 1 && (
               <div className="space-y-4">
