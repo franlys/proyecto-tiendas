@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Product, ProductVariant, ProductCategory, PRODUCT_CATEGORY_LABELS, ProductExtra, MealPlate } from "@/lib/constants";
+import { Product, ProductVariant, ProductCategory, PRODUCT_CATEGORY_LABELS, ProductExtra, MealPlate, ProductColor } from "@/lib/constants";
 import type { ProductExtra as ProductExtraType } from "@/lib/types/product-extra.types";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, Trash2, Tag, Palette, Check } from "lucide-react";
@@ -66,6 +66,7 @@ const EMPTY_PRODUCT: ExtendedProduct = {
     infiniteStock: false,
     predefinedPlates: [],
     variants: [],
+    colors: [],
     extras: [],
     extrasRequired: false,
     maxExtras: undefined,
@@ -79,6 +80,7 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideSt
     const isFoodBusiness = FOOD_BUSINESS_TYPES.includes(businessType.toLowerCase());
     const [formData, setFormData] = useState<ExtendedProduct>(EMPTY_PRODUCT);
     const [hasVariants, setHasVariants] = useState(false);
+    const [hasColors, setHasColors] = useState(false);
     const [hasExtras, setHasExtras] = useState(false);
     const [customCategories, setCustomCategories] = useState<CustomCategory[]>([]);
     const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
@@ -125,6 +127,7 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideSt
             if (product) {
                 setFormData(product as ExtendedProduct);
                 setHasVariants(!!(product.variants && product.variants.length > 0));
+                setHasColors(!!(product.colors && product.colors.length > 0));
                 setHasExtras(!!(product.extras && product.extras.length > 0));
                 // Check if product has a custom category
                 const isCustom = !Object.keys(PRODUCT_CATEGORY_LABELS).includes(product.category);
@@ -134,6 +137,7 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideSt
             } else {
                 setFormData({ ...EMPTY_PRODUCT, id: `new-${Date.now()}` });
                 setHasVariants(false);
+                setHasColors(false);
                 setHasExtras(false);
                 setShowNewCategoryInput(false);
                 setNewCategoryName("");
@@ -239,11 +243,37 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideSt
         const cleanData = {
             ...formData,
             variants: hasVariants ? formData.variants : [],
+            colors: hasColors ? formData.colors : [],
             extras: hasExtras ? formData.extras : [],
             extrasRequired: hasExtras ? formData.extrasRequired : false,
             maxExtras: hasExtras ? formData.maxExtras : undefined,
         };
         onSave(cleanData as Product);
+    };
+
+    // Color management functions
+    const addColor = () => {
+        const newColor: ProductColor = {
+            id: `c-${Date.now()}`,
+            name: "",
+            hex: "#000000",
+        };
+        setFormData({
+            ...formData,
+            colors: [...(formData.colors || []), newColor],
+        });
+    };
+
+    const updateColor = (index: number, field: keyof ProductColor, value: any) => {
+        const newColors = [...(formData.colors || [])];
+        newColors[index] = { ...newColors[index], [field]: value };
+        setFormData({ ...formData, colors: newColors });
+    };
+
+    const removeColor = (index: number) => {
+        const newColors = [...(formData.colors || [])];
+        newColors.splice(index, 1);
+        setFormData({ ...formData, colors: newColors });
     };
 
     // Extra management functions
@@ -334,6 +364,8 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideSt
                         exit={{ x: "100%" }}
                         transition={{ type: "spring", damping: 25, stiffness: 200 }}
                         className="fixed inset-y-0 right-0 w-full max-w-2xl bg-zinc-900 border-l border-zinc-800 shadow-2xl z-50 overflow-y-auto"
+                        onWheel={(e) => e.stopPropagation()}
+                        onTouchMove={(e) => e.stopPropagation()}
                     >
                         <div className="p-6">
                             <div className="flex items-center justify-between mb-8">
@@ -536,6 +568,18 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideSt
                                         <div className="flex items-center gap-2">
                                             <input
                                                 type="checkbox"
+                                                id="hasColors"
+                                                checked={hasColors}
+                                                onChange={(e) => setHasColors(e.target.checked)}
+                                                className="w-4 h-4 rounded bg-zinc-800 border-zinc-600 text-cyan-500 focus:ring-cyan-500"
+                                            />
+                                            <label htmlFor="hasColors" className="text-sm text-zinc-300 cursor-pointer select-none">
+                                                Colores Disponibles
+                                            </label>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="checkbox"
                                                 id="infiniteStock"
                                                 checked={formData.infiniteStock}
                                                 onChange={(e) => setFormData({ ...formData, infiniteStock: e.target.checked })}
@@ -554,11 +598,74 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideSt
                                                 className="w-4 h-4 rounded bg-zinc-800 border-zinc-600 text-indigo-500 focus:ring-indigo-500"
                                             />
                                             <label htmlFor="hasVariants" className="text-sm text-zinc-300 cursor-pointer select-none">
-                                                Variantes (Tallas, Calidades)
+                                                Variantes (Capacidades, Modelos)
                                             </label>
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Colors Section */}
+                                {hasColors && (
+                                    <div className="space-y-4 mb-6 relative">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {formData.colors?.map((color, index) => (
+                                                <div key={color.id} className="flex gap-4 p-4 bg-zinc-800/30 rounded-xl border border-zinc-800/50 relative overflow-hidden group">
+                                                    {/* Color Image Upload */}
+                                                    <div className="w-24 shrink-0">
+                                                        <FirebaseImageUpload
+                                                            value={color.image}
+                                                            onChange={(url) => updateColor(index, "image", url)}
+                                                            folder="colors"
+                                                            shopId={shopId}
+                                                            aspectRatio="square"
+                                                            maxSizeMB={5}
+                                                            label="Foto Color"
+                                                        />
+                                                    </div>
+                                                    {/* Color Info */}
+                                                    <div className="flex-1 space-y-3">
+                                                        <div>
+                                                            <label className="block text-xs text-zinc-500 mb-1">Nombre del Color</label>
+                                                            <input
+                                                                type="text"
+                                                                value={color.name}
+                                                                onChange={(e) => updateColor(index, "name", e.target.value)}
+                                                                className="w-full bg-zinc-900 border-zinc-700 rounded px-3 py-1.5 text-white text-sm"
+                                                                placeholder="Ej. Titanio Natural"
+                                                            />
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <label className="block text-xs text-zinc-500 min-w-16">Hex Color</label>
+                                                            <input
+                                                                type="color"
+                                                                value={color.hex}
+                                                                onChange={(e) => updateColor(index, "hex", e.target.value)}
+                                                                className="w-8 h-8 rounded cursor-pointer bg-transparent border-0 shrink-0 p-0"
+                                                            />
+                                                            <span className="text-xs text-zinc-500 font-mono uppercase bg-zinc-900 px-2 py-1 rounded border border-zinc-700">{color.hex || '#000000'}</span>
+                                                        </div>
+                                                    </div>
+                                                    {/* Delete button */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeColor(index)}
+                                                        className="absolute top-2 right-2 p-1.5 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-md opacity-0 group-hover:opacity-100 transition-all font-bold"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            onClick={addColor}
+                                            className="flex items-center justify-center w-full gap-2 p-3 border-2 border-dashed border-cyan-700/50 text-cyan-500 hover:text-cyan-400 hover:border-cyan-500/30 hover:bg-cyan-500/5 rounded-xl font-medium transition-all"
+                                        >
+                                            <Plus size={18} /> Añadir Nuevo Color
+                                        </button>
+                                    </div>
+                                )}
 
                                 {(!hasVariants) ? (
                                     /* Simple Product Strategy (or menu-only mode) */
@@ -656,18 +763,6 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideSt
                                                         />
                                                     </div>
                                                 )}
-                                                <div className="w-24">
-                                                    <label className="block text-xs text-zinc-500 mb-1">Foto Color</label>
-                                                    <FirebaseImageUpload
-                                                        value={variant.image}
-                                                        onChange={(url) => updateVariant(index, "image", url)}
-                                                        folder="variants"
-                                                        shopId={shopId}
-                                                        aspectRatio="square"
-                                                        maxSizeMB={5}
-                                                        label=""
-                                                    />
-                                                </div>
                                                 <button
                                                     type="button"
                                                     onClick={() => removeVariant(index)}
