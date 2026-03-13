@@ -1,9 +1,8 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { cn } from "@/lib/utils";
 
 const MASTER_FRAME = "/assets/tech-premium-animation/frame4.png";
 
@@ -17,7 +16,7 @@ export function LogoAnimation() {
   if (!hasMounted) return null;
 
   // Apple-style smooth animation variants
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
@@ -28,7 +27,7 @@ export function LogoAnimation() {
     },
   };
 
-  const gPieceVariants = {
+  const gPieceVariants: Variants = {
     hidden: { x: -100, y: -50, opacity: 0, scale: 0.8 },
     show: { 
       x: 0, y: 0, opacity: 1, scale: 1,
@@ -36,7 +35,7 @@ export function LogoAnimation() {
     },
   };
 
-  const sPieceVariants = {
+  const sPieceVariants: Variants = {
     hidden: { x: 100, y: -50, opacity: 0, scale: 0.8 },
     show: { 
       x: 0, y: 0, opacity: 1, scale: 1,
@@ -44,7 +43,7 @@ export function LogoAnimation() {
     },
   };
 
-  const textVariants = {
+  const textVariants: Variants = {
     hidden: { y: 50, opacity: 0, filter: "blur(10px)" },
     show: { 
       y: 0, opacity: 1, filter: "blur(0px)",
@@ -52,7 +51,7 @@ export function LogoAnimation() {
     },
   };
 
-  const electricVariants = {
+  const electricVariants: Variants = {
     hidden: { opacity: 0, scale: 0.5 },
     show: { 
       opacity: [0, 1, 0, 0.8, 0], 
