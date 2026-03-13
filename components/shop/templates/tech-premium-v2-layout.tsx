@@ -18,7 +18,7 @@ import { ProductOptionsModal } from "@/components/shop/product-card";
 import { useVisualFeedback } from "@/components/shared";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { TechPremiumLogoAnimation } from "@/components/shop/templates/custom/tech-premium-logo-animation";
+import { LogoAnimation } from "@/components/shop/logo-animation";
 
 if (typeof window !== "undefined") {
     gsap.registerPlugin(ScrollTrigger);
@@ -226,7 +226,7 @@ function Hero({ shop, onExplore }: { shop: any; onExplore: () => void }) {
 
                 {/* Animated Logo */}
                 <div className="relative flex items-center justify-center">
-                    <TechPremiumLogoAnimation />
+                    <LogoAnimation />
                 </div>
             </div>
 
