@@ -38,7 +38,8 @@ export interface ShopLayoutProps {
  * Clave = templateType guardado en Firestore del shop.
  * Valor = componente React que renderiza esa plantilla.
  */
-export const TEMPLATE_REGISTRY: Record<string, React.ComponentType<ShopLayoutProps>> = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const TEMPLATE_REGISTRY: Record<string, React.ComponentType<any>> = {
     // --- Built-in ---
     "standard":         StandardShopLayout,
     "premium-drop-v1":  PremiumDropLayout,
@@ -53,7 +54,8 @@ export const TEMPLATE_REGISTRY: Record<string, React.ComponentType<ShopLayoutPro
 };
 
 /** Resuelve el componente de layout para un templateType dado. Fallback a "standard". */
-export function resolveTemplate(templateType?: string | null): React.ComponentType<ShopLayoutProps> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function resolveTemplate(templateType?: string | null): React.ComponentType<any> {
     if (templateType && TEMPLATE_REGISTRY[templateType]) {
         return TEMPLATE_REGISTRY[templateType];
     }
