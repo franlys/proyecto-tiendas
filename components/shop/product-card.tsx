@@ -301,23 +301,24 @@ export function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { pro
     hasVariants ? null : null // Will be set when user selects
   );
   const [displayImage, setDisplayImage] = useState(selectedColor?.image || product.image);
-  const [fadingImage, setFadingImage] = useState<string | null>(null);
 
-  // Handle color selection with a subtle cross-fade
-  // Looks like a color change, not a photo swap
+  // Preload all color images as soon as the modal mounts so they're
+  // cached before the user clicks — prevents the "white flash" on first swap
+  useEffect(() => {
+    if (!hasColors || !product.colors) return;
+    product.colors.forEach(color => {
+      if (color.image) {
+        const img = new window.Image();
+        img.src = color.image;
+      }
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Handle color selection — direct state update, AnimatePresence handles the cross-fade
   const handleColorSelect = (color: ProductColor) => {
     if (selectedColor?.id === color.id) return;
     setSelectedColor(color);
-
-    if (color.image && color.image !== displayImage) {
-      // Overlay the new image on top, fade it in, then swap base
-      setFadingImage(color.image);
-      const timer = setTimeout(() => {
-        setDisplayImage(color.image!);
-        setFadingImage(null);
-      }, 180);
-      return () => clearTimeout(timer);
-    }
+    if (color.image) setDisplayImage(color.image);
   };
 
   // Handle variant selection
@@ -384,29 +385,19 @@ export function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { pro
       >
         {/* Header with Image */}
         <div className="relative h-64 bg-zinc-900">
-          {/* Base image */}
-          {displayImage && (
-            <Image
-              src={displayImage}
-              alt={product.name}
-              fill
-              className="object-contain py-4 px-8"
-              priority
-            />
-          )}
-          {/* Cross-fade overlay — new color image fades in on top */}
-          <AnimatePresence>
-            {fadingImage && (
+          {/* AnimatePresence cross-fade: key changes trigger exit+enter */}
+          <AnimatePresence mode="sync">
+            {displayImage && (
               <motion.div
-                key={fadingImage}
+                key={displayImage}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.18, ease: "easeInOut" }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
                 className="absolute inset-0"
               >
                 <Image
-                  src={fadingImage}
+                  src={displayImage}
                   alt={product.name}
                   fill
                   className="object-contain py-4 px-8"
