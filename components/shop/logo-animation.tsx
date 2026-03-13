@@ -1,123 +1,98 @@
 "use client";
 
-import { motion, type Variants } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-const MASTER_FRAME = "/assets/tech-premium-animation/frame4.png";
+const FRAMES = [
+  "/assets/gs-animation/gs-start.png",
+  "/assets/gs-animation/gs-mid1.png",
+  "/assets/gs-animation/gs-mid2.png",
+  "/assets/gs-animation/gs-impact.png",
+  "/assets/gs-animation/gs-master.png",
+];
 
-export function LogoAnimation() {
-  const [hasMounted, setHasMounted] = useState(false);
+// Duración que cada frame espera antes de avanzar (ms)
+// El impacto (frame 3) es rápido y energético; el master (frame 4) es la pausa elegante
+const FRAME_DURATIONS = [900, 180, 180, 100, Infinity];
+
+export function LogoAnimation({ onComplete }: { onComplete?: () => void }) {
+  const [currentFrame, setCurrentFrame] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Parallax: el logo sube levemente al hacer scroll
+  const { scrollY } = useScroll();
+  const y = useTransform(scrollY, [0, 400], [0, -40]);
 
   useEffect(() => {
-    setHasMounted(true);
-  }, []);
+    const duration = FRAME_DURATIONS[currentFrame];
+    if (duration === Infinity) {
+      onComplete?.();
+      return;
+    }
+    const timer = setTimeout(() => {
+      setCurrentFrame((prev) => prev + 1);
+    }, duration);
+    return () => clearTimeout(timer);
+  }, [currentFrame, onComplete]);
 
-  if (!hasMounted) return null;
-
-  // Apple-style smooth animation variants
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.4,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const gPieceVariants: Variants = {
-    hidden: { x: -100, y: -50, opacity: 0, scale: 0.8 },
-    show: { 
-      x: 0, y: 0, opacity: 1, scale: 1,
-      transition: { type: "spring", bounce: 0.2, duration: 1.5, ease: [0.25, 1, 0.5, 1] } 
-    },
-  };
-
-  const sPieceVariants: Variants = {
-    hidden: { x: 100, y: -50, opacity: 0, scale: 0.8 },
-    show: { 
-      x: 0, y: 0, opacity: 1, scale: 1,
-      transition: { type: "spring", bounce: 0.2, duration: 1.5, ease: [0.25, 1, 0.5, 1] } 
-    },
-  };
-
-  const textVariants: Variants = {
-    hidden: { y: 50, opacity: 0, filter: "blur(10px)" },
-    show: { 
-      y: 0, opacity: 1, filter: "blur(0px)",
-      transition: { duration: 1.5, ease: [0.25, 1, 0.5, 1], delay: 0.6 } 
-    },
-  };
-
-  const electricVariants: Variants = {
-    hidden: { opacity: 0, scale: 0.5 },
-    show: { 
-      opacity: [0, 1, 0, 0.8, 0], 
-      scale: [0.8, 1.2, 0.9, 1.1, 1],
-      transition: { duration: 0.3, times: [0, 0.2, 0.4, 0.6, 1], delay: 1.2 } 
-    },
-  };
+  const isImpact = currentFrame === 3;
+  const isMaster = currentFrame === 4;
 
   return (
-    <div className="relative w-full max-w-3xl aspect-square mx-auto flex items-center justify-center bg-black">
-      
-      {/* Background glow that pulses slightly */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0, 0.3, 0.1] }}
-        transition={{ duration: 4, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" }}
-        className="absolute inset-0 flex items-center justify-center pointer-events-none"
-      >
-        <div className="w-[40%] h-[40%] bg-blue-600/20 blur-[100px] rounded-full mix-blend-screen" />
-        <div className="w-[40%] h-[40%] bg-red-600/20 blur-[100px] rounded-full mix-blend-screen -ml-10" />
-      </motion.div>
+    <motion.div
+      ref={containerRef}
+      style={{ y }}
+      className="relative w-full h-[420px] flex items-center justify-center select-none pointer-events-none"
+      // fondo negro absoluto — los bordes de los assets desaparecen
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+    >
+      {/* Fondo negro puro — garantiza que no haya halo entre imagen y página */}
+      <div className="absolute inset-0 bg-black" />
 
-      <motion.div 
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-        className="relative w-full h-full"
-      >
-        {/* Piece 1: The 'G' - Clipped from the master image */}
-        <motion.div 
-          variants={gPieceVariants}
-          className="absolute inset-0"
-          style={{ clipPath: "polygon(0% 0%, 50% 0%, 50% 64%, 0% 64%)" }}
-        >
-          <Image src={MASTER_FRAME} alt="G" fill className="object-contain" priority />
-        </motion.div>
-
-        {/* Piece 2: The 'S' - Clipped from the master image */}
-        <motion.div 
-          variants={sPieceVariants}
-          className="absolute inset-0"
-          style={{ clipPath: "polygon(50% 0%, 100% 0%, 100% 64%, 50% 64%)" }}
-        >
-          <Image src={MASTER_FRAME} alt="S" fill className="object-contain" priority />
-        </motion.div>
-
-        {/* Piece 3: The 'GONZALEZ SMARTPHONE' text - Clipped from the master image */}
-        <motion.div 
-          variants={textVariants}
-          className="absolute inset-0"
-          style={{ clipPath: "polygon(0% 64%, 100% 64%, 100% 100%, 0% 100%)" }}
-        >
-          <Image src={MASTER_FRAME} alt="Gonzalez Smartphone" fill className="object-contain" priority />
-        </motion.div>
-
-        {/* Synthetic "Electric Impact" between G and S */}
+      <AnimatePresence mode="wait">
         <motion.div
-           variants={electricVariants}
-           className="absolute top-[45%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-16 pointer-events-none mix-blend-screen"
+          key={currentFrame}
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 1.02 }}
+          transition={{
+            duration: isImpact ? 0.08 : isMaster ? 0.7 : 0.25,
+            ease: isMaster ? [0.25, 1, 0.5, 1] : "easeOut",
+          }}
+          className="relative w-full h-full max-w-2xl"
         >
-           {/* Simulate electric spark using CSS blur and bright colors */}
-           <div className="absolute inset-0 bg-blue-400 blur-[8px] opacity-80 rounded-full scale-y-50"></div>
-           <div className="absolute inset-0 bg-white blur-[2px] rounded-full scale-y-[0.1]"></div>
-           <div className="absolute inset-0 bg-red-500 blur-[15px] opacity-40 rounded-full scale-150"></div>
+          <Image
+            src={FRAMES[currentFrame]}
+            alt="GS Gonzalez Smartphone"
+            fill
+            className="object-contain"
+            priority
+          />
+
+          {/* Chispa eléctrica en el impacto */}
+          {isImpact && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 0.7, 0] }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="absolute inset-0 bg-blue-500/15 blur-3xl pointer-events-none"
+            />
+          )}
+
+          {/* Aura roja elegante en el master logo */}
+          {isMaster && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4, duration: 1.2, ease: "easeOut" }}
+              className="absolute inset-0 bg-red-600/8 blur-[80px] pointer-events-none"
+            />
+          )}
         </motion.div>
-      </motion.div>
-    </div>
+      </AnimatePresence>
+    </motion.div>
   );
 }
