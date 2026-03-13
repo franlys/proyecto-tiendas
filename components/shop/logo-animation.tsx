@@ -61,7 +61,7 @@ export function LogoAnimation() {
   };
 
   return (
-    <div className="relative w-full max-w-3xl aspect-square mx-auto flex items-center justify-center bg-black overflow-hidden">
+    <div className="relative w-full max-w-3xl aspect-square mx-auto flex items-center justify-center bg-black">
       
       {/* Background glow that pulses slightly */}
       <motion.div 
@@ -78,7 +78,7 @@ export function LogoAnimation() {
         variants={containerVariants}
         initial="hidden"
         animate="show"
-        className="relative w-full h-full scale-[1.3] md:scale-[1.5]" // Enlarge the logo as requested
+        className="relative w-full h-full"
       >
         {/* Piece 1: The 'G' - Clipped from the master image */}
         <motion.div 
