@@ -300,25 +300,35 @@ export function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { pro
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
     hasVariants ? null : null // Will be set when user selects
   );
-  const [displayImage, setDisplayImage] = useState(selectedColor?.image || product.image);
+  const [baseImage, setBaseImage] = useState(selectedColor?.image || product.image);
+  const [overlayImage, setOverlayImage] = useState<string | null>(null);
+  const colorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Preload all color images as soon as the modal mounts so they're
-  // cached before the user clicks — prevents the "white flash" on first swap
+  // Preload all color images on mount so they're cached before first click
   useEffect(() => {
     if (!hasColors || !product.colors) return;
     product.colors.forEach(color => {
-      if (color.image) {
-        const img = new window.Image();
-        img.src = color.image;
-      }
+      if (color.image) { const img = new window.Image(); img.src = color.image; }
     });
+    return () => { if (colorTimerRef.current) clearTimeout(colorTimerRef.current); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Handle color selection — direct state update, AnimatePresence handles the cross-fade
+  // Apple-style: the old image NEVER fades out — the new one fades IN on top.
+  // Result: looks like just the color changed, not a photo swap.
   const handleColorSelect = (color: ProductColor) => {
     if (selectedColor?.id === color.id) return;
     setSelectedColor(color);
-    if (color.image) setDisplayImage(color.image);
+    if (!color.image || color.image === baseImage) return;
+
+    if (colorTimerRef.current) clearTimeout(colorTimerRef.current);
+    setOverlayImage(color.image);
+
+    // After the fade-in completes, promote overlay to base and remove it
+    colorTimerRef.current = setTimeout(() => {
+      setBaseImage(color.image!);
+      setOverlayImage(null);
+      colorTimerRef.current = null;
+    }, 230);
   };
 
   // Handle variant selection
@@ -352,7 +362,7 @@ export function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { pro
       const rect = modalRef.current.getBoundingClientRect();
       const startX = rect.left + rect.width / 2;
       const startY = rect.top + rect.height / 3;
-      triggerFlyToCart(startX, startY, displayImage);
+      triggerFlyToCart(startX, startY, overlayImage || baseImage);
     }
 
     addProduct(product, quantity, selectedVariant || undefined, selectedExtras.length > 0 ? selectedExtras : undefined, undefined, selectedColor || undefined);
@@ -385,19 +395,28 @@ export function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { pro
       >
         {/* Header with Image */}
         <div className="relative h-64 bg-zinc-900">
-          {/* AnimatePresence cross-fade: key changes trigger exit+enter */}
-          <AnimatePresence mode="sync">
-            {displayImage && (
+          {/* Base layer — always at full opacity, never fades out */}
+          {baseImage && (
+            <Image
+              src={baseImage}
+              alt={product.name}
+              fill
+              className="object-contain py-4 px-8"
+              priority
+            />
+          )}
+          {/* Overlay — new color fades IN on top; old never dims */}
+          <AnimatePresence>
+            {overlayImage && (
               <motion.div
-                key={displayImage}
+                key={overlayImage}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
                 transition={{ duration: 0.2, ease: "easeInOut" }}
                 className="absolute inset-0"
               >
                 <Image
-                  src={displayImage}
+                  src={overlayImage}
                   alt={product.name}
                   fill
                   className="object-contain py-4 px-8"
