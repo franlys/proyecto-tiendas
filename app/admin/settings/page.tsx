@@ -30,6 +30,7 @@ import {
   Smartphone,
   HelpCircle,
   ChevronRight,
+  ShoppingBag,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import {
@@ -82,6 +83,7 @@ interface ShopConfig {
   // Tech 3D Breakout assets
   heroProductImage: string;
   requestQuoteEnabled: boolean;
+  wholesaleEnabled: boolean;
 }
 
 const BACKGROUND_OPTIONS: { id: BackgroundEffect; name: string; description: string }[] = [
@@ -125,6 +127,7 @@ export default function AdminSettingsPage() {
     phone: "",
     heroProductImage: "",
     requestQuoteEnabled: false,
+    wholesaleEnabled: false,
   });
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -189,6 +192,7 @@ export default function AdminSettingsPage() {
           phone: shop.contact?.phone || "",
           heroProductImage: shop.heroProductImage || "",
           requestQuoteEnabled: shop.requestQuoteEnabled || false,
+          wholesaleEnabled: shop.wholesaleEnabled || false,
         });
       }
     }
@@ -243,6 +247,7 @@ export default function AdminSettingsPage() {
         },
         heroProductImage: config.heroProductImage,
         requestQuoteEnabled: config.requestQuoteEnabled,
+        wholesaleEnabled: config.wholesaleEnabled,
       };
 
       // Add URL based on type
@@ -781,6 +786,41 @@ export default function AdminSettingsPage() {
                       <div className={cn(
                         "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
                         config.requestQuoteEnabled ? "translate-x-7" : "translate-x-1"
+                      )} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Wholesale / Mayoristas Toggle */}
+                <div className="glass-panel rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all group">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "p-2 rounded-xl transition-colors",
+                        config.wholesaleEnabled ? "bg-amber-500/20 text-amber-400" : "bg-white/5 text-slate-500"
+                      )}>
+                        <ShoppingBag className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-white font-bold tracking-tight">Modo Mayorista</h3>
+                        <p className="text-xs text-slate-500">
+                          {config.wholesaleEnabled
+                            ? "El botón de mayoristas aparece en tu tienda. Ve a Mayoristas para gestionar distribuidores."
+                            : "Activa precios especiales para distribuidores registrados."}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => updateConfig({ wholesaleEnabled: !config.wholesaleEnabled })}
+                      className={cn(
+                        "relative w-12 h-6 rounded-full transition-colors font-sans",
+                        config.wholesaleEnabled ? "bg-amber-500" : "bg-white/20"
+                      )}
+                    >
+                      <div className={cn(
+                        "absolute top-1 w-4 h-4 rounded-full bg-white transition-transform",
+                        config.wholesaleEnabled ? "translate-x-7" : "translate-x-1"
                       )} />
                     </button>
                   </div>

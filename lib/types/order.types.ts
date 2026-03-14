@@ -34,6 +34,8 @@ export interface SalesOrder {
     deliveredAt?: string;
     tableId?: string;
     source?: string;
+    branchId?: string;   // Sucursal que atiende el pedido
+    branchName?: string; // Nombre de la sucursal (denormalizado para legibilidad)
     // Delivery & Scheduling (for meal prep, catering, etc.)
     deliveryType?: "pickup" | "delivery" | "entrega" | "recogida";
     scheduledDate?: string; // YYYY-MM-DD

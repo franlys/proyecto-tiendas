@@ -10,33 +10,41 @@ import {
 
 interface WholesaleContextType {
   isWholesaleMode: boolean;
-  activateWholesale: (code: string, correctCode: string) => boolean;
+  wholesalerName: string | null;
+  activateWholesale: (code: string, shopId: string) => Promise<boolean>;
   deactivateWholesale: () => void;
   getDisplayPrice: (retailPrice: number, wholesalePrice?: number) => number;
 }
 
 const WholesaleContext = createContext<WholesaleContextType | undefined>(undefined);
 
-interface WholesaleProviderProps {
-  children: ReactNode;
-}
-
-export function WholesaleProvider({ children }: WholesaleProviderProps) {
+export function WholesaleProvider({ children }: { children: ReactNode }) {
   const [isWholesaleMode, setIsWholesaleMode] = useState(false);
+  const [wholesalerName, setWholesalerName] = useState<string | null>(null);
 
-  const activateWholesale = useCallback((code: string, correctCode: string): boolean => {
-    if (!correctCode) return false;
-
-    const isValid = code.trim().toUpperCase() === correctCode.trim().toUpperCase();
-    if (isValid) {
-      setIsWholesaleMode(true);
-      return true;
+  const activateWholesale = useCallback(async (code: string, shopId: string): Promise<boolean> => {
+    if (!code.trim() || !shopId) return false;
+    try {
+      const res = await fetch("/api/wholesale/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shopId, code }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        setIsWholesaleMode(true);
+        setWholesalerName(data.wholesalerName || null);
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
     }
-    return false;
   }, []);
 
   const deactivateWholesale = useCallback(() => {
     setIsWholesaleMode(false);
+    setWholesalerName(null);
   }, []);
 
   const getDisplayPrice = useCallback(
@@ -53,6 +61,7 @@ export function WholesaleProvider({ children }: WholesaleProviderProps) {
     <WholesaleContext.Provider
       value={{
         isWholesaleMode,
+        wholesalerName,
         activateWholesale,
         deactivateWholesale,
         getDisplayPrice,

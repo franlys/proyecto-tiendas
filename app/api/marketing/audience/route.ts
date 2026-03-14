@@ -83,6 +83,16 @@ export async function GET(request: NextRequest) {
             });
         }
 
+        const withDetails = searchParams.get("withDetails") === "true";
+
+        if (withDetails) {
+            const contacts = customers.map(c => ({
+                phone: c.phone as string,
+                name: (c.name || c.phone) as string,
+            }));
+            return NextResponse.json({ contacts, count: contacts.length, segment });
+        }
+
         // Return phone numbers only
         const phones = customers.map(c => c.phone);
 

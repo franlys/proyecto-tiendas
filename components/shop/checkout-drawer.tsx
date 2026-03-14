@@ -19,7 +19,8 @@ import {
     AlertCircle,
     ChevronRight,
 } from "lucide-react";
-import { useCart, useShop, useOrders, useShopConfig, useInventory } from "@/components/shared";
+import { useCart, useShop, useOrders, useShopConfig, useInventory, BranchSelector, useWholesale } from "@/components/shared";
+import type { Branch } from "@/lib/types/branch.types";
 import { cn } from "@/lib/utils";
 import { storage } from "@/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -29,6 +30,7 @@ import { StripePayButton } from "@/components/shop/stripe-checkout-button";
 import { PayPalPayButton } from "@/components/shop/paypal-checkout-button";
 import { reverseGeocode } from "@/lib/utils/distance";
 import type { Currency, ManualPaymentMethod } from "@/lib/types/payment.types";
+import type { LoyaltyConfig } from "@/lib/types/loyalty.types";
 
 interface CheckoutDrawerProps {
     isOpen: boolean;
@@ -47,6 +49,16 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
     const { config } = useShopConfig();
     const { addOrder } = useOrders();
     const { decrementStock } = useInventory();
+    const { isWholesaleMode } = useWholesale();
+
+    // Recalculate total using wholesale prices when wholesale mode is active
+    const effectiveTotal = isWholesaleMode
+        ? products.reduce((sum, item) => {
+              const unitPrice = item.wholesalePrice && item.wholesalePrice > 0 ? item.wholesalePrice : item.price;
+              return sum + unitPrice * item.quantity + (item.extrasTotal || 0);
+          }, 0)
+        : totalPrice;
+
     const isTechDrop = shop?.templateType === "tech-drop-v1";
     const isTech3D = shop?.templateType === "tech-3d-v1";
     const isTechTheme = isTechDrop || isTech3D;
@@ -64,6 +76,20 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
     const [isDetectingLocation, setIsDetectingLocation] = useState(false);
     const [scheduledDate, setScheduledDate] = useState("");
     const [scheduledTime, setScheduledTime] = useState("");
+
+    // Branch selection (multi-location)
+    const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
+
+    // Loyalty config (for stamp preview)
+    const [loyaltyConfig, setLoyaltyConfig] = useState<LoyaltyConfig | null>(null);
+    useEffect(() => {
+        const id = shop?.id || shop?.slug;
+        if (!id) return;
+        fetch(`/api/loyalty/config?shopId=${id}`)
+            .then((r) => r.ok ? r.json() : null)
+            .then((d) => { if (d?.config?.enabled) setLoyaltyConfig(d.config); })
+            .catch(() => {});
+    }, [shop?.id, shop?.slug]);
 
     // Manual Payment States
     const [paymentTiming, setPaymentTiming] = useState<"pay_now" | "pay_on_delivery">("pay_now"); // Defaulted to now for better testing
@@ -107,8 +133,8 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
     // Upfront Payment Calculation
     const requireUpfront = manualPaymentConfig?.requireUpfrontPayment || false;
     const upfrontPercentage = requireUpfront ? (manualPaymentConfig?.upfrontPaymentPercentage ?? 50) : 0;
-    const upfrontAmount = (totalPrice * upfrontPercentage) / 100;
-    const remainingBalance = totalPrice - upfrontAmount;
+    const upfrontAmount = (effectiveTotal * upfrontPercentage) / 100;
+    const remainingBalance = effectiveTotal - upfrontAmount;
 
     const hasItems = products.length > 0 || services.length > 0;
     const stripeEnabled = shop?.payments?.enabled && shop?.payments?.stripeAccountId && shop?.payments?.provider === "stripe";
@@ -205,10 +231,12 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                     customerEmail,
                     customerAddress: deliveryType === "delivery" ? customerAddress : undefined,
                     items: orderItems,
-                    total: totalPrice,
+                    total: effectiveTotal,
                     deliveryType: deliveryType === "delivery" ? "entrega" : "recogida",
                     deliveryDate: scheduledDate || undefined,
                     deliveryTime: scheduledTime || undefined,
+                    branchId: selectedBranch?.id || undefined,
+                    branchName: selectedBranch?.name || undefined,
                     paymentInfo: {
                         paymentTiming,
                         status: paymentTiming === "pay_now" ? "pending_verification" : "pending",
@@ -390,6 +418,16 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                 )}
                             </div>
 
+                            {/* Branch Selector (multi-location) */}
+                            {shop?.id && (
+                                <BranchSelector
+                                    shopId={shop.id}
+                                    value={selectedBranch}
+                                    onChange={setSelectedBranch}
+                                    className="mb-2"
+                                />
+                            )}
+
                             {/* Delivery Info */}
                             <div className="space-y-6">
                                 <h3 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">Información de entrega</h3>
@@ -560,7 +598,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                                 {requireUpfront ? "Monto a pagar hoy" : "Total a pagar"}
                                             </p>
                                             <p className="text-4xl font-black text-white leading-none">
-                                                ${(requireUpfront ? upfrontAmount : totalPrice).toLocaleString()}
+                                                ${(requireUpfront ? upfrontAmount : effectiveTotal).toLocaleString()}
                                             </p>
                                             {requireUpfront && (
                                                 <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mt-2">
@@ -573,6 +611,27 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                             <p className="text-xl font-bold text-white">{products.length + services.length}</p>
                                         </div>
                                     </div>
+                                    {/* Loyalty stamp preview */}
+                                    {loyaltyConfig && hasItems && (() => {
+                                        const stampsEarned = loyaltyConfig.stampsPerAmount && loyaltyConfig.stampsPerAmount > 0
+                                            ? Math.floor(effectiveTotal / loyaltyConfig.stampsPerAmount)
+                                            : loyaltyConfig.stampsPerOrder;
+                                        if (stampsEarned <= 0) return null;
+                                        return (
+                                            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 border border-primary/20 text-sm">
+                                                <span className="text-xl">⭐</span>
+                                                <p className="text-slate-300">
+                                                    Ganarás{" "}
+                                                    <span className="text-white font-bold">{stampsEarned} {stampsEarned === 1 ? "sello" : "sellos"}</span>
+                                                    {" "}con este pedido
+                                                    {loyaltyConfig.stampsRequired > 0 && (
+                                                        <span className="text-slate-500"> · Meta: {loyaltyConfig.stampsRequired} sellos = {loyaltyConfig.reward}</span>
+                                                    )}
+                                                </p>
+                                            </div>
+                                        );
+                                    })()}
+
                                     {formError && (
                                         <div role="alert" aria-live="polite" className="flex items-start gap-2 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
                                             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
@@ -641,7 +700,7 @@ export function CheckoutDrawer({ isOpen, onClose }: CheckoutDrawerProps) {
                                         ))}
                                         <div className="flex justify-between text-base font-black pt-2 border-t border-white/8">
                                             <span className="text-white">Total</span>
-                                            <span className={isTech3D ? "text-cyan-400" : "text-white"}>${totalPrice.toLocaleString()}</span>
+                                            <span className={isTech3D ? "text-cyan-400" : "text-white"}>${effectiveTotal.toLocaleString()}</span>
                                         </div>
                                     </div>
 

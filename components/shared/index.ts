@@ -121,3 +121,4 @@ export { SmoothScroll } from "./smooth-scroll";
 export { ScrollProgress } from "./scroll-progress";
 export { VisualFeedbackProvider, useVisualFeedback } from "./visual-feedback-context";
 export { CursorProvider, useCursor } from "./cursor-context";
+export { BranchSelector } from "./branch-selector";

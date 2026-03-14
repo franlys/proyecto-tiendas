@@ -6,6 +6,7 @@ export { BackgroundEffects, BackgroundPreview, type BackgroundEffect } from "./b
 export { ShopLayoutClient } from "./shop-layout-client";
 // Phase 13: Wholesale
 export { WholesaleModal } from "./wholesale-modal";
+export { WholesaleButton } from "./wholesale-button";
 // Phase 22: Appointment Flow
 export { AppointmentModal } from "./appointment-modal";
 // Meal Prep

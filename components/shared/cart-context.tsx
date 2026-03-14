@@ -40,6 +40,9 @@ export interface ProductCartItem {
   selectedExtras?: SelectedExtra[];
   extrasTotal?: number; // Pre-calculated total of extras
 
+  // Wholesale pricing
+  wholesalePrice?: number;
+
   // Customization notes (for meal prep, special instructions, etc.)
   notes?: string;
 }
@@ -206,8 +209,9 @@ export function CartProvider({ children, shopId, templateType }: CartProviderPro
       // Determine price to use
       const unitPrice = variant ? variant.price : product.price;
       const unitPromo = variant ? undefined : product.promoPrice;
+      const unitWholesale = variant ? variant.wholesalePrice : product.wholesalePrice;
       const extrasTotal = calculateExtrasTotal(extras);
-      
+
       // Select best image
       const finalImage = color?.image || variant?.image || product.image;
 
@@ -222,6 +226,7 @@ export function CartProvider({ children, shopId, templateType }: CartProviderPro
         colorHex: color?.hex,
         price: unitPrice,
         promoPrice: unitPromo,
+        wholesalePrice: unitWholesale,
         image: finalImage,
         quantity,
         selectedExtras: extras,

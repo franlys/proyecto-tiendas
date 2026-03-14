@@ -24,6 +24,8 @@ import {
   Smartphone,
   Shield,
   Loader2,
+  Search,
+  UserCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import {
@@ -119,6 +121,12 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
   const { createCampaign, updateCampaign, getAudienceCount, startCampaign } = useMarketing();
   const [step, setStep] = useState(1);
   const [isStarting, setIsStarting] = useState(false);
+  const [selectionMode, setSelectionMode] = useState<"segment" | "individual">(
+    editCampaign?.customPhones?.length ? "individual" : "segment"
+  );
+  const [customers, setCustomers] = useState<{ phone: string; name: string }[]>([]);
+  const [customersLoading, setCustomersLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [formData, setFormData] = useState({
     name: editCampaign?.name || "",
     message: editCampaign?.message || "",
@@ -126,23 +134,59 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
     mediaUrl: editCampaign?.mediaUrl || "",
     mediaName: editCampaign?.mediaName || "",
     segment: (editCampaign?.segment || "all") as AudienceSegment,
+    customPhones: editCampaign?.customPhones || [] as string[],
   });
 
-  const audienceCount = getAudienceCount(formData.segment);
+  const segmentAudienceCount = getAudienceCount(formData.segment);
+  const audienceCount = selectionMode === "individual" ? formData.customPhones.length : segmentAudienceCount;
+
+  // Fetch customers when switching to individual mode
+  const loadCustomers = async () => {
+    if (customers.length > 0) return;
+    setCustomersLoading(true);
+    try {
+      const res = await fetch(`/api/marketing/audience?shopId=${shopId}&segment=all&withDetails=true`);
+      if (res.ok) {
+        const data = await res.json();
+        setCustomers(data.contacts || []);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setCustomersLoading(false);
+    }
+  };
+
+  const handleSelectMode = (mode: "segment" | "individual") => {
+    setSelectionMode(mode);
+    if (mode === "individual") loadCustomers();
+  };
+
+  const togglePhone = (phone: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      customPhones: prev.customPhones.includes(phone)
+        ? prev.customPhones.filter((p) => p !== phone)
+        : [...prev.customPhones, phone],
+    }));
+  };
+
+  const filteredCustomers = customers.filter((c) => {
+    const q = searchQuery.toLowerCase();
+    return c.name.toLowerCase().includes(q) || c.phone.includes(q);
+  });
 
   const handleSaveDraft = () => {
+    const saveData = {
+      ...formData,
+      customPhones: selectionMode === "individual" ? formData.customPhones : undefined,
+      audienceCount,
+      status: "draft" as const,
+    };
     if (editCampaign) {
-      updateCampaign(editCampaign.id, {
-        ...formData,
-        audienceCount,
-        status: "draft",
-      });
+      updateCampaign(editCampaign.id, saveData);
     } else {
-      createCampaign({
-        ...formData,
-        audienceCount,
-        status: "draft",
-      });
+      createCampaign(saveData);
     }
     onClose();
   };
@@ -151,32 +195,45 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
     setIsStarting(true);
 
     try {
-      // Fetch real phone numbers from API
-      const response = await fetch(`/api/marketing/audience?shopId=${shopId}&segment=${formData.segment}`);
-      const data = await response.json();
+      let phones: string[];
 
-      if (!response.ok) {
-        throw new Error(data.error || "Error fetching audience");
+      if (selectionMode === "individual") {
+        phones = formData.customPhones;
+        if (phones.length === 0) {
+          alert("Selecciona al menos un cliente para enviar.");
+          setIsStarting(false);
+          return;
+        }
+      } else {
+        // Fetch real phone numbers from API by segment
+        const response = await fetch(`/api/marketing/audience?shopId=${shopId}&segment=${formData.segment}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Error fetching audience");
+        }
+
+        phones = data.phones || [];
+
+        if (phones.length === 0) {
+          alert("No hay destinatarios en este segmento. Agrega clientes primero.");
+          setIsStarting(false);
+          return;
+        }
       }
 
-      const phones: string[] = data.phones || [];
-
-      if (phones.length === 0) {
-        alert("No hay destinatarios en este segmento. Agrega clientes primero.");
-        setIsStarting(false);
-        return;
-      }
+      const campaignPayload = {
+        ...formData,
+        customPhones: selectionMode === "individual" ? formData.customPhones : undefined,
+        audienceCount: phones.length,
+      };
 
       let campaignId = editCampaign?.id;
       if (!campaignId) {
-        const campaign = createCampaign({
-          ...formData,
-          audienceCount: phones.length,
-          status: "sending",
-        });
+        const campaign = createCampaign({ ...campaignPayload, status: "sending" });
         campaignId = campaign.id;
       } else {
-        updateCampaign(campaignId, { ...formData, audienceCount: phones.length });
+        updateCampaign(campaignId, { ...campaignPayload });
       }
 
       startCampaign(campaignId, phones);
@@ -334,39 +391,154 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
                 </div>
               </div>
 
-              <p className="text-slate-300">Selecciona a quién enviar esta campaña:</p>
-
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {(Object.entries(AUDIENCE_SEGMENTS) as [AudienceSegment, typeof AUDIENCE_SEGMENTS.all][]).map(
-                  ([key, segment]) => {
-                    const count = getAudienceCount(key);
-                    return (
-                      <button
-                        key={key}
-                        onClick={() => setFormData({ ...formData, segment: key })}
-                        className={cn(
-                          "p-4 rounded-xl border text-left transition-all",
-                          formData.segment === key
-                            ? "border-purple-500 bg-purple-500/20"
-                            : "border-white/10 bg-white/5 hover:bg-white/10"
-                        )}
-                      >
-                        <div className="flex items-start justify-between">
-                          <span className="text-2xl">{segment.icon}</span>
-                          <span className={cn(
-                            "px-2 py-0.5 rounded-full text-xs font-medium",
-                            formData.segment === key ? "bg-purple-500/30 text-purple-300" : "bg-white/10 text-slate-400"
-                          )}>
-                            {count}
-                          </span>
-                        </div>
-                        <p className="text-white font-medium mt-2">{segment.label}</p>
-                        <p className="text-xs text-slate-400 mt-1">{segment.description}</p>
-                      </button>
-                    );
-                  }
-                )}
+              {/* Mode Toggle */}
+              <div className="flex gap-2 p-1 rounded-xl bg-white/5 border border-white/10">
+                <button
+                  onClick={() => handleSelectMode("segment")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all",
+                    selectionMode === "segment"
+                      ? "bg-purple-500/30 text-purple-300 border border-purple-500/30"
+                      : "text-slate-400 hover:text-white"
+                  )}
+                >
+                  <Users className="w-4 h-4" />
+                  Por Segmento
+                </button>
+                <button
+                  onClick={() => handleSelectMode("individual")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all",
+                    selectionMode === "individual"
+                      ? "bg-purple-500/30 text-purple-300 border border-purple-500/30"
+                      : "text-slate-400 hover:text-white"
+                  )}
+                >
+                  <UserCheck className="w-4 h-4" />
+                  Selección Individual
+                </button>
               </div>
+
+              {/* Segment Mode */}
+              {selectionMode === "segment" && (
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {(Object.entries(AUDIENCE_SEGMENTS) as [AudienceSegment, typeof AUDIENCE_SEGMENTS.all][]).map(
+                    ([key, segment]) => {
+                      const count = getAudienceCount(key);
+                      return (
+                        <button
+                          key={key}
+                          onClick={() => setFormData({ ...formData, segment: key })}
+                          className={cn(
+                            "p-4 rounded-xl border text-left transition-all",
+                            formData.segment === key
+                              ? "border-purple-500 bg-purple-500/20"
+                              : "border-white/10 bg-white/5 hover:bg-white/10"
+                          )}
+                        >
+                          <div className="flex items-start justify-between">
+                            <span className="text-2xl">{segment.icon}</span>
+                            <span className={cn(
+                              "px-2 py-0.5 rounded-full text-xs font-medium",
+                              formData.segment === key ? "bg-purple-500/30 text-purple-300" : "bg-white/10 text-slate-400"
+                            )}>
+                              {count}
+                            </span>
+                          </div>
+                          <p className="text-white font-medium mt-2">{segment.label}</p>
+                          <p className="text-xs text-slate-400 mt-1">{segment.description}</p>
+                        </button>
+                      );
+                    }
+                  )}
+                </div>
+              )}
+
+              {/* Individual Mode */}
+              {selectionMode === "individual" && (
+                <div className="space-y-3">
+                  {/* Search */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Buscar por nombre o teléfono..."
+                      className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-purple-500/50"
+                    />
+                  </div>
+
+                  {/* Select all / deselect */}
+                  {filteredCustomers.length > 0 && (
+                    <div className="flex items-center justify-between text-xs text-slate-400">
+                      <span>{formData.customPhones.length} seleccionados de {customers.length}</span>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => setFormData((prev) => ({
+                            ...prev,
+                            customPhones: filteredCustomers.map((c) => c.phone),
+                          }))}
+                          className="text-purple-400 hover:text-purple-300"
+                        >
+                          Seleccionar todos
+                        </button>
+                        <button
+                          onClick={() => setFormData((prev) => ({ ...prev, customPhones: [] }))}
+                          className="text-slate-500 hover:text-slate-300"
+                        >
+                          Limpiar
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Customer list */}
+                  <div className="max-h-64 overflow-y-auto space-y-1 pr-1">
+                    {customersLoading ? (
+                      <div className="flex items-center justify-center py-8 text-slate-400">
+                        <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                        Cargando clientes...
+                      </div>
+                    ) : filteredCustomers.length === 0 ? (
+                      <div className="text-center py-8 text-slate-400 text-sm">
+                        {customers.length === 0
+                          ? "No hay clientes registrados"
+                          : "Sin resultados para tu búsqueda"}
+                      </div>
+                    ) : (
+                      filteredCustomers.map((customer) => {
+                        const isSelected = formData.customPhones.includes(customer.phone);
+                        return (
+                          <button
+                            key={customer.phone}
+                            onClick={() => togglePhone(customer.phone)}
+                            className={cn(
+                              "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition-all",
+                              isSelected
+                                ? "border-purple-500/50 bg-purple-500/15"
+                                : "border-white/5 bg-white/5 hover:bg-white/10"
+                            )}
+                          >
+                            <div className={cn(
+                              "w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all",
+                              isSelected
+                                ? "border-purple-500 bg-purple-500"
+                                : "border-white/20"
+                            )}>
+                              {isSelected && <CheckCircle className="w-3 h-3 text-white fill-white" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-white truncate">{customer.name}</p>
+                              <p className="text-xs text-slate-500">{customer.phone}</p>
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="p-4 rounded-xl bg-white/5 text-center">
                 <p className="text-slate-400 text-sm">Esta campaña se enviará a</p>
@@ -397,7 +569,9 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
                 <div className="p-4 rounded-xl bg-white/5">
                   <p className="text-xs text-slate-400 mb-1">Audiencia</p>
                   <p className="text-white font-medium">
-                    {AUDIENCE_SEGMENTS[formData.segment].icon} {AUDIENCE_SEGMENTS[formData.segment].label}
+                    {selectionMode === "individual"
+                      ? `👤 Selección Individual`
+                      : `${AUDIENCE_SEGMENTS[formData.segment].icon} ${AUDIENCE_SEGMENTS[formData.segment].label}`}
                   </p>
                 </div>
                 <div className="p-4 rounded-xl bg-white/5">
@@ -457,7 +631,7 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
                 </Button>
                 <Button
                   onClick={handleStartCampaign}
-                  disabled={isStarting || audienceCount === 0}
+                  disabled={isStarting || (selectionMode === "segment" && audienceCount === 0) || (selectionMode === "individual" && formData.customPhones.length === 0)}
                   className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400"
                 >
                   {isStarting ? (

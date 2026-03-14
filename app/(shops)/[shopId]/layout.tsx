@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { Suspense } from "react";
-import { ThemeProvider, CartProvider, OrdersProvider, InventoryProvider } from "@/components/shared";
-import { FloatingCart, ShopLayoutClient, StreetCart } from "@/components/shop";
+import { ThemeProvider, CartProvider, OrdersProvider, InventoryProvider, WholesaleProvider } from "@/components/shared";
+import { FloatingCart, ShopLayoutClient, StreetCart, WholesaleButton } from "@/components/shop";
 import { BackgroundAudio } from "@/components/shop/background-audio";
 import { Loader2 } from "lucide-react";
 import { MOCK_SHOPS, DEFAULT_THEME, type ShopConfig } from "@/lib/constants";
@@ -208,6 +208,7 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
 
   return (
     <ThemeProvider shop={shop}>
+      <WholesaleProvider>
       <OrdersProvider>
         <InventoryProvider shopId={shop.id}>
         <CartProvider shopId={shop.id} templateType={shop.templateType}>
@@ -273,8 +274,8 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
                       </div>
 
                       {/* Navigation - Adapt based on business type */}
-                      <nav className="hidden md:flex items-center gap-6 flex-shrink-0">
-                        <a href={`/${shopId}`} className="text-slate-300 hover:text-white transition-colors">
+                      <nav className="flex items-center gap-3 md:gap-6 flex-shrink-0">
+                        <a href={`/${shopId}`} className="hidden md:inline text-slate-300 hover:text-white transition-colors">
                           Inicio
                         </a>
 
@@ -286,25 +287,30 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
                             <>
                               {/* Show Servicios for service-based businesses */}
                               {features?.services && (
-                                <a href={`/${shopId}#servicios`} className="text-slate-300 hover:text-white transition-colors">
+                                <a href={`/${shopId}#servicios`} className="hidden md:inline text-slate-300 hover:text-white transition-colors">
                                   Servicios
                                 </a>
                               )}
                               {/* Show Productos for retail and food */}
                               {features?.catalog && (
-                                <a href={`/${shopId}#products`} className="text-slate-300 hover:text-white transition-colors">
+                                <a href={`/${shopId}#products`} className="hidden md:inline text-slate-300 hover:text-white transition-colors">
                                   Productos
                                 </a>
                               )}
                               {/* Only show Reservar for booking-based businesses */}
                               {features?.bookings && (
-                                <a href={`/${shopId}/book`} className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-lg hover:shadow-lg transition-all">
+                                <a href={`/${shopId}/book`} className="hidden md:inline px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-lg hover:shadow-lg transition-all">
                                   Reservar
                                 </a>
                               )}
                             </>
                           );
                         })()}
+
+                        {/* Wholesale mode button — always visible if enabled */}
+                        {shop.wholesaleEnabled && (
+                          <WholesaleButton shopId={shop.id} />
+                        )}
                       </nav>
                     </div>
                   </div>
@@ -409,6 +415,7 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
         </CartProvider>
         </InventoryProvider>
       </OrdersProvider>
+      </WholesaleProvider>
     </ThemeProvider>
   );
 }

@@ -8,7 +8,6 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import { localToken } from "@/lib/utils/safe-storage";
 
 export type CampaignStatus = "draft" | "scheduled" | "sending" | "completed" | "paused" | "failed";
 export type AudienceSegment = "all" | "wholesale" | "inactive" | "birthday" | "new" | "vip";
@@ -72,6 +71,7 @@ export interface Campaign {
   mediaUrl?: string;
   mediaName?: string;
   segment: AudienceSegment;
+  customPhones?: string[]; // Individual selection — overrides segment when present
   audienceCount: number;
   status: CampaignStatus;
   progress: {
@@ -115,53 +115,6 @@ interface MarketingProviderProps {
   shopId: string;
 }
 
-const getStorageKey = (shopId: string) => `marketing-campaigns-${shopId}`;
-
-// Demo campaigns
-const DEMO_CAMPAIGNS: Campaign[] = [
-  {
-    id: "camp1",
-    name: "Promo Día del Padre",
-    message: "🎉 ¡Llegó la promoción del Día del Padre!\n\n20% de descuento en todos los servicios para papá.\n\nVálido del 10 al 16 de junio.\n\n👉 Agenda tu cita: {shopUrl}",
-    mediaType: "image",
-    mediaUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800",
-    mediaName: "promo-papa.jpg",
-    segment: "all",
-    audienceCount: 145,
-    status: "completed",
-    progress: { sent: 145, failed: 2, total: 147 },
-    completedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "camp2",
-    name: "Lista de Precios Mayoreo",
-    message: "📋 Nueva lista de precios mayorista Enero 2026\n\nDescarga el PDF adjunto con todos los productos y precios especiales para distribuidores.\n\n¿Dudas? Escríbenos directo.",
-    mediaType: "document",
-    mediaUrl: "/docs/lista-precios.pdf",
-    mediaName: "Lista-Precios-Enero-2026.pdf",
-    segment: "wholesale",
-    audienceCount: 23,
-    status: "completed",
-    progress: { sent: 23, failed: 0, total: 23 },
-    completedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "camp3",
-    name: "Reactivación Clientes",
-    message: "¡Hola! 👋 Te extrañamos...\n\n¿Sabías que tenemos nuevos servicios?\n\nVuelve y recibe 15% de descuento en tu próxima visita.\n\nCódigo: VUELVE15\n\n🛍️ Ver novedades: {shopUrl}",
-    mediaType: "none",
-    segment: "inactive",
-    audienceCount: 67,
-    status: "draft",
-    progress: { sent: 0, failed: 0, total: 0 },
-    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-];
 
 // Default audience counts (shown before real data loads)
 const DEFAULT_AUDIENCE_COUNTS: Record<AudienceSegment, number> = {
@@ -211,31 +164,16 @@ export function MarketingProvider({ children, shopId }: MarketingProviderProps) 
     fetchAudienceCounts();
   }, [shopId]);
 
-  // Load campaigns from localStorage
+  // Load campaigns from Firestore
   useEffect(() => {
-    const storageKey = getStorageKey(shopId);
-    try {
-      const stored = localToken.get(storageKey);
-      if (stored) {
-        setCampaigns(JSON.parse(stored));
-      } else {
-        // Start with empty campaigns instead of demo data
-        setCampaigns([]);
-      }
-    } catch (error) {
-      console.error("Error loading campaigns:", error);
-      setCampaigns([]);
-    } finally {
-      setIsLoading(false);
-    }
+    if (!shopId || shopId === "default") { setIsLoading(false); return; }
+    setIsLoading(true);
+    fetch(`/api/marketing/campaigns?shopId=${shopId}`)
+      .then((r) => r.ok ? r.json() : { campaigns: [] })
+      .then((d) => setCampaigns(d.campaigns || []))
+      .catch(() => setCampaigns([]))
+      .finally(() => setIsLoading(false));
   }, [shopId]);
-
-  // Save to localStorage
-  useEffect(() => {
-    if (!isLoading) {
-      localToken.set(getStorageKey(shopId), JSON.stringify(campaigns));
-    }
-  }, [campaigns, isLoading, shopId]);
 
   const getCampaign = useCallback(
     (id: string) => campaigns.find((c) => c.id === id),
@@ -245,30 +183,56 @@ export function MarketingProvider({ children, shopId }: MarketingProviderProps) 
   const createCampaign = useCallback(
     (campaignData: Omit<Campaign, "id" | "createdAt" | "updatedAt" | "progress">): Campaign => {
       const now = new Date().toISOString();
+      const tempId = `temp-${Date.now()}`;
       const newCampaign: Campaign = {
         ...campaignData,
-        id: `camp-${Date.now()}`,
+        id: tempId,
         progress: { sent: 0, failed: 0, total: 0 },
         createdAt: now,
         updatedAt: now,
       };
+      // Optimistic update
       setCampaigns((prev) => [newCampaign, ...prev]);
+      // Persist to Firestore and swap temp ID with real one
+      fetch("/api/marketing/campaigns", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shopId, ...newCampaign, id: undefined }),
+      })
+        .then((r) => r.ok ? r.json() : null)
+        .then((d) => {
+          if (d?.campaign?.id) {
+            setCampaigns((prev) =>
+              prev.map((c) => (c.id === tempId ? { ...c, id: d.campaign.id } : c))
+            );
+          }
+        })
+        .catch(() => {});
       return newCampaign;
     },
-    []
+    [shopId]
   );
 
   const updateCampaign = useCallback((id: string, updates: Partial<Campaign>) => {
+    const now = new Date().toISOString();
     setCampaigns((prev) =>
-      prev.map((c) =>
-        c.id === id ? { ...c, ...updates, updatedAt: new Date().toISOString() } : c
-      )
+      prev.map((c) => (c.id === id ? { ...c, ...updates, updatedAt: now } : c))
     );
-  }, []);
+    if (!id.startsWith("temp-")) {
+      fetch(`/api/marketing/campaigns/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shopId, ...updates }),
+      }).catch(() => {});
+    }
+  }, [shopId]);
 
   const deleteCampaign = useCallback((id: string) => {
     setCampaigns((prev) => prev.filter((c) => c.id !== id));
-  }, []);
+    if (!id.startsWith("temp-")) {
+      fetch(`/api/marketing/campaigns/${id}?shopId=${shopId}`, { method: "DELETE" }).catch(() => {});
+    }
+  }, [shopId]);
 
   // Start sending campaign - uses real Evolution API
   const startCampaign = useCallback(async (id: string, phones: string[]) => {

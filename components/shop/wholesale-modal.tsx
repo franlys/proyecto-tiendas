@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Lock, Unlock, Sparkles, AlertCircle } from "lucide-react";
+import { X, Lock, Unlock, Sparkles, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useWholesale } from "@/components/shared";
 import { cn } from "@/lib/utils";
@@ -9,18 +9,19 @@ import { cn } from "@/lib/utils";
 interface WholesaleModalProps {
   isOpen: boolean;
   onClose: () => void;
-  wholesaleCode: string;
+  shopId: string;
 }
 
-export function WholesaleModal({ isOpen, onClose, wholesaleCode }: WholesaleModalProps) {
-  const { activateWholesale, isWholesaleMode, deactivateWholesale } = useWholesale();
+export function WholesaleModal({ isOpen, onClose, shopId }: WholesaleModalProps) {
+  const { activateWholesale, isWholesaleMode, wholesalerName, deactivateWholesale } = useWholesale();
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -29,7 +30,10 @@ export function WholesaleModal({ isOpen, onClose, wholesaleCode }: WholesaleModa
       return;
     }
 
-    const isValid = activateWholesale(code, wholesaleCode);
+    setIsValidating(true);
+    const isValid = await activateWholesale(code, shopId);
+    setIsValidating(false);
+
     if (isValid) {
       setSuccess(true);
       setTimeout(() => {
@@ -84,13 +88,14 @@ export function WholesaleModal({ isOpen, onClose, wholesaleCode }: WholesaleModa
               {isWholesaleMode ? "Modo Mayorista Activo" : "Acceso Distribuidores"}
             </h2>
             <p className="text-sm text-slate-400">
-              {isWholesaleMode ? "Precios especiales aplicados" : "Ingresa tu código de socio"}
+              {isWholesaleMode
+                ? wholesalerName ? `Bienvenido, ${wholesalerName}` : "Precios especiales aplicados"
+                : "Ingresa tu código de socio"}
             </p>
           </div>
         </div>
 
         {isWholesaleMode ? (
-          // Already in wholesale mode
           <div className="space-y-4">
             <div className="p-4 rounded-xl bg-gold/20 border border-gold/30">
               <div className="flex items-center gap-2 text-gold mb-2">
@@ -112,35 +117,31 @@ export function WholesaleModal({ isOpen, onClose, wholesaleCode }: WholesaleModa
             </Button>
           </div>
         ) : success ? (
-          // Success state
           <div className="text-center py-6">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
               <Sparkles className="w-8 h-8 text-green-400" />
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2">
-              ¡Código Válido!
-            </h3>
-            <p className="text-slate-400">
-              Activando precios mayoristas...
-            </p>
+            <h3 className="text-lg font-semibold text-white mb-2">¡Código Válido!</h3>
+            <p className="text-slate-400">Activando precios mayoristas...</p>
           </div>
         ) : (
-          // Code input form
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
-                Código de Distribuidor
+                Código de 4 dígitos o número de teléfono
               </label>
               <input
                 type="text"
                 value={code}
                 onChange={(e) => {
-                  setCode(e.target.value.toUpperCase());
+                  setCode(e.target.value);
                   setError("");
                 }}
-                placeholder="Ej: MAYOREO2026"
-                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-gold/50 uppercase tracking-wider"
+                placeholder="1234 o +52 555 000 0000"
+                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-gold/50 tracking-wider text-center text-lg font-mono"
                 autoFocus
+                disabled={isValidating}
+                maxLength={20}
               />
               {error && (
                 <div className="flex items-center gap-2 mt-2 text-red-400 text-sm">
@@ -152,14 +153,18 @@ export function WholesaleModal({ isOpen, onClose, wholesaleCode }: WholesaleModa
 
             <Button
               type="submit"
+              disabled={isValidating}
               className="w-full bg-gradient-to-r from-gold to-amber-500 hover:from-gold/90 hover:to-amber-500/90 text-black font-semibold"
             >
-              <Unlock className="w-4 h-4 mr-2" />
-              Activar Precios Mayoristas
+              {isValidating ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Verificando...</>
+              ) : (
+                <><Unlock className="w-4 h-4 mr-2" /> Activar Precios Mayoristas</>
+              )}
             </Button>
 
             <p className="text-center text-xs text-slate-500">
-              ¿No tienes código? Contacta a ventas para ser distribuidor.
+              ¿No tienes acceso? Contacta a ventas para ser distribuidor.
             </p>
           </form>
         )}
