@@ -17,6 +17,7 @@ import {
   Sun,
   Upload,
   Link2,
+  MapPin,
   Play,
   Loader2,
   Volume2,
@@ -73,6 +74,10 @@ interface ShopConfig {
   tiktok: string;
   website: string;
   templateType: string;
+  // Contact / Location
+  address: string;
+  whatsapp: string;
+  phone: string;
   // Tech 3D Breakout assets
   heroProductImage: string;
   requestQuoteEnabled: boolean;
@@ -114,6 +119,9 @@ export default function AdminSettingsPage() {
     tiktok: "",
     website: "",
     templateType: "standard",
+    address: "",
+    whatsapp: "",
+    phone: "",
     heroProductImage: "",
     requestQuoteEnabled: false,
   });
@@ -175,6 +183,9 @@ export default function AdminSettingsPage() {
           tiktok: shop.social?.tiktok || "",
           website: shop.social?.website || "",
           templateType: shop.templateType || "standard",
+          address: shop.contact?.address || "",
+          whatsapp: shop.contact?.whatsapp || "",
+          phone: shop.contact?.phone || "",
           heroProductImage: shop.heroProductImage || "",
           requestQuoteEnabled: shop.requestQuoteEnabled || false,
         });
@@ -224,6 +235,11 @@ export default function AdminSettingsPage() {
           website: config.website,
         },
         templateType: config.templateType,
+        contact: {
+          address: config.address,
+          whatsapp: config.whatsapp,
+          phone: config.phone,
+        },
         heroProductImage: config.heroProductImage,
         requestQuoteEnabled: config.requestQuoteEnabled,
       };
@@ -418,6 +434,48 @@ export default function AdminSettingsPage() {
                         className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors resize-none"
                         placeholder="Describe tu negocio en unas pocas líneas..."
                       />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact / Location */}
+                <div className="glass-panel rounded-2xl p-6">
+                  <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-gold" />
+                    Contacto y Ubicación
+                  </h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm text-slate-400 mb-2">Dirección</label>
+                      <input
+                        type="text"
+                        value={config.address}
+                        onChange={(e) => updateConfig({ address: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors"
+                        placeholder="Calle Falsa 123, Ciudad"
+                      />
+                    </div>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm text-slate-400 mb-2">WhatsApp</label>
+                        <input
+                          type="tel"
+                          value={config.whatsapp}
+                          onChange={(e) => updateConfig({ whatsapp: e.target.value })}
+                          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors"
+                          placeholder="18091234567"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-slate-400 mb-2">Teléfono</label>
+                        <input
+                          type="tel"
+                          value={config.phone}
+                          onChange={(e) => updateConfig({ phone: e.target.value })}
+                          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors"
+                          placeholder="18091234567"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
