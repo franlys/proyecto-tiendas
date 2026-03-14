@@ -45,6 +45,7 @@ import {
   type BackgroundType,
 } from "@/components/shared";
 import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
+import { AddressInput } from "@/components/shared/address-input";
 import { cn } from "@/lib/utils";
 import { BUILT_IN_TEMPLATES, TemplateDefinition } from "@/lib/templates/registry";
 import { doc, getDoc } from "firebase/firestore";
@@ -447,12 +448,9 @@ export default function AdminSettingsPage() {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm text-slate-400 mb-2">Dirección</label>
-                      <input
-                        type="text"
+                      <AddressInput
                         value={config.address}
-                        onChange={(e) => updateConfig({ address: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors"
-                        placeholder="Calle Falsa 123, Ciudad"
+                        onChange={(val) => updateConfig({ address: val })}
                       />
                     </div>
                     <div className="grid sm:grid-cols-2 gap-4">

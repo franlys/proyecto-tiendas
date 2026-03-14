@@ -223,6 +223,8 @@ function ShopDetailContent() {
     const [email, setEmail] = useState("");
     const [address, setAddress] = useState("");
     const [city, setCity] = useState("");
+    const [detectingLocation, setDetectingLocation] = useState(false);
+    const [locationError, setLocationError] = useState("");
     const [instagram, setInstagram] = useState("");
     const [facebook, setFacebook] = useState("");
     const [tiktok, setTiktok] = useState("");
@@ -1015,18 +1017,70 @@ function ShopDetailContent() {
 
                                     <div>
                                         <label className="block text-sm font-medium text-slate-300 mb-2">Dirección</label>
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-2 mb-2">
                                             <div className="px-3 py-3 bg-black/20 border border-white/10 rounded-xl text-slate-400">
                                                 <MapPin className="w-5 h-5" />
                                             </div>
                                             <input
                                                 type="text"
                                                 value={address}
-                                                onChange={(e) => setAddress(e.target.value)}
+                                                onChange={(e) => { setAddress(e.target.value); setLocationError(""); }}
                                                 placeholder="Calle Principal #123, Ciudad"
-                                                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white"
+                                                className="flex-1 px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white"
                                             />
+                                            <button
+                                                type="button"
+                                                disabled={detectingLocation}
+                                                onClick={async () => {
+                                                    setLocationError("");
+                                                    if (!navigator.geolocation) {
+                                                        setLocationError("Tu navegador no soporta geolocalización.");
+                                                        return;
+                                                    }
+                                                    setDetectingLocation(true);
+                                                    navigator.geolocation.getCurrentPosition(
+                                                        async (pos) => {
+                                                            try {
+                                                                const { latitude: lat, longitude: lon } = pos.coords;
+                                                                const res = await fetch(
+                                                                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`,
+                                                                    { headers: { "Accept-Language": "es" } }
+                                                                );
+                                                                const data = await res.json();
+                                                                const a = data.address || {};
+                                                                // Build a readable address: road + house_number, city, state
+                                                                const parts = [
+                                                                    [a.road, a.house_number].filter(Boolean).join(" "),
+                                                                    a.suburb || a.neighbourhood,
+                                                                    a.city || a.town || a.village || a.county,
+                                                                    a.state,
+                                                                ].filter(Boolean);
+                                                                setAddress(parts.join(", "));
+                                                            } catch {
+                                                                setLocationError("No se pudo obtener la dirección. Escríbela manualmente.");
+                                                            } finally {
+                                                                setDetectingLocation(false);
+                                                            }
+                                                        },
+                                                        () => {
+                                                            setLocationError("Permiso de ubicación denegado. Escríbela manualmente.");
+                                                            setDetectingLocation(false);
+                                                        }
+                                                    );
+                                                }}
+                                                className="flex items-center gap-2 px-4 py-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 transition-colors text-sm font-medium whitespace-nowrap disabled:opacity-50"
+                                            >
+                                                {detectingLocation ? (
+                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                ) : (
+                                                    <MapPin className="w-4 h-4" />
+                                                )}
+                                                {detectingLocation ? "Detectando..." : "Detectar"}
+                                            </button>
                                         </div>
+                                        {locationError && (
+                                            <p className="text-xs text-red-400 mt-1">{locationError}</p>
+                                        )}
                                     </div>
 
                                     <div>
