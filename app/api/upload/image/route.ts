@@ -33,10 +33,10 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
+        // Validate file size (max 20MB — allows 4K quality images)
+        if (file.size > 20 * 1024 * 1024) {
             return NextResponse.json(
-                { error: "La imagen debe ser menor a 5MB" },
+                { error: "La imagen debe ser menor a 20MB" },
                 { status: 400 }
             );
         }

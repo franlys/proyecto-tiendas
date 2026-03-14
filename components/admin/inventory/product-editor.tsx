@@ -618,7 +618,7 @@ export function ProductEditor({ product, isOpen, onClose, onSave, shopId, hideSt
                                                             folder="colors"
                                                             shopId={shopId}
                                                             aspectRatio="square"
-                                                            maxSizeMB={5}
+                                                            maxSizeMB={20}
                                                             label="Foto Color"
                                                         />
                                                     </div>
