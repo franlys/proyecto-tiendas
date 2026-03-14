@@ -1014,6 +1014,22 @@ function ShopDetailContent() {
                                     </div>
 
                                     <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-2">Dirección</label>
+                                        <div className="flex gap-2">
+                                            <div className="px-3 py-3 bg-black/20 border border-white/10 rounded-xl text-slate-400">
+                                                <MapPin className="w-5 h-5" />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                value={address}
+                                                onChange={(e) => setAddress(e.target.value)}
+                                                placeholder="Calle Principal #123, Ciudad"
+                                                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
                                         <label className="block text-sm font-medium text-slate-300 mb-2">Correo para Notificaciones</label>
                                         <p className="text-xs text-slate-500 mb-2">Recibirás notificaciones de pedidos, citas y pagos en este correo</p>
                                         <div className="flex gap-2">
@@ -1047,7 +1063,7 @@ function ShopDetailContent() {
                                                     category,
                                                     businessType: primaryType as BusinessType,
                                                     businessTypes: businessTypes,
-                                                    contact: { ...shop.contact, phone, email: notificationEmail },
+                                                    contact: { ...shop.contact, phone, address, email: notificationEmail },
                                                     ownerNotificationEmail: notificationEmail
                                                 });
                                                 // Actualizar el shop local
@@ -1057,7 +1073,7 @@ function ShopDetailContent() {
                                                     category,
                                                     businessType: primaryType as BusinessType,
                                                     businessTypes: businessTypes,
-                                                    contact: { ...prev.contact, phone, email: notificationEmail },
+                                                    contact: { ...prev.contact, phone, address, email: notificationEmail },
                                                     ownerNotificationEmail: notificationEmail
                                                 } : prev);
                                                 setTimeout(() => {
