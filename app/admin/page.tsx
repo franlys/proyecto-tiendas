@@ -1037,8 +1037,8 @@ function AdminDashboardWithSubscription() {
                   </Link>
                 )}
 
-                {/* Citas/Reservaciones - Solo si tiene bookings */}
-                {features.adminModules.bookings && (
+                {/* Citas/Reservaciones - Solo si tiene bookings y NO es entrenamiento */}
+                {features.adminModules.bookings && !features.hasTraining && (
                   <Link href="/admin/bookings">
                     <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-purple-400 hover:text-purple-300">
                       <Calendar className="w-4 h-4" />

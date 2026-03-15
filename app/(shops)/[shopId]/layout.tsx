@@ -288,8 +288,9 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
                         {(() => {
                           const config = getBusinessType(shop.businessType || "");
                           const features = config?.features;
-                          const TRAINING_TYPES = ["gimnasio", "crossfit", "entrenador_personal", "yoga", "pilates", "artes_marciales", "boxeo"];
-                          const isTraining = TRAINING_TYPES.includes(shop.businessType || "");
+                          const TRAINING_TYPES = ["gimnasio", "crossfit", "entrenador_personal", "yoga", "pilates", "artes_marciales", "boxeo", "meal_prep"];
+                          const allTypes = [...(shop.businessTypes || []), shop.businessType].filter(Boolean) as string[];
+                          const isTraining = allTypes.some(t => TRAINING_TYPES.includes(t));
 
                           return (
                             <>

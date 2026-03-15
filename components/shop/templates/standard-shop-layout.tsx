@@ -13,7 +13,7 @@ import {
 } from "@/components/shared";
 import { ServiceCard, ProductGrid } from "@/components/shop";
 import { AppointmentModal } from "@/components/shop/appointment-modal";
-import { Sparkles, MapPin, Phone, Clock, Calendar, ShoppingBag, Loader2, Instagram, Facebook, Globe, MessageCircle, ChefHat } from "lucide-react";
+import { Sparkles, MapPin, Phone, Clock, Calendar, ShoppingBag, Loader2, Instagram, Facebook, Globe, MessageCircle, ChefHat, Dumbbell } from "lucide-react";
 import {
     CATEGORY_LABELS,
     type ServiceCategory,
@@ -46,7 +46,7 @@ export function StandardShopLayout({ shop, products, services, loadingData }: St
     // Feature-based visibility (works for single or multiple types)
     const isServiceBusiness = combinedFeatures.hasServices && combinedFeatures.hasBookings;
     const isProductBusiness = combinedFeatures.hasOrders || combinedFeatures.hasCatalog;
-    const TRAINING_TYPES = ["gimnasio", "crossfit", "entrenador_personal", "yoga", "pilates", "artes_marciales", "boxeo"];
+    const TRAINING_TYPES = ["gimnasio", "crossfit", "entrenador_personal", "yoga", "pilates", "artes_marciales", "boxeo", "meal_prep"];
     const isTrainingBusiness = businessTypes.some((t: string) => TRAINING_TYPES.includes(t));
     const hasServices = services.length > 0;
     const hasProducts = products.length > 0;
@@ -242,6 +242,16 @@ export function StandardShopLayout({ shop, products, services, loadingData }: St
                         {/* Main Action Button (CTA) */}
                         <ScrollReveal delay={0.5}>
                             <div className="mt-8 flex flex-wrap justify-center gap-4">
+                                {/* Training CTA - Only for training businesses */}
+                                {isTrainingBusiness && (shop?.slug || shop?.id) && (
+                                    <Link href={`/${shop?.slug || shop?.id}/training`}
+                                        className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white font-semibold rounded-full shadow-lg shadow-orange-500/25 transition-all hover:scale-105 hover:shadow-xl"
+                                    >
+                                        <Dumbbell className="w-5 h-5" />
+                                        Inscribirse ahora
+                                    </Link>
+                                )}
+
                                 {/* Book Appointment - Hidden for training businesses */}
                                 {isServiceBusiness && hasServices && !isTrainingBusiness && services.some(s => s.category !== "entrenamiento" || shop?.businessType === "gimnasio") && (
                                     <button
