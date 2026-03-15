@@ -221,6 +221,7 @@ export function getBusinessFeatures(businessType: BusinessType | undefined | nul
         hasRentals: features.rentals,
         hasTables: features.tables,
         hasDelivery: features.delivery,
+        hasTraining: isTrainingBusiness(type),
         labels: config.labels,
         config,
         adminModules: {
@@ -234,7 +235,7 @@ export function getBusinessFeatures(businessType: BusinessType | undefined | nul
             wholesale: features.wholesale,
             delivery: features.delivery,
             beautyConsultations: isBeautyBusiness(businessType),
-            trainingPackages: type === "meal_prep" || type === "gimnasio" || type === "entrenador_personal",
+            trainingPackages: isTrainingBusiness(type),
         },
         dashboardWidgets: {
             pendingOrders: features.orders,
