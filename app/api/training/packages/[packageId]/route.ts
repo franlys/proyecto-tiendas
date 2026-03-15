@@ -15,7 +15,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     if (!db) return NextResponse.json({ error: "Database unavailable" }, { status: 503 });
 
     try {
-        const ref = db.collection("shops").doc(shopId).collection("trainingPackages").doc(packageId);
+        const ref = db.collection("shops").doc(shopId).collection("training-packages").doc(packageId);
         await ref.update({ ...updates, updatedAt: new Date().toISOString() });
         const snap = await ref.get();
         return NextResponse.json({ package: { id: snap.id, ...snap.data() } });
@@ -35,7 +35,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     if (!db) return NextResponse.json({ error: "Database unavailable" }, { status: 503 });
 
     try {
-        await db.collection("shops").doc(shopId).collection("trainingPackages").doc(packageId).delete();
+        await db.collection("shops").doc(shopId).collection("training-packages").doc(packageId).delete();
         return NextResponse.json({ success: true });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });

@@ -870,11 +870,6 @@ function TrainingPackagesContent({ shopId: inputId }: { shopId: string }) {
                 </button>
             </div>
 
-            {/* Shop Coordinates */}
-            <div className="mb-8">
-                <ShopCoordinatesConfig shopId={shopId} />
-            </div>
-
             {/* Packages Grid */}
             {packages.length === 0 ? (
                 <div className="text-center py-16 bg-zinc-900 rounded-xl border border-zinc-800">

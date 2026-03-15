@@ -676,8 +676,8 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
             <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
           </Link>
 
-          {/* Calendario - Solo si tiene bookings */}
-          {features.hasBookings && (
+          {/* Calendario - Solo si tiene bookings y NO es negocio de entrenamiento */}
+          {features.hasBookings && !features.hasTraining && (
             <Link
               href="/admin/bookings"
               className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
@@ -925,7 +925,7 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
           )}
 
           {/* Horarios - Acceso directo a Configuración de Citas */}
-          {!isSuperAdmin && features.hasBookings && (
+          {!isSuperAdmin && features.hasBookings && !features.hasTraining && (
             <Link
               href="/admin/bookings/settings"
               className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-blue-500/10 to-cyan-500/10 hover:from-blue-500/20 hover:to-cyan-500/20 border border-blue-500/20 hover:border-blue-500/30 transition-all group"

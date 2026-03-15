@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     try {
         const snap = await db
             .collection("shops").doc(shopId)
-            .collection("trainingPackages")
+            .collection("training-packages")
             .orderBy("sortOrder", "asc")
             .get();
 
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     try {
         const now = new Date().toISOString();
         const pkg = { ...data, isActive: data.isActive ?? true, createdAt: now, updatedAt: now };
-        const ref = await db.collection("shops").doc(shopId).collection("trainingPackages").add(pkg);
+        const ref = await db.collection("shops").doc(shopId).collection("training-packages").add(pkg);
         return NextResponse.json({ package: { id: ref.id, ...pkg } }, { status: 201 });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
