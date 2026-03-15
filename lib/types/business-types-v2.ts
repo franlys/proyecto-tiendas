@@ -212,10 +212,10 @@ export const BUSINESS_TYPES: BusinessTypeConfig[] = [
     { id: "sastreria", label: "Sastrería", icon: "🧵", category: "fashion", subcategory: "fashion_services", keywords: ["sastre", "trajes", "arreglos"], features: F.service, labels: { cta: "Agendar Cita", products: "Servicios", services: "Arreglos" } },
 
     // ========== TECHNOLOGY ==========
-    { id: "celulares", label: "Tienda de Celulares", icon: "📱", category: "technology", subcategory: "tech_sales", keywords: ["celulares", "telefonos", "moviles"], features: F.repair, labels: { cta: "Ver Catálogo", products: "Celulares", services: "Reparaciones" } },
-    { id: "computadoras", label: "Tienda de Computadoras", icon: "💻", category: "technology", subcategory: "tech_sales", keywords: ["computadoras", "laptops", "pc"], features: F.repair, labels: { cta: "Ver Catálogo", products: "Equipos", services: "Servicios" } },
+    { id: "celulares", label: "Tienda de Celulares", icon: "📱", category: "technology", subcategory: "tech_sales", keywords: ["celulares", "telefonos", "moviles"], features: { ...F.repair, bookings: false }, labels: { cta: "Ver Catálogo", products: "Celulares", services: "Taller" } },
+    { id: "computadoras", label: "Tienda de Computadoras", icon: "💻", category: "technology", subcategory: "tech_sales", keywords: ["computadoras", "laptops", "pc"], features: { ...F.repair, bookings: false }, labels: { cta: "Ver Catálogo", products: "Equipos", services: "Taller" } },
     { id: "gaming", label: "Tienda Gaming", icon: "🎮", category: "technology", subcategory: "tech_sales", keywords: ["gaming", "videojuegos", "consolas"], features: F.retail, labels: { cta: "Ver Catálogo", products: "Productos", services: "Servicios" } },
-    { id: "reparacion_celulares", label: "Reparación de Celulares", icon: "🔧", category: "technology", subcategory: "tech_repair", keywords: ["reparacion", "pantalla", "celular"], features: F.repair, labels: { cta: "Ver Servicios", products: "Refacciones", services: "Reparaciones" } },
+    { id: "reparacion_celulares", label: "Reparación de Celulares", icon: "🔧", category: "technology", subcategory: "tech_repair", keywords: ["reparacion", "pantalla", "celular"], features: { ...F.repair, bookings: false }, labels: { cta: "Ver Servicios", products: "Refacciones", services: "Taller" } },
     { id: "soporte_it", label: "Soporte Técnico / IT", icon: "🖥️", category: "technology", subcategory: "tech_services", keywords: ["soporte", "it", "tecnico"], features: F.consultancy, labels: { cta: "Contratar", products: "Servicios", services: "Soporte" } },
 
     // ========== AUTOMOTIVE ==========

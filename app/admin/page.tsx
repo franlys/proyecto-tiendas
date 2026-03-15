@@ -712,19 +712,34 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
 
           {/* Reparaciones - Solo si tiene repairs */}
           {features.hasRepairs && (
-            <Link
-              href="/admin/repair"
-              className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
-            >
-              <div className="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
-                <Wrench className="w-5 h-5 text-orange-400" />
-              </div>
-              <div className="flex-1">
-                <p className="text-white font-medium">{features.labels.services}</p>
-                <p className="text-xs text-slate-300">Órdenes de reparación</p>
-              </div>
-              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
-            </Link>
+            <>
+              <Link
+                href="/admin/repair"
+                className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                  <Wrench className="w-5 h-5 text-orange-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-white font-medium">{features.labels.services}</p>
+                  <p className="text-xs text-slate-300">Órdenes de reparación</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+              </Link>
+              <Link
+                href="/admin/services"
+                className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                  <Settings className="w-5 h-5 text-amber-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-white font-medium">Servicios del Taller</p>
+                  <p className="text-xs text-slate-300">Configura precios y tiempos</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+              </Link>
+            </>
           )}
 
           {/* Mayoristas - Solo si el negocio tiene wholesale */}
@@ -1040,12 +1055,20 @@ function AdminDashboardWithSubscription() {
 
                 {/* Reparaciones - Solo si tiene repairs */}
                 {features.adminModules.repairs && (
-                  <Link href="/admin/repair">
-                    <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-orange-400 hover:text-orange-300">
-                      <Wrench className="w-4 h-4" />
-                      <span className="hidden sm:inline ml-1">{features.labels.services}</span>
-                    </Button>
-                  </Link>
+                  <>
+                    <Link href="/admin/repair">
+                      <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-orange-400 hover:text-orange-300">
+                        <Wrench className="w-4 h-4" />
+                        <span className="hidden sm:inline ml-1">{features.labels.services}</span>
+                      </Button>
+                    </Link>
+                    <Link href="/admin/services">
+                      <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-amber-400 hover:text-amber-300">
+                        <Settings className="w-4 h-4" />
+                        <span className="hidden sm:inline ml-1">Servicios</span>
+                      </Button>
+                    </Link>
+                  </>
                 )}
 
                 {/* Rentas - Solo si tiene rentals */}
