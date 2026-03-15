@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { Suspense } from "react";
 import { ThemeProvider, CartProvider, OrdersProvider, InventoryProvider, WholesaleProvider } from "@/components/shared";
 import { FloatingCart, ShopLayoutClient, StreetCart, WholesaleButton } from "@/components/shop";
+import { CartUnlessTraining } from "@/components/shop/cart-unless-training";
 import { BackgroundAudio } from "@/components/shop/background-audio";
 import { Loader2 } from "lucide-react";
 import { MOCK_SHOPS, DEFAULT_THEME, type ShopConfig } from "@/lib/constants";
@@ -418,8 +419,8 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
                   </div>
                 </footer>
 
-                {/* Floating Cart */}
-                <FloatingCart />
+                {/* Floating Cart - hidden on training page */}
+                <CartUnlessTraining />
 
                 {/* Background Audio (if configured) */}
                 {shop.backgroundAudio?.enabled && shop.backgroundAudio?.url && (
