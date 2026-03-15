@@ -941,24 +941,6 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
             </Link>
           )}
 
-          {/* Paquetes de Entrenamiento - Para gimnasios y entrenadores */}
-          {(shop?.businessTypes?.some((t: string) =>
-            ["gimnasio", "crossfit", "entrenador_personal", "yoga", "pilates", "artes_marciales", "boxeo", "meal_prep"].includes(t)
-          ) || ["gimnasio", "crossfit", "entrenador_personal", "yoga", "pilates", "artes_marciales", "boxeo", "meal_prep"].includes(shop?.businessType || "")) && (
-              <Link
-                href="/admin/training-packages"
-                className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 hover:from-emerald-500/20 hover:to-cyan-500/20 border border-emerald-500/20 hover:border-emerald-500/30 transition-all group"
-              >
-                <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                  <Dumbbell className="w-5 h-5 text-emerald-400" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-white font-medium">Paquetes de Entrenamiento</p>
-                  <p className="text-xs text-slate-300">Planes, precios y distancia</p>
-                </div>
-                <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
-              </Link>
-            )}
         </div>
       </div>
 

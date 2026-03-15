@@ -46,6 +46,8 @@ export function StandardShopLayout({ shop, products, services, loadingData }: St
     // Feature-based visibility (works for single or multiple types)
     const isServiceBusiness = combinedFeatures.hasServices && combinedFeatures.hasBookings;
     const isProductBusiness = combinedFeatures.hasOrders || combinedFeatures.hasCatalog;
+    const TRAINING_TYPES = ["gimnasio", "crossfit", "entrenador_personal", "yoga", "pilates", "artes_marciales", "boxeo"];
+    const isTrainingBusiness = businessTypes.some((t: string) => TRAINING_TYPES.includes(t));
     const hasServices = services.length > 0;
     const hasProducts = products.length > 0;
 
@@ -240,8 +242,8 @@ export function StandardShopLayout({ shop, products, services, loadingData }: St
                         {/* Main Action Button (CTA) */}
                         <ScrollReveal delay={0.5}>
                             <div className="mt-8 flex flex-wrap justify-center gap-4">
-                                {/* Book Appointment - Only if has services that are NOT training (unless gym) */}
-                                {isServiceBusiness && hasServices && services.some(s => s.category !== "entrenamiento" || shop?.businessType === "gimnasio") && (
+                                {/* Book Appointment - Hidden for training businesses */}
+                                {isServiceBusiness && hasServices && !isTrainingBusiness && services.some(s => s.category !== "entrenamiento" || shop?.businessType === "gimnasio") && (
                                     <button
                                         onClick={() => setIsAppointmentModalOpen(true)}
                                         className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-400 text-white font-semibold rounded-full shadow-lg shadow-primary/25 transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/30"

@@ -19,7 +19,21 @@ import {
   Users,
   ToggleLeft,
   ToggleRight,
+  CalendarDays,
 } from "lucide-react";
+import type { DayOfWeek } from "@/lib/types/training-package.types";
+import { DAY_LABELS } from "@/lib/types/training-package.types";
+
+const ALL_DAYS: DayOfWeek[] = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+const DAY_SHORT: Record<DayOfWeek, string> = {
+  monday: "Lun", tuesday: "Mar", wednesday: "Mié",
+  thursday: "Jue", friday: "Vie", saturday: "Sáb", sunday: "Dom",
+};
+const ALL_TIME_SLOTS = [
+  "06:00", "06:30", "07:00", "07:30", "08:00", "08:30",
+  "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+  "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00",
+];
 import { Button } from "@/components/ui";
 import { useAuth } from "@/components/shared";
 import { cn } from "@/lib/utils";
@@ -63,6 +77,12 @@ export default function TrainingPackagesPage() {
   const [saving, setSaving] = useState(false);
   const [newInclude, setNewInclude] = useState("");
 
+  // Schedule state
+  const [availableDays, setAvailableDays] = useState<DayOfWeek[]>([]);
+  const [timeSlots, setTimeSlots] = useState<string[]>([]);
+  const [scheduleLoading, setScheduleLoading] = useState(true);
+  const [scheduleSaving, setScheduleSaving] = useState(false);
+
   // Load packages
   useEffect(() => {
     if (!user?.shopId) return;
@@ -72,6 +92,49 @@ export default function TrainingPackagesPage() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [user?.shopId]);
+
+  // Load schedule
+  useEffect(() => {
+    if (!user?.shopId) return;
+    fetch(`/api/training/schedule?shopId=${user.shopId}`)
+      .then(r => r.json())
+      .then(({ schedule }) => {
+        if (schedule) {
+          setAvailableDays(schedule.availableDays || []);
+          setTimeSlots(schedule.timeSlots || []);
+        } else {
+          // Default: Mon-Sat all slots
+          setAvailableDays(["monday","tuesday","wednesday","thursday","friday","saturday"]);
+          setTimeSlots(["07:00","09:00","17:00","19:00"]);
+        }
+      })
+      .catch(console.error)
+      .finally(() => setScheduleLoading(false));
+  }, [user?.shopId]);
+
+  const saveSchedule = async () => {
+    if (!user?.shopId) return;
+    setScheduleSaving(true);
+    try {
+      await fetch("/api/training/schedule", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shopId: user.shopId, availableDays, timeSlots }),
+      });
+    } catch (err: any) {
+      alert("Error al guardar horarios: " + err.message);
+    } finally {
+      setScheduleSaving(false);
+    }
+  };
+
+  const toggleDay = (day: DayOfWeek) => {
+    setAvailableDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]);
+  };
+
+  const toggleSlot = (slot: string) => {
+    setTimeSlots(prev => prev.includes(slot) ? prev.filter(s => s !== slot) : [...prev, slot].sort());
+  };
 
   const openAdd = () => {
     setEditingId(null);
@@ -292,6 +355,78 @@ export default function TrainingPackagesPage() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+        {/* Schedule config section */}
+        {!scheduleLoading && (
+          <div className="mt-10 glass-panel rounded-2xl p-6 border border-white/10">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-400 flex items-center justify-center">
+                <CalendarDays className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-white font-bold text-lg">Horarios Disponibles</h2>
+                <p className="text-slate-400 text-sm">Días y horarios en que ofreces entrenamiento</p>
+              </div>
+            </div>
+
+            {/* Days */}
+            <div className="mb-6">
+              <p className="text-slate-400 text-sm mb-3 font-medium">Días disponibles</p>
+              <div className="grid grid-cols-7 gap-2">
+                {ALL_DAYS.map(day => {
+                  const active = availableDays.includes(day);
+                  return (
+                    <button
+                      key={day}
+                      onClick={() => toggleDay(day)}
+                      className={cn(
+                        "flex flex-col items-center py-3 rounded-xl border text-xs font-semibold transition-all",
+                        active
+                          ? "bg-primary border-primary text-white"
+                          : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                      )}
+                    >
+                      <span>{DAY_SHORT[day]}</span>
+                      {active && <Check className="w-3 h-3 mt-1" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Time slots */}
+            <div className="mb-6">
+              <p className="text-slate-400 text-sm mb-3 font-medium">Horarios disponibles</p>
+              <div className="grid grid-cols-5 sm:grid-cols-7 gap-2">
+                {ALL_TIME_SLOTS.map(slot => {
+                  const active = timeSlots.includes(slot);
+                  return (
+                    <button
+                      key={slot}
+                      onClick={() => toggleSlot(slot)}
+                      className={cn(
+                        "py-2.5 rounded-xl text-xs font-medium border transition-all",
+                        active
+                          ? "bg-primary border-primary text-white"
+                          : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                      )}
+                    >
+                      {slot}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <button
+              onClick={saveSchedule}
+              disabled={scheduleSaving || availableDays.length === 0 || timeSlots.length === 0}
+              className="flex items-center gap-2 px-5 py-2.5 bg-primary rounded-xl text-white text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
+            >
+              {scheduleSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              Guardar horarios
+            </button>
           </div>
         )}
       </main>

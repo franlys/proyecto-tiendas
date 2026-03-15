@@ -130,6 +130,10 @@ export default function TrainingBookingPage() {
   const [enrollmentId, setEnrollmentId] = useState("");
   const [phoneValue, setPhoneValue] = useState("");
 
+  // Schedule config from admin
+  const [availableDays, setAvailableDays] = useState<DayOfWeek[]>(WEEK_DAYS);
+  const [configuredSlots, setConfiguredSlots] = useState<string[]>(TIME_SLOTS);
+
   // Calendar state
   const today = useMemo(() => {
     const d = new Date();
@@ -142,16 +146,21 @@ export default function TrainingBookingPage() {
     return d;
   }, [today]);
 
-  // Load training packages
+  // Load training packages + schedule
   useEffect(() => {
     if (!shop?.id) return;
-    fetch(`/api/training/packages?shopId=${shop.id}`)
-      .then(r => r.json())
-      .then(({ packages: pkgs }) => {
-        setPackages((pkgs || []).filter((p: TrainingPackage) => p.isActive !== false));
-      })
-      .catch(console.error)
-      .finally(() => setPackagesLoading(false));
+    Promise.all([
+      fetch(`/api/training/packages?shopId=${shop.id}`).then(r => r.json()),
+      fetch(`/api/training/schedule?shopId=${shop.id}`).then(r => r.json()),
+    ]).then(([pkgData, schedData]) => {
+      setPackages((pkgData.packages || []).filter((p: TrainingPackage) => p.isActive !== false));
+      if (schedData.schedule) {
+        if (schedData.schedule.availableDays?.length) setAvailableDays(schedData.schedule.availableDays);
+        if (schedData.schedule.timeSlots?.length) setConfiguredSlots(schedData.schedule.timeSlots);
+      }
+    })
+    .catch(console.error)
+    .finally(() => setPackagesLoading(false));
   }, [shop?.id]);
 
   // ── Step helpers ──────────────────────────────
@@ -360,17 +369,21 @@ export default function TrainingBookingPage() {
             </p>
             <div className="grid grid-cols-7 gap-2 mb-6">
               {WEEK_DAYS.map(day => {
+                const isAvailable = availableDays.includes(day);
                 const selected = data.preferredDays.includes(day);
                 const full = !selected && data.preferredDays.length >= data.sessionsPerWeek;
+                const disabled = full || !isAvailable;
                 return (
                   <button
                     key={day}
-                    onClick={() => toggleDay(day)}
-                    disabled={full}
+                    onClick={() => !disabled && toggleDay(day)}
+                    disabled={disabled}
                     className={cn(
                       "flex flex-col items-center py-3 rounded-xl border text-xs font-semibold transition-all",
                       selected
                         ? "bg-primary border-primary text-white shadow-lg shadow-primary/30"
+                        : !isAvailable
+                        ? "bg-white/[0.02] border-white/5 text-slate-700 cursor-not-allowed line-through"
                         : full
                         ? "bg-white/[0.02] border-white/5 text-slate-600 cursor-not-allowed"
                         : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:border-white/20"
@@ -508,7 +521,7 @@ export default function TrainingBookingPage() {
               {data.preferredDays.map(d => DAY_SHORT[d]).join(", ")}).
             </p>
             <div className="grid grid-cols-4 gap-2 mb-6">
-              {TIME_SLOTS.map(t => (
+              {configuredSlots.map(t => (
                 <button
                   key={t}
                   onClick={() => setData(prev => ({ ...prev, preferredTime: t }))}
