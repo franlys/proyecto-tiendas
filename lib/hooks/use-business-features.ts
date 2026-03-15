@@ -14,6 +14,17 @@ import {
 } from "@/lib/types/business.types";
 import { getBusinessType as getV2BusinessType } from "@/lib/types/business-types-v2";
 
+// Tipos de negocio relacionados con entrenamiento/fitness
+const TRAINING_BUSINESS_TYPES = [
+    "gimnasio", "crossfit", "entrenador_personal", "yoga",
+    "pilates", "artes_marciales", "boxeo", "meal_prep",
+];
+
+function isTrainingBusiness(type: string | undefined | null): boolean {
+    if (!type) return false;
+    return TRAINING_BUSINESS_TYPES.includes(type.toLowerCase());
+}
+
 // Tipos de negocio relacionados con belleza
 const BEAUTY_BUSINESS_TYPES = [
     "salon",
@@ -42,6 +53,7 @@ export interface BusinessFeatures {
     hasInventory: boolean;      // Maneja inventario
     hasWholesale: boolean;      // Precios mayoreo
     hasRepairs: boolean;        // Ofrece reparaciones
+    hasTraining: boolean;       // Ofrece programas de entrenamiento (fitness/gym)
     hasRentals: boolean;        // Ofrece rentas
     hasTables: boolean;         // Maneja mesas (restaurantes)
     hasDelivery: boolean;       // Ofrece delivery
@@ -103,6 +115,7 @@ export function useBusinessFeatures(businessType: BusinessType | undefined | nul
             hasInventory: features.inventory,
             hasWholesale: features.wholesale,
             hasRepairs: features.repairs,
+            hasTraining: isTrainingBusiness(type),
             hasRentals: features.rentals,
             hasTables: features.tables,
             hasDelivery: features.delivery,
@@ -125,7 +138,7 @@ export function useBusinessFeatures(businessType: BusinessType | undefined | nul
                 wholesale: features.wholesale,
                 delivery: features.delivery,
                 beautyConsultations: isBeautyBusiness(type),
-                trainingPackages: type === "meal_prep" || type === "gimnasio" || type === "entrenador_personal",
+                trainingPackages: isTrainingBusiness(type),
             },
 
             // Widgets del dashboard
@@ -160,6 +173,7 @@ export function getBusinessFeatures(businessType: BusinessType | undefined | nul
             hasInventory: features.inventory,
             hasWholesale: features.wholesale,
             hasRepairs: features.repairs,
+            hasTraining: isTrainingBusiness(type),
             hasRentals: features.rentals,
             hasTables: features.tables,
             hasDelivery: features.delivery,
@@ -180,7 +194,7 @@ export function getBusinessFeatures(businessType: BusinessType | undefined | nul
                 wholesale: features.wholesale,
                 delivery: features.delivery,
                 beautyConsultations: isBeautyBusiness(type),
-                trainingPackages: type === "meal_prep" || type === "gimnasio" || type === "entrenador_personal",
+                trainingPackages: isTrainingBusiness(type),
             },
             dashboardWidgets: {
                 pendingOrders: features.orders,
@@ -320,6 +334,7 @@ export function getCombinedFeatures(businessTypes: string[]): CombinedBusinessFe
         hasInventory: typeConfigs.some(t => t.features.hasInventory),
         hasWholesale: typeConfigs.some(t => t.features.hasWholesale),
         hasRepairs: typeConfigs.some(t => t.features.hasRepairs),
+        hasTraining: typeConfigs.some(t => t.features.hasTraining),
         hasRentals: typeConfigs.some(t => t.features.hasRentals),
         hasTables: typeConfigs.some(t => t.features.hasTables),
         hasDelivery: typeConfigs.some(t => t.features.hasDelivery),

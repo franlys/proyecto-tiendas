@@ -21,9 +21,11 @@ import {
   ToggleLeft,
   ToggleRight,
   Info,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useAuth, useShops } from "@/components/shared";
+import { FirebaseImageUpload } from "@/components/shared/firebase-image-upload";
 import { cn, cleanForFirestore } from "@/lib/utils";
 import type {
   ManualPaymentMethod,
@@ -90,6 +92,12 @@ const PAYMENT_METHOD_TYPES: {
     label: "Google Pay",
     icon: "🇬",
     description: "Pagos vía Google Pay ID",
+  },
+  {
+    type: "payment_link",
+    label: "Enlace de Pago",
+    icon: "🔗",
+    description: "Binance Pay, PayPal.me, link con QR opcional",
   },
   {
     type: "other",
@@ -522,6 +530,8 @@ export default function PaymentSettingsPage() {
                           {MANUAL_PAYMENT_METHOD_LABELS[method.type]}
                           {method.bankName && ` • ${method.bankName}`}
                           {method.email && ` • ${method.email}`}
+                          {method.paymentLink && ` • ${method.paymentLink}`}
+                          {method.qrCodeUrl && " • 📷 QR"}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -569,6 +579,7 @@ export default function PaymentSettingsPage() {
       {(showAddModal || editingMethod) && (
         <PaymentMethodModal
           method={editingMethod}
+          shopId={user?.shopId}
           onClose={() => {
             setShowAddModal(false);
             setEditingMethod(null);
@@ -583,12 +594,14 @@ export default function PaymentSettingsPage() {
 // Modal Component
 interface PaymentMethodModalProps {
   method: ManualPaymentMethod | null;
+  shopId?: string;
   onClose: () => void;
   onSave: (method: ManualPaymentMethod) => void;
 }
 
 function PaymentMethodModal({
   method,
+  shopId,
   onClose,
   onSave,
 }: PaymentMethodModalProps) {
@@ -856,6 +869,82 @@ function PaymentMethodModal({
                   placeholder="Ej: BEP20, TRC20, ERC20"
                   className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
                 />
+              </div>
+            </>
+          )}
+
+          {/* Payment Link Fields */}
+          {formData.type === "payment_link" && (
+            <>
+              <div>
+                <label className="block text-sm text-slate-400 mb-2">
+                  Enlace de Pago *
+                </label>
+                <input
+                  type="url"
+                  value={formData.paymentLink || ""}
+                  onChange={(e) => updateField("paymentLink", e.target.value)}
+                  placeholder="https://bpay.binance.com/... o tu enlace"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                />
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs text-slate-500">
+                    Ej: Binance Pay, PayPal.me, Nequi, etc.
+                  </p>
+                  {formData.paymentLink && (
+                    <a
+                      href={formData.paymentLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-xs text-primary/70 hover:text-primary"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      Vista previa
+                    </a>
+                  )}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-2">
+                  Código QR (opcional)
+                </label>
+                {shopId ? (
+                  <FirebaseImageUpload
+                    value={formData.qrCodeUrl || ""}
+                    onChange={(url) => setFormData((prev) => {
+                      const next = { ...prev };
+                      if (url) next.qrCodeUrl = url;
+                      else delete next.qrCodeUrl;
+                      return next;
+                    })}
+                    folder="payment-qr"
+                    shopId={shopId}
+                    label="Subir imagen del QR"
+                    aspectRatio="square"
+                  />
+                ) : (
+                  <>
+                    <input
+                      type="url"
+                      value={formData.qrCodeUrl || ""}
+                      onChange={(e) => updateField("qrCodeUrl", e.target.value)}
+                      placeholder="https://... (imagen PNG o JPG del QR)"
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                    />
+                    {formData.qrCodeUrl && (
+                      <div className="mt-3 flex justify-center">
+                        <img
+                          src={formData.qrCodeUrl}
+                          alt="QR Preview"
+                          className="w-32 h-32 object-contain rounded-xl border border-white/20 bg-white p-1"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = "none";
+                          }}
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </>
           )}

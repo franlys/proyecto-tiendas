@@ -291,6 +291,7 @@ export type ManualPaymentMethodType =
     | "paypal_manual"      // PayPal sin integración (solo email)
     | "apple_pay"          // Apple Pay (manual)
     | "google_pay"         // Google Pay (manual)
+    | "payment_link"       // Enlace de pago (Binance Pay, etc.) con QR opcional
     | "other";             // Otro
 
 // A single manual payment method configuration
@@ -312,6 +313,9 @@ export interface ManualPaymentMethod {
     network?: string;          // e.g., "BEP20", "TRC20"
     // Zelle/PayPal
     email?: string;
+    // Payment link
+    paymentLink?: string;      // URL del enlace de pago (Binance Pay, PayPal.me, etc.)
+    qrCodeUrl?: string;        // URL de imagen QR (opcional)
     // General
     instructions?: string;     // Custom instructions for this method
     icon?: string;             // Custom icon URL
@@ -372,6 +376,7 @@ export const MANUAL_PAYMENT_METHOD_LABELS: Record<ManualPaymentMethodType, strin
     paypal_manual: "PayPal",
     apple_pay: "Apple Pay",
     google_pay: "Google Pay",
+    payment_link: "Enlace de Pago",
     other: "Otro",
 };
 
@@ -385,6 +390,7 @@ export const MANUAL_PAYMENT_METHOD_ICONS: Record<ManualPaymentMethodType, string
     paypal_manual: "🅿️",
     apple_pay: "🍎",
     google_pay: "🤖",
+    payment_link: "🔗",
     other: "💳",
 };
 

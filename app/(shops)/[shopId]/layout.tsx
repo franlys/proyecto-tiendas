@@ -288,11 +288,13 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
                         {(() => {
                           const config = getBusinessType(shop.businessType || "");
                           const features = config?.features;
+                          const TRAINING_TYPES = ["gimnasio", "crossfit", "entrenador_personal", "yoga", "pilates", "artes_marciales", "boxeo"];
+                          const isTraining = TRAINING_TYPES.includes(shop.businessType || "");
 
                           return (
                             <>
                               {/* Show Servicios for service-based businesses */}
-                              {features?.services && (
+                              {features?.services && !isTraining && (
                                 <a href={`/${shopId}#servicios`} className="hidden md:inline text-slate-300 hover:text-white transition-colors">
                                   Servicios
                                 </a>
@@ -303,8 +305,19 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
                                   Productos
                                 </a>
                               )}
-                              {/* Only show Reservar for booking-based businesses */}
-                              {features?.bookings && (
+                              {/* Training businesses → Planes + Agendar */}
+                              {isTraining && (
+                                <>
+                                  <a href={`/${shopId}#planes`} className="hidden md:inline text-slate-300 hover:text-white transition-colors">
+                                    Planes
+                                  </a>
+                                  <a href={`/${shopId}/training`} className="hidden md:inline px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:shadow-lg hover:shadow-orange-500/25 transition-all font-medium">
+                                    Agendar
+                                  </a>
+                                </>
+                              )}
+                              {/* Only show Reservar for booking-based non-training businesses */}
+                              {features?.bookings && !isTraining && (
                                 <a href={`/${shopId}/book`} className="hidden md:inline px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-lg hover:shadow-lg transition-all">
                                   Reservar
                                 </a>
