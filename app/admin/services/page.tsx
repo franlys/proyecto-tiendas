@@ -66,7 +66,7 @@ function ServiceForm({
         shopId,
         name: form.name,
         description: form.description || undefined,
-        price: parseFloat(form.price),
+        price: form.price ? parseFloat(form.price) : 0,
         duration: parseInt(form.duration) || 30,
         category: form.category || undefined,
         isActive: service?.isActive ?? true,
@@ -126,7 +126,7 @@ function ServiceForm({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-slate-300 mb-1.5">
-            Precio *
+            Precio estimado <span className="text-slate-500 font-normal">(opcional)</span>
           </label>
           <div className="relative">
             <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -134,13 +134,13 @@ function ServiceForm({
               type="number"
               value={form.price}
               onChange={(e) => setForm({ ...form, price: e.target.value })}
-              required
               min="0"
               step="0.01"
-              placeholder="0.00"
+              placeholder="Varía / cotización"
               className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-orange-500/50 text-sm"
             />
           </div>
+          <p className="text-xs text-slate-600 mt-1">Déjalo vacío si el precio varía</p>
         </div>
 
         <div>
@@ -190,7 +190,7 @@ function ServiceForm({
         </Button>
         <Button
           type="submit"
-          disabled={isSaving || !form.name || !form.price}
+          disabled={isSaving || !form.name}
           className="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400"
         >
           {isSaving ? (
@@ -361,9 +361,11 @@ function ServicesContent({ shopId }: { shopId: string }) {
               </div>
               <div className="glass-panel rounded-xl p-4 border border-white/10 text-center">
                 <p className="text-2xl font-bold text-white">
-                  ${Math.min(...services.map(s => s.price))}–${Math.max(...services.map(s => s.price))}
+                  {services.some(s => s.price > 0)
+                    ? `$${Math.min(...services.filter(s => s.price > 0).map(s => s.price))}+`
+                    : "Cotización"}
                 </p>
-                <p className="text-xs text-slate-400">Rango de precios</p>
+                <p className="text-xs text-slate-400">Desde</p>
               </div>
             </div>
 
@@ -407,7 +409,10 @@ function ServicesContent({ shopId }: { shopId: string }) {
                       </div>
 
                       <div className="flex-shrink-0 text-right">
-                        <p className="text-white font-bold">${service.price.toLocaleString("es-MX")}</p>
+                        {service.price > 0
+                          ? <p className="text-white font-bold">${service.price.toLocaleString("es-MX")}</p>
+                          : <p className="text-slate-500 text-xs">Cotización</p>
+                        }
                       </div>
 
                       <div className="flex items-center gap-1 flex-shrink-0">

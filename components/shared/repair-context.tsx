@@ -8,7 +8,6 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import { localToken } from "@/lib/utils/safe-storage";
 
 export type RepairStatus = "received" | "diagnosing" | "repairing" | "ready" | "delivered";
 
@@ -59,7 +58,8 @@ export interface RepairTicket {
   deviceModel: string;
   issueDescription: string;
   status: RepairStatus;
-  estimatedCost?: number;
+  estimatedCost?: number;    // Costo estimado (cotización)
+  quoteSentAt?: string;      // Cuándo se envió la cotización al cliente
   finalCost?: number;
   notes?: string;
   createdAt: string;
@@ -86,47 +86,22 @@ interface RepairProviderProps {
   shopId: string;
 }
 
-const getStorageKey = (shopId: string) => `repair-tickets-${shopId}`;
-
-// Generate a unique folio
-function generateFolio(): string {
-  const prefix = "REP";
-  const timestamp = Date.now().toString(36).toUpperCase();
-  const random = Math.random().toString(36).substring(2, 5).toUpperCase();
-  return `${prefix}-${timestamp}${random}`.substring(0, 12);
-}
-
 
 
 export function RepairProvider({ children, shopId }: RepairProviderProps) {
   const [tickets, setTickets] = useState<RepairTicket[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load tickets from localStorage
+  // Load tickets from Firestore
   useEffect(() => {
-    const storageKey = getStorageKey(shopId);
-    try {
-      const stored = localToken.get(storageKey);
-      if (stored) {
-        setTickets(JSON.parse(stored));
-      } else {
-        setTickets([]);
-      }
-    } catch (error) {
-      console.error("Error loading repair tickets:", error);
-      setTickets([]);
-    } finally {
-      setIsLoading(false);
-    }
+    if (!shopId || shopId === "default") { setIsLoading(false); return; }
+    setIsLoading(true);
+    fetch(`/api/repair/tickets?shopId=${shopId}`)
+      .then((r) => r.ok ? r.json() : { tickets: [] })
+      .then((d) => setTickets(d.tickets || []))
+      .catch(() => setTickets([]))
+      .finally(() => setIsLoading(false));
   }, [shopId]);
-
-  // Save to localStorage when tickets change
-  useEffect(() => {
-    if (!isLoading) {
-      const storageKey = getStorageKey(shopId);
-      localToken.set(storageKey, JSON.stringify(tickets));
-    }
-  }, [tickets, isLoading, shopId]);
 
   const getTicket = useCallback(
     (id: string) => tickets.find((t) => t.id === id),
@@ -141,35 +116,58 @@ export function RepairProvider({ children, shopId }: RepairProviderProps) {
   const createTicket = useCallback(
     (ticketData: Omit<RepairTicket, "id" | "folio" | "createdAt" | "updatedAt">): RepairTicket => {
       const now = new Date().toISOString();
+      const tempId = `temp-${Date.now()}`;
       const newTicket: RepairTicket = {
         ...ticketData,
-        id: `rt-${Date.now()}`,
-        folio: generateFolio(),
+        id: tempId,
+        folio: `REP-${Date.now().toString(36).toUpperCase().slice(-5)}`,
         createdAt: now,
         updatedAt: now,
       };
       setTickets((prev) => [newTicket, ...prev]);
+      fetch("/api/repair/tickets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shopId, ...newTicket, id: undefined }),
+      })
+        .then((r) => r.ok ? r.json() : null)
+        .then((d) => {
+          if (d?.ticket?.id) {
+            setTickets((prev) =>
+              prev.map((t) => t.id === tempId ? { ...t, id: d.ticket.id, folio: d.ticket.folio } : t)
+            );
+          }
+        })
+        .catch(() => {});
       return newTicket;
     },
-    []
+    [shopId]
   );
 
   const updateTicketStatus = useCallback((id: string, status: RepairStatus, notes?: string) => {
+    const now = new Date().toISOString();
     setTickets((prev) =>
       prev.map((t) => {
         if (t.id === id) {
-          const updates: Partial<RepairTicket> = {
-            status,
-            updatedAt: new Date().toISOString(),
-          };
+          const updates: Partial<RepairTicket> = { status, updatedAt: now };
           if (notes) updates.notes = notes;
-          if (status === "delivered") updates.completedAt = new Date().toISOString();
+          if (status === "delivered") updates.completedAt = now;
           return { ...t, ...updates };
         }
         return t;
       })
     );
-  }, []);
+    if (!id.startsWith("temp-")) {
+      const updateData: Record<string, unknown> = { status };
+      if (notes) updateData.notes = notes;
+      if (status === "delivered") updateData.completedAt = new Date().toISOString();
+      fetch(`/api/repair/tickets/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shopId, ...updateData }),
+      }).catch(() => {});
+    }
+  }, [shopId]);
 
   const updateTicket = useCallback((id: string, updates: Partial<RepairTicket>) => {
     setTickets((prev) =>
@@ -177,11 +175,21 @@ export function RepairProvider({ children, shopId }: RepairProviderProps) {
         t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t
       )
     );
-  }, []);
+    if (!id.startsWith("temp-")) {
+      fetch(`/api/repair/tickets/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shopId, ...updates }),
+      }).catch(() => {});
+    }
+  }, [shopId]);
 
   const deleteTicket = useCallback((id: string) => {
     setTickets((prev) => prev.filter((t) => t.id !== id));
-  }, []);
+    if (!id.startsWith("temp-")) {
+      fetch(`/api/repair/tickets/${id}?shopId=${shopId}`, { method: "DELETE" }).catch(() => {});
+    }
+  }, [shopId]);
 
   const getActiveTickets = useCallback(() => {
     return tickets.filter((t) => t.status !== "delivered");
