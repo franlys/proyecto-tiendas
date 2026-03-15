@@ -13,6 +13,7 @@ import {
 } from "@/components/shared";
 import { ServiceCard, ProductGrid } from "@/components/shop";
 import { AppointmentModal } from "@/components/shop/appointment-modal";
+import { TrainingEnrollmentModal } from "@/components/shop/training-enrollment-modal";
 import { Sparkles, MapPin, Phone, Clock, Calendar, ShoppingBag, Loader2, Instagram, Facebook, Globe, MessageCircle, ChefHat, Dumbbell } from "lucide-react";
 import {
     CATEGORY_LABELS,
@@ -82,6 +83,8 @@ export function StandardShopLayout({ shop, products, services, loadingData }: St
 
     const [isMealModalOpen, setIsMealModalOpen] = useState(false);
     const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
+    const [trainingModalOpen, setTrainingModalOpen] = useState(false);
+    const [preselectedTrainingPkg, setPreselectedTrainingPkg] = useState<string | null>(null);
 
     // 4. Table Logic
     const queryTable = searchParams.get("table");
@@ -130,6 +133,14 @@ export function StandardShopLayout({ shop, products, services, loadingData }: St
                     isBeautyBusiness={getCombinedFeatures(shop.businessTypes || [shop.businessType || "beauty"]).adminModules.beautyConsultations}
                 />
             )}
+
+            {/* Training Enrollment Modal */}
+            <TrainingEnrollmentModal
+                isOpen={trainingModalOpen}
+                onClose={() => setTrainingModalOpen(false)}
+                shop={shop}
+                preselectedPackageId={preselectedTrainingPkg}
+            />
 
             {/* Hero Section - Background handled by BackgroundEffects component globally */}
             <SectionObserver id="hero" className="relative py-16 lg:py-24 overflow-hidden">
@@ -243,13 +254,14 @@ export function StandardShopLayout({ shop, products, services, loadingData }: St
                         <ScrollReveal delay={0.5}>
                             <div className="mt-8 flex flex-wrap justify-center gap-4">
                                 {/* Training CTA - Only for training businesses */}
-                                {isTrainingBusiness && (shop?.slug || shop?.id) && (
-                                    <Link href={`/${shop?.slug || shop?.id}/training`}
+                                {isTrainingBusiness && (
+                                    <button
+                                        onClick={() => { setPreselectedTrainingPkg(null); setTrainingModalOpen(true); }}
                                         className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white font-semibold rounded-full shadow-lg shadow-orange-500/25 transition-all hover:scale-105 hover:shadow-xl"
                                     >
                                         <Dumbbell className="w-5 h-5" />
                                         Inscribirse ahora
-                                    </Link>
+                                    </button>
                                 )}
 
                                 {/* Book Appointment - Hidden for training businesses */}
@@ -349,7 +361,27 @@ export function StandardShopLayout({ shop, products, services, loadingData }: St
                                         >
                                             {servicesByCategory[category]?.map((service) => (
                                                 <StaggerItem key={service.id}>
-                                                    <ServiceCard service={service} />
+                                                    {isTrainingBusiness && service.category === "entrenamiento" ? (
+                                                        <div
+                                                            className="relative rounded-2xl overflow-hidden cursor-pointer group border border-white/10 hover:border-primary/40 transition-all bg-white/5"
+                                                            onClick={() => { setPreselectedTrainingPkg(service.id); setTrainingModalOpen(true); }}
+                                                        >
+                                                            {service.image && (
+                                                                <div className="aspect-square overflow-hidden">
+                                                                    <img src={service.image} alt={service.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                                                </div>
+                                                            )}
+                                                            <div className="p-3">
+                                                                <p className="text-white font-semibold text-sm truncate">{service.name}</p>
+                                                                <p className="text-primary font-bold text-lg">${service.price?.toLocaleString()}</p>
+                                                                <button className="mt-2 w-full py-2 rounded-xl bg-orange-500/20 text-orange-400 text-xs font-semibold hover:bg-orange-500/30 transition-colors border border-orange-500/30">
+                                                                    Inscribirse
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <ServiceCard service={service} />
+                                                    )}
                                                 </StaggerItem>
                                             ))}
                                         </StaggerContainer>
