@@ -289,8 +289,12 @@ function ShopRow({
   onPaymentAction: (shop: ManagedShop) => void;
   onDeleteClick: (shop: ManagedShop) => void;
 }) {
-  const { toggleShopStatus } = useShops();
+  const { toggleShopStatus, updateShop } = useShops();
   const [copied, setCopied] = useState(false);
+
+  const toggleWholesale = () => {
+    updateShop(shop.slug, { wholesaleEnabled: !shop.wholesaleEnabled });
+  };
 
   const copyCredentials = () => {
     const text = `Usuario: ${shop.ownerUsername}\nContraseña: ${shop.ownerPassword}`;
@@ -333,18 +337,32 @@ function ShopRow({
 
       {/* Shop Status */}
       <td className="px-6 py-4">
-        <button
-          onClick={() => toggleShopStatus(shop.slug)}
-          className={cn(
-            "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all",
-            shop.isActive
-              ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
-              : "bg-red-500/20 text-red-400 hover:bg-red-500/30"
-          )}
-        >
-          <Power className="w-4 h-4" />
-          {shop.isActive ? "Activa" : "Inactiva"}
-        </button>
+        <div className="flex flex-col gap-1.5">
+          <button
+            onClick={() => toggleShopStatus(shop.slug)}
+            className={cn(
+              "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all",
+              shop.isActive
+                ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
+                : "bg-red-500/20 text-red-400 hover:bg-red-500/30"
+            )}
+          >
+            <Power className="w-4 h-4" />
+            {shop.isActive ? "Activa" : "Inactiva"}
+          </button>
+          <button
+            onClick={toggleWholesale}
+            className={cn(
+              "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all",
+              shop.wholesaleEnabled
+                ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"
+                : "bg-white/5 text-slate-500 hover:bg-white/10 hover:text-slate-300"
+            )}
+            title={shop.wholesaleEnabled ? "Desactivar modo mayorista" : "Activar modo mayorista"}
+          >
+            🏢 {shop.wholesaleEnabled ? "Mayoreo ON" : "Mayoreo"}
+          </button>
+        </div>
       </td>
 
       {/* Payment Status */}

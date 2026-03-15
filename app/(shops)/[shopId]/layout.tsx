@@ -232,6 +232,12 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
                 */}
                 {shop.templateType === "street-drop-v1" && <StreetCart />}
                 {shop.templateType === "premium-drop-v1" && <FloatingCart />}
+                {/* Wholesale button — fixed top-right for special templates */}
+                {shop.wholesaleEnabled && (
+                  <div className="fixed top-4 right-4 z-50">
+                    <WholesaleButton shopId={shop.id} />
+                  </div>
+                )}
                 {/* Background Audio (if configured) */}
                 {shop.backgroundAudio?.enabled && shop.backgroundAudio?.url && (
                   <BackgroundAudio
