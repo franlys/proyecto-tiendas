@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Button, PhoneInput, type PhoneInputValue } from "@/components/ui";
+import { Button, PhoneInput } from "@/components/ui";
 import { useShop } from "@/components/shared";
 import {
   ArrowLeft,
@@ -128,7 +128,7 @@ export default function TrainingBookingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [enrollmentId, setEnrollmentId] = useState("");
-  const [phoneValue, setPhoneValue] = useState<PhoneInputValue>({ phone: "", country: "US" });
+  const [phoneValue, setPhoneValue] = useState("");
 
   // Calendar state
   const today = useMemo(() => {
@@ -210,7 +210,7 @@ export default function TrainingBookingPage() {
       const res = await fetch("/api/training/enrollments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ shopId: shop?.id, ...data, customerPhone: phoneValue.phone }),
+        body: JSON.stringify({ shopId: shop?.id, ...data, customerPhone: phoneValue }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
@@ -559,7 +559,7 @@ export default function TrainingBookingPage() {
               </label>
               <PhoneInput
                 value={phoneValue}
-                onChange={setPhoneValue}
+                onChange={(v) => setPhoneValue(v.fullPhone)}
                 placeholder="Tu número de WhatsApp"
               />
             </div>
@@ -598,7 +598,7 @@ export default function TrainingBookingPage() {
               </Button>
               <Button
                 onClick={goNext}
-                disabled={!data.customerName.trim() || !phoneValue.phone.trim()}
+                disabled={!data.customerName.trim() || !phoneValue.trim()}
                 className="flex-1"
               >
                 Continuar <ArrowRight className="w-4 h-4 ml-2" />
@@ -652,7 +652,7 @@ export default function TrainingBookingPage() {
               <div className="pt-4 border-t border-white/10">
                 <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">Cliente</p>
                 <p className="text-white font-medium">{data.customerName}</p>
-                <p className="text-slate-400 text-sm">{phoneValue.phone}</p>
+                <p className="text-slate-400 text-sm">{phoneValue}</p>
                 {data.customerEmail && <p className="text-slate-400 text-sm">{data.customerEmail}</p>}
                 {data.fitnessGoals && (
                   <p className="text-slate-400 text-sm mt-1 italic">"{data.fitnessGoals}"</p>
