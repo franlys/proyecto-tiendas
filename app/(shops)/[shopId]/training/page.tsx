@@ -25,7 +25,7 @@ import {
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-import type { TrainingPackage, DayOfWeek } from "@/lib/types/training-package.types";
+import type { TrainingPackage, DayOfWeek, SessionDuration } from "@/lib/types/training-package.types";
 import {
   DAY_LABELS,
   DURATION_LABELS,
@@ -635,7 +635,7 @@ export default function TrainingBookingPage() {
                 </div>
                 <div>
                   <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">Duración sesión</p>
-                  <p className="text-white text-sm font-medium">{DURATION_LABELS[data.sessionDuration as any]}</p>
+                  <p className="text-white text-sm font-medium">{DURATION_LABELS[data.sessionDuration as SessionDuration]}</p>
                 </div>
                 <div>
                   <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">Modalidad</p>
