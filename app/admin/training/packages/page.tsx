@@ -23,7 +23,7 @@ import {
 import { Button } from "@/components/ui";
 import { useAuth } from "@/components/shared";
 import { cn } from "@/lib/utils";
-import type { TrainingPackage } from "@/lib/types/training-package.types";
+import type { TrainingPackage, SessionDuration } from "@/lib/types/training-package.types";
 import {
   DURATION_LABELS,
   BILLING_CYCLE_LABELS,
@@ -356,7 +356,7 @@ export default function TrainingPackagesPage() {
                   <label className="block text-sm text-slate-400 mb-1.5">Duración por sesión</label>
                   <select value={form.sessionDuration} onChange={e => setForm(p => ({ ...p, sessionDuration: Number(e.target.value) as any }))}
                     className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-primary/50">
-                    {[30,45,60,90,120].map(n => <option key={n} value={n}>{DURATION_LABELS[n as any]}</option>)}
+                    {[30,45,60,90,120].map(n => <option key={n} value={n}>{DURATION_LABELS[n as SessionDuration]}</option>)}
                   </select>
                 </div>
               </div>
