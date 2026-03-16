@@ -297,27 +297,28 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"], 
     const phone = (sender || rawPhone).includes("@") ? (sender || rawPhone) : formatPhoneForWhatsApp(rawPhone);
 
     // ============================================================
-    // GUARD: Hidden / unresolvable phone number
-    // @lid JIDs without a participant mean WhatsApp couldn't expose
-    // the real phone. Notify the owner and stop — we can't reply.
+    // GUARD: @lid JIDs — WhatsApp privacy-preserving identifiers
+    // These arrive as @lid (with or without participant). The bot
+    // cannot reliably identify or reply to them. Notify the owner
+    // instead of sending automatic bot replies.
     // ============================================================
-    const isHiddenPhone = key.remoteJid?.includes("@lid") && !key.participant && !sender;
-    if (isHiddenPhone) {
-      console.log(`[${instance}] ⚠️ Hidden phone (unresolvable @lid JID). Notifying owner.`);
+    if (key.remoteJid?.includes("@lid")) {
+      console.log(`[${instance}] ⚠️ @lid JID received — notifying owner, no auto-reply.`);
       try {
         const { getAllNotificationPhones } = await import("@/lib/handlers/whatsapp-order.handler");
         const notifPhones = await getAllNotificationPhones(shopId);
-        const text = message.conversation || message.extendedTextMessage?.text || "(sin texto)";
+        const lidText = message.conversation || message.extendedTextMessage?.text || "(sin texto)";
+        const lidName = data.pushName || "Número oculto";
         for (const np of notifPhones) {
           if (!np.phone) continue;
           await sendTextMessage(
             instance,
             formatPhoneForWhatsApp(np.phone),
-            `📵 *Mensaje de número oculto*\n\nAlguien con número no identificable escribió al bot:\n\n_"${text}"_\n\nNo se puede responder automáticamente.`
+            `📵 *Mensaje de número oculto*\n\n*De:* ${lidName}\n*Mensaje:* _"${lidText}"_\n\nEste contacto usa un ID cifrado (LID). El bot no puede responderle automáticamente.`
           );
         }
       } catch (e) {
-        console.error(`[${instance}] Failed to notify owner of hidden phone:`, e);
+        console.error(`[${instance}] Failed to notify owner of @lid message:`, e);
       }
       return;
     }
