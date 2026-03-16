@@ -246,6 +246,22 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"], 
     }
 
     // ============================================================
+    // GUARD: Ignore own (outgoing) messages immediately
+    // Must be first — Evolution API sometimes fires webhooks for
+    // outgoing messages. Processing them creates reply loops.
+    // ============================================================
+    if (key.fromMe === true) {
+      console.log(`[${instance}] Ignored: fromMe=true (outgoing message)`);
+      return;
+    }
+
+    // Also guard against messages where remoteJid looks like a status broadcast
+    if (key.remoteJid === "status@broadcast") {
+      console.log(`[${instance}] Ignored: status@broadcast`);
+      return;
+    }
+
+    // ============================================================
     // PRE-PROCESS: Resolve Shop SLUG from Instance Name
     // ============================================================
     // The instance name contains the slug (e.g. shop_surprise_gifts_v2 -> surprise-gifts)
@@ -307,12 +323,6 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"], 
       }
 
       await sendTextMessage(instance, phone, "🏓 PONG! El webhook está activo y escuchando.");
-      return;
-    }
-
-    // Ignore own messages
-    if (key.fromMe) {
-      console.log(`[${instance}] Ignored: Message fromMe`);
       return;
     }
 
