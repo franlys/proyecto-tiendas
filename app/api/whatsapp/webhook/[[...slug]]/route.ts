@@ -296,6 +296,32 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"], 
     // Only format if it's NOT a JID (doesn't contain @)
     const phone = (sender || rawPhone).includes("@") ? (sender || rawPhone) : formatPhoneForWhatsApp(rawPhone);
 
+    // ============================================================
+    // GUARD: Hidden / unresolvable phone number
+    // @lid JIDs without a participant mean WhatsApp couldn't expose
+    // the real phone. Notify the owner and stop — we can't reply.
+    // ============================================================
+    const isHiddenPhone = key.remoteJid?.includes("@lid") && !key.participant && !sender;
+    if (isHiddenPhone) {
+      console.log(`[${instance}] ⚠️ Hidden phone (unresolvable @lid JID). Notifying owner.`);
+      try {
+        const { getAllNotificationPhones } = await import("@/lib/handlers/whatsapp-order.handler");
+        const notifPhones = await getAllNotificationPhones(shopId);
+        const text = message.conversation || message.extendedTextMessage?.text || "(sin texto)";
+        for (const np of notifPhones) {
+          if (!np.phone) continue;
+          await sendTextMessage(
+            instance,
+            formatPhoneForWhatsApp(np.phone),
+            `📵 *Mensaje de número oculto*\n\nAlguien con número no identificable escribió al bot:\n\n_"${text}"_\n\nNo se puede responder automáticamente.`
+          );
+        }
+      } catch (e) {
+        console.error(`[${instance}] Failed to notify owner of hidden phone:`, e);
+      }
+      return;
+    }
+
     const text = message.conversation || message.extendedTextMessage?.text || "";
 
     // ============================================================
