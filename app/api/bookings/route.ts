@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { sendPushToShop } from "@/lib/push-notify";
+import { adminDb } from "@/lib/firebase-admin";
 import {
   createBookingAdmin,
   getBookingsForDateAdmin,
@@ -203,6 +205,17 @@ export async function POST(request: NextRequest) {
       });
     } catch (err) {
       console.error("Error notifying owner of booking:", err);
+    }
+
+    // Send push notification to admin PWA (background)
+    const pushDb = adminDb();
+    if (pushDb) {
+        sendPushToShop(pushDb, shopId, {
+            title: "📅 Nueva Reservación",
+            body: `${bookingData.customerName} — ${bookingData.serviceName} el ${bookingData.date} a las ${bookingData.time}`,
+            tag: "new-booking",
+            data: { type: "new_booking", url: "/admin/bookings" },
+        }).catch(() => {});
     }
 
     return NextResponse.json({ booking }, { status: 201 });

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { sendTextMessage, isEvolutionConfigured, getInstanceName } from "@/lib/evolution";
 import { formatPhoneForWhatsApp } from "@/lib/utils";
+import { sendPushToShop } from "@/lib/push-notify";
 
 // GET /api/training/enrollments?shopId=xxx
 export async function GET(request: NextRequest) {
@@ -85,6 +86,14 @@ export async function POST(request: NextRequest) {
                 console.error("[Enrollments] WhatsApp notification error:", waError);
             }
         }
+
+        // Send push notification to admin PWA (background notification)
+        sendPushToShop(db, shopId, {
+            title: "🏋️ Nueva Inscripción",
+            body: `${data.customerName} se inscribió al plan ${data.packageName || "de entrenamiento"}`,
+            tag: "new-enrollment",
+            data: { type: "new_enrollment", url: "/admin/training" },
+        }).catch(() => {});
 
         return NextResponse.json({ enrollment: { id: ref.id, ...enrollment } }, { status: 201 });
     } catch (error: any) {

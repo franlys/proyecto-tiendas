@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { sendPushToShop } from "@/lib/push-notify";
 import { getShopById, getShopBySlug } from "@/lib/services/shops.service";
 import { createOrder, Order } from "@/lib/services/orders.service";
 import { sendTextMessage, sendDocument, isEvolutionConfigured, getInstanceName } from "@/lib/evolution";
@@ -440,6 +441,17 @@ export async function POST(request: NextRequest) {
         if (!isEvolutionConfigured()) {
             const msg = `¡Hola! Acabo de realizar un pedido en *${shop.name}*.\n\n🧾 *Pedido #${order.orderNumber}*\n💰 Total: $${total.toLocaleString()}\n\nPor favor confírmame cuando esté listo. ¡Gracias!`;
             whatsappUrl = `https://wa.me/${formatPhoneForWhatsApp(shop.contact?.whatsapp || shop.contact?.phone || customerPhone)}?text=${encodeURIComponent(msg)}`;
+        }
+
+        // Send push notification to admin PWA (background)
+        const db = adminDb();
+        if (db) {
+            sendPushToShop(db, shop.id, {
+                title: "🛒 Nuevo Pedido",
+                body: `#${order.orderNumber} — $${total.toLocaleString()} de ${customerName}`,
+                tag: "new-order",
+                data: { type: "new_order", url: "/admin/orders" },
+            }).catch(() => {});
         }
 
         return NextResponse.json({
