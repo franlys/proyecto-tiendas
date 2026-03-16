@@ -126,12 +126,27 @@ export function PaymentSettings({
         setError(null);
         try {
             const configRef = doc(db, "shops", shopId, "settings", "payments");
-            await setDoc(configRef, {
+
+            // Strip undefined values — Firestore rejects them
+            const stripUndefined = (obj: any): any => {
+                if (obj === null || obj === undefined) return null;
+                if (Array.isArray(obj)) return obj.filter(i => i !== undefined).map(stripUndefined);
+                if (typeof obj === "object") {
+                    const out: any = {};
+                    for (const k in obj) { if (obj[k] !== undefined) out[k] = stripUndefined(obj[k]); }
+                    return out;
+                }
+                return obj;
+            };
+
+            const payload = stripUndefined({
                 ...newConfig,
-                qrCodeUrl,
-                paymentLinkUrl,
+                qrCodeUrl: qrCodeUrl || null,
+                paymentLinkUrl: paymentLinkUrl || null,
                 updatedAt: new Date().toISOString(),
             });
+
+            await setDoc(configRef, payload);
 
             setManualConfig(newConfig);
             setSuccessMessage("Configuración guardada");
