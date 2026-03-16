@@ -286,6 +286,36 @@ function BookingsWidget({ shopId, features }: { shopId: string; features: Combin
 function TrainingEnrollmentsWidget({ shopId }: { shopId: string }) {
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [sendingWA, setSendingWA] = useState<string | null>(null);
+
+  const handleWhatsApp = async (enrollment: any) => {
+    setSendingWA(enrollment.id);
+    try {
+      const res = await fetch("/api/training/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          shopId,
+          enrollmentId: enrollment.id,
+          customerPhone: enrollment.customerPhone,
+          customerName: enrollment.customerName,
+          packageName: enrollment.packageName,
+          status: "contact",
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Bot sent it automatically — nothing else needed
+      } else if (data.whatsappUrl) {
+        // Fallback: Evolution not configured, open manual wa.me
+        window.open(data.whatsappUrl, "_blank");
+      }
+    } catch (e) {
+      console.error("Error sending WhatsApp:", e);
+    } finally {
+      setSendingWA(null);
+    }
+  };
 
   useEffect(() => {
     async function fetchEnrollments() {
@@ -394,15 +424,14 @@ function TrainingEnrollmentsWidget({ shopId }: { shopId: string }) {
               <div className="flex flex-col items-end gap-1">
                 {getStatusBadge(enrollment.status || "pending")}
                 {enrollment.customerPhone && (
-                  <a
-                    href={`https://wa.me/${enrollment.customerPhone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola ${enrollment.customerName}, sobre tu inscripción al plan ${enrollment.packageName}...`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-2 py-1 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 text-xs flex items-center gap-1"
+                  <button
+                    onClick={() => handleWhatsApp(enrollment)}
+                    disabled={sendingWA === enrollment.id}
+                    className="px-2 py-1 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 text-xs flex items-center gap-1 disabled:opacity-50"
                   >
                     <Phone className="w-3 h-3" />
-                    WhatsApp
-                  </a>
+                    {sendingWA === enrollment.id ? "Enviando..." : "WhatsApp"}
+                  </button>
                 )}
               </div>
             </div>
