@@ -114,10 +114,34 @@ export default function TrainingEnrollmentsPage() {
     if (selected?.id === id) setSelected(null);
   };
 
-  const sendWhatsApp = (enrollment: TrainingEnrollment) => {
-    const days = enrollment.preferredDays.map(d => DAY_LABELS[d]).join(", ");
-    const msg = `¡Hola ${enrollment.customerName}! 👋\n\nTu inscripción al plan *${enrollment.packageName}* ha sido confirmada.\n\n📅 *Días:* ${days}\n⏰ *Horario:* ${enrollment.preferredTime} hrs\n🗓️ *Inicio:* ${new Date(enrollment.startDate + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })}\n\n¡Nos vemos pronto! 💪`;
-    window.open(`https://wa.me/${enrollment.customerPhone.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`, "_blank");
+  const [sendingWA, setSendingWA] = useState<string | null>(null);
+
+  const sendWhatsApp = async (enrollment: TrainingEnrollment) => {
+    if (!user?.shopId) return;
+    setSendingWA(enrollment.id);
+    try {
+      const res = await fetch("/api/training/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          shopId: user.shopId,
+          enrollmentId: enrollment.id,
+          customerPhone: enrollment.customerPhone,
+          customerName: enrollment.customerName,
+          packageName: enrollment.packageName,
+          status: "active",
+        }),
+      });
+      const data = await res.json();
+      if (data.whatsappUrl) {
+        // Fallback: Evolution not configured
+        window.open(data.whatsappUrl, "_blank");
+      }
+    } catch (e) {
+      console.error("Error sending WhatsApp:", e);
+    } finally {
+      setSendingWA(null);
+    }
   };
 
   // Filtered list
@@ -292,8 +316,10 @@ export default function TrainingEnrollmentsPage() {
                         ))}
                       </div>
                       <div className="flex gap-2">
-                        <Button size="sm" onClick={() => sendWhatsApp(enrollment)} className="bg-green-600 hover:bg-green-500">
-                          <MessageCircle className="w-3.5 h-3.5 mr-1.5" /> WhatsApp
+                        <Button size="sm" onClick={() => sendWhatsApp(enrollment)} disabled={sendingWA === enrollment.id} className="bg-green-600 hover:bg-green-500 disabled:opacity-50">
+                          {sendingWA === enrollment.id
+                            ? <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Enviando...</>
+                            : <><MessageCircle className="w-3.5 h-3.5 mr-1.5" /> WhatsApp</>}
                         </Button>
                         <Button size="sm" variant="outline" onClick={() => deleteEnrollment(enrollment.id)} className="text-red-400 border-red-500/30 hover:bg-red-500/10">
                           <Trash2 className="w-3.5 h-3.5" />
