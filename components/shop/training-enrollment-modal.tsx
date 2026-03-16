@@ -23,6 +23,10 @@ import {
     X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { ShopManualPaymentConfig, ManualPaymentMethod } from "@/lib/types/payment.types";
+import { MANUAL_PAYMENT_METHOD_LABELS, MANUAL_PAYMENT_METHOD_ICONS } from "@/lib/types/payment.types";
+import { storage } from "@/lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import type { TrainingPackage, DayOfWeek, SessionDuration } from "@/lib/types/training-package.types";
 import {
     DAY_LABELS,
@@ -35,15 +39,17 @@ import {
 // Types & constants
 // ─────────────────────────────────────────────
 
-type TrainingStep = "plan" | "days" | "start" | "time" | "info" | "confirm";
+type TrainingStep = "plan" | "days" | "start" | "time" | "info" | "payment" | "confirm";
 
-const STEPS: TrainingStep[] = ["plan", "days", "start", "time", "info", "confirm"];
+const ALL_STEPS: TrainingStep[] = ["plan", "days", "start", "time", "info", "payment", "confirm"];
+const STEPS_NO_PAYMENT: TrainingStep[] = ["plan", "days", "start", "time", "info", "confirm"];
 const STEP_LABELS: Record<TrainingStep, string> = {
     plan: "Plan",
     days: "Días",
     start: "Inicio",
     time: "Horario",
     info: "Datos",
+    payment: "Pago",
     confirm: "Confirmar",
 };
 
@@ -145,6 +151,13 @@ export function TrainingEnrollmentModal({
     const [enrollmentId, setEnrollmentId] = useState("");
     const [phoneValue, setPhoneValue] = useState("");
 
+    // Payment state
+    const [paymentConfig, setPaymentConfig] = useState<ShopManualPaymentConfig | null>(null);
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<ManualPaymentMethod | null>(null);
+    const [receiptFile, setReceiptFile] = useState<File | null>(null);
+    const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+    const [uploadingReceipt, setUploadingReceipt] = useState(false);
+
     // Schedule config from admin
     const [availableDays, setAvailableDays] = useState<DayOfWeek[]>(WEEK_DAYS);
     const [configuredSlots, setConfiguredSlots] = useState<string[]>(TIME_SLOTS);
@@ -177,13 +190,32 @@ export function TrainingEnrollmentModal({
             setAvailableDays(WEEK_DAYS);
             setConfiguredSlots(TIME_SLOTS);
             setCalMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+            setSelectedPaymentMethod(null);
+            setReceiptFile(null);
+            setReceiptPreview(null);
         }
     }, [isOpen, today]);
 
-    // Load training packages + schedule when modal opens
+    // Derived: which steps to show (skip "payment" if no active methods)
+    const activePaymentMethods = paymentConfig?.enabled
+        ? (paymentConfig.paymentMethods || []).filter(m => m.isActive)
+        : [];
+    const STEPS = activePaymentMethods.length > 0 ? ALL_STEPS : STEPS_NO_PAYMENT;
+
+    // Load training packages + schedule + payment config when modal opens
     useEffect(() => {
         if (!isOpen || !shop?.id) return;
         setPackagesLoading(true);
+
+        // Load payment config from Firestore
+        import("@/lib/firebase").then(({ db }) =>
+            import("firebase/firestore").then(({ doc, getDoc }) =>
+                getDoc(doc(db, "shops", shop.id, "settings", "payments"))
+            )
+        ).then(snap => {
+            if (snap.exists()) setPaymentConfig(snap.data() as ShopManualPaymentConfig);
+        }).catch(() => {});
+
         Promise.all([
             fetch(`/api/training/packages?shopId=${shop.id}`).then(r => r.json()),
             fetch(`/api/training/schedule?shopId=${shop.id}`).then(r => r.json()),
@@ -276,10 +308,34 @@ export function TrainingEnrollmentModal({
     const handleSubmit = async () => {
         setSubmitting(true);
         try {
+            let receiptUrl: string | null = null;
+
+            // Upload receipt if one was selected
+            if (receiptFile && shop?.id) {
+                setUploadingReceipt(true);
+                const ext = receiptFile.name.split(".").pop();
+                const storageRef = ref(storage, `receipts/${shop.id}/training-${Date.now()}.${ext}`);
+                await uploadBytes(storageRef, receiptFile);
+                receiptUrl = await getDownloadURL(storageRef);
+                setUploadingReceipt(false);
+            }
+
+            const paymentInfo = selectedPaymentMethod ? {
+                paymentMethodId: selectedPaymentMethod.id,
+                paymentMethodName: selectedPaymentMethod.name,
+                paymentMethodType: selectedPaymentMethod.type,
+                receiptUrl,
+            } : null;
+
             const res = await fetch("/api/training/enrollments", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ shopId: shop?.id, ...data, customerPhone: phoneValue }),
+                body: JSON.stringify({
+                    shopId: shop?.id,
+                    ...data,
+                    customerPhone: phoneValue,
+                    ...(paymentInfo && { paymentInfo }),
+                }),
             });
             const json = await res.json();
             if (!res.ok) throw new Error(json.error);
@@ -289,6 +345,7 @@ export function TrainingEnrollmentModal({
             alert("Error al enviar la solicitud: " + err.message);
         } finally {
             setSubmitting(false);
+            setUploadingReceipt(false);
         }
     };
 
@@ -399,6 +456,7 @@ export function TrainingEnrollmentModal({
                                     {step === "start" && "¿Cuándo quieres empezar?"}
                                     {step === "time" && "Elige tu horario preferido"}
                                     {step === "info" && "Tus datos"}
+                                    {step === "payment" && "Método de pago"}
                                     {step === "confirm" && "Confirma tu inscripción"}
                                 </h2>
                             </div>
@@ -726,6 +784,115 @@ export function TrainingEnrollmentModal({
                                 </div>
                             )}
 
+                            {/* ── STEP: PAYMENT ── */}
+                            {step === "payment" && (
+                                <div className="space-y-4">
+                                    <p className="text-slate-400 text-sm">
+                                        Selecciona cómo deseas realizar el pago de{" "}
+                                        <span className="text-white font-semibold">{formatPrice(data.packagePrice, data.packageBillingCycle)}</span>
+                                    </p>
+
+                                    {/* Payment method selector */}
+                                    <div className="space-y-2">
+                                        {activePaymentMethods.map(method => (
+                                            <button
+                                                key={method.id}
+                                                type="button"
+                                                onClick={() => setSelectedPaymentMethod(method)}
+                                                className={cn(
+                                                    "w-full flex items-center gap-4 p-4 rounded-xl border transition-all text-left",
+                                                    selectedPaymentMethod?.id === method.id
+                                                        ? "bg-primary/15 border-primary"
+                                                        : "bg-white/5 border-white/10 hover:bg-white/10"
+                                                )}
+                                            >
+                                                <span className="text-2xl">{MANUAL_PAYMENT_METHOD_ICONS[method.type]}</span>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-white font-medium">{method.name}</p>
+                                                    <p className="text-slate-400 text-xs">{MANUAL_PAYMENT_METHOD_LABELS[method.type]}</p>
+                                                    {method.type === "bank_transfer" && method.bankName && (
+                                                        <p className="text-slate-300 text-xs mt-0.5">
+                                                            {method.bankName}{method.accountHolder ? ` • ${method.accountHolder}` : ""}{method.accountNumber ? ` • ${method.accountNumber}` : ""}
+                                                        </p>
+                                                    )}
+                                                    {(method.type === "zelle" || method.type === "paypal_manual") && method.email && (
+                                                        <p className="text-slate-300 text-xs mt-0.5">{method.email}</p>
+                                                    )}
+                                                    {method.type === "mobile_payment" && method.phoneNumber && (
+                                                        <p className="text-slate-300 text-xs mt-0.5">{method.phoneNumber}{method.bankName ? ` • ${method.bankName}` : ""}</p>
+                                                    )}
+                                                    {method.type === "payment_link" && method.paymentLink && (
+                                                        <a
+                                                            href={method.paymentLink}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            onClick={e => e.stopPropagation()}
+                                                            className="text-primary text-xs mt-0.5 hover:underline"
+                                                        >
+                                                            Abrir enlace de pago →
+                                                        </a>
+                                                    )}
+                                                </div>
+                                                {selectedPaymentMethod?.id === method.id && (
+                                                    <Check className="w-5 h-5 text-primary shrink-0" />
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Receipt upload */}
+                                    {selectedPaymentMethod && paymentConfig?.requiresReceipt && (
+                                        <div>
+                                            <label className="block text-sm text-slate-400 mb-2">
+                                                Comprobante de pago (requerido)
+                                            </label>
+                                            {receiptPreview ? (
+                                                <div className="relative">
+                                                    <img src={receiptPreview} alt="Comprobante" className="w-full max-h-40 object-contain rounded-xl border border-white/20 bg-white/5" />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { setReceiptFile(null); setReceiptPreview(null); }}
+                                                        className="absolute top-2 right-2 p-1.5 bg-red-500/80 rounded-lg hover:bg-red-500"
+                                                    >
+                                                        <X className="w-3.5 h-3.5 text-white" />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <label className="flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-2 border-dashed border-white/20 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                                                    <span className="text-2xl">📎</span>
+                                                    <span className="text-sm text-slate-400">Toca para subir foto del comprobante</span>
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        onChange={e => {
+                                                            const file = e.target.files?.[0];
+                                                            if (file) {
+                                                                setReceiptFile(file);
+                                                                setReceiptPreview(URL.createObjectURL(file));
+                                                            }
+                                                        }}
+                                                    />
+                                                </label>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    <div className="flex gap-3 pt-2">
+                                        <Button variant="outline" onClick={goBack} className="flex-1">
+                                            <ArrowLeft className="w-4 h-4 mr-2" /> Atrás
+                                        </Button>
+                                        <Button
+                                            onClick={goNext}
+                                            disabled={!selectedPaymentMethod || (paymentConfig?.requiresReceipt && !receiptFile)}
+                                            className="flex-1"
+                                        >
+                                            Continuar <ArrowRight className="w-4 h-4 ml-2" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* ── STEP: CONFIRM ── */}
                             {step === "confirm" && (
                                 <div>
@@ -779,12 +946,25 @@ export function TrainingEnrollmentModal({
                                         </div>
                                     </div>
 
+                                    {/* Payment summary if method selected */}
+                                    {selectedPaymentMethod && (
+                                        <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-3 flex items-center gap-3">
+                                            <span className="text-xl">{MANUAL_PAYMENT_METHOD_ICONS[selectedPaymentMethod.type]}</span>
+                                            <div>
+                                                <p className="text-green-400 text-sm font-medium">Pago: {selectedPaymentMethod.name}</p>
+                                                {receiptFile && <p className="text-green-300/70 text-xs">✓ Comprobante adjunto</p>}
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <div className="flex gap-3">
                                         <Button variant="outline" onClick={goBack} className="flex-1">
                                             <ArrowLeft className="w-4 h-4 mr-2" /> Atrás
                                         </Button>
-                                        <Button onClick={handleSubmit} disabled={submitting} className="flex-1 bg-green-600 hover:bg-green-500">
-                                            {submitting ? (
+                                        <Button onClick={handleSubmit} disabled={submitting || uploadingReceipt} className="flex-1 bg-green-600 hover:bg-green-500">
+                                            {uploadingReceipt ? (
+                                                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Subiendo comprobante...</>
+                                            ) : submitting ? (
                                                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Enviando...</>
                                             ) : (
                                                 <><CheckCircle2 className="w-4 h-4 mr-2" /> Confirmar</>
