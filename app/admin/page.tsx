@@ -282,6 +282,137 @@ function BookingsWidget({ shopId, features }: { shopId: string; features: Combin
   );
 }
 
+// Training Enrollments Widget for Dashboard
+function TrainingEnrollmentsWidget({ shopId }: { shopId: string }) {
+  const [enrollments, setEnrollments] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchEnrollments() {
+      if (!shopId || shopId === "default") {
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/training/enrollments?shopId=${shopId}&limit=5`);
+        if (res.ok) {
+          const data = await res.json();
+          setEnrollments((data.enrollments || []).slice(0, 5));
+        }
+      } catch (e) {
+        console.error("Error fetching enrollments:", e);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchEnrollments();
+  }, [shopId]);
+
+  const getStatusBadge = (status: string) => {
+    const styles: Record<string, string> = {
+      pending: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+      active: "bg-green-500/20 text-green-400 border-green-500/30",
+      completed: "bg-slate-500/20 text-slate-400 border-slate-500/30",
+      cancelled: "bg-red-500/20 text-red-400 border-red-500/30",
+    };
+    const labels: Record<string, string> = {
+      pending: "Pendiente",
+      active: "Activo",
+      completed: "Completado",
+      cancelled: "Cancelado",
+    };
+    const style = styles[status] || "bg-slate-500/20 text-slate-400 border-slate-500/30";
+    const label = labels[status] || status;
+    return (
+      <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${style}`}>
+        {label}
+      </span>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="glass-panel rounded-2xl p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Dumbbell className="w-5 h-5 text-orange-400" />
+          <h3 className="text-lg font-semibold text-white">Próximas Inscripciones</h3>
+        </div>
+        <div className="text-center py-8 text-slate-400">Cargando...</div>
+      </div>
+    );
+  }
+
+  if (enrollments.length === 0) {
+    return (
+      <div className="glass-panel rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+            <Dumbbell className="w-5 h-5 text-orange-400" />
+            Próximas Inscripciones
+          </h3>
+        </div>
+        <div className="text-center py-8 text-slate-400">
+          <Dumbbell className="w-12 h-12 mx-auto mb-3 opacity-50" />
+          <p>No hay inscripciones recientes</p>
+          <p className="text-xs mt-1">Las inscripciones aparecerán aquí</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="glass-panel rounded-2xl p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+          <Dumbbell className="w-5 h-5 text-orange-400" />
+          Próximas Inscripciones
+          <span className="px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 text-xs font-bold">
+            {enrollments.length}
+          </span>
+        </h3>
+        <Link href="/admin/training" className="text-sm text-primary hover:underline">
+          Ver todas
+        </Link>
+      </div>
+
+      <div className="space-y-3">
+        {enrollments.map((enrollment) => (
+          <div
+            key={enrollment.id}
+            className="rounded-xl bg-white/5 border border-white/10 p-4"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-semibold text-white">{enrollment.customerName}</p>
+                <p className="text-sm text-slate-400">{enrollment.packageName}</p>
+                {enrollment.startDate && (
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Inicio: {new Date(enrollment.startDate + "T12:00:00").toLocaleDateString("es", { day: "numeric", month: "short" })}
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                {getStatusBadge(enrollment.status || "pending")}
+                {enrollment.customerPhone && (
+                  <a
+                    href={`https://wa.me/${enrollment.customerPhone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola ${enrollment.customerName}, sobre tu inscripción al plan ${enrollment.packageName}...`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-2 py-1 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 text-xs flex items-center gap-1"
+                  >
+                    <Phone className="w-3 h-3" />
+                    WhatsApp
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // Pending Orders Widget for Dashboard
 function PendingOrdersWidget({ shopId, features }: { shopId: string; features: CombinedBusinessFeatures }) {
   const { orders, updateOrderStatus, getPendingOrders } = useSalesOrders();
@@ -589,11 +720,14 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
             {features.dashboardWidgets.pendingOrders && (
               <PendingOrdersWidget shopId={shop?.id || shop?.slug || "default"} features={features} />
             )}
-            {features.dashboardWidgets.upcomingBookings && (
+            {features.hasTraining && (
+              <TrainingEnrollmentsWidget shopId={shop?.id || shop?.slug || "default"} />
+            )}
+            {features.dashboardWidgets.upcomingBookings && !features.hasTraining && (
               <BookingsWidget shopId={shop?.id || shop?.slug || "default"} features={features} />
             )}
-            {/* If neither orders nor bookings, show a placeholder */}
-            {!features.dashboardWidgets.pendingOrders && !features.dashboardWidgets.upcomingBookings && (
+            {/* If neither orders nor bookings nor training, show a placeholder */}
+            {!features.dashboardWidgets.pendingOrders && !features.dashboardWidgets.upcomingBookings && !features.hasTraining && (
               <div className="lg:col-span-2 glass-panel rounded-2xl p-6 text-center">
                 <Briefcase className="w-12 h-12 mx-auto mb-3 text-slate-400 opacity-50" />
                 <p className="text-slate-300">Panel de {features.config.label}</p>

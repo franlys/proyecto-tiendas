@@ -679,6 +679,7 @@ export function TrainingEnrollmentModal({
                                             value={phoneValue}
                                             onChange={(v) => setPhoneValue(v.fullPhone)}
                                             placeholder="Tu número de WhatsApp"
+                                            variant="glass"
                                         />
                                     </div>
 
