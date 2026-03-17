@@ -1050,20 +1050,6 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"], 
               `_Escribe *Menú* para ver todas las opciones_`;
 
 
-            // Send logo image with welcome message if logo exists
-            // If image succeeds → return (no duplicate text message)
-            // If image fails → fall through to text-only
-            if (shopInfo?.logoUrl) {
-              try {
-                console.log(`[${instance}] 🖼️ Sending welcome image to ${phone}`);
-                await sendImage(instance, phone, shopInfo.logoUrl, welcomeCaption);
-                console.log(`[${instance}] ✅ Welcome image sent`);
-                return; // Image delivered — don't send a second text message
-              } catch (imgError) {
-                console.error(`[${instance}] ❌ Error sending welcome image, falling back to text:`, imgError);
-              }
-            }
-
             responseText = welcomeCaption;
             break;
 
