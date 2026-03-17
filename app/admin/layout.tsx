@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { ThemeProvider, AuthProvider, useAuth, ShopsProvider, useShops, AgencyProvider, NotificationsProvider } from "@/components/shared";
 import { SupportWidget } from "@/components/admin/support-widget";
+import { PushSetup } from "@/components/admin/push-setup";
 
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -57,6 +58,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider shop={shop as any}>
       <NotificationsProvider shopId={shopId}>
+        {shopId && <PushSetup shopId={shopId} />}
         {children}
       </NotificationsProvider>
     </ThemeProvider>
