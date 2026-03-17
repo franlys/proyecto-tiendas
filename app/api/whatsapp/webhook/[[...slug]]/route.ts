@@ -1051,18 +1051,17 @@ async function handleNewMessage(instance: string, data: WebhookPayload["data"], 
 
 
             // Send logo image with welcome message if logo exists
+            // If image succeeds → return (no duplicate text message)
+            // If image fails → fall through to text-only
             if (shopInfo?.logoUrl) {
               try {
-                console.log(`[${instance}] 🖼️ Sending welcome image to ${phone} using URL: ${shopInfo.logoUrl}`);
-                const imgResult = await sendImage(instance, phone, shopInfo.logoUrl, welcomeCaption);
-                console.log(`[${instance}] ✅ Welcome image result:`, JSON.stringify(imgResult));
-                // We DON'T return here anymore - let it send the text message too as a fallback/confirmation
+                console.log(`[${instance}] 🖼️ Sending welcome image to ${phone}`);
+                await sendImage(instance, phone, shopInfo.logoUrl, welcomeCaption);
+                console.log(`[${instance}] ✅ Welcome image sent`);
+                return; // Image delivered — don't send a second text message
               } catch (imgError) {
-                console.error(`[${instance}] ❌ Error sending welcome image:`, imgError);
-                // Fall back to text-only message
+                console.error(`[${instance}] ❌ Error sending welcome image, falling back to text:`, imgError);
               }
-            } else {
-              console.log(`[${instance}] ℹ️ No logoUrl found for shop, using text-only welcome`);
             }
 
             responseText = welcomeCaption;
