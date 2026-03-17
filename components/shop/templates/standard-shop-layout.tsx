@@ -278,7 +278,10 @@ export function StandardShopLayout({ shop, products, services, loadingData }: St
                                 {/* Meal Prep Constructor Button - For Meal Prep shops or shops with Meal Prep category */}
                                 {(shop?.businessType === "meal_prep" || products.some(p => (p as any).category === "meal_prep_package")) && (
                                     <button
-                                        onClick={() => setIsMealModalOpen(true)}
+                                        onClick={() => {
+                                            if (activeTab !== "productos") setActiveTab("productos");
+                                            setIsMealModalOpen(true);
+                                        }}
                                         className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 text-white font-semibold rounded-full shadow-lg shadow-green-500/25 transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/30"
                                     >
                                         <ChefHat className="w-5 h-5" />
