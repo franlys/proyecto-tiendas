@@ -8,9 +8,10 @@ import { cn } from "@/lib/utils";
 
 interface WholesaleButtonProps {
   shopId: string;
+  className?: string;
 }
 
-export function WholesaleButton({ shopId }: WholesaleButtonProps) {
+export function WholesaleButton({ shopId, className }: WholesaleButtonProps) {
   const { isWholesaleMode, wholesalerName } = useWholesale();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -23,7 +24,8 @@ export function WholesaleButton({ shopId }: WholesaleButtonProps) {
           "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
           isWholesaleMode
             ? "bg-amber-500/20 border border-amber-500/40 text-amber-400 hover:bg-amber-500/30"
-            : "bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white"
+            : "bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white",
+          className
         )}
       >
         {isWholesaleMode ? (

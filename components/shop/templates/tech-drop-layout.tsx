@@ -179,7 +179,12 @@ export function TechDropLayout({ shop, products, services, loadingData }: TechDr
                     </div>
 
                     <div className="flex items-center gap-4">
-                        {shop.wholesaleEnabled && <WholesaleButton shopId={shop.id} />}
+                        {shop.wholesaleEnabled && (
+                            <WholesaleButton
+                                shopId={shop.id}
+                                className="px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest"
+                            />
+                        )}
                         <CartButton cart={cart} onOpen={() => setIsCartOpen(true)} />
                     </div>
                 </div>

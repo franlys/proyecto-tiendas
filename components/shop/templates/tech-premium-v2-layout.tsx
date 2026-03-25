@@ -308,7 +308,12 @@ export function TechPremiumV2Layout({ shop, products, services, loadingData }: T
 
                     {/* Search + Cart */}
                     <div className="flex items-center gap-3">
-                        {shop.wholesaleEnabled && <WholesaleButton shopId={shop.id} />}
+                        {shop.wholesaleEnabled && (
+                            <WholesaleButton
+                                shopId={shop.id}
+                                className="px-4 py-2 rounded-lg text-[11px] font-bold tracking-wide"
+                            />
+                        )}
                         <div className="hidden sm:flex items-center gap-2 px-3.5 py-2 bg-white/5 border border-white/8 rounded-lg focus-within:border-white/20 transition-colors">
                             <Search className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />
                             <input
