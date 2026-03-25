@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Plus, Minus, ShoppingBag, Tag, ChevronDown, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCart, useShop, useVisualFeedback } from "@/components/shared";
+import { useCart, useShop, useVisualFeedback, useWholesale } from "@/components/shared";
 import { useBusinessFeatures, useCombinedBusinessFeatures } from "@/lib/hooks/use-business-features";
 import type { Product, ProductVariant, ProductColor } from "@/lib/constants";
 import type { SelectedExtra } from "@/lib/types/product-extra.types";
@@ -268,6 +268,7 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
 export function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: Product, onClose: () => void, hidePriceIfZero?: boolean }) {
   const { addProduct, getVariantQuantity, removeVariant, updateVariantQuantity } = useCart();
   const { triggerFlyToCart } = useVisualFeedback();
+  const { isWholesaleMode } = useWholesale();
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Lock body scroll when modal is open (iOS Safari fix)
@@ -529,7 +530,7 @@ export function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { pro
                         ) : <div />}
                         {isOutOfStock ? (
                           <span className="text-[8px] font-black text-red-400 uppercase tracking-widest">Agotado</span>
-                        ) : variant.stock !== undefined && (
+                        ) : variant.stock !== undefined && isWholesaleMode && (
                           <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Stock: {variant.stock}</span>
                         )}
                       </div>

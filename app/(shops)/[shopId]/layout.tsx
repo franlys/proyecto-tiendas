@@ -214,7 +214,7 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
         <InventoryProvider shopId={shop.id}>
         <CartProvider shopId={shop.id} templateType={shop.templateType}>
           <ShopLayoutClient shop={shop}>
-            {shop.templateType === "premium-drop-v1" || shop.templateType === "street-drop-v1" || shop.templateType === "cosmic-drop-v1" ? (
+            {shop.templateType === "premium-drop-v1" || shop.templateType === "street-drop-v1" || shop.templateType === "cosmic-drop-v1" || shop.templateType === "tech-drop-v1" || shop.templateType === "tech-3d-v1" || shop.templateType === "tech-premium-v2" ? (
               // Premium/Special templates handle their own layout completely
               <>
                 <main className="min-h-screen relative overflow-hidden bg-[#1a1a1a]">

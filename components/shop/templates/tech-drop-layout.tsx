@@ -26,6 +26,7 @@ import { useCart, useCursor, CursorProvider } from "@/components/shared";
 import type { Product, Service } from "@/lib/constants";
 import { Button } from "@/components/ui";
 import { ProductOptionsModal } from "@/components/shop/product-card";
+import { WholesaleButton } from "@/components/shop";
 import { useVisualFeedback } from "@/components/shared";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -78,6 +79,13 @@ export function TechDropLayout({ shop, products, services, loadingData }: TechDr
         return products.filter(p => {
             const matchesCategory = activeCategory === "todos" || p.category === activeCategory;
             const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+            // Hide products with explicit stock=0 (unless infiniteStock)
+            if (!p.infiniteStock && p.stock !== undefined) {
+                const hasVariants = p.variants && p.variants.length > 0;
+                const anyVariantInStock = hasVariants ? p.variants!.some(v => (Number(v.stock) || 0) > 0) : false;
+                const isOutOfStock = (Number(p.stock) || 0) === 0 && (!hasVariants || !anyVariantInStock);
+                if (isOutOfStock) return false;
+            }
             return matchesCategory && matchesSearch;
         });
     }, [products, activeCategory, searchQuery]);
@@ -171,6 +179,7 @@ export function TechDropLayout({ shop, products, services, loadingData }: TechDr
                     </div>
 
                     <div className="flex items-center gap-4">
+                        {shop.wholesaleEnabled && <WholesaleButton shopId={shop.id} />}
                         <CartButton cart={cart} onOpen={() => setIsCartOpen(true)} />
                     </div>
                 </div>
@@ -681,9 +690,17 @@ function ProductCard({ product, index }: { product: Product, index: number }) {
                             {product.name}
                         </h4>
                         <div className="flex flex-col items-end">
-                            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
-                                ${product.price.toLocaleString()}
-                            </span>
+                            {(() => {
+                                const hasVariants = product.variants && product.variants.length > 0;
+                                const minPrice = hasVariants ? Math.min(...product.variants!.map(v => v.price)) : (product.promoPrice || product.price);
+                                const maxPrice = hasVariants ? Math.max(...product.variants!.map(v => v.price)) : minPrice;
+                                const showRange = hasVariants && maxPrice > minPrice;
+                                return (
+                                    <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
+                                        {showRange ? `Desde $${minPrice.toLocaleString()}` : `$${minPrice.toLocaleString()}`}
+                                    </span>
+                                );
+                            })()}
                             {/* Pricing Pulse for Tech Theme */}
                             <div className="w-2 h-2 rounded-full bg-cyan-500 animate-ping opacity-75 mt-1" />
                         </div>
