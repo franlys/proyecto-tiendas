@@ -233,8 +233,8 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
                 */}
                 {shop.templateType === "street-drop-v1" && <StreetCart />}
                 {shop.templateType === "premium-drop-v1" && <FloatingCart />}
-                {/* Wholesale button — fixed top-right for special templates */}
-                {shop.wholesaleEnabled && (
+                {/* Wholesale button — fixed top-right only for templates without their own header */}
+                {shop.wholesaleEnabled && (shop.templateType === "premium-drop-v1" || shop.templateType === "street-drop-v1" || shop.templateType === "cosmic-drop-v1") && (
                   <div className="fixed top-4 right-4 z-50">
                     <WholesaleButton shopId={shop.id} />
                   </div>
