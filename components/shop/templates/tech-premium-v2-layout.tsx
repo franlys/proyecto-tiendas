@@ -12,10 +12,10 @@ import {
     ArrowUpRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCart } from "@/components/shared";
+import { useCart, useVisualFeedback } from "@/components/shared";
 import type { Product, Service } from "@/lib/constants";
 import { ProductOptionsModal } from "@/components/shop/product-card";
-import { useVisualFeedback } from "@/components/shared";
+import { WholesaleButton } from "@/components/shop";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { LogoAnimation } from "@/components/shop/logo-animation";
@@ -118,7 +118,13 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
                     </div>
 
                     <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/5">
-                        <span className="text-base font-bold text-white">${product.price.toLocaleString()}</span>
+                        <span className="text-base font-bold text-white">
+                            {(() => {
+                                const minPrice = hasVariants ? Math.min(...product.variants!.map(v => v.price)) : (product.promoPrice || product.price);
+                                const maxPrice = hasVariants ? Math.max(...product.variants!.map(v => v.price)) : minPrice;
+                                return maxPrice > minPrice ? `Desde $${minPrice.toLocaleString()}` : `$${minPrice.toLocaleString()}`;
+                            })()}
+                        </span>
                         <button
                             onClick={handleAction}
                             disabled={isOutOfStock && !hasOptions}
@@ -254,6 +260,11 @@ export function TechPremiumV2Layout({ shop, products, services, loadingData }: T
         products.filter(p => {
             const catOk = activeCategory === "todos" || p.category === activeCategory;
             const searchOk = p.name.toLowerCase().includes(search.toLowerCase());
+            if (!p.infiniteStock && p.stock !== undefined) {
+                const hasVariants = p.variants && p.variants.length > 0;
+                const anyVariantInStock = hasVariants ? p.variants!.some(v => (Number(v.stock) || 0) > 0) : false;
+                if ((Number(p.stock) || 0) === 0 && (!hasVariants || !anyVariantInStock)) return false;
+            }
             return catOk && searchOk;
         }),
         [products, activeCategory, search]
@@ -297,6 +308,7 @@ export function TechPremiumV2Layout({ shop, products, services, loadingData }: T
 
                     {/* Search + Cart */}
                     <div className="flex items-center gap-3">
+                        {shop.wholesaleEnabled && <WholesaleButton shopId={shop.id} />}
                         <div className="hidden sm:flex items-center gap-2 px-3.5 py-2 bg-white/5 border border-white/8 rounded-lg focus-within:border-white/20 transition-colors">
                             <Search className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />
                             <input
