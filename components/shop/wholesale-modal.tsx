@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { X, Lock, Unlock, Sparkles, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useWholesale } from "@/components/shared";
@@ -18,8 +19,11 @@ export function WholesaleModal({ isOpen, onClose, shopId }: WholesaleModalProps)
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => { setMounted(true); }, []);
+
+  if (!isOpen || !mounted) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,8 +55,8 @@ export function WholesaleModal({ isOpen, onClose, shopId }: WholesaleModalProps)
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
@@ -169,6 +173,7 @@ export function WholesaleModal({ isOpen, onClose, shopId }: WholesaleModalProps)
           </form>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
