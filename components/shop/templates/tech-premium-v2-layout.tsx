@@ -120,9 +120,16 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
                     <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/5">
                         <span className="text-base font-bold text-white">
                             {(() => {
-                                const minPrice = hasVariants ? Math.min(...product.variants!.map(v => v.price)) : (product.promoPrice || product.price);
-                                const maxPrice = hasVariants ? Math.max(...product.variants!.map(v => v.price)) : minPrice;
-                                return maxPrice > minPrice ? `Desde $${minPrice.toLocaleString()}` : `$${minPrice.toLocaleString()}`;
+                                const nonZeroPrices = hasVariants
+                                    ? product.variants!.map(v => Number(v.price) || 0).filter(p => p > 0)
+                                    : [];
+                                const base = Number(product.promoPrice || product.price) || 0;
+                                const minPrice = nonZeroPrices.length > 0 ? Math.min(...nonZeroPrices) : base;
+                                const maxPrice = nonZeroPrices.length > 0 ? Math.max(...nonZeroPrices) : base;
+                                if (minPrice === 0) return "Consultar";
+                                return maxPrice > minPrice
+                                    ? `Desde $${minPrice.toLocaleString()}`
+                                    : `$${minPrice.toLocaleString()}`;
                             })()}
                         </span>
                         <button

@@ -696,13 +696,21 @@ function ProductCard({ product, index }: { product: Product, index: number }) {
                         </h4>
                         <div className="flex flex-col items-end">
                             {(() => {
-                                const hasVariants = product.variants && product.variants.length > 0;
-                                const minPrice = hasVariants ? Math.min(...product.variants!.map(v => v.price)) : (product.promoPrice || product.price);
-                                const maxPrice = hasVariants ? Math.max(...product.variants!.map(v => v.price)) : minPrice;
-                                const showRange = hasVariants && maxPrice > minPrice;
+                                const hv = product.variants && product.variants.length > 0;
+                                const nonZeroPrices = hv
+                                    ? product.variants!.map(v => Number(v.price) || 0).filter(p => p > 0)
+                                    : [];
+                                const base = Number(product.promoPrice || product.price) || 0;
+                                const minPrice = nonZeroPrices.length > 0 ? Math.min(...nonZeroPrices) : base;
+                                const maxPrice = nonZeroPrices.length > 0 ? Math.max(...nonZeroPrices) : base;
+                                const label = minPrice === 0
+                                    ? "Consultar"
+                                    : maxPrice > minPrice
+                                        ? `Desde $${minPrice.toLocaleString()}`
+                                        : `$${minPrice.toLocaleString()}`;
                                 return (
                                     <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
-                                        {showRange ? `Desde $${minPrice.toLocaleString()}` : `$${minPrice.toLocaleString()}`}
+                                        {label}
                                     </span>
                                 );
                             })()}
