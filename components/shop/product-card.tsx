@@ -268,7 +268,7 @@ export function ProductCard({ product, hidePriceIfZero, onClickIntercept }: Prod
 export function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { product: Product, onClose: () => void, hidePriceIfZero?: boolean }) {
   const { addProduct, getVariantQuantity, removeVariant, updateVariantQuantity } = useCart();
   const { triggerFlyToCart } = useVisualFeedback();
-  const { isWholesaleMode } = useWholesale();
+  const { isWholesaleMode, getDisplayPrice } = useWholesale();
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Lock body scroll when modal is open (iOS Safari fix)
@@ -347,8 +347,10 @@ export function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { pro
   const productHasIntentionalStock = typeof product.stock === "number" && product.stock > 0 && !product.infiniteStock;
   const shouldValidateStock = hasInventory || productHasIntentionalStock;
 
-  // Calculate total price
-  const basePrice = selectedVariant?.price || product.promoPrice || product.price;
+  // Calculate total price (respects wholesale mode)
+  const basePrice = selectedVariant
+    ? getDisplayPrice(selectedVariant.price, (selectedVariant as any).wholesalePrice || undefined)
+    : getDisplayPrice(product.promoPrice || product.price, (product as any).wholesalePrice || undefined);
   const extrasTotal = selectedExtras.reduce((sum, e) => sum + (e.price * e.quantity), 0);
   const totalPrice = (basePrice + extrasTotal) * quantity;
 
@@ -524,8 +526,8 @@ export function ProductOptionsModal({ product, onClose, hidePriceIfZero }: { pro
 
                       <div className="flex items-center justify-between mt-2">
                         {variant.price > 0 ? (
-                          <p className={cn("text-xs font-black", isTechDrop ? "text-cyan-400" : "text-emerald-400")}>
-                            ${variant.price.toLocaleString()}
+                          <p className={cn("text-xs font-black", isTechDrop ? "text-cyan-400" : isWholesaleMode ? "text-amber-400" : "text-emerald-400")}>
+                            ${getDisplayPrice(variant.price, (variant as any).wholesalePrice || undefined).toLocaleString()}
                           </p>
                         ) : <div />}
                         {isOutOfStock ? (

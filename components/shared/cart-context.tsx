@@ -11,6 +11,7 @@ import {
 import { localToken } from "@/lib/utils/safe-storage";
 import type { Service, Product, ProductVariant, ProductColor } from "@/lib/constants";
 import type { SelectedExtra } from "@/lib/types/product-extra.types";
+import { useWholesale } from "@/components/shared/wholesale-context";
 
 // Cart item types
 export type CartItemType = "service" | "product";
@@ -104,6 +105,7 @@ export function CartProvider({ children, shopId, templateType }: CartProviderPro
   const [notifications, setNotifications] = useState<CartNotification[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const notificationIdRef = { current: 0 };
+  const { isWholesaleMode, getDisplayPrice } = useWholesale();
 
   // Add notification helper
   const addNotification = useCallback((message: string, type: "add" | "remove" | "update") => {
@@ -206,10 +208,13 @@ export function CartProvider({ children, shopId, templateType }: CartProviderPro
         return updated;
       }
 
-      // Determine price to use
-      const unitPrice = variant ? variant.price : product.price;
-      const unitPromo = variant ? undefined : product.promoPrice;
-      const unitWholesale = variant ? variant.wholesalePrice : product.wholesalePrice;
+      // Determine price to use (apply wholesale price when in mayorista mode)
+      const retailPrice = variant ? variant.price : (product.promoPrice || product.price);
+      const wholesalePriceVal = variant ? variant.wholesalePrice : product.wholesalePrice;
+      const effectivePrice = getDisplayPrice(retailPrice, wholesalePriceVal || undefined);
+      const unitPrice = effectivePrice;
+      const unitPromo = undefined; // promoPrice already factored into effectivePrice
+      const unitWholesale = wholesalePriceVal;
       const extrasTotal = calculateExtrasTotal(extras);
 
       // Select best image
@@ -325,9 +330,11 @@ export function CartProvider({ children, shopId, templateType }: CartProviderPro
 
   const totalPrice = items.reduce((sum, item) => {
     if (item.itemType === "product") {
-      const basePrice = item.promoPrice || item.price;
+      // price already stores the effective price (wholesale or retail) set at add-time
+      const basePrice = isWholesaleMode && item.wholesalePrice
+        ? item.wholesalePrice
+        : (item.promoPrice || item.price);
       const extrasPrice = item.extrasTotal || 0;
-      // (basePrice + extras) * quantity
       return sum + (basePrice + extrasPrice) * item.quantity;
     }
     return sum + item.price * item.quantity;
