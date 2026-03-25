@@ -230,9 +230,11 @@ export default async function ShopLayout({ children, params }: ShopLayoutProps) 
                     - cosmic-drop-v1: Uses CosmicCart (rendered inside CosmicDropLayout)
                     - street-drop-v1: Uses StreetCart
                     - premium-drop-v1: Uses FloatingCart
+                    - tech-premium-v2 / tech-3d-v1: Uses FloatingCart (template has no internal cart)
+                    - tech-drop-v1: Has its own internal cart
                 */}
                 {shop.templateType === "street-drop-v1" && <StreetCart />}
-                {shop.templateType === "premium-drop-v1" && <FloatingCart />}
+                {(shop.templateType === "premium-drop-v1" || shop.templateType === "tech-premium-v2" || shop.templateType === "tech-3d-v1") && <FloatingCart />}
                 {/* Wholesale button — fixed top-right only for templates without their own header */}
                 {shop.wholesaleEnabled && (shop.templateType === "premium-drop-v1" || shop.templateType === "street-drop-v1" || shop.templateType === "cosmic-drop-v1") && (
                   <div className="fixed top-4 right-4 z-50">

@@ -12,7 +12,7 @@ import {
     ArrowUpRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCart, useVisualFeedback } from "@/components/shared";
+import { useCart, useVisualFeedback, useWholesale } from "@/components/shared";
 import type { Product, Service } from "@/lib/constants";
 import { ProductOptionsModal } from "@/components/shop/product-card";
 import { WholesaleButton } from "@/components/shop";
@@ -37,6 +37,7 @@ type View = "products" | "services" | "location";
 function ProductCard({ product, index }: { product: Product; index: number }) {
     const { addProduct } = useCart();
     const { triggerFlyToCart } = useVisualFeedback();
+    const { isWholesaleMode, getDisplayPrice } = useWholesale();
     const cardRef = useRef<HTMLDivElement>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -118,12 +119,17 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
                     </div>
 
                     <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/5">
-                        <span className="text-base font-bold text-white">
+                        <span className={cn("text-base font-bold", isWholesaleMode ? "text-amber-400" : "text-white")}>
                             {(() => {
                                 const nonZeroPrices = hasVariants
-                                    ? product.variants!.map(v => Number(v.price) || 0).filter(p => p > 0)
+                                    ? product.variants!.map(v => {
+                                        const retail = Number(v.price) || 0;
+                                        const wholesale = Number((v as any).wholesalePrice) || 0;
+                                        return getDisplayPrice(retail, wholesale || undefined);
+                                    }).filter(p => p > 0)
                                     : [];
-                                const base = Number(product.promoPrice || product.price) || 0;
+                                const retailBase = Number(product.promoPrice || product.price) || 0;
+                                const base = getDisplayPrice(retailBase, Number((product as any).wholesalePrice) || undefined);
                                 const minPrice = nonZeroPrices.length > 0 ? Math.min(...nonZeroPrices) : base;
                                 const maxPrice = nonZeroPrices.length > 0 ? Math.max(...nonZeroPrices) : base;
                                 if (minPrice === 0) return "Consultar";
