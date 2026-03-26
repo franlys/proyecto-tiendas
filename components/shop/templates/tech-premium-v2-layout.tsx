@@ -11,6 +11,7 @@ import {
     ChevronRight,
     ArrowUpRight,
     MessageSquarePlus,
+    CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCart, useVisualFeedback, useWholesale } from "@/components/shared";
@@ -19,6 +20,7 @@ import { ProductOptionsModal } from "@/components/shop/product-card";
 import { WholesaleButton } from "@/components/shop";
 import { QuoteRequestModal } from "@/components/shop/quote-request-modal";
 import { LiveChatWidget } from "@/components/shop/live-chat-widget";
+import { FinancingModal } from "@/components/shop/financing-modal";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { LogoAnimation } from "@/components/shop/logo-animation";
@@ -265,6 +267,7 @@ export function TechPremiumV2Layout({ shop, products, services, loadingData }: T
     const [activeCategory, setActiveCategory] = useState("todos");
     const [search, setSearch] = useState("");
     const [isQuoteOpen, setIsQuoteOpen] = useState(false);
+    const [isFinancingOpen, setIsFinancingOpen] = useState(false);
     const catalogRef = useRef<HTMLElement>(null);
     const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
 
@@ -325,6 +328,14 @@ export function TechPremiumV2Layout({ shop, products, services, loadingData }: T
 
                     {/* Search + Cart */}
                     <div className="flex items-center gap-3">
+                        <button
+                            type="button"
+                            onClick={() => setIsFinancingOpen(true)}
+                            className="hidden lg:flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/8 rounded-lg text-[11px] font-bold text-white/50 hover:text-white hover:bg-white/10 transition-all uppercase tracking-wide"
+                        >
+                            <CreditCard className="w-3.5 h-3.5" />
+                            Financiamiento
+                        </button>
                         <button
                             type="button"
                             onClick={() => setIsQuoteOpen(true)}
@@ -578,6 +589,23 @@ export function TechPremiumV2Layout({ shop, products, services, loadingData }: T
                 shopId={shop.id}
                 categories={categories}
             />
+
+            {/* Financing Modal */}
+            <FinancingModal
+                isOpen={isFinancingOpen}
+                onClose={() => setIsFinancingOpen(false)}
+                shopId={shop.id}
+            />
+
+            {/* Mobile FAB — Financiamiento */}
+            <button
+                type="button"
+                onClick={() => setIsFinancingOpen(true)}
+                className="lg:hidden fixed bottom-36 right-4 z-40 flex items-center gap-2 px-4 py-2.5 bg-white/10 border border-white/15 backdrop-blur-md rounded-full text-xs font-bold text-white shadow-xl"
+            >
+                <CreditCard className="w-4 h-4" />
+                Financiamiento
+            </button>
 
             {/* Live Chat Widget */}
             <LiveChatWidget shopId={shop.id} shopName={shop.name} />

@@ -11,6 +11,8 @@ export { WholesaleButton } from "./wholesale-button";
 export { QuoteRequestModal } from "./quote-request-modal";
 // Live Chat
 export { LiveChatWidget } from "./live-chat-widget";
+// Financing
+export { FinancingModal } from "./financing-modal";
 // Phase 22: Appointment Flow
 export { AppointmentModal } from "./appointment-modal";
 // Meal Prep
