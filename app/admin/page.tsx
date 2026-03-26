@@ -1001,6 +1001,23 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
             <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
           </Link>
 
+          {/* Página de Inicio - Visible si usa tech-premium-v2 */}
+          {shop?.templateType === "tech-premium-v2" && (
+            <Link
+              href="/admin/homepage"
+              className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center">
+                <LayoutDashboard className="w-5 h-5 text-violet-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-white font-medium">Página de Inicio</p>
+                <p className="text-xs text-slate-300">Editar tarjetas y descripciones</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+            </Link>
+          )}
+
           {/* Sucursales - Solo si tiene multiLocation habilitado */}
           {shop?.enabledFeatures?.includes("multiLocation") && (
             <Link
@@ -1270,6 +1287,16 @@ function AdminDashboardWithSubscription() {
                     <span className="hidden sm:inline ml-1">Financiamiento</span>
                   </Button>
                 </Link>
+
+                {/* Página de Inicio */}
+                {shop?.templateType === "tech-premium-v2" && (
+                  <Link href="/admin/homepage">
+                    <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-violet-400 hover:text-violet-300">
+                      <LayoutDashboard className="w-4 h-4" />
+                      <span className="hidden sm:inline ml-1">Inicio</span>
+                    </Button>
+                  </Link>
+                )}
 
                 {/* Citas/Reservaciones - Solo si tiene bookings y NO es entrenamiento */}
                 {features.adminModules.bookings && !features.hasTraining && (

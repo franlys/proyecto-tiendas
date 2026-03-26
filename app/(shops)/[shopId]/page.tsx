@@ -16,6 +16,7 @@ import {
   BILLING_CYCLE_LABELS
 } from "@/lib/types/training-package.types";
 import { resolveTemplate } from "@/lib/templates/component-registry";
+import { TechPremiumV2Home } from "@/components/shop/templates/tech-premium-v2-home";
 
 type TabType = "servicios" | "productos";
 
@@ -151,7 +152,11 @@ export default function ShopHomePage() {
   }, [shop?.id, shop?.slug]);
   // 2. Render appropriate template based on settings
   const Layout = resolveTemplate(shop?.templateType);
-  console.log("🎨 [TEMPLATE] Current templateType:", shop?.templateType, "| Shop:", shop?.name);
+
+  // tech-premium-v2 has a dedicated homepage with feature cards
+  if (shop?.templateType === "tech-premium-v2") {
+    return <TechPremiumV2Home shop={shop as any} />;
+  }
 
   return (
     <Layout

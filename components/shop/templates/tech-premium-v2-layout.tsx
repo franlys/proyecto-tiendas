@@ -24,6 +24,8 @@ import { FinancingModal } from "@/components/shop/financing-modal";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { LogoAnimation } from "@/components/shop/logo-animation";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 
 if (typeof window !== "undefined") {
     gsap.registerPlugin(ScrollTrigger);
@@ -34,6 +36,7 @@ interface TechPremiumV2Props {
     products: Product[];
     services: Service[];
     loadingData: boolean;
+    showHomeLink?: boolean;
 }
 
 type View = "products" | "services" | "location";
@@ -261,7 +264,8 @@ function Hero({ shop, onExplore }: { shop: any; onExplore: () => void }) {
 }
 
 // ─── MAIN LAYOUT ──────────────────────────────────────────────────────────────
-export function TechPremiumV2Layout({ shop, products, services, loadingData }: TechPremiumV2Props) {
+export function TechPremiumV2Layout({ shop, products, services, loadingData, showHomeLink }: TechPremiumV2Props) {
+    const { shopId } = useParams<{ shopId: string }>();
     const { items: cart, setIsCartOpen } = useCart();
     const [view, setView] = useState<View>("products");
     const [activeCategory, setActiveCategory] = useState("todos");
@@ -312,6 +316,14 @@ export function TechPremiumV2Layout({ shop, products, services, loadingData }: T
 
                     {/* Nav — desktop */}
                     <nav className="hidden md:flex items-center gap-1">
+                        {showHomeLink && (
+                            <Link
+                                href={`/${shopId}`}
+                                className="px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-widest transition-all text-white/35 hover:text-white/70"
+                            >
+                                Inicio
+                            </Link>
+                        )}
                         {(["products", "services", "location"] as View[]).map(v => (
                             <button
                                 key={v}
