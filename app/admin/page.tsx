@@ -34,6 +34,8 @@ import {
   Palette,
   Dumbbell,
   Building2,
+  MessageSquarePlus,
+  MessageCircle,
 } from "lucide-react";
 import { useAuth, ShopsProvider, useShops, AgencyProvider, SalesOrdersProvider, useSalesOrders, ORDER_STATUS_CONFIG, type OrderStatus, type SalesOrder } from "@/components/shared";
 import { DashboardKPIs, SalesChart, SubscriptionLock, SupportWidget, AgencyContactCard } from "@/components/admin";
@@ -954,6 +956,51 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
             </Link>
           )}
 
+          {/* Cotizaciones - Siempre visible */}
+          <Link
+            href="/admin/quote-requests"
+            className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+              <MessageSquarePlus className="w-5 h-5 text-emerald-400" />
+            </div>
+            <div className="flex-1">
+              <p className="text-white font-medium">Cotizaciones</p>
+              <p className="text-xs text-slate-300">Solicitudes de clientes</p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+          </Link>
+
+          {/* Chat en Vivo - Siempre visible */}
+          <Link
+            href="/admin/chat"
+            className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-lg bg-sky-500/20 flex items-center justify-center">
+              <MessageCircle className="w-5 h-5 text-sky-400" />
+            </div>
+            <div className="flex-1">
+              <p className="text-white font-medium">Chat en Vivo</p>
+              <p className="text-xs text-slate-300">Atender clientes en tiempo real</p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+          </Link>
+
+          {/* Financiamiento - Siempre visible */}
+          <Link
+            href="/admin/financing"
+            className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+              <CreditCard className="w-5 h-5 text-blue-400" />
+            </div>
+            <div className="flex-1">
+              <p className="text-white font-medium">Financiamiento</p>
+              <p className="text-xs text-slate-300">Solicitudes BANFONDESA</p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+          </Link>
+
           {/* Sucursales - Solo si tiene multiLocation habilitado */}
           {shop?.enabledFeatures?.includes("multiLocation") && (
             <Link
@@ -1199,6 +1246,30 @@ function AdminDashboardWithSubscription() {
                     </Button>
                   </Link>
                 )}
+
+                {/* Cotizaciones */}
+                <Link href="/admin/quote-requests">
+                  <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-emerald-400 hover:text-emerald-300">
+                    <MessageSquarePlus className="w-4 h-4" />
+                    <span className="hidden sm:inline ml-1">Cotizaciones</span>
+                  </Button>
+                </Link>
+
+                {/* Chat en Vivo */}
+                <Link href="/admin/chat">
+                  <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-sky-400 hover:text-sky-300">
+                    <MessageCircle className="w-4 h-4" />
+                    <span className="hidden sm:inline ml-1">Chat</span>
+                  </Button>
+                </Link>
+
+                {/* Financiamiento */}
+                <Link href="/admin/financing">
+                  <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-blue-400 hover:text-blue-300">
+                    <CreditCard className="w-4 h-4" />
+                    <span className="hidden sm:inline ml-1">Financiamiento</span>
+                  </Button>
+                </Link>
 
                 {/* Citas/Reservaciones - Solo si tiene bookings y NO es entrenamiento */}
                 {features.adminModules.bookings && !features.hasTraining && (
