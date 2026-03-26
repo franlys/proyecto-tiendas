@@ -4,12 +4,12 @@ import { FieldValue } from "firebase-admin/firestore";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const body = await request.json();
     const { shopId, status, adminNotes } = body;
-    const { id } = params;
+    const { id } = await params;
 
     if (!shopId || !id) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 });
