@@ -234,8 +234,8 @@ export default function AdminChatPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const shopId = user?.shopId;
-  const employeeName = user?.displayName || user?.email || "Asesor";
-  const employeeId = user?.uid || "unknown";
+  const employeeName = user?.name || user?.email || "Asesor";
+  const employeeId = user?.id || "unknown";
 
   // Real-time listener for waiting + active sessions
   useEffect(() => {
