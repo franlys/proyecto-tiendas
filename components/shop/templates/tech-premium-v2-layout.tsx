@@ -18,6 +18,7 @@ import type { Product, Service } from "@/lib/constants";
 import { ProductOptionsModal } from "@/components/shop/product-card";
 import { WholesaleButton } from "@/components/shop";
 import { QuoteRequestModal } from "@/components/shop/quote-request-modal";
+import { LiveChatWidget } from "@/components/shop/live-chat-widget";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { LogoAnimation } from "@/components/shop/logo-animation";
@@ -577,6 +578,9 @@ export function TechPremiumV2Layout({ shop, products, services, loadingData }: T
                 shopId={shop.id}
                 categories={categories}
             />
+
+            {/* Live Chat Widget */}
+            <LiveChatWidget shopId={shop.id} shopName={shop.name} />
         </div>
     );
 }
