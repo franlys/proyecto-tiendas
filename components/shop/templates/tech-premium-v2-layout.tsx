@@ -326,12 +326,12 @@ export function TechPremiumV2Layout({ shop, products, services, loadingData }: T
                         ))}
                     </nav>
 
-                    {/* Search + Cart */}
-                    <div className="flex items-center gap-3">
+                    {/* Actions + Search + Cart */}
+                    <div className="flex items-center gap-1.5">
                         <button
                             type="button"
                             onClick={() => setIsFinancingOpen(true)}
-                            className="hidden lg:flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/8 rounded-lg text-[11px] font-bold text-white/50 hover:text-white hover:bg-white/10 transition-all uppercase tracking-wide"
+                            className="hidden lg:flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold text-white/45 hover:text-white hover:bg-white/8 transition-all uppercase tracking-widest"
                         >
                             <CreditCard className="w-3.5 h-3.5" />
                             Financiamiento
@@ -339,7 +339,7 @@ export function TechPremiumV2Layout({ shop, products, services, loadingData }: T
                         <button
                             type="button"
                             onClick={() => setIsQuoteOpen(true)}
-                            className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/8 rounded-lg text-[11px] font-bold text-white/50 hover:text-white hover:bg-white/10 transition-all uppercase tracking-wide"
+                            className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold text-white/45 hover:text-white hover:bg-white/8 transition-all uppercase tracking-widest"
                         >
                             <MessageSquarePlus className="w-3.5 h-3.5" />
                             Cotizar
@@ -347,22 +347,23 @@ export function TechPremiumV2Layout({ shop, products, services, loadingData }: T
                         {shop.wholesaleEnabled && (
                             <WholesaleButton
                                 shopId={shop.id}
-                                className="px-4 py-2 rounded-lg text-[11px] font-bold tracking-wide"
+                                className="px-3 py-2 rounded-lg text-[11px] font-bold uppercase tracking-widest"
                             />
                         )}
-                        <div className="hidden sm:flex items-center gap-2 px-3.5 py-2 bg-white/5 border border-white/8 rounded-lg focus-within:border-white/20 transition-colors">
-                            <Search className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />
+
+                        <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/8 rounded-lg focus-within:border-white/15 transition-colors ml-1">
+                            <Search className="w-3.5 h-3.5 text-white/25 flex-shrink-0" />
                             <input
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
                                 placeholder="Buscar..."
-                                className="bg-transparent text-xs text-white placeholder-white/25 outline-none w-24 focus:w-32 transition-all"
+                                className="bg-transparent text-xs text-white placeholder-white/20 outline-none w-20 focus:w-28 transition-all"
                             />
                         </div>
 
                         <button
                             onClick={() => setIsCartOpen(true)}
-                            className="relative flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-xs font-bold hover:bg-white/90 active:scale-95 transition-all"
+                            className="relative flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-xs font-bold hover:bg-white/90 active:scale-95 transition-all ml-1"
                         >
                             <ShoppingBag className="w-3.5 h-3.5" />
                             <span className="hidden sm:inline">Carrito</span>
