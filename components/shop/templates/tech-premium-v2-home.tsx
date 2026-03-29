@@ -10,12 +10,14 @@ import {
   ShoppingBag,
   ChevronRight,
   ArrowUpRight,
-  MapPin,
-  Globe,
-  Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Product } from "@/lib/constants";
+import {
+  DEFAULT_MAIN_CATEGORIES,
+  MAIN_CATEGORY_GRADIENTS,
+  MAIN_CATEGORY_ACCENTS,
+  type MainCategory,
+} from "@/lib/types/main-category.types";
 import { useCart, useWholesale } from "@/components/shared";
 import { WholesaleButton } from "@/components/shop";
 import { QuoteRequestModal } from "@/components/shop/quote-request-modal";
@@ -343,88 +345,46 @@ function FeaturesSection({
   );
 }
 
-// ─── FEATURED PRODUCTS ──────────────────────────────────────────────────────
+// ─── CATEGORY SHOWCASE ──────────────────────────────────────────────────────
 
-function FeaturedCard({ product, tiendaHref, index }: { product: Product; tiendaHref: string; index: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-40px" });
-  const { isWholesaleMode } = useWholesale();
-
-  const price = (() => {
-    const base = Number((product as any).promoPrice || product.price) || 0;
-    if (isWholesaleMode) {
-      const wholesale = Number((product as any).wholesalePrice) || 0;
-      return wholesale > 0 ? wholesale : base;
-    }
-    return base;
-  })();
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 28 }}
-      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 28 }}
-      transition={{ duration: 0.55, delay: Math.min(index * 0.07, 0.21), ease: [0.22, 1, 0.36, 1] }}
-    >
-      <Link href={tiendaHref} className="group block bg-[#0c0c0c] border border-white/6 rounded-2xl overflow-hidden hover:border-white/14 transition-colors duration-300">
-        {/* Image */}
-        <div className="relative overflow-hidden bg-[#0f0f0f]" style={{ paddingTop: "100%" }}>
-          {product.image ? (
-            <img
-              src={product.image}
-              alt={product.name}
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500"
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Package className="w-10 h-10 text-white/10" />
-            </div>
-          )}
-        </div>
-
-        {/* Info */}
-        <div className="p-4 space-y-2">
-          {product.category && (
-            <p className="text-[9px] text-white/25 font-mono uppercase tracking-[0.25em]">{product.category}</p>
-          )}
-          <h3 className="text-sm font-semibold text-white leading-snug line-clamp-2">{product.name}</h3>
-          <div className="flex items-center justify-between pt-1">
-            <span className={cn("text-sm font-bold", isWholesaleMode ? "text-amber-400" : "text-white")}>
-              {price > 0 ? `$${price.toLocaleString()}` : "Consultar"}
-            </span>
-            <span className="flex items-center gap-1 text-[10px] text-white/30 group-hover:text-white/60 transition-colors duration-200 font-medium">
-              Ver <ArrowUpRight className="w-3 h-3" />
-            </span>
-          </div>
-        </div>
-      </Link>
-    </motion.div>
-  );
-}
-
-function FeaturedProductsSection({
-  products,
-  loadingData,
+function CategoryShowcaseSection({
   tiendaHref,
+  shopId,
 }: {
-  products: Product[];
-  loadingData: boolean;
   tiendaHref: string;
+  shopId: string;
 }) {
-  const titleRef = useRef<HTMLDivElement>(null);
-  const titleInView = useInView(titleRef, { once: true });
+  const [categories, setCategories] = useState<MainCategory[]>(DEFAULT_MAIN_CATEGORIES);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const inView = useInView(sectionRef, { once: true });
 
-  const featured = products.slice(0, 6);
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const snap = await getDoc(doc(db, "shops", shopId, "settings", "mainCategories"));
+        if (snap.exists()) {
+          const data = snap.data();
+          const items: MainCategory[] = (data.items || []).filter((c: MainCategory) => c.enabled);
+          if (items.length > 0) setCategories(items.sort((a, b) => a.order - b.order));
+        }
+      } catch {}
+    };
+    if (shopId) load();
+  }, [shopId]);
 
-  if (!loadingData && featured.length === 0) return null;
+  const navigate = (catId: string) => {
+    window.location.href = `${tiendaHref}?mainCategory=${catId}`;
+  };
 
   return (
-    <section className="max-w-screen-xl mx-auto px-6 md:px-12 py-20 space-y-12">
-      <div ref={titleRef} className="flex items-end justify-between">
+    <section ref={sectionRef} className="max-w-screen-xl mx-auto px-6 md:px-12 py-20 space-y-10">
+      {/* Header */}
+      <div className="flex items-end justify-between">
         <div className="space-y-3">
           <motion.p
             initial={{ opacity: 0, y: 12 }}
-            animate={titleInView ? { opacity: 1, y: 0 } : {}}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.5 }}
             className="text-[10px] font-mono uppercase tracking-[0.4em] text-white/25"
           >
@@ -432,40 +392,186 @@ function FeaturedProductsSection({
           </motion.p>
           <motion.h2
             initial={{ opacity: 0, y: 16 }}
-            animate={titleInView ? { opacity: 1, y: 0 } : {}}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.08 }}
             className="text-3xl md:text-4xl font-black tracking-tight text-white leading-tight"
           >
-            Productos Destacados
+            Explora por categoría
           </motion.h2>
         </div>
         <motion.div
           initial={{ opacity: 0 }}
-          animate={titleInView ? { opacity: 1 } : {}}
+          animate={inView ? { opacity: 1 } : {}}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <Link
             href={tiendaHref}
             className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white/35 hover:text-white transition-colors duration-200"
           >
-            Ver todos <ChevronRight className="w-3.5 h-3.5" />
+            Ver todo <ChevronRight className="w-3.5 h-3.5" />
           </Link>
         </motion.div>
       </div>
 
-      {loadingData ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-white/3 rounded-2xl animate-pulse" style={{ paddingTop: "140%" }} />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          {featured.map((product, i) => (
-            <FeaturedCard key={product.id} product={product} tiendaHref={tiendaHref} index={i} />
-          ))}
-        </div>
-      )}
+      {/* Desktop: Apex-style horizontal strip */}
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={inView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.7, delay: 0.15 }}
+        className="hidden md:flex h-[300px] overflow-hidden rounded-2xl"
+      >
+        {categories.map((cat, i) => {
+          const isHovered = hoveredId === cat.id;
+          const isOther = hoveredId !== null && !isHovered;
+          const isFirst = i === 0;
+          const isLast = i === categories.length - 1;
+          // Diagonal cuts: first card has straight left, last has straight right
+          const clipPath = `polygon(${isFirst ? "0" : "8%"} 0, 100% 0, ${isLast ? "100%" : "92%"} 100%, 0 100%)`;
+
+          return (
+            <div
+              key={cat.id}
+              role="button"
+              aria-label={cat.name}
+              onClick={() => navigate(cat.id)}
+              onMouseEnter={() => setHoveredId(cat.id)}
+              onMouseLeave={() => setHoveredId(null)}
+              style={{
+                flex: isHovered ? "2.3" : isOther ? "0.72" : "1",
+                transition: "flex 0.45s cubic-bezier(0.23, 1, 0.32, 1)",
+                clipPath,
+                marginLeft: isFirst ? 0 : "-1px",
+                zIndex: isHovered ? 10 : categories.length - i,
+                position: "relative",
+                overflow: "hidden",
+                cursor: "pointer",
+              }}
+            >
+              {/* Background: image takes priority, gradient as fallback */}
+              {cat.image ? (
+                <>
+                  <img
+                    src={cat.image}
+                    alt={cat.name}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    style={{
+                      transform: isHovered ? "scale(1.07)" : "scale(1)",
+                      transition: "transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)",
+                    }}
+                  />
+                  <div
+                    className="absolute inset-0 bg-gradient-to-t from-black/92 via-black/25 to-transparent"
+                    style={{
+                      opacity: isHovered ? 0.8 : 1,
+                      transition: "opacity 0.3s",
+                    }}
+                  />
+                </>
+              ) : (
+                <div
+                  className={cn(
+                    "absolute inset-0 bg-gradient-to-br",
+                    MAIN_CATEGORY_GRADIENTS[i % MAIN_CATEGORY_GRADIENTS.length]
+                  )}
+                  style={{
+                    opacity: isHovered ? 1 : 0.65,
+                    transition: "opacity 0.3s",
+                  }}
+                />
+              )}
+
+              {/* Hover glow overlay */}
+              <div
+                className="absolute inset-0 bg-white/[0.03]"
+                style={{ opacity: isHovered ? 1 : 0, transition: "opacity 0.3s" }}
+              />
+
+              {/* Content */}
+              <div className="absolute inset-0 flex flex-col justify-end pb-7 px-6 select-none">
+                {/* Description — slides up on hover */}
+                <AnimatePresence>
+                  {isHovered && (
+                    <motion.p
+                      key="desc"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 6 }}
+                      transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+                      className="text-xs text-white/60 mb-2 leading-relaxed max-w-[200px]"
+                    >
+                      {cat.description}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+
+                {/* Name — always visible */}
+                <p className={cn(
+                  "text-[11px] font-black uppercase tracking-[0.18em]",
+                  MAIN_CATEGORY_ACCENTS[i % MAIN_CATEGORY_ACCENTS.length]
+                )}>
+                  {cat.name}
+                </p>
+
+                {/* CTA — slides in on hover */}
+                <AnimatePresence>
+                  {isHovered && (
+                    <motion.span
+                      key="cta"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.18, delay: 0.06 }}
+                      className="flex items-center gap-1 mt-2 text-[10px] font-bold text-white/45 uppercase tracking-widest"
+                    >
+                      Ver productos <ArrowUpRight className="w-3 h-3" />
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          );
+        })}
+      </motion.div>
+
+      {/* Mobile: 2-col grid */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={inView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.6, delay: 0.1 }}
+        className="grid grid-cols-2 gap-3 md:hidden"
+      >
+        {categories.map((cat, i) => (
+          <Link
+            key={cat.id}
+            href={`${tiendaHref}?mainCategory=${cat.id}`}
+            className="group relative h-32 rounded-2xl overflow-hidden cursor-pointer"
+          >
+            {cat.image ? (
+              <>
+                <img
+                  src={cat.image}
+                  alt={cat.name}
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 to-black/15" />
+              </>
+            ) : (
+              <div className={cn(
+                "absolute inset-0 bg-gradient-to-br",
+                MAIN_CATEGORY_GRADIENTS[i % MAIN_CATEGORY_GRADIENTS.length]
+              )} />
+            )}
+            <div className="absolute bottom-0 left-0 right-0 p-3">
+              <p className={cn(
+                "text-[10px] font-black uppercase tracking-widest",
+                MAIN_CATEGORY_ACCENTS[i % MAIN_CATEGORY_ACCENTS.length]
+              )}>
+                {cat.name}
+              </p>
+            </div>
+          </Link>
+        ))}
+      </motion.div>
     </section>
   );
 }
@@ -514,11 +620,9 @@ function CTASection({ tiendaHref }: { tiendaHref: string }) {
 
 interface TechPremiumV2HomeProps {
   shop: any;
-  products?: Product[];
-  loadingData?: boolean;
 }
 
-export function TechPremiumV2Home({ shop, products = [], loadingData = false }: TechPremiumV2HomeProps) {
+export function TechPremiumV2Home({ shop }: TechPremiumV2HomeProps) {
   const { shopId } = useParams<{ shopId: string }>();
   const { items: cart, setIsCartOpen } = useCart();
   const { isWholesaleMode, wholesalerName } = useWholesale();
@@ -622,10 +726,9 @@ export function TechPremiumV2Home({ shop, products = [], loadingData = false }: 
           onFinancing={() => setIsFinancingOpen(true)}
           onQuote={() => setIsQuoteOpen(true)}
         />
-        <FeaturedProductsSection
-          products={products}
-          loadingData={loadingData}
+        <CategoryShowcaseSection
           tiendaHref={tiendaHref}
+          shopId={shop.id}
         />
         <CTASection tiendaHref={tiendaHref} />
       </div>

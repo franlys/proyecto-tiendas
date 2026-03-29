@@ -202,13 +202,34 @@ function ServiceCard({ service }: { service: Service }) {
 }
 
 // ─── CATALOG BANNER ──────────────────────────────────────────────────────────
-function CatalogBanner({ shop, productCount }: { shop: any; productCount: number }) {
+function CatalogBanner({
+    shop,
+    productCount,
+    mainCategoryFilter,
+    onClearFilter,
+}: {
+    shop: any;
+    productCount: number;
+    mainCategoryFilter: string | null;
+    onClearFilter: () => void;
+}) {
     return (
         <div className="border-b border-white/5">
             <div className="max-w-screen-xl mx-auto px-6 md:px-12 py-8 flex items-center justify-between gap-4">
-                <div>
-                    <p className="text-[9px] font-mono uppercase tracking-[0.4em] text-white/20 mb-1">Catálogo</p>
-                    <h1 className="text-xl font-black tracking-tight text-white">{shop.name}</h1>
+                <div className="flex items-center gap-3 flex-wrap">
+                    <div>
+                        <p className="text-[9px] font-mono uppercase tracking-[0.4em] text-white/20 mb-1">Catálogo</p>
+                        <h1 className="text-xl font-black tracking-tight text-white">{shop.name}</h1>
+                    </div>
+                    {mainCategoryFilter && (
+                        <button
+                            onClick={onClearFilter}
+                            className="flex items-center gap-1.5 px-3 py-1 bg-white/8 border border-white/12 rounded-full text-[10px] font-bold text-white/60 hover:text-white hover:bg-white/12 transition-all uppercase tracking-widest"
+                        >
+                            {mainCategoryFilter.replace(/-/g, " ")}
+                            <span className="text-white/40 hover:text-white ml-0.5">×</span>
+                        </button>
+                    )}
                 </div>
                 {productCount > 0 && (
                     <span className="text-[10px] font-mono text-white/20 uppercase tracking-widest">
@@ -226,29 +247,41 @@ export function TechPremiumV2Layout({ shop, products, services, loadingData, sho
     const { items: cart, setIsCartOpen } = useCart();
     const [view, setView] = useState<View>("products");
     const [activeCategory, setActiveCategory] = useState("todos");
+    const [mainCategoryFilter, setMainCategoryFilter] = useState<string | null>(null);
     const [search, setSearch] = useState("");
     const [isQuoteOpen, setIsQuoteOpen] = useState(false);
     const [isFinancingOpen, setIsFinancingOpen] = useState(false);
     const catalogRef = useRef<HTMLElement>(null);
     const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
 
+    // Read mainCategory from URL on mount (set by homepage category cards)
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const mc = params.get("mainCategory");
+        if (mc) setMainCategoryFilter(mc);
+    }, []);
+
     const categories = useMemo(() => {
-        const cats = Array.from(new Set(products.map(p => p.category).filter(Boolean))) as string[];
+        const source = mainCategoryFilter
+            ? products.filter(p => (p as any).mainCategory === mainCategoryFilter)
+            : products;
+        const cats = Array.from(new Set(source.map(p => p.category).filter(Boolean))) as string[];
         return ["todos", ...cats];
-    }, [products]);
+    }, [products, mainCategoryFilter]);
 
     const filtered = useMemo(() =>
         products.filter(p => {
             const catOk = activeCategory === "todos" || p.category === activeCategory;
             const searchOk = p.name.toLowerCase().includes(search.toLowerCase());
+            const mainCatOk = !mainCategoryFilter || (p as any).mainCategory === mainCategoryFilter;
             if (!p.infiniteStock && p.stock !== undefined) {
                 const hasVariants = p.variants && p.variants.length > 0;
                 const anyVariantInStock = hasVariants ? p.variants!.some(v => (Number(v.stock) || 0) > 0) : false;
                 if ((Number(p.stock) || 0) === 0 && (!hasVariants || !anyVariantInStock)) return false;
             }
-            return catOk && searchOk;
+            return catOk && searchOk && mainCatOk;
         }),
-        [products, activeCategory, search]
+        [products, activeCategory, search, mainCategoryFilter]
     );
 
     const scrollToCatalog = useCallback(() => {
@@ -354,7 +387,12 @@ export function TechPremiumV2Layout({ shop, products, services, loadingData, sho
 
             {/* ─── CATALOG BANNER ─── */}
             <div className="pt-16">
-                <CatalogBanner shop={shop} productCount={products.length} />
+                <CatalogBanner
+                    shop={shop}
+                    productCount={filtered.length}
+                    mainCategoryFilter={mainCategoryFilter}
+                    onClearFilter={() => { setMainCategoryFilter(null); setActiveCategory("todos"); }}
+                />
             </div>
 
             {/* ─── CATALOG ─── */}

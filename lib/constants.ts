@@ -786,6 +786,7 @@ export interface Product {
   allowedComponentCategories?: string[]; // Categories like "Proteínas", "Carbohidratos"
   predefinedPlates?: MealPlate[]; // Array of plates with pre-selected components
   infiniteStock?: boolean; // Whether to treat this product as always in stock
+  mainCategory?: string;  // Main showcase category, e.g. "smartphones", "televisores"
 }
 
 // Product Category Labels

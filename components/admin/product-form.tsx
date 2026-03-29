@@ -20,6 +20,7 @@ import {
   type ProductVariant,
   type ProductColor,
 } from "@/lib/constants";
+import { DEFAULT_MAIN_CATEGORIES } from "@/lib/types/main-category.types";
 import { cn } from "@/lib/utils";
 
 interface ProductFormProps {
@@ -68,6 +69,7 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
     stock: 0,
     lowStockThreshold: 5,
     category: "cabello" as ProductCategory,
+    mainCategory: "" as string,
     image: "",
     featured: false,
     colors: [] as ProductColor[],
@@ -84,6 +86,7 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
         stock: product.stock,
         lowStockThreshold: product.lowStockThreshold,
         category: product.category,
+        mainCategory: (product as any).mainCategory || "",
         image: product.image,
         featured: product.featured || false,
         colors: product.colors || [],
@@ -98,6 +101,7 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
     const productData = {
       ...formData,
       promoPrice: formData.promoPrice > 0 ? formData.promoPrice : undefined,
+      mainCategory: formData.mainCategory || undefined,
     };
 
     if (isEditing && product) {
@@ -259,6 +263,42 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
                   </button>
                 )
               )}
+            </div>
+          </div>
+
+          {/* Main Category */}
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Categoría Principal (Showcase)
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => updateField("mainCategory", "")}
+                className={cn(
+                  "px-3 py-2 rounded-lg text-sm font-medium transition-all",
+                  formData.mainCategory === ""
+                    ? "bg-slate-600 text-white"
+                    : "bg-white/5 text-slate-400 hover:bg-white/10"
+                )}
+              >
+                Sin asignar
+              </button>
+              {DEFAULT_MAIN_CATEGORIES.map(mc => (
+                <button
+                  key={mc.id}
+                  type="button"
+                  onClick={() => updateField("mainCategory", mc.id)}
+                  className={cn(
+                    "px-3 py-2 rounded-lg text-sm font-medium transition-all",
+                    formData.mainCategory === mc.id
+                      ? "bg-primary text-white"
+                      : "bg-white/5 text-slate-400 hover:bg-white/10"
+                  )}
+                >
+                  {mc.name}
+                </button>
+              ))}
             </div>
           </div>
 
