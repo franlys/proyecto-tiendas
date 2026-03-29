@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence, useInView } from "framer-motion";
+import { motion, AnimatePresence, useInView, useMotionValue, useSpring, useTransform } from "framer-motion";
 import {
   CreditCard,
   MessageSquarePlus,
@@ -90,7 +90,7 @@ function FeatureCard({
   description,
   accent,
   accentBg,
-  accentBorder,
+  accentBorder: _accentBorder,
   cta,
   onClick,
   delay = 0,
@@ -98,14 +98,22 @@ function FeatureCard({
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
 
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    e.currentTarget.style.setProperty("--mx", `${e.clientX - rect.left}px`);
+    e.currentTarget.style.setProperty("--my", `${e.clientY - rect.top}px`);
+  };
+
   return (
     <motion.div
       ref={ref}
       initial={{ opacity: 0, y: 32 }}
       animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 32 }}
       transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={{ y: -4, transition: { duration: 0.25 } }}
+      whileHover={{ y: -3, transition: { duration: 0.22, ease: [0.23, 1, 0.32, 1] } }}
+      whileTap={{ scale: 0.98, transition: { duration: 0.12 } }}
       onClick={onClick}
+      onMouseMove={handleMouseMove}
       className={cn(
         "group relative flex flex-col gap-5 p-7 rounded-3xl border cursor-pointer transition-colors duration-300",
         "bg-white/[0.025] border-white/8 hover:border-white/16 hover:bg-white/[0.04]"
@@ -122,22 +130,22 @@ function FeatureCard({
         <p className="text-sm text-white/40 leading-relaxed">{description}</p>
       </div>
 
-      {/* CTA */}
-      <div className={cn(
-        "flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest transition-all duration-300",
-        accent, "opacity-60 group-hover:opacity-100"
-      )}>
-        {cta}
-        <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+      {/* CTA — slides up from overflow-hidden container */}
+      <div className="overflow-hidden">
+        <div className={cn(
+          "flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest",
+          "translate-y-full group-hover:translate-y-0 transition-transform duration-300",
+          accent
+        )} style={{ transitionTimingFunction: "cubic-bezier(0.23, 1, 0.32, 1)" }}>
+          {cta}
+          <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+        </div>
       </div>
 
-      {/* Hover glow */}
-      <div className={cn(
-        "absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none",
-        `bg-gradient-to-br ${accentBorder} to-transparent`
-      )} style={{ opacity: 0 }}
-        onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
-        onMouseLeave={e => (e.currentTarget.style.opacity = "0")}
+      {/* Mouse-follow spotlight glow */}
+      <div
+        className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+        style={{ background: "radial-gradient(280px circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,0.055), transparent 70%)" }}
       />
     </motion.div>
   );
@@ -147,6 +155,10 @@ function FeatureCard({
 
 function HomeHero({ shop, tiendaHref }: { shop: any; tiendaHref: string }) {
   const heroRef = useRef<HTMLDivElement>(null);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const springX = useSpring(mouseX, { stiffness: 55, damping: 25 });
+  const springY = useSpring(mouseY, { stiffness: 55, damping: 25 });
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -164,9 +176,27 @@ function HomeHero({ shop, tiendaHref }: { shop: any; tiendaHref: string }) {
     return () => ctx.revert();
   }, []);
 
+  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    mouseX.set(e.clientX - rect.left);
+    mouseY.set(e.clientY - rect.top);
+  };
+
   return (
-    <section ref={heroRef} className="relative min-h-[90vh] flex items-center overflow-hidden">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-white/[0.025] rounded-full blur-[160px] pointer-events-none" />
+    <section ref={heroRef} onMouseMove={handleMouseMove} className="relative min-h-[90vh] flex items-center overflow-hidden">
+      {/* Static ambient glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-white/[0.018] rounded-full blur-[160px] pointer-events-none" />
+      {/* Mouse-follow glow */}
+      <motion.div
+        className="absolute w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none"
+        style={{
+          left: springX,
+          top: springY,
+          translateX: "-50%",
+          translateY: "-50%",
+          background: "radial-gradient(circle, rgba(255,255,255,0.035) 0%, transparent 70%)",
+        }}
+      />
 
       <div className="relative z-10 w-full max-w-screen-xl mx-auto px-6 md:px-12 grid lg:grid-cols-2 gap-16 items-center py-24">
         <div className="space-y-8">
@@ -192,7 +222,7 @@ function HomeHero({ shop, tiendaHref }: { shop: any; tiendaHref: string }) {
           <div className="home-hero-sub flex items-center gap-4 flex-wrap">
             <Link
               href={tiendaHref}
-              className="flex items-center gap-2 px-7 py-3.5 bg-white text-black rounded-full font-bold text-sm tracking-wide hover:bg-white/90 active:scale-95 transition-all"
+              className="flex items-center gap-2 px-7 py-3.5 bg-white text-black rounded-full font-bold text-sm tracking-wide hover:bg-white/90 active:scale-[0.97] transition-all"
             >
               Ver Catálogo <ChevronRight className="w-4 h-4" />
             </Link>
@@ -340,7 +370,7 @@ function CTASection({ tiendaHref }: { tiendaHref: string }) {
 
         <Link
           href={tiendaHref}
-          className="relative inline-flex items-center gap-2 px-8 py-4 bg-white text-black rounded-full font-bold text-sm tracking-wide hover:bg-white/90 active:scale-95 transition-all"
+          className="relative inline-flex items-center gap-2 px-8 py-4 bg-white text-black rounded-full font-bold text-sm tracking-wide hover:bg-white/90 active:scale-[0.97] transition-all"
         >
           <ShoppingBag className="w-4 h-4" />
           Ver Catálogo Completo
@@ -432,16 +462,16 @@ export function TechPremiumV2Home({ shop }: TechPremiumV2HomeProps) {
             )}
             <Link
               href={tiendaHref}
-              className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-xs font-bold hover:bg-white/90 active:scale-95 transition-all ml-1"
+              className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-xs font-bold hover:bg-white/90 active:scale-[0.97] transition-all ml-1"
             >
               <ShoppingBag className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Catálogo</span>
               {totalItems > 0 && (
                 <motion.span
                   key={totalItems}
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                  initial={{ scale: 0.4, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", duration: 0.4, bounce: 0.35 }}
                   className="w-4 h-4 bg-black text-white text-[9px] font-black rounded-full flex items-center justify-center"
                 >
                   {totalItems}

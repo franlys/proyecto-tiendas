@@ -66,7 +66,7 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
             {
                 opacity: 1, y: 0,
                 duration: 0.5,
-                delay: Math.min(index * 0.035, 0.3), // cap delay so late cards don't wait too long
+                delay: Math.min(index * 0.04, 0.16), // cap delay so late cards don't wait too long
                 ease: "power2.out",
                 scrollTrigger: { trigger: el, start: "top 96%", once: true },
                 clearProps: "willChange", // release GPU layer after animation
@@ -106,6 +106,19 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
                     ) : (
                         <div className="absolute inset-0 flex items-center justify-center">
                             <Package className="w-12 h-12 text-white/10" />
+                        </div>
+                    )}
+
+                    {/* Quick-add overlay — slides up from bottom on hover */}
+                    {!isOutOfStock && (
+                        <div className="absolute inset-x-0 bottom-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] bg-gradient-to-t from-black/80 to-transparent pt-8 pb-3 px-3 flex justify-end pointer-events-none group-hover:pointer-events-auto">
+                            <button
+                                onClick={handleAction}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-black text-[10px] font-bold tracking-wide active:scale-[0.97] transition-transform duration-150"
+                            >
+                                <ShoppingBag className="w-3 h-3" />
+                                {hasOptions ? "Ver opciones" : "Agregar"}
+                            </button>
                         </div>
                     )}
 
@@ -150,7 +163,7 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
                             onClick={handleAction}
                             disabled={isOutOfStock && !hasOptions}
                             className={cn(
-                                "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[11px] font-bold tracking-wide transition-all duration-150 active:scale-95",
+                                "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[11px] font-bold tracking-wide transition-all duration-150 active:scale-[0.97]",
                                 isOutOfStock && !hasOptions
                                     ? "bg-white/4 text-white/20 cursor-not-allowed"
                                     : "bg-white text-black hover:bg-white/90"
@@ -244,7 +257,7 @@ function Hero({ shop, onExplore }: { shop: any; onExplore: () => void }) {
                     <div className="v2-hero-sub flex items-center gap-4">
                         <button
                             onClick={onExplore}
-                            className="flex items-center gap-2 px-7 py-3.5 bg-white text-black rounded-full font-bold text-sm tracking-wide hover:bg-white/90 active:scale-95 transition-all"
+                            className="flex items-center gap-2 px-7 py-3.5 bg-white text-black rounded-full font-bold text-sm tracking-wide hover:bg-white/90 active:scale-[0.97] transition-all"
                         >
                             Ver Catálogo <ChevronRight className="w-4 h-4" />
                         </button>
@@ -375,16 +388,16 @@ export function TechPremiumV2Layout({ shop, products, services, loadingData, sho
 
                         <button
                             onClick={() => setIsCartOpen(true)}
-                            className="relative flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-xs font-bold hover:bg-white/90 active:scale-95 transition-all ml-1"
+                            className="relative flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-xs font-bold hover:bg-white/90 active:scale-[0.97] transition-all ml-1"
                         >
                             <ShoppingBag className="w-3.5 h-3.5" />
                             <span className="hidden sm:inline">Carrito</span>
                             {totalItems > 0 && (
                                 <motion.span
                                     key={totalItems}
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                                    initial={{ scale: 0.4, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    transition={{ type: "spring", duration: 0.4, bounce: 0.35 }}
                                     className="w-4 h-4 bg-black text-white text-[9px] font-black rounded-full flex items-center justify-center"
                                 >
                                     {totalItems}
@@ -559,7 +572,7 @@ export function TechPremiumV2Layout({ shop, products, services, loadingData, sho
                                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shop.contact?.address || shop.name || "")}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-sm hover:bg-white/90 active:scale-95 transition-all"
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-sm hover:bg-white/90 active:scale-[0.97] transition-all"
                             >
                                 Abrir en Maps <ArrowUpRight className="w-4 h-4" />
                             </a>
