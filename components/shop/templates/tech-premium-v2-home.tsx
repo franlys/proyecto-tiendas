@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import {
   DEFAULT_MAIN_CATEGORIES,
   MAIN_CATEGORY_GRADIENTS,
+  MAIN_CATEGORY_SOLID_BG,
   MAIN_CATEGORY_ACCENTS,
   type MainCategory,
 } from "@/lib/types/main-category.types";
@@ -447,42 +448,66 @@ function CategoryShowcaseSection({
                 cursor: "pointer",
               }}
             >
-              {/* Background: image takes priority, gradient as fallback */}
-              {cat.image ? (
-                <>
-                  <img
-                    src={cat.image}
-                    alt={cat.name}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    style={{
-                      transform: isHovered ? "scale(1.07)" : "scale(1)",
-                      transition: "transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)",
-                    }}
-                  />
-                  <div
-                    className="absolute inset-0 bg-gradient-to-t from-black/92 via-black/25 to-transparent"
-                    style={{
-                      opacity: isHovered ? 0.8 : 1,
-                      transition: "opacity 0.3s",
-                    }}
-                  />
-                </>
-              ) : (
-                <div
-                  className={cn(
-                    "absolute inset-0 bg-gradient-to-br",
-                    MAIN_CATEGORY_GRADIENTS[i % MAIN_CATEGORY_GRADIENTS.length]
-                  )}
-                  style={{
-                    opacity: isHovered ? 1 : 0.65,
-                    transition: "opacity 0.3s",
-                  }}
-                />
+              {/* ── Solid color base (always rendered) ── */}
+              <div
+                className="absolute inset-0"
+                style={{ backgroundColor: MAIN_CATEGORY_SOLID_BG[i % MAIN_CATEGORY_SOLID_BG.length] }}
+              />
+
+              {/* ── Gradient overlay on top of solid ── */}
+              <div
+                className={cn("absolute inset-0 bg-gradient-to-br", MAIN_CATEGORY_GRADIENTS[i % MAIN_CATEGORY_GRADIENTS.length])}
+                style={{ opacity: 0.6 }}
+              />
+
+              {/* ── Image ── */}
+              {cat.image && (
+                cat.imageType === "atmosphere" ? (
+                  /* Atmospheric/scenic photo: fill card + dark overlay */
+                  <>
+                    <img
+                      src={cat.image}
+                      alt={cat.name}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      style={{
+                        transform: isHovered ? "scale(1.07)" : "scale(1)",
+                        transition: "transform 0.65s cubic-bezier(0.23, 1, 0.32, 1)",
+                      }}
+                    />
+                    <div
+                      className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/10"
+                      style={{ transition: "opacity 0.3s", opacity: isHovered ? 0.75 : 1 }}
+                    />
+                  </>
+                ) : (
+                  /* Product shot (white/transparent bg):
+                     mix-blend-mode: multiply makes white disappear against the colored bg.
+                     object-fit: contain shows the full product without cropping.
+                     drop-shadow adds depth so it reads as floating. */
+                  <>
+                    <img
+                      src={cat.image}
+                      alt={cat.name}
+                      className="absolute inset-x-0 w-full"
+                      style={{
+                        top: "8%",
+                        height: "68%",
+                        objectFit: "contain",
+                        mixBlendMode: "multiply",
+                        filter: `drop-shadow(0 8px 24px rgba(0,0,0,0.55)) brightness(${isHovered ? 1.08 : 0.92})`,
+                        transform: isHovered ? "scale(1.1) translateY(-4px)" : "scale(1) translateY(0)",
+                        transition: "transform 0.55s cubic-bezier(0.23, 1, 0.32, 1), filter 0.4s",
+                      }}
+                    />
+                    {/* Bottom fade so text is always readable */}
+                    <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/85 to-transparent" />
+                  </>
+                )
               )}
 
-              {/* Hover glow overlay */}
+              {/* ── Hover glow ── */}
               <div
-                className="absolute inset-0 bg-white/[0.03]"
+                className="absolute inset-0 bg-white/[0.025]"
                 style={{ opacity: isHovered ? 1 : 0, transition: "opacity 0.3s" }}
               />
 
@@ -544,23 +569,41 @@ function CategoryShowcaseSection({
           <Link
             key={cat.id}
             href={`${tiendaHref}?mainCategory=${cat.id}`}
-            className="group relative h-32 rounded-2xl overflow-hidden cursor-pointer"
+            className="group relative h-36 rounded-2xl overflow-hidden cursor-pointer"
           >
-            {cat.image ? (
-              <>
-                <img
-                  src={cat.image}
-                  alt={cat.name}
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 to-black/15" />
-              </>
-            ) : (
-              <div className={cn(
-                "absolute inset-0 bg-gradient-to-br",
-                MAIN_CATEGORY_GRADIENTS[i % MAIN_CATEGORY_GRADIENTS.length]
-              )} />
+            {/* Solid base */}
+            <div
+              className="absolute inset-0"
+              style={{ backgroundColor: MAIN_CATEGORY_SOLID_BG[i % MAIN_CATEGORY_SOLID_BG.length] }}
+            />
+            {/* Gradient */}
+            <div className={cn("absolute inset-0 bg-gradient-to-br opacity-60", MAIN_CATEGORY_GRADIENTS[i % MAIN_CATEGORY_GRADIENTS.length])} />
+
+            {cat.image && (
+              cat.imageType === "atmosphere" ? (
+                <>
+                  <img src={cat.image} alt={cat.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 to-black/15" />
+                </>
+              ) : (
+                <>
+                  <img
+                    src={cat.image}
+                    alt={cat.name}
+                    className="absolute inset-x-0 group-hover:scale-110 transition-transform duration-500"
+                    style={{
+                      top: "5%",
+                      height: "62%",
+                      objectFit: "contain",
+                      mixBlendMode: "multiply",
+                      filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.4))",
+                    }}
+                  />
+                  <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent" />
+                </>
+              )
             )}
+
             <div className="absolute bottom-0 left-0 right-0 p-3">
               <p className={cn(
                 "text-[10px] font-black uppercase tracking-widest",

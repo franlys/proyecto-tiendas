@@ -2,10 +2,17 @@
 // Stored in: shops/{shopId}/settings/mainCategories → { items: MainCategory[] }
 
 export interface MainCategory {
-  id: string;        // URL-safe slug, e.g. "smartphones"
-  name: string;      // Display name, e.g. "Smartphones"
+  id: string;
+  name: string;
   description: string;
-  image?: string;    // URL (Firebase Storage, CDN, etc.)
+  image?: string;
+  /**
+   * "product" (default): product shot on white/transparent bg.
+   *   → object-fit: contain + mix-blend-mode: multiply → white bg disappears.
+   * "atmosphere": scenic/environmental photo (e.g. a TV showing a landscape).
+   *   → object-fit: cover, no blend mode, just a dark overlay.
+   */
+  imageType?: "product" | "atmosphere";
   enabled: boolean;
   order: number;
 }
@@ -16,6 +23,7 @@ export const DEFAULT_MAIN_CATEGORIES: MainCategory[] = [
     id: "smartphones",
     name: "Smartphones",
     description: "iPhone, Samsung, Xiaomi y los últimos modelos",
+    imageType: "product",
     enabled: true,
     order: 0,
   },
@@ -23,6 +31,7 @@ export const DEFAULT_MAIN_CATEGORIES: MainCategory[] = [
     id: "televisores",
     name: "Televisores",
     description: "Smart TV 4K, OLED y QLED para tu hogar",
+    imageType: "atmosphere",
     enabled: true,
     order: 1,
   },
@@ -30,6 +39,7 @@ export const DEFAULT_MAIN_CATEGORIES: MainCategory[] = [
     id: "tablets",
     name: "Tablets",
     description: "iPad, Galaxy Tab y más para trabajar y crear",
+    imageType: "product",
     enabled: true,
     order: 2,
   },
@@ -37,6 +47,7 @@ export const DEFAULT_MAIN_CATEGORIES: MainCategory[] = [
     id: "smartwatches",
     name: "Smartwatches",
     description: "Wearables y relojes inteligentes de alta gama",
+    imageType: "product",
     enabled: true,
     order: 3,
   },
@@ -44,28 +55,43 @@ export const DEFAULT_MAIN_CATEGORIES: MainCategory[] = [
     id: "aires-acondicionados",
     name: "Aires A/C",
     description: "Climatización inteligente para cada espacio",
+    imageType: "product",
     enabled: true,
     order: 4,
   },
   {
-    id: "accesorios",
-    name: "Accesorios",
-    description: "Audífonos, cargadores, fundas y mucho más",
+    id: "laptops",
+    name: "Laptops",
+    description: "Computadoras portátiles de alto rendimiento",
+    imageType: "product",
     enabled: true,
     order: 5,
   },
 ];
 
-// Palette rotates if there are more than 6 categories
+// ─── PALETTE ─────────────────────────────────────────────────────────────────
+// Medium-saturation colors: bright enough that mix-blend-mode: multiply
+// removes white backgrounds while keeping product colors recognizable.
+export const MAIN_CATEGORY_SOLID_BG = [
+  "#1e3a5f",   // deep blue      — smartphones
+  "#2d1b69",   // deep violet    — televisores
+  "#0c3b4a",   // deep cyan      — tablets
+  "#3d2600",   // deep amber     — smartwatches
+  "#0a2d3d",   // deep sky       — aires
+  "#0d2d1e",   // deep emerald   — laptops
+  "#3d0d1e",   // deep rose      — extra
+  "#2d1500",   // deep orange    — extra
+];
+
 export const MAIN_CATEGORY_GRADIENTS = [
-  "from-blue-700/60 to-blue-950",
-  "from-violet-700/60 to-violet-950",
-  "from-cyan-700/60 to-cyan-950",
-  "from-amber-700/60 to-amber-950",
-  "from-sky-700/60 to-sky-950",
-  "from-emerald-700/60 to-emerald-950",
-  "from-rose-700/60 to-rose-950",
-  "from-orange-700/60 to-orange-950",
+  "from-[#1e3a5f] to-[#0a1628]",
+  "from-[#2d1b69] to-[#0d0820]",
+  "from-[#0c3b4a] to-[#040f14]",
+  "from-[#3d2600] to-[#120b00]",
+  "from-[#0a2d3d] to-[#030d12]",
+  "from-[#0d2d1e] to-[#030d08]",
+  "from-[#3d0d1e] to-[#120308]",
+  "from-[#2d1500] to-[#0d0600]",
 ];
 
 export const MAIN_CATEGORY_ACCENTS = [
