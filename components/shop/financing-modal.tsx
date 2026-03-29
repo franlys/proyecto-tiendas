@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   X, CreditCard, User, Hash, MapPin, Phone, Briefcase,
   FileText, DollarSign, Send, Loader2, CheckCircle, ChevronRight,
@@ -49,7 +50,7 @@ export function FinancingModal({ isOpen, onClose, shopId, bankName = "BANFONDESA
     }
   }, [isOpen]);
 
-  if (!isOpen || !mounted) return null;
+  if (!mounted) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,10 +90,25 @@ export function FinancingModal({ isOpen, onClose, shopId, bankName = "BANFONDESA
   };
 
   return createPortal(
+    <AnimatePresence>
+    {isOpen && (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+        onClick={onClose}
+      />
 
-      <div className="relative w-full max-w-lg bg-[#0d0d0d] border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.97, y: 6 }}
+        transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+        className="relative w-full max-w-lg bg-[#0d0d0d] border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+      >
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/8 flex-shrink-0">
@@ -222,7 +238,7 @@ export function FinancingModal({ isOpen, onClose, shopId, bankName = "BANFONDESA
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3.5 bg-white text-black rounded-xl font-black text-sm uppercase tracking-widest hover:bg-white/90 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-white text-black rounded-xl font-black text-sm uppercase tracking-widest hover:bg-white/90 active:scale-[0.97] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Enviando...</>
@@ -233,8 +249,10 @@ export function FinancingModal({ isOpen, onClose, shopId, bankName = "BANFONDESA
             </div>
           </form>
         )}
-      </div>
-    </div>,
+      </motion.div>
+    </div>
+    )}
+    </AnimatePresence>,
     document.body
   );
 }

@@ -19,6 +19,7 @@ export function WholesaleButton({ shopId, className }: WholesaleButtonProps) {
     <>
       <button
         type="button"
+        data-wholesale-trigger
         onClick={() => setIsOpen(true)}
         className={cn(
           "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all",

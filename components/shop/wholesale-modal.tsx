@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Lock, Unlock, Sparkles, AlertCircle, Loader2,
   UserPlus, CheckCircle, Phone, User, Building2, Hash,
@@ -259,15 +260,30 @@ export function WholesaleModal({ isOpen, onClose, shopId }: WholesaleModalProps)
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
-  if (!isOpen || !mounted) return null;
+  if (!mounted) return null;
 
   const handleDeactivate = () => { deactivateWholesale(); onClose(); };
 
   return createPortal(
+    <AnimatePresence>
+    {isOpen && (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        onClick={onClose}
+      />
 
-      <div className="relative w-full max-w-md glass-panel rounded-2xl p-6 border border-amber-500/20 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.97, y: 6 }}
+        transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+        className="relative w-full max-w-md glass-panel rounded-2xl p-6 border border-amber-500/20 max-h-[90vh] overflow-y-auto"
+      >
         {/* Close */}
         <button
           onClick={onClose}
@@ -360,8 +376,10 @@ export function WholesaleModal({ isOpen, onClose, shopId }: WholesaleModalProps)
             }
           </>
         )}
-      </div>
-    </div>,
+      </motion.div>
+    </div>
+    )}
+    </AnimatePresence>,
     document.body
   );
 }

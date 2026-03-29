@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { X, Tag, FileText, User, Mail, Phone, Send, CheckCircle, Loader2, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -46,7 +47,7 @@ export function QuoteRequestModal({ isOpen, onClose, shopId, categories }: Quote
     }
   }, [isOpen]);
 
-  if (!isOpen || !mounted) return null;
+  if (!mounted) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,15 +87,27 @@ export function QuoteRequestModal({ isOpen, onClose, shopId, categories }: Quote
   const displayCategories = categories.filter(c => c !== "todos");
 
   return createPortal(
+    <AnimatePresence>
+    {isOpen && (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
         className="absolute inset-0 bg-black/75 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-md bg-[#0d0d0d] border border-white/10 rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.97, y: 6 }}
+        transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+        className="relative w-full max-w-md bg-[#0d0d0d] border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+      >
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/8">
@@ -249,7 +262,7 @@ export function QuoteRequestModal({ isOpen, onClose, shopId, categories }: Quote
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3.5 bg-white text-black rounded-xl font-black text-sm uppercase tracking-widest hover:bg-white/90 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-3.5 bg-white text-black rounded-xl font-black text-sm uppercase tracking-widest hover:bg-white/90 active:scale-[0.97] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Enviando...</>
@@ -259,8 +272,10 @@ export function QuoteRequestModal({ isOpen, onClose, shopId, categories }: Quote
             </button>
           </form>
         )}
-      </div>
-    </div>,
+      </motion.div>
+    </div>
+    )}
+    </AnimatePresence>,
     document.body
   );
 }

@@ -313,9 +313,10 @@ export function LiveChatWidget({ shopId, shopName }: LiveChatWidgetProps) {
       {/* FAB */}
       <button
         type="button"
+        data-chat-trigger
         onClick={() => widgetState === "closed" ? setWidgetState("intro") : handleClose()}
         className={cn(
-          "w-12 h-12 rounded-full shadow-xl flex items-center justify-center transition-all active:scale-95",
+          "w-12 h-12 rounded-full shadow-xl flex items-center justify-center transition-all active:scale-[0.97]",
           isOpen
             ? "bg-white/10 border border-white/20 text-white"
             : "bg-white text-black hover:bg-white/90"
