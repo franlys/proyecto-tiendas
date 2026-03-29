@@ -12,8 +12,10 @@ import {
   ArrowUpRight,
   MapPin,
   Globe,
+  Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { Product } from "@/lib/constants";
 import { useCart, useWholesale } from "@/components/shared";
 import { WholesaleButton } from "@/components/shop";
 import { QuoteRequestModal } from "@/components/shop/quote-request-modal";
@@ -341,6 +343,133 @@ function FeaturesSection({
   );
 }
 
+// ─── FEATURED PRODUCTS ──────────────────────────────────────────────────────
+
+function FeaturedCard({ product, tiendaHref, index }: { product: Product; tiendaHref: string; index: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-40px" });
+  const { isWholesaleMode } = useWholesale();
+
+  const price = (() => {
+    const base = Number((product as any).promoPrice || product.price) || 0;
+    if (isWholesaleMode) {
+      const wholesale = Number((product as any).wholesalePrice) || 0;
+      return wholesale > 0 ? wholesale : base;
+    }
+    return base;
+  })();
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 28 }}
+      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 28 }}
+      transition={{ duration: 0.55, delay: Math.min(index * 0.07, 0.21), ease: [0.22, 1, 0.36, 1] }}
+    >
+      <Link href={tiendaHref} className="group block bg-[#0c0c0c] border border-white/6 rounded-2xl overflow-hidden hover:border-white/14 transition-colors duration-300">
+        {/* Image */}
+        <div className="relative overflow-hidden bg-[#0f0f0f]" style={{ paddingTop: "100%" }}>
+          {product.image ? (
+            <img
+              src={product.image}
+              alt={product.name}
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Package className="w-10 h-10 text-white/10" />
+            </div>
+          )}
+        </div>
+
+        {/* Info */}
+        <div className="p-4 space-y-2">
+          {product.category && (
+            <p className="text-[9px] text-white/25 font-mono uppercase tracking-[0.25em]">{product.category}</p>
+          )}
+          <h3 className="text-sm font-semibold text-white leading-snug line-clamp-2">{product.name}</h3>
+          <div className="flex items-center justify-between pt-1">
+            <span className={cn("text-sm font-bold", isWholesaleMode ? "text-amber-400" : "text-white")}>
+              {price > 0 ? `$${price.toLocaleString()}` : "Consultar"}
+            </span>
+            <span className="flex items-center gap-1 text-[10px] text-white/30 group-hover:text-white/60 transition-colors duration-200 font-medium">
+              Ver <ArrowUpRight className="w-3 h-3" />
+            </span>
+          </div>
+        </div>
+      </Link>
+    </motion.div>
+  );
+}
+
+function FeaturedProductsSection({
+  products,
+  loadingData,
+  tiendaHref,
+}: {
+  products: Product[];
+  loadingData: boolean;
+  tiendaHref: string;
+}) {
+  const titleRef = useRef<HTMLDivElement>(null);
+  const titleInView = useInView(titleRef, { once: true });
+
+  const featured = products.slice(0, 6);
+
+  if (!loadingData && featured.length === 0) return null;
+
+  return (
+    <section className="max-w-screen-xl mx-auto px-6 md:px-12 py-20 space-y-12">
+      <div ref={titleRef} className="flex items-end justify-between">
+        <div className="space-y-3">
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={titleInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.5 }}
+            className="text-[10px] font-mono uppercase tracking-[0.4em] text-white/25"
+          >
+            Catálogo
+          </motion.p>
+          <motion.h2
+            initial={{ opacity: 0, y: 16 }}
+            animate={titleInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.08 }}
+            className="text-3xl md:text-4xl font-black tracking-tight text-white leading-tight"
+          >
+            Productos Destacados
+          </motion.h2>
+        </div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={titleInView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <Link
+            href={tiendaHref}
+            className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-white/35 hover:text-white transition-colors duration-200"
+          >
+            Ver todos <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+        </motion.div>
+      </div>
+
+      {loadingData ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="bg-white/3 rounded-2xl animate-pulse" style={{ paddingTop: "140%" }} />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          {featured.map((product, i) => (
+            <FeaturedCard key={product.id} product={product} tiendaHref={tiendaHref} index={i} />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 // ─── CTA SECTION ────────────────────────────────────────────────────────────
 
 function CTASection({ tiendaHref }: { tiendaHref: string }) {
@@ -385,9 +514,11 @@ function CTASection({ tiendaHref }: { tiendaHref: string }) {
 
 interface TechPremiumV2HomeProps {
   shop: any;
+  products?: Product[];
+  loadingData?: boolean;
 }
 
-export function TechPremiumV2Home({ shop }: TechPremiumV2HomeProps) {
+export function TechPremiumV2Home({ shop, products = [], loadingData = false }: TechPremiumV2HomeProps) {
   const { shopId } = useParams<{ shopId: string }>();
   const { items: cart, setIsCartOpen } = useCart();
   const { isWholesaleMode, wholesalerName } = useWholesale();
@@ -490,6 +621,11 @@ export function TechPremiumV2Home({ shop }: TechPremiumV2HomeProps) {
           shop={shop}
           onFinancing={() => setIsFinancingOpen(true)}
           onQuote={() => setIsQuoteOpen(true)}
+        />
+        <FeaturedProductsSection
+          products={products}
+          loadingData={loadingData}
+          tiendaHref={tiendaHref}
         />
         <CTASection tiendaHref={tiendaHref} />
       </div>

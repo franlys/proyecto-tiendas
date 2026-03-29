@@ -8,7 +8,6 @@ import {
     Package,
     MapPin,
     Globe,
-    ChevronRight,
     ArrowUpRight,
     MessageSquarePlus,
     CreditCard,
@@ -23,7 +22,6 @@ import { LiveChatWidget } from "@/components/shop/live-chat-widget";
 import { FinancingModal } from "@/components/shop/financing-modal";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { LogoAnimation } from "@/components/shop/logo-animation";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -203,76 +201,22 @@ function ServiceCard({ service }: { service: Service }) {
     );
 }
 
-// ─── HERO ────────────────────────────────────────────────────────────────────
-function Hero({ shop, onExplore }: { shop: any; onExplore: () => void }) {
-    const heroRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const ctx = gsap.context(() => {
-            gsap.fromTo(
-                ".v2-hero-line",
-                { y: 60, opacity: 0 },
-                { y: 0, opacity: 1, duration: 1.1, stagger: 0.12, ease: "power3.out", delay: 0.1 }
-            );
-            gsap.fromTo(
-                ".v2-hero-sub",
-                { y: 20, opacity: 0 },
-                { y: 0, opacity: 1, duration: 0.9, ease: "power2.out", delay: 0.55 }
-            );
-            gsap.fromTo(
-                ".v2-hero-img",
-                { scale: 1.08, opacity: 0 },
-                { scale: 1, opacity: 1, duration: 1.4, ease: "power3.out", delay: 0.2 }
-            );
-        }, heroRef);
-        return () => ctx.revert();
-    }, []);
-
+// ─── CATALOG BANNER ──────────────────────────────────────────────────────────
+function CatalogBanner({ shop, productCount }: { shop: any; productCount: number }) {
     return (
-        <section ref={heroRef} className="relative min-h-[88vh] flex items-center overflow-hidden">
-            {/* Subtle radial glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/3 rounded-full blur-[140px] pointer-events-none" />
-
-            <div className="relative z-10 w-full max-w-screen-xl mx-auto px-6 md:px-12 grid lg:grid-cols-2 gap-16 items-center py-20">
-
-                {/* Text */}
-                <div className="space-y-8">
-                    <div className="overflow-hidden">
-                        <p className="v2-hero-line text-[10px] font-semibold uppercase tracking-[0.4em] text-white/35 mb-6 font-mono">
-                            {shop.slogan || "Tecnología de nueva generación"}
-                        </p>
-                    </div>
-
-                    <div style={{ overflow: "hidden clip" }}>
-                        <h1 className="v2-hero-line font-black leading-[0.88] tracking-[-0.04em] text-white"
-                            style={{ fontSize: "clamp(2.4rem, 5.5vw, 5.2rem)" }}>
-                            {shop.name}
-                        </h1>
-                    </div>
-
-                    <p className="v2-hero-sub text-white/38 text-[15px] md:text-base leading-[1.7] max-w-md font-light tracking-wide">
-                        {shop.description || "Dispositivos de élite. Diseño sin concesiones. La experiencia premium que mereces."}
-                    </p>
-
-                    <div className="v2-hero-sub flex items-center gap-4">
-                        <button
-                            onClick={onExplore}
-                            className="flex items-center gap-2 px-7 py-3.5 bg-white text-black rounded-full font-bold text-sm tracking-wide hover:bg-white/90 active:scale-[0.97] transition-all"
-                        >
-                            Ver Catálogo <ChevronRight className="w-4 h-4" />
-                        </button>
-                    </div>
+        <div className="border-b border-white/5">
+            <div className="max-w-screen-xl mx-auto px-6 md:px-12 py-8 flex items-center justify-between gap-4">
+                <div>
+                    <p className="text-[9px] font-mono uppercase tracking-[0.4em] text-white/20 mb-1">Catálogo</p>
+                    <h1 className="text-xl font-black tracking-tight text-white">{shop.name}</h1>
                 </div>
-
-                {/* Animated Logo */}
-                <div className="relative flex items-center justify-center">
-                    <LogoAnimation />
-                </div>
+                {productCount > 0 && (
+                    <span className="text-[10px] font-mono text-white/20 uppercase tracking-widest">
+                        {productCount} producto{productCount !== 1 ? "s" : ""}
+                    </span>
+                )}
             </div>
-
-            {/* Bottom divider */}
-            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
-        </section>
+        </div>
     );
 }
 
@@ -408,13 +352,13 @@ export function TechPremiumV2Layout({ shop, products, services, loadingData, sho
                 </div>
             </header>
 
-            {/* ─── HERO ─── */}
+            {/* ─── CATALOG BANNER ─── */}
             <div className="pt-16">
-                <Hero shop={shop} onExplore={scrollToCatalog} />
+                <CatalogBanner shop={shop} productCount={products.length} />
             </div>
 
             {/* ─── CATALOG ─── */}
-            <main ref={catalogRef} className="max-w-screen-xl mx-auto px-6 md:px-12 py-16 space-y-12">
+            <main ref={catalogRef} className="max-w-screen-xl mx-auto px-6 md:px-12 py-12 space-y-12">
 
                 {/* Tab + Filter bar */}
                 <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">

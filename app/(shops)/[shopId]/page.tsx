@@ -155,7 +155,7 @@ export default function ShopHomePage() {
 
   // tech-premium-v2 has a dedicated homepage with feature cards
   if (shop?.templateType === "tech-premium-v2") {
-    return <TechPremiumV2Home shop={shop as any} />;
+    return <TechPremiumV2Home shop={shop as any} products={products} loadingData={loadingData} />;
   }
 
   return (
