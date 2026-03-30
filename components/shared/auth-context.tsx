@@ -45,7 +45,9 @@ export interface User {
   role: UserRole;
   shopId?: string;
   // Staff-specific fields
-  staffRole?: "owner" | "manager" | "sales" | "warehouse";
+  staffRole?: "owner" | "manager" | "sales" | "warehouse" | "technician" | "receptionist";
+  branchId?: string;    // Sucursal asignada al empleado
+  branchName?: string;  // Nombre de la sucursal (cache para display)
   email?: string;
   phone?: string;
   avatar?: string;

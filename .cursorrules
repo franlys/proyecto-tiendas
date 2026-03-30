@@ -1,0 +1,26 @@
+# Reglas Globales de Arquitectura e IA - proyecto-tiendas
+
+## 1. 🤖 INSTRUCCIÓN CRÍTICA DE SKILLS (CLAUDE / CURSOR)
+
+**ANTES DE COMENZAR A ESCRIBIR O DISEÑAR CUALQUIER COMPONENTE:**
+Siempre debes leer el archivo `.claude/SKILLS_RULES.md` ubicado en este repositorio y decidir cuál de las *skills* predefinidas vas a aplicar para la tarea actual. Este proyecto prioriza una alta calidad visual, animaciones ricas, patrones de composición modernos y el cumplimiento riguroso de buenas prácticas. 
+NUNCA utilices un estilo visual genérico ("AI slop") sin antes consultar las skills de diseño (`ui-ux-pro-max`, `emilkowalski-design`, `frontend-design`).
+
+## 2. 📝 GESTIÓN DE TAREAS Y MEMORIA
+Tu "memoria" como agente se encuentra en la raíz del repositorio, en `task.md`.
+- Al iniciar el día o recibir instrucciones ambiguas, **debes leer y consultar `task.md`** para saber en qué fase de implementación estamo enfocados.
+- Cuando completes una historia de usuario o bloque importante de funcionalidad, **debes actualizar obligatoriamente el archivo `task.md`**, cambiando el estado de los pendientes a `[x]` y documentando el nuevo hito.
+- Siempre mantén anotaciones claras sobre lo que falta por hacer en las Fases del proyecto en `task.md`. Nunca dependas únicamente de tu memoria de contexto del chat (se reinicia); el repositorio local manda.
+
+## 3. 🏗️ STACK Y DIRECTIVAS TÉCNICAS
+- **Framework:** Next.js 14+ (App Router). Uso estricto de Server Components vs Client Components (el pragma `"use client"` va únicamente en componentes donde existan interacciones o un manejador de estado React).
+- **Estilos:** Tailwind CSS y utilidades base como `shadcn/ui` o `lucide-react`.
+- **Base de Datos/Backend:** Firebase Authentication, Storage, Evolution API y Firestore Cloud.
+- **Gestión del Estado:** React Context API (`AuthContext`, `ShopsContext`, `InventoryContext`).
+- **TypeScript:** Altamente tipado. Evita y prohíbe el uso de `any`. Si la data de nube es incierta, usa `unknown` y constrúyelo escalonadamente, o extrae la interfaz del modelo real en `lib/constants.ts` o en los archivos ubicados bajo `lib/types/`.
+
+## 4. 🗂️ CONTEXTO Y ARQUITECTURA GLOBAL
+- Consulta preferiblemente `docs/architecture.md` antes de decidir crear nuevas tablas pesadas en Firebase, modificar reglas en Firestore o alterar drásticamente la lógica multicomercial. Ese documento enseña los roles transaccionales vitales (`SUPER_ADMIN`, `SHOP_OWNER`, `SHOP_STAFF`) y cómo lidiar de manera segura con el entorno multi-tenant de Linko App.
+
+## 5. 🛠️ WORKFLOWS Y AGENTES EJECUTORES
+- El directorio `.agents/workflows/` contiene instrucciones formales para procesos de validación estandarizados de este repositorio. Cuando te ordenen "Súbelo a producción", invoca un workflow sistemático, lee `.agents/workflows/deploy.md` antes de correr comandos imprudentes en consola.

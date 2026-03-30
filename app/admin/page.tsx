@@ -36,6 +36,8 @@ import {
   Building2,
   MessageSquarePlus,
   MessageCircle,
+  ClipboardList,
+  BarChart3,
 } from "lucide-react";
 import { useAuth, ShopsProvider, useShops, AgencyProvider, SalesOrdersProvider, useSalesOrders, ORDER_STATUS_CONFIG, type OrderStatus, type SalesOrder } from "@/components/shared";
 import { DashboardKPIs, SalesChart, SubscriptionLock, SupportWidget, AgencyContactCard } from "@/components/admin";
@@ -1050,6 +1052,54 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
             </Link>
           )}
 
+          {/* Finanzas — Solo dueño/admin */}
+          {(user?.role === "SHOP_OWNER" || user?.role === "SUPER_ADMIN") && (
+            <Link
+              href="/admin/finanzas"
+              className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-green-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-white font-medium">Finanzas</p>
+                <p className="text-xs text-slate-300">Resumen financiero por sucursal</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+            </Link>
+          )}
+
+          {/* Cuadres — Dueño ve todos, Empleado ve el suyo */}
+          {user?.role === "SHOP_OWNER" || user?.role === "SUPER_ADMIN" ? (
+            <Link
+              href="/admin/cuadres"
+              className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                <ClipboardList className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-white font-medium">Cuadres</p>
+                <p className="text-xs text-slate-300">Revisión de actividad por empleado</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+            </Link>
+          ) : user?.role === "SHOP_STAFF" ? (
+            <Link
+              href="/admin/mi-cuadre"
+              className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                <ClipboardList className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-white font-medium">Mi Cuadre</p>
+                <p className="text-xs text-slate-300">Registrar ventas, reparaciones y servicios</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+            </Link>
+          ) : null}
+
           {/* Rentas - Solo si tiene rentals */}
           {features.hasRentals && (
             <Link
@@ -1377,6 +1427,24 @@ function AdminDashboardWithSubscription() {
                     <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-amber-400 hover:text-amber-300">
                       <UtensilsCrossed className="w-4 h-4" />
                       <span className="hidden sm:inline ml-1">Mesas</span>
+                    </Button>
+                  </Link>
+                )}
+
+                {/* Cuadres — visible según rol */}
+                {(user?.role === "SHOP_OWNER" || user?.role === "SUPER_ADMIN") && (
+                  <Link href="/admin/cuadres">
+                    <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-emerald-400 hover:text-emerald-300">
+                      <ClipboardList className="w-4 h-4" />
+                      <span className="hidden sm:inline ml-1">Cuadres</span>
+                    </Button>
+                  </Link>
+                )}
+                {user?.role === "SHOP_STAFF" && (
+                  <Link href="/admin/mi-cuadre">
+                    <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-emerald-400 hover:text-emerald-300">
+                      <ClipboardList className="w-4 h-4" />
+                      <span className="hidden sm:inline ml-1">Mi Cuadre</span>
                     </Button>
                   </Link>
                 )}
