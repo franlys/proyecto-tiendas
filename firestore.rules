@@ -122,6 +122,20 @@ service cloud.firestore {
         allow write: if true; // Public booking flow
       }
 
+      // CHAT SESSIONS - Live chat widget
+      match /chatSessions/{sessionId} {
+        allow read: if true;
+        allow create: if true; // Customers can open a session
+        allow update: if true; // Agent and customer can update status
+        allow delete: if isShopOwner(shopId);
+
+        match /messages/{messageId} {
+          allow read: if true;
+          allow create: if true; // Both sides can send messages
+          allow update, delete: if isShopOwner(shopId);
+        }
+      }
+
       // TRAINING PACKAGES - CRM/Admin
       match /training-packages/{packageId} {
         allow read: if true;
