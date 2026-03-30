@@ -228,10 +228,34 @@ function ChatPanel({
 }
 
 // ─── MAIN PAGE ─────────────────────────────────────────────────────────────────
+
+// Play a simple two-tone notification using Web Audio API
+function playNewChatSound() {
+  try {
+    const ctx = new AudioContext();
+    const play = (freq: number, start: number, duration: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.25, ctx.currentTime + start);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + duration);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + duration);
+    };
+    play(880, 0, 0.15);
+    play(1100, 0.18, 0.15);
+  } catch {}
+}
+
 export default function AdminChatPage() {
   const { user } = useAuth();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Persist the last known session to prevent ChatPanel from closing during Firestore snapshot gaps
+  const lastSelectedRef = useRef<ChatSession | null>(null);
+  const prevWaitingCountRef = useRef(0);
 
   const shopId = user?.shopId;
   const employeeName = user?.name || user?.email || "Asesor";
@@ -246,12 +270,24 @@ export default function AdminChatPage() {
       orderBy("createdAt", "desc")
     );
     const unsub = onSnapshot(q, snap => {
-      setSessions(snap.docs.map(d => ({ id: d.id, ...d.data() } as ChatSession)));
+      const updated = snap.docs.map(d => ({ id: d.id, ...d.data() } as ChatSession));
+      setSessions(updated);
+
+      // Play sound when a new "waiting" session arrives
+      const newWaiting = updated.filter(s => s.status === "waiting").length;
+      if (newWaiting > prevWaitingCountRef.current) {
+        playNewChatSound();
+      }
+      prevWaitingCountRef.current = newWaiting;
     });
     return () => unsub();
   }, [shopId]);
 
-  const selected = sessions.find(s => s.id === selectedId) ?? null;
+  // Derive selected — persist last known so ChatPanel doesn't unmount during Firestore gaps
+  const foundSelected = sessions.find(s => s.id === selectedId) ?? null;
+  if (foundSelected) lastSelectedRef.current = foundSelected;
+  const selected = selectedId ? (foundSelected ?? lastSelectedRef.current) : null;
+
   const waitingCount = sessions.filter(s => s.status === "waiting").length;
 
   return (
