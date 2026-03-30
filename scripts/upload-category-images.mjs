@@ -55,11 +55,12 @@ const IMAGES_DIR =
   "C:\\Users\\elmae\\OneDrive - Universidad APEC - Académico\\Escritorio\\productos";
 
 const IMAGE_MAP = [
-  { file: "smartphone.png",           categoryId: "smartphones",          imageType: "product"    },
-  { file: "tv.png",                   categoryId: "televisores",           imageType: "atmosphere" },
-  { file: "reloj.avif",               categoryId: "smartwatches",          imageType: "product"    },
-  { file: "aire acondicionado.png",   categoryId: "aires-acondicionados",  imageType: "product"    },
-  { file: "laptos.png",               categoryId: "laptops",               imageType: "product"    },
+  { file: "samsung.png",           categoryId: "smartphones",          imageType: "product" },
+  { file: "tv.png",                categoryId: "televisores",          imageType: "product" },
+  { file: "reloj.png",             categoryId: "smartwatches",         imageType: "product" },
+  { file: "aire.png",              categoryId: "aires-acondicionados", imageType: "product" },
+  { file: "laptop.png",            categoryId: "laptops",              imageType: "product" },
+  { file: "tablet.png",            categoryId: "tablets",              imageType: "product" },
 ];
 
 const MIME = {
@@ -90,7 +91,8 @@ async function uploadImage(file, categoryId) {
     public: true,
   });
 
-  const publicUrl = `https://storage.googleapis.com/${bucket.name}/${destination}`;
+  const encodedPath = encodeURIComponent(destination);
+  const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodedPath}?alt=media`;
   console.log(`  ✓ URL: ${publicUrl}`);
   return publicUrl;
 }

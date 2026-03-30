@@ -454,10 +454,13 @@ function CategoryShowcaseSection({
                 style={{ backgroundColor: MAIN_CATEGORY_SOLID_BG[i % MAIN_CATEGORY_SOLID_BG.length] }}
               />
 
-              {/* ── Gradient overlay on top of solid ── */}
+              {/* ── Gradient overlay — fades out on hover to reveal natural image colors ── */}
               <div
                 className={cn("absolute inset-0 bg-gradient-to-br", MAIN_CATEGORY_GRADIENTS[i % MAIN_CATEGORY_GRADIENTS.length])}
-                style={{ opacity: 0.6 }}
+                style={{
+                  opacity: isHovered ? 0.15 : 0.6,
+                  transition: "opacity 0.45s cubic-bezier(0.23, 1, 0.32, 1)",
+                }}
               />
 
               {/* ── Image ── */}
@@ -493,8 +496,7 @@ function CategoryShowcaseSection({
                         top: "8%",
                         height: "68%",
                         objectFit: "contain",
-                        mixBlendMode: "multiply",
-                        filter: `drop-shadow(0 8px 24px rgba(0,0,0,0.55)) brightness(${isHovered ? 1.15 : isOther ? 0.6 : 0.88})`,
+                        filter: `drop-shadow(0 8px 24px rgba(0,0,0,0.6)) brightness(${isHovered ? 1.1 : isOther ? 0.65 : 0.95})`,
                         transform: isHovered ? "scale(1.1) translateY(-4px)" : "scale(1) translateY(0)",
                         transition: "transform 0.55s cubic-bezier(0.23, 1, 0.32, 1), filter 0.4s",
                       }}
@@ -603,8 +605,7 @@ function CategoryShowcaseSection({
                       top: "5%",
                       height: "62%",
                       objectFit: "contain",
-                      mixBlendMode: "multiply",
-                      filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.4))",
+                      filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.5))",
                     }}
                   />
                   <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent" />
