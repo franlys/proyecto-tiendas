@@ -494,7 +494,7 @@ function CategoryShowcaseSection({
                         height: "68%",
                         objectFit: "contain",
                         mixBlendMode: "multiply",
-                        filter: `drop-shadow(0 8px 24px rgba(0,0,0,0.55)) brightness(${isHovered ? 1.08 : 0.92})`,
+                        filter: `drop-shadow(0 8px 24px rgba(0,0,0,0.55)) brightness(${isHovered ? 1.15 : isOther ? 0.6 : 0.88})`,
                         transform: isHovered ? "scale(1.1) translateY(-4px)" : "scale(1) translateY(0)",
                         transition: "transform 0.55s cubic-bezier(0.23, 1, 0.32, 1), filter 0.4s",
                       }}
@@ -505,9 +505,17 @@ function CategoryShowcaseSection({
                 )
               )}
 
+              {/* ── Dim overlay for non-hovered cards ── */}
+              <div
+                className="absolute inset-0 bg-black"
+                style={{
+                  opacity: isOther ? 0.45 : 0,
+                  transition: "opacity 0.35s cubic-bezier(0.23, 1, 0.32, 1)",
+                }}
+              />
               {/* ── Hover glow ── */}
               <div
-                className="absolute inset-0 bg-white/[0.025]"
+                className="absolute inset-0 bg-white/[0.04]"
                 style={{ opacity: isHovered ? 1 : 0, transition: "opacity 0.3s" }}
               />
 
