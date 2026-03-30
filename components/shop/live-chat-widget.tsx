@@ -35,6 +35,9 @@ export function LiveChatWidget({ shopId, shopName }: LiveChatWidgetProps) {
   const [isStarting, setIsStarting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const waitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Ref to always have current widgetState in cleanup without re-registering the effect
+  const widgetStateRef = useRef(widgetState);
+  useEffect(() => { widgetStateRef.current = widgetState; }, [widgetState]);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -78,17 +81,18 @@ export function LiveChatWidget({ shopId, shopName }: LiveChatWidgetProps) {
     return () => unsubscribe();
   }, [sessionId, shopId, widgetState]);
 
-  // Mark session ended on unmount if still waiting/active
+  // Mark session ended on actual unmount — use ref so widgetState changes don't re-run this cleanup
   useEffect(() => {
     return () => {
-      if (sessionId && (widgetState === "waiting" || widgetState === "active")) {
+      if (sessionId && (widgetStateRef.current === "waiting" || widgetStateRef.current === "active")) {
         updateDoc(doc(db, "shops", shopId, "chatSessions", sessionId), {
           status: "ended",
         }).catch(() => {});
       }
       if (waitTimerRef.current) clearTimeout(waitTimerRef.current);
     };
-  }, [sessionId, shopId, widgetState]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, shopId]);
 
   const handleStart = async (e: React.FormEvent) => {
     e.preventDefault();
