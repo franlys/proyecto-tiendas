@@ -454,11 +454,20 @@ function CategoryShowcaseSection({
                 style={{ backgroundColor: MAIN_CATEGORY_SOLID_BG[i % MAIN_CATEGORY_SOLID_BG.length] }}
               />
 
-              {/* ── Gradient overlay — fades out on hover to reveal natural image colors ── */}
+              {/* ── Gradient overlay — fades on hover to reveal natural image colors ── */}
               <div
                 className={cn("absolute inset-0 bg-gradient-to-br", MAIN_CATEGORY_GRADIENTS[i % MAIN_CATEGORY_GRADIENTS.length])}
                 style={{
-                  opacity: isHovered ? 0.15 : 0.6,
+                  opacity: isHovered ? 0.1 : 0.55,
+                  transition: "opacity 0.45s cubic-bezier(0.23, 1, 0.32, 1)",
+                }}
+              />
+              {/* ── Color glow on hover (matches card accent color) ── */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: `radial-gradient(ellipse 80% 60% at 50% 30%, ${MAIN_CATEGORY_SOLID_BG[i % MAIN_CATEGORY_SOLID_BG.length]}99 0%, transparent 70%)`,
+                  opacity: isHovered ? 1 : 0,
                   transition: "opacity 0.45s cubic-bezier(0.23, 1, 0.32, 1)",
                 }}
               />
@@ -493,11 +502,11 @@ function CategoryShowcaseSection({
                       alt={cat.name}
                       className="absolute inset-x-0 w-full"
                       style={{
-                        top: "8%",
-                        height: "68%",
+                        top: "5%",
+                        height: "72%",
                         objectFit: "contain",
-                        filter: `drop-shadow(0 8px 24px rgba(0,0,0,0.6)) brightness(${isHovered ? 1.1 : isOther ? 0.65 : 0.95})`,
-                        transform: isHovered ? "scale(1.1) translateY(-4px)" : "scale(1) translateY(0)",
+                        filter: `drop-shadow(0 10px 28px rgba(0,0,0,0.65)) brightness(${isHovered ? 1.12 : isOther ? 0.6 : 1})`,
+                        transform: isHovered ? "scale(1.1) translateY(-6px)" : "scale(1) translateY(0)",
                         transition: "transform 0.55s cubic-bezier(0.23, 1, 0.32, 1), filter 0.4s",
                       }}
                     />

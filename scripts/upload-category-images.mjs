@@ -59,7 +59,7 @@ const IMAGE_MAP = [
   { file: "tv.png",                categoryId: "televisores",          imageType: "product" },
   { file: "reloj.png",             categoryId: "smartwatches",         imageType: "product" },
   { file: "aire.png",              categoryId: "aires-acondicionados", imageType: "product" },
-  { file: "laptop.png",            categoryId: "laptops",              imageType: "product" },
+  { file: "laptop 1.png",           categoryId: "laptops",              imageType: "product" },
   { file: "tablet.png",            categoryId: "tablets",              imageType: "product" },
 ];
 
