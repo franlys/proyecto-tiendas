@@ -25,6 +25,8 @@ import { QuoteRequestModal } from "@/components/shop/quote-request-modal";
 import { FinancingModal } from "@/components/shop/financing-modal";
 import { LiveChatWidget } from "@/components/shop/live-chat-widget";
 import { LogoAnimation } from "@/components/shop/logo-animation";
+import { BranchesMap } from "@/components/shop/branches-map";
+import { SocialLinks } from "@/components/shop/social-links";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { db } from "@/lib/firebase";
@@ -792,6 +794,28 @@ export function TechPremiumV2Home({ shop }: TechPremiumV2HomeProps) {
           shopId={shop.id}
         />
         <CTASection tiendaHref={tiendaHref} />
+
+        {/* ─── LOCATION + SOCIAL ─── */}
+        {(shop.contact?.address || shop.social || shop.contact?.whatsapp) && (
+          <section className="py-20 px-6 md:px-12 border-t border-white/5">
+            <div className="max-w-screen-xl mx-auto">
+              <div className="max-w-2xl">
+                <p className="text-[10px] font-black text-white/25 uppercase tracking-[0.25em] mb-3">Encuéntranos</p>
+                <h2 className="text-2xl font-black tracking-tight text-white mb-8">Ubicación</h2>
+                <BranchesMap
+                  shopId={shop.id}
+                  shopName={shop.name}
+                  fallbackAddress={shop.contact?.address}
+                />
+                {(shop.social || shop.contact?.whatsapp) && (
+                  <div className="mt-8">
+                    <SocialLinks social={shop.social} whatsapp={shop.contact?.whatsapp} />
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
       </div>
 
       {/* ─── FOOTER ─── */}

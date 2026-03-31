@@ -61,6 +61,7 @@ export function BranchesMap({ shopId, shopName, fallbackAddress }: BranchesMapPr
   const mapInstanceRef = useRef<any>(null);
   const [branches, setBranches] = useState<BranchMapEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [mapFailed, setMapFailed] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState<BranchMapEntry | null>(null);
 
   // Fetch branches
@@ -103,7 +104,10 @@ export function BranchesMap({ shopId, shopName, fallbackAddress }: BranchesMapPr
         .map((b, i) => ({ branch: b, pos: coords[i] }))
         .filter(x => x.pos !== null) as { branch: BranchMapEntry; pos: { lat: number; lon: number } }[];
 
-      if (points.length === 0) return;
+      if (points.length === 0) {
+        setMapFailed(true);
+        return;
+      }
 
       const center = points[0].pos;
       const map = L.map(mapRef.current, {
@@ -184,12 +188,34 @@ export function BranchesMap({ shopId, shopName, fallbackAddress }: BranchesMapPr
   return (
     <div className="space-y-4">
       {/* Map */}
-      <div className="relative rounded-2xl overflow-hidden border border-white/10" style={{ height: 320 }}>
-        <div ref={mapRef} className="w-full h-full" />
-        {/* Overlay gradient edges */}
-        <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-black/30 to-transparent pointer-events-none" />
-        <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
-      </div>
+      {mapFailed ? (
+        /* Geocoding failed — show Google Maps deep-link fallback */
+        <div
+          className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-white/8 text-center"
+          style={{ height: 200, background: "rgba(255,255,255,0.02)" }}
+        >
+          <MapPin className="w-6 h-6 text-white/20" />
+          <p className="text-xs text-white/30">No se pudo cargar el mapa</p>
+          {(branches[0]?.address || fallbackAddress) && (
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(branches[0]?.address || fallbackAddress || "")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/8 text-xs font-bold text-white/60 hover:text-white hover:bg-white/12 transition-colors"
+            >
+              <ExternalLink className="w-3 h-3" />
+              Ver en Google Maps
+            </a>
+          )}
+        </div>
+      ) : (
+        <div className="relative rounded-2xl overflow-hidden border border-white/10" style={{ height: 320 }}>
+          <div ref={mapRef} className="w-full h-full" />
+          {/* Overlay gradient edges */}
+          <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-black/30 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
+        </div>
+      )}
 
       {/* Branch cards */}
       {(branches.length > 0 ? branches : fallbackAddress ? [{ id: "main", name: shopName || "", address: fallbackAddress, isMain: true }] : []).map((b, i) => (
