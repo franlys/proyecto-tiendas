@@ -13,6 +13,9 @@ export { QuoteRequestModal } from "./quote-request-modal";
 export { LiveChatWidget } from "./live-chat-widget";
 // Financing
 export { FinancingModal } from "./financing-modal";
+// Location & Social
+export { BranchesMap } from "./branches-map";
+export { SocialLinks } from "./social-links";
 // Phase 22: Appointment Flow
 export { AppointmentModal } from "./appointment-modal";
 // Meal Prep

@@ -12,7 +12,6 @@ import {
   Star,
   X,
   Loader2,
-  CheckCircle,
   Store,
   ToggleLeft,
   ToggleRight,
@@ -42,14 +41,13 @@ function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: numb
 interface BranchFormData {
   name: string;
   address: string;
+  reference: string;
   phone: string;
   whatsapp: string;
-  lat: string;
-  lng: string;
   isMain: boolean;
 }
 
-const emptyForm: BranchFormData = { name: "", address: "", phone: "", whatsapp: "", lat: "", lng: "", isMain: false };
+const emptyForm: BranchFormData = { name: "", address: "", reference: "", phone: "", whatsapp: "", isMain: false };
 
 function BranchFormModal({
   isOpen,
@@ -72,30 +70,15 @@ function BranchFormModal({
         ? {
             name: initial.name,
             address: initial.address,
+            reference: (initial as any).reference || "",
             phone: initial.phone || "",
             whatsapp: initial.whatsapp || "",
-            lat: initial.coordinates?.lat.toString() || "",
-            lng: initial.coordinates?.lng.toString() || "",
             isMain: initial.isMain,
           }
         : emptyForm
       );
     }
   }, [isOpen, initial]);
-
-  const [detectingCoords, setDetectingCoords] = useState(false);
-
-  const detectCoords = () => {
-    if (!navigator.geolocation) return;
-    setDetectingCoords(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setForm((f) => ({ ...f, lat: pos.coords.latitude.toString(), lng: pos.coords.longitude.toString() }));
-        setDetectingCoords(false);
-      },
-      () => setDetectingCoords(false)
-    );
-  };
 
   if (!isOpen) return null;
 
@@ -142,20 +125,17 @@ function BranchFormModal({
             </div>
           </div>
 
-          {/* Coordenadas */}
+          {/* Referencia */}
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-white/70">Coordenadas GPS</label>
-              <button type="button" onClick={detectCoords} disabled={detectingCoords} className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors">
-                {detectingCoords ? <Loader2 className="w-3 h-3 animate-spin" /> : <MapPin className="w-3 h-3" />}
-                {detectingCoords ? "Detectando..." : "Usar mi ubicación"}
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <input type="number" step="any" value={form.lat} onChange={(e) => setForm({ ...form, lat: e.target.value })} placeholder="Latitud (ej: 19.4326)" className={inputClass} />
-              <input type="number" step="any" value={form.lng} onChange={(e) => setForm({ ...form, lng: e.target.value })} placeholder="Longitud (ej: -99.1332)" className={inputClass} />
-            </div>
-            <p className="text-xs text-white/40 mt-1.5">Las coordenadas permiten detectar la sucursal más cercana al cliente</p>
+            <label className="block text-sm font-medium text-white/70 mb-2">Referencia / Punto de referencia</label>
+            <input
+              type="text"
+              value={form.reference}
+              onChange={(e) => setForm({ ...form, reference: e.target.value })}
+              placeholder="Frente al parque central, 2do piso local 3…"
+              className={inputClass}
+            />
+            <p className="text-xs text-white/40 mt-1.5">Ayuda a los clientes a encontrar la sucursal fácilmente</p>
           </div>
 
           {/* Sucursal principal */}
@@ -196,9 +176,12 @@ export default function BranchesPage() {
     if (!shopId) return;
     setIsLoading(true);
     fetch(`/api/branches?shopId=${shopId}`)
-      .then((r) => r.json())
-      .then((d) => setBranches(d.branches || []))
-      .catch(() => setError("Error al cargar las sucursales"))
+      .then(async (r) => {
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.detail || d.error || "Error al cargar sucursales");
+        setBranches(d.branches || []);
+      })
+      .catch((e) => setError(e instanceof Error ? e.message : "Error al cargar las sucursales"))
       .finally(() => setIsLoading(false));
   }, [shopId]);
 
@@ -210,12 +193,10 @@ export default function BranchesPage() {
         shopId,
         name: form.name,
         address: form.address,
+        reference: form.reference.trim() || undefined,
         phone: form.phone,
         whatsapp: form.whatsapp,
         isMain: form.isMain,
-        coordinates: form.lat && form.lng
-          ? { lat: parseFloat(form.lat), lng: parseFloat(form.lng) }
-          : undefined,
       };
 
       if (editing) {
@@ -224,24 +205,24 @@ export default function BranchesPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        if (!res.ok) throw new Error();
-        const { branch } = await res.json();
-        setBranches((prev) => prev.map((b) => b.id === editing.id ? branch : b));
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.detail || d.error || "Error al actualizar");
+        setBranches((prev) => prev.map((b) => b.id === editing.id ? d.branch : b));
       } else {
         const res = await fetch("/api/branches", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        if (!res.ok) throw new Error();
-        const { branch } = await res.json();
-        setBranches((prev) => [...prev, branch]);
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.detail || d.error || "Error al crear");
+        setBranches((prev) => [...prev, d.branch]);
       }
 
       setShowForm(false);
       setEditing(undefined);
-    } catch {
-      setError("Error al guardar la sucursal");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al guardar la sucursal");
     } finally {
       setIsSaving(false);
     }
@@ -378,10 +359,10 @@ export default function BranchesPage() {
                             <span>{branch.phone}</span>
                           </div>
                         )}
-                        {branch.coordinates && (
+                        {(branch as any).reference && (
                           <div className="flex items-center gap-2 text-white/40 text-xs">
                             <MapPin className="w-3 h-3 shrink-0" />
-                            <span>GPS: {branch.coordinates.lat.toFixed(5)}, {branch.coordinates.lng.toFixed(5)}</span>
+                            <span className="truncate">{(branch as any).reference}</span>
                           </div>
                         )}
                       </div>
@@ -414,9 +395,7 @@ export default function BranchesPage() {
                 {/* Link to manage this branch's stock */}
                 <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
                   <p className="text-white/40 text-xs">
-                    {branch.coordinates
-                      ? "Ubicación GPS configurada — detección automática activa"
-                      : "Sin coordenadas GPS — los clientes deben elegir manualmente"}
+                    {(branch as any).reference || branch.address}
                   </p>
                   <Link href={`/admin/branches/${branch.id}/stock`}>
                     <Button variant="outline" size="sm" className="text-xs">

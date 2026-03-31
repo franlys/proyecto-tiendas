@@ -9,24 +9,26 @@ const stockDocId = (branchId: string, productId: string) => `${branchId}__${prod
 // ─── BRANCHES ────────────────────────────────────────────────────────────────
 
 export async function getBranchesAdmin(shopId: string): Promise<Branch[]> {
-  const db = adminDb();
-  if (!db) return [];
   try {
+    const db = adminDb();
+    if (!db) return [];
     const snap = await db.collection(getBranchesCol(shopId)).get();
     return snap.docs.map(d => ({ id: d.id, ...d.data() } as Branch));
-  } catch {
-    return [];
+  } catch (err) {
+    console.error("[getBranchesAdmin]", err);
+    throw err; // re-throw so route can log the real error
   }
 }
 
 export async function getActiveBranchesAdmin(shopId: string): Promise<Branch[]> {
-  const db = adminDb();
-  if (!db) return [];
   try {
+    const db = adminDb();
+    if (!db) return [];
     const snap = await db.collection(getBranchesCol(shopId)).where("isActive", "==", true).get();
     return snap.docs.map(d => ({ id: d.id, ...d.data() } as Branch));
-  } catch {
-    return [];
+  } catch (err) {
+    console.error("[getActiveBranchesAdmin]", err);
+    throw err;
   }
 }
 
@@ -58,21 +60,24 @@ export async function createBranchAdmin(shopId: string, input: CreateBranchInput
 
   const now = new Date().toISOString();
   const ref = db.collection(getBranchesCol(shopId)).doc();
-  const branch: Omit<Branch, "id"> = {
+
+  // Firestore Admin SDK throws on `undefined` values — build object without optional undefined fields
+  const branch: Record<string, unknown> = {
     shopId,
     name: input.name,
     address: input.address,
     phone: input.phone || "",
     whatsapp: input.whatsapp || "",
-    coordinates: input.coordinates || undefined,
     isActive: true,
     isMain: input.isMain ?? false,
-    schedule: input.schedule,
     createdAt: now,
     updatedAt: now,
   };
+  if (input.coordinates) branch.coordinates = input.coordinates;
+  if (input.schedule)    branch.schedule    = input.schedule;
+
   await ref.set(branch);
-  return { id: ref.id, ...branch };
+  return { id: ref.id, ...branch } as Branch;
 }
 
 export async function updateBranchAdmin(shopId: string, branchId: string, updates: Partial<Branch>): Promise<Branch | null> {
@@ -89,8 +94,13 @@ export async function updateBranchAdmin(shopId: string, branchId: string, update
       await batch.commit();
     }
 
+    // Strip undefined values before sending to Firestore
+    const safeUpdates = Object.fromEntries(
+      Object.entries({ ...updates, updatedAt: new Date().toISOString() })
+        .filter(([, v]) => v !== undefined)
+    );
     const ref = db.doc(getBranchDoc(shopId, branchId));
-    await ref.set({ ...updates, updatedAt: new Date().toISOString() }, { merge: true });
+    await ref.set(safeUpdates, { merge: true });
     const updated = await ref.get();
     return { id: updated.id, ...updated.data() } as Branch;
   } catch {

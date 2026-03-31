@@ -12,6 +12,8 @@ import {
     MessageSquarePlus,
     CreditCard,
 } from "lucide-react";
+import { BranchesMap } from "@/components/shop/branches-map";
+import { SocialLinks } from "@/components/shop/social-links";
 import { cn } from "@/lib/utils";
 import { useCart, useVisualFeedback, useWholesale } from "@/components/shared";
 import type { Product, Service } from "@/lib/constants";
@@ -534,30 +536,21 @@ export function TechPremiumV2Layout({ shop, products, services, loadingData, sho
                             className="space-y-8 max-w-2xl"
                         >
                             <h2 className="text-2xl font-black tracking-tight text-white">Ubicación</h2>
-                            <div className="space-y-3">
-                                <div className="p-5 bg-[#0c0c0c] border border-white/6 rounded-2xl flex items-start gap-4">
-                                    <MapPin className="w-4 h-4 text-white/40 flex-shrink-0 mt-0.5" />
-                                    <div>
-                                        <p className="text-[10px] text-white/30 font-mono uppercase tracking-widest mb-1">Dirección</p>
-                                        <p className="text-sm text-white">{shop.contact?.address || "Consultar disponibilidad"}</p>
-                                    </div>
-                                </div>
-                                <div className="p-5 bg-[#0c0c0c] border border-white/6 rounded-2xl flex items-start gap-4">
-                                    <Globe className="w-4 h-4 text-white/40 flex-shrink-0 mt-0.5" />
-                                    <div>
-                                        <p className="text-[10px] text-white/30 font-mono uppercase tracking-widest mb-1">Contacto</p>
-                                        <p className="text-sm text-white">{shop.contact?.whatsapp || shop.contact?.phone || "—"}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <a
-                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shop.contact?.address || shop.name || "")}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full font-bold text-sm hover:bg-white/90 active:scale-[0.97] transition-all"
-                            >
-                                Abrir en Maps <ArrowUpRight className="w-4 h-4" />
-                            </a>
+
+                            {/* Mapa interactivo con sucursales */}
+                            <BranchesMap
+                                shopId={shop.id}
+                                shopName={shop.name}
+                                fallbackAddress={shop.contact?.address}
+                            />
+
+                            {/* Redes sociales */}
+                            {(shop.social || shop.contact?.whatsapp) && (
+                                <SocialLinks
+                                    social={shop.social}
+                                    whatsapp={shop.contact?.whatsapp}
+                                />
+                            )}
                         </motion.div>
                     )}
 

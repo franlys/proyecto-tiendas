@@ -18,8 +18,10 @@ export async function GET(request: NextRequest) {
       ? await getActiveBranchesAdmin(shopId)
       : await getBranchesAdmin(shopId);
     return NextResponse.json({ branches });
-  } catch {
-    return NextResponse.json({ error: "Failed to fetch branches" }, { status: 500 });
+  } catch (err) {
+    console.error("[GET /api/branches]", err);
+    const msg = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json({ error: "Failed to fetch branches", detail: msg }, { status: 500 });
   }
 }
 
@@ -38,6 +40,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ branch }, { status: 201 });
   } catch (err) {
     console.error("[POST /api/branches]", err);
-    return NextResponse.json({ error: "Failed to create branch" }, { status: 500 });
+    const msg = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json({ error: "Failed to create branch", detail: msg }, { status: 500 });
   }
 }
