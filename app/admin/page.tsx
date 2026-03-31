@@ -125,7 +125,7 @@ function BookingsWidget({ shopId, features }: { shopId: string; features: Combin
       confirmed: "bg-green-500/20 text-green-400 border-green-500/30",
       rescheduled: "bg-blue-500/20 text-blue-400 border-blue-500/30",
       cancelled: "bg-red-500/20 text-red-400 border-red-500/30",
-      completed: "bg-slate-500/20 text-slate-400 border-slate-500/30",
+      completed: "bg-slate-500/20 text-white/50 border-slate-500/30",
       no_show: "bg-red-500/20 text-red-400 border-red-500/30",
     };
     const labels: Record<BookingStatus, string> = {
@@ -161,7 +161,7 @@ function BookingsWidget({ shopId, features }: { shopId: string; features: Combin
           <Calendar className="w-5 h-5 text-purple-400" />
           <h3 className="text-lg font-semibold text-white">Próximas {bookingLabel}s</h3>
         </div>
-        <div className="text-center py-8 text-slate-400">Cargando...</div>
+        <div className="text-center py-8 text-white/50">Cargando...</div>
       </div>
     );
   }
@@ -175,7 +175,7 @@ function BookingsWidget({ shopId, features }: { shopId: string; features: Combin
             Próximas {bookingLabel}s
           </h3>
         </div>
-        <div className="text-center py-8 text-slate-400">
+        <div className="text-center py-8 text-white/50">
           <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
           <p>No hay {bookingLabel.toLowerCase()}s programadas</p>
           <p className="text-xs mt-1">Las {bookingLabel.toLowerCase()}s aparecerán aquí</p>
@@ -215,12 +215,12 @@ function BookingsWidget({ shopId, features }: { shopId: string; features: Combin
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="text-center min-w-[50px]">
-                      <p className="text-xs text-slate-400">{formatDate(booking.date)}</p>
+                      <p className="text-xs text-white/50">{formatDate(booking.date)}</p>
                       <p className="text-lg font-bold text-white">{booking.time}</p>
                     </div>
                     <div>
                       <p className="font-semibold text-white">{booking.customerName}</p>
-                      <p className="text-sm text-slate-400">{booking.serviceName}</p>
+                      <p className="text-sm text-white/50">{booking.serviceName}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -231,7 +231,7 @@ function BookingsWidget({ shopId, features }: { shopId: string; features: Combin
 
               {isExpanded && (
                 <div className="px-4 pb-4 border-t border-white/10 pt-3 space-y-3">
-                  <div className="text-sm text-slate-400">
+                  <div className="text-sm text-white/50">
                     <p>📱 {booking.customerPhone}</p>
                     <p>⏱️ {booking.serviceDuration} min - ${booking.servicePrice.toLocaleString()}</p>
                   </div>
@@ -346,7 +346,7 @@ function TrainingEnrollmentsWidget({ shopId }: { shopId: string }) {
     const styles: Record<string, string> = {
       pending: "bg-amber-500/20 text-amber-400 border-amber-500/30",
       active: "bg-green-500/20 text-green-400 border-green-500/30",
-      completed: "bg-slate-500/20 text-slate-400 border-slate-500/30",
+      completed: "bg-slate-500/20 text-white/50 border-slate-500/30",
       cancelled: "bg-red-500/20 text-red-400 border-red-500/30",
     };
     const labels: Record<string, string> = {
@@ -355,7 +355,7 @@ function TrainingEnrollmentsWidget({ shopId }: { shopId: string }) {
       completed: "Completado",
       cancelled: "Cancelado",
     };
-    const style = styles[status] || "bg-slate-500/20 text-slate-400 border-slate-500/30";
+    const style = styles[status] || "bg-slate-500/20 text-white/50 border-slate-500/30";
     const label = labels[status] || status;
     return (
       <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${style}`}>
@@ -371,7 +371,7 @@ function TrainingEnrollmentsWidget({ shopId }: { shopId: string }) {
           <Dumbbell className="w-5 h-5 text-orange-400" />
           <h3 className="text-lg font-semibold text-white">Próximas Inscripciones</h3>
         </div>
-        <div className="text-center py-8 text-slate-400">Cargando...</div>
+        <div className="text-center py-8 text-white/50">Cargando...</div>
       </div>
     );
   }
@@ -385,7 +385,7 @@ function TrainingEnrollmentsWidget({ shopId }: { shopId: string }) {
             Próximas Inscripciones
           </h3>
         </div>
-        <div className="text-center py-8 text-slate-400">
+        <div className="text-center py-8 text-white/50">
           <Dumbbell className="w-12 h-12 mx-auto mb-3 opacity-50" />
           <p>No hay inscripciones recientes</p>
           <p className="text-xs mt-1">Las inscripciones aparecerán aquí</p>
@@ -418,9 +418,9 @@ function TrainingEnrollmentsWidget({ shopId }: { shopId: string }) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-semibold text-white">{enrollment.customerName}</p>
-                <p className="text-sm text-slate-400">{enrollment.packageName}</p>
+                <p className="text-sm text-white/50">{enrollment.packageName}</p>
                 {enrollment.startDate && (
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-xs text-white/40 mt-0.5">
                     Inicio: {new Date(enrollment.startDate + "T12:00:00").toLocaleDateString("es", { day: "numeric", month: "short" })}
                   </p>
                 )}
@@ -497,7 +497,7 @@ function PendingOrdersWidget({ shopId, features }: { shopId: string; features: C
       delivered: "bg-green-500/20 text-green-400 border-green-500/30",
       cancelled: "bg-red-500/20 text-red-400 border-red-500/30",
     };
-    return colors[status] || "bg-slate-500/20 text-slate-400";
+    return colors[status] || "bg-slate-500/20 text-white/50";
   };
 
   if (activeOrders.length === 0) {
@@ -509,7 +509,7 @@ function PendingOrdersWidget({ shopId, features }: { shopId: string; features: C
             {orderLabel}s Activos
           </h3>
         </div>
-        <div className="text-center py-8 text-slate-400">
+        <div className="text-center py-8 text-white/50">
           <CheckCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
           <p>No hay {orderLabel.toLowerCase()}s pendientes</p>
           <p className="text-xs mt-1">Los nuevos {orderLabel.toLowerCase()}s aparecerán aquí</p>
@@ -558,7 +558,7 @@ function PendingOrdersWidget({ shopId, features }: { shopId: string; features: C
                     <span className="text-2xl">{config.icon}</span>
                     <div>
                       <p className="font-semibold text-white">#{order.orderNumber}</p>
-                      <p className="text-sm text-slate-400">{order.customerName}</p>
+                      <p className="text-sm text-white/50">{order.customerName}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -574,12 +574,12 @@ function PendingOrdersWidget({ shopId, features }: { shopId: string; features: C
               {isExpanded && (
                 <div className="px-4 pb-4 border-t border-white/10 pt-3 space-y-3">
                   {/* Items */}
-                  <div className="text-sm text-slate-400">
+                  <div className="text-sm text-white/50">
                     {order.items.slice(0, 3).map((item, idx) => (
                       <p key={idx}>• {item.productName} x{item.quantity}</p>
                     ))}
                     {order.items.length > 3 && (
-                      <p className="text-xs text-slate-500">+{order.items.length - 3} más...</p>
+                      <p className="text-xs text-white/40">+{order.items.length - 3} más...</p>
                     )}
                   </div>
 
@@ -660,7 +660,7 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
   if (!isClient) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-pulse text-slate-400">Cargando dashboard...</div>
+        <div className="animate-pulse text-white/50">Cargando dashboard...</div>
       </div>
     );
   }
@@ -763,9 +763,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
             {/* If neither orders nor bookings nor training, show a placeholder */}
             {!features.dashboardWidgets.pendingOrders && !features.dashboardWidgets.upcomingBookings && !features.hasTraining && (
               <div className="lg:col-span-2 glass-panel rounded-2xl p-6 text-center">
-                <Briefcase className="w-12 h-12 mx-auto mb-3 text-slate-400 opacity-50" />
-                <p className="text-slate-300">Panel de {features.config.label}</p>
-                <p className="text-xs text-slate-400 mt-1">Configura tu negocio desde Mi Negocio</p>
+                <Briefcase className="w-12 h-12 mx-auto mb-3 text-white/50 opacity-50" />
+                <p className="text-white/70">Panel de {features.config.label}</p>
+                <p className="text-xs text-white/50 mt-1">Configura tu negocio desde Mi Negocio</p>
               </div>
             )}
           </div>
@@ -779,7 +779,7 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
                 orderLabel={features.hasBookings ? features.labels.booking : features.labels.order}
               />
               {!hasRealData && (
-                <p className="text-xs text-slate-500 text-center mt-2">
+                <p className="text-xs text-white/40 text-center mt-2">
                   📊 Datos de demostración - Las gráficas se actualizarán con ventas reales
                 </p>
               )}
@@ -808,7 +808,7 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               <Shield className="w-8 h-8 text-cyan-400" />
             </div>
             <h2 className="text-xl font-bold text-white mb-2">Vista de Mantenimiento</h2>
-            <p className="text-slate-300 mb-6">
+            <p className="text-white/70 mb-6">
               Como administrador de agencia, los reportes financieros individuales de cada tienda
               son privados. Accede al panel de Agencia para ver el estado de suscripciones.
             </p>
@@ -839,9 +839,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
             </div>
             <div className="flex-1">
               <p className="text-white font-medium">Ver Tienda</p>
-              <p className="text-xs text-slate-300">{shop?.name || "Mi Tienda"}</p>
+              <p className="text-xs text-white/60">{shop?.name || "Mi Tienda"}</p>
             </div>
-            <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+            <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
           </Link>
 
           {/* Calendario - Solo si tiene bookings y NO es negocio de entrenamiento */}
@@ -855,9 +855,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">Calendario de {features.labels.booking}s</p>
-                <p className="text-xs text-slate-300">Gestionar agenda</p>
+                <p className="text-xs text-white/60">Gestionar agenda</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+              <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
             </Link>
           )}
 
@@ -872,9 +872,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">{features.labels.products}</p>
-                <p className="text-xs text-slate-300">Gestionar catálogo</p>
+                <p className="text-xs text-white/60">Gestionar catálogo</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+              <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
             </Link>
           )}
 
@@ -890,9 +890,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
                 </div>
                 <div className="flex-1">
                   <p className="text-white font-medium">{features.labels.services}</p>
-                  <p className="text-xs text-slate-300">Órdenes de reparación</p>
+                  <p className="text-xs text-white/60">Órdenes de reparación</p>
                 </div>
-                <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+                <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
               </Link>
               <Link
                 href="/admin/services"
@@ -903,9 +903,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
                 </div>
                 <div className="flex-1">
                   <p className="text-white font-medium">Servicios del Taller</p>
-                  <p className="text-xs text-slate-300">Configura precios y tiempos</p>
+                  <p className="text-xs text-white/60">Configura precios y tiempos</p>
                 </div>
-                <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+                <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
               </Link>
             </>
           )}
@@ -922,9 +922,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
                 </div>
                 <div className="flex-1">
                   <p className="text-white font-medium">Inscripciones</p>
-                  <p className="text-xs text-slate-300">Clientes y horarios de entrenamiento</p>
+                  <p className="text-xs text-white/60">Clientes y horarios de entrenamiento</p>
                 </div>
-                <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+                <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
               </Link>
               <Link
                 href="/admin/training/packages"
@@ -935,9 +935,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
                 </div>
                 <div className="flex-1">
                   <p className="text-white font-medium">Planes de Entrenamiento</p>
-                  <p className="text-xs text-slate-300">Configura tus planes y precios</p>
+                  <p className="text-xs text-white/60">Configura tus planes y precios</p>
                 </div>
-                <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+                <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
               </Link>
             </>
           )}
@@ -953,9 +953,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">Mayoristas</p>
-                <p className="text-xs text-slate-300">Gestionar distribuidores y códigos</p>
+                <p className="text-xs text-white/60">Gestionar distribuidores y códigos</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+              <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
             </Link>
           )}
 
@@ -969,9 +969,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
             </div>
             <div className="flex-1">
               <p className="text-white font-medium">Solicitudes Mayoristas</p>
-              <p className="text-xs text-slate-300">Nuevos distribuidores</p>
+              <p className="text-xs text-white/60">Nuevos distribuidores</p>
             </div>
-            <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+            <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
           </Link>
 
           {/* Cotizaciones - Siempre visible */}
@@ -984,9 +984,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
             </div>
             <div className="flex-1">
               <p className="text-white font-medium">Cotizaciones</p>
-              <p className="text-xs text-slate-300">Solicitudes de clientes</p>
+              <p className="text-xs text-white/60">Solicitudes de clientes</p>
             </div>
-            <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+            <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
           </Link>
 
           {/* Chat en Vivo - Siempre visible */}
@@ -999,9 +999,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
             </div>
             <div className="flex-1">
               <p className="text-white font-medium">Chat en Vivo</p>
-              <p className="text-xs text-slate-300">Atender clientes en tiempo real</p>
+              <p className="text-xs text-white/60">Atender clientes en tiempo real</p>
             </div>
-            <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+            <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
           </Link>
 
           {/* Financiamiento - Siempre visible */}
@@ -1014,9 +1014,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
             </div>
             <div className="flex-1">
               <p className="text-white font-medium">Financiamiento</p>
-              <p className="text-xs text-slate-300">Solicitudes BANFONDESA</p>
+              <p className="text-xs text-white/60">Solicitudes BANFONDESA</p>
             </div>
-            <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+            <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
           </Link>
 
           {/* Página de Inicio - Visible si usa tech-premium-v2 */}
@@ -1030,9 +1030,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">Página de Inicio</p>
-                <p className="text-xs text-slate-300">Editar tarjetas y descripciones</p>
+                <p className="text-xs text-white/60">Editar tarjetas y descripciones</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+              <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
             </Link>
           )}
 
@@ -1047,9 +1047,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">Sucursales</p>
-                <p className="text-xs text-slate-300">Gestionar ubicaciones</p>
+                <p className="text-xs text-white/60">Gestionar ubicaciones</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+              <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
             </Link>
           )}
 
@@ -1064,9 +1064,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">Finanzas</p>
-                <p className="text-xs text-slate-300">Resumen financiero por sucursal</p>
+                <p className="text-xs text-white/60">Resumen financiero por sucursal</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+              <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
             </Link>
           )}
 
@@ -1081,9 +1081,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">Cuadres</p>
-                <p className="text-xs text-slate-300">Revisión de actividad por empleado</p>
+                <p className="text-xs text-white/60">Revisión de actividad por empleado</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+              <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
             </Link>
           ) : user?.role === "SHOP_STAFF" ? (
             <Link
@@ -1095,9 +1095,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">Mi Cuadre</p>
-                <p className="text-xs text-slate-300">Registrar ventas, reparaciones y servicios</p>
+                <p className="text-xs text-white/60">Registrar ventas, reparaciones y servicios</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+              <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
             </Link>
           ) : null}
 
@@ -1112,9 +1112,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">Rentas</p>
-                <p className="text-xs text-slate-300">Gestionar alquileres</p>
+                <p className="text-xs text-white/60">Gestionar alquileres</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+              <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
             </Link>
           )}
 
@@ -1129,9 +1129,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">Meal Prep</p>
-                <p className="text-xs text-slate-300">Reglas y Categorías</p>
+                <p className="text-xs text-white/60">Reglas y Categorías</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+              <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
             </Link>
           )}
 
@@ -1147,9 +1147,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">Mesas</p>
-                <p className="text-xs text-slate-300">Gestionar reservas</p>
+                <p className="text-xs text-white/60">Gestionar reservas</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+              <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
             </Link>
           )}
 
@@ -1163,9 +1163,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
             </div>
             <div className="flex-1">
               <p className="text-white font-medium">Crear Promo</p>
-              <p className="text-xs text-slate-300">Stories Instagram</p>
+              <p className="text-xs text-white/60">Stories Instagram</p>
             </div>
-            <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+            <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
           </Link>
 
           {/* Settings - Siempre visible */}
@@ -1178,9 +1178,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
             </div>
             <div className="flex-1">
               <p className="text-white font-medium">Diseño Visual</p>
-              <p className="text-xs text-slate-300">Colores, fondo, efectos</p>
+              <p className="text-xs text-white/60">Colores, fondo, efectos</p>
             </div>
-            <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+            <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
           </Link>
 
           {/* Billing - Solo para Shop Owner */}
@@ -1194,9 +1194,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">Mi Suscripción</p>
-                <p className="text-xs text-slate-300">Ver facturación</p>
+                <p className="text-xs text-white/60">Ver facturación</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+              <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
             </Link>
           )}
 
@@ -1211,9 +1211,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">Información de Contacto</p>
-                <p className="text-xs text-slate-300">Teléfono, redes sociales, dirección</p>
+                <p className="text-xs text-white/60">Teléfono, redes sociales, dirección</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+              <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
             </Link>
           )}
 
@@ -1228,9 +1228,9 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
               </div>
               <div className="flex-1">
                 <p className="text-white font-medium">Horarios de Atención</p>
-                <p className="text-xs text-slate-300">Configura disponibilidad y citas</p>
+                <p className="text-xs text-white/60">Configura disponibilidad y citas</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+              <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
             </Link>
           )}
 
@@ -1273,7 +1273,7 @@ function AdminDashboardWithSubscription() {
   if (isSuperAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse flex flex-col items-center gap-4 text-slate-400">
+        <div className="animate-pulse flex flex-col items-center gap-4 text-white/50">
           <Shield className="w-8 h-8 text-cyan-500" />
           <p>Accediendo al Panel de Agencia...</p>
         </div>
@@ -1302,7 +1302,7 @@ function AdminDashboardWithSubscription() {
                 <h1 className="font-display text-2xl font-bold text-white">
                   Dashboard
                 </h1>
-                <p className="text-slate-300 text-sm">
+                <p className="text-white/70 text-sm">
                   {user?.name} · {isSuperAdmin ? "Super Admin" : "Shop Owner"}
                 </p>
               </div>

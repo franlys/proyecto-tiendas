@@ -105,7 +105,7 @@ function BranchFormModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-lg glass-panel rounded-2xl p-6 border border-white/10 max-h-[90vh] overflow-y-auto">
-        <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10">
+        <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10">
           <X className="w-5 h-5" />
         </button>
 
@@ -118,12 +118,12 @@ function BranchFormModal({
 
         <form onSubmit={(e) => { e.preventDefault(); onSave(form); }} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Nombre de la Sucursal *</label>
+            <label className="block text-sm font-medium text-white/70 mb-2">Nombre de la Sucursal *</label>
             <input required type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ej: Sucursal Centro, GS Norte" className={inputClass} />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Dirección *</label>
+            <label className="block text-sm font-medium text-white/70 mb-2">Dirección *</label>
             <AddressInput
               value={form.address}
               onChange={(v) => setForm({ ...form, address: v })}
@@ -133,11 +133,11 @@ function BranchFormModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Teléfono</label>
+              <label className="block text-sm font-medium text-white/70 mb-2">Teléfono</label>
               <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+52 800 123 4567" className={inputClass} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">WhatsApp</label>
+              <label className="block text-sm font-medium text-white/70 mb-2">WhatsApp</label>
               <input type="tel" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} placeholder="+52 800 123 4567" className={inputClass} />
             </div>
           </div>
@@ -145,7 +145,7 @@ function BranchFormModal({
           {/* Coordenadas */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-slate-300">Coordenadas GPS</label>
+              <label className="block text-sm font-medium text-white/70">Coordenadas GPS</label>
               <button type="button" onClick={detectCoords} disabled={detectingCoords} className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors">
                 {detectingCoords ? <Loader2 className="w-3 h-3 animate-spin" /> : <MapPin className="w-3 h-3" />}
                 {detectingCoords ? "Detectando..." : "Usar mi ubicación"}
@@ -155,7 +155,7 @@ function BranchFormModal({
               <input type="number" step="any" value={form.lat} onChange={(e) => setForm({ ...form, lat: e.target.value })} placeholder="Latitud (ej: 19.4326)" className={inputClass} />
               <input type="number" step="any" value={form.lng} onChange={(e) => setForm({ ...form, lng: e.target.value })} placeholder="Longitud (ej: -99.1332)" className={inputClass} />
             </div>
-            <p className="text-xs text-slate-500 mt-1.5">Las coordenadas permiten detectar la sucursal más cercana al cliente</p>
+            <p className="text-xs text-white/40 mt-1.5">Las coordenadas permiten detectar la sucursal más cercana al cliente</p>
           </div>
 
           {/* Sucursal principal */}
@@ -163,7 +163,7 @@ function BranchFormModal({
             <input type="checkbox" checked={form.isMain} onChange={(e) => setForm({ ...form, isMain: e.target.checked })} className="w-4 h-4 accent-primary" />
             <div>
               <p className="text-white text-sm font-medium">Sucursal Principal (Matriz)</p>
-              <p className="text-slate-500 text-xs">Esta sucursal aparecerá primero y recibirá los pedidos sin sucursal asignada</p>
+              <p className="text-white/40 text-xs">Esta sucursal aparecerá primero y recibirá los pedidos sin sucursal asignada</p>
             </div>
           </label>
 
@@ -289,7 +289,7 @@ export default function BranchesPage() {
                 </div>
                 <div>
                   <h1 className="font-display text-2xl font-bold text-white">Sucursales</h1>
-                  <p className="text-slate-400 text-sm">{shop?.name || "Gestión de ubicaciones"}</p>
+                  <p className="text-white/50 text-sm">{shop?.name || "Gestión de ubicaciones"}</p>
                 </div>
               </div>
             </div>
@@ -310,20 +310,20 @@ export default function BranchesPage() {
 
         {/* Info banner */}
         <div className="mb-8 p-4 rounded-xl bg-primary/5 border border-primary/20">
-          <p className="text-sm text-slate-300">
+          <p className="text-sm text-white/70">
             <span className="text-primary font-medium">¿Cómo funciona?</span> — Todas las sucursales comparten el mismo catálogo de productos y servicios. El stock se maneja por separado en cada sucursal. Al hacer un pedido, el sistema detecta la sucursal más cercana al cliente o él puede elegirla manualmente.
           </p>
         </div>
 
         {isLoading ? (
           <div className="flex justify-center py-20">
-            <Loader2 className="w-8 h-8 text-slate-500 animate-spin" />
+            <Loader2 className="w-8 h-8 text-white/40 animate-spin" />
           </div>
         ) : sortedBranches.length === 0 ? (
           <div className="glass-panel rounded-2xl border border-white/10 py-20 text-center">
             <Store className="w-16 h-16 text-slate-600 mx-auto mb-4" />
             <h3 className="text-white font-semibold text-lg mb-2">Sin sucursales registradas</h3>
-            <p className="text-slate-400 text-sm mb-6">Crea tu primera sucursal para activar el sistema multi-ubicación</p>
+            <p className="text-white/50 text-sm mb-6">Crea tu primera sucursal para activar el sistema multi-ubicación</p>
             <Button onClick={() => setShowForm(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Crear primera sucursal
@@ -346,7 +346,7 @@ export default function BranchesPage() {
                       "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
                       branch.isMain ? "bg-primary/20" : "bg-white/5"
                     )}>
-                      <Store className={cn("w-6 h-6", branch.isMain ? "text-primary" : "text-slate-400")} />
+                      <Store className={cn("w-6 h-6", branch.isMain ? "text-primary" : "text-white/50")} />
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -361,25 +361,25 @@ export default function BranchesPage() {
                           "px-2 py-0.5 rounded-full text-xs font-medium",
                           branch.isActive
                             ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                            : "bg-slate-500/20 text-slate-400 border border-slate-500/30"
+                            : "bg-slate-500/20 text-white/50 border border-slate-500/30"
                         )}>
                           {branch.isActive ? "Activa" : "Inactiva"}
                         </span>
                       </div>
 
                       <div className="mt-2 space-y-1">
-                        <div className="flex items-center gap-2 text-slate-400 text-sm">
+                        <div className="flex items-center gap-2 text-white/50 text-sm">
                           <MapPin className="w-3.5 h-3.5 shrink-0" />
                           <span className="truncate">{branch.address}</span>
                         </div>
                         {branch.phone && (
-                          <div className="flex items-center gap-2 text-slate-400 text-sm">
+                          <div className="flex items-center gap-2 text-white/50 text-sm">
                             <Phone className="w-3.5 h-3.5 shrink-0" />
                             <span>{branch.phone}</span>
                           </div>
                         )}
                         {branch.coordinates && (
-                          <div className="flex items-center gap-2 text-slate-500 text-xs">
+                          <div className="flex items-center gap-2 text-white/40 text-xs">
                             <MapPin className="w-3 h-3 shrink-0" />
                             <span>GPS: {branch.coordinates.lat.toFixed(5)}, {branch.coordinates.lng.toFixed(5)}</span>
                           </div>
@@ -392,19 +392,19 @@ export default function BranchesPage() {
                     <button
                       onClick={() => handleToggleActive(branch)}
                       title={branch.isActive ? "Desactivar" : "Activar"}
-                      className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                      className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
                     >
                       {branch.isActive ? <ToggleRight className="w-5 h-5 text-green-400" /> : <ToggleLeft className="w-5 h-5" />}
                     </button>
                     <button
                       onClick={() => { setEditing(branch); setShowForm(true); }}
-                      className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                      className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
                     >
                       <Pencil className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(branch.id)}
-                      className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                      className="p-2 rounded-lg text-white/50 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -413,7 +413,7 @@ export default function BranchesPage() {
 
                 {/* Link to manage this branch's stock */}
                 <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
-                  <p className="text-slate-500 text-xs">
+                  <p className="text-white/40 text-xs">
                     {branch.coordinates
                       ? "Ubicación GPS configurada — detección automática activa"
                       : "Sin coordenadas GPS — los clientes deben elegir manualmente"}
