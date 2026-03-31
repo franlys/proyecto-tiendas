@@ -4,22 +4,23 @@ import type { Cuadre, CuadreEntry, CuadreExpense, CuadreStatus } from "@/lib/typ
 import { calcCuadreTotals } from "@/lib/types/cuadre.types";
 
 // GET /api/cuadres/[id]?shopId=xxx
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const shopId = new URL(request.url).searchParams.get("shopId");
   if (!shopId) return NextResponse.json({ error: "shopId is required" }, { status: 400 });
 
   const db = adminDb();
   if (!db) return NextResponse.json({ error: "DB unavailable" }, { status: 500 });
 
-  const snap = await db.collection("shops").doc(shopId).collection("cuadres").doc(params.id).get();
+  const snap = await db.collection("shops").doc(shopId).collection("cuadres").doc(id).get();
   if (!snap.exists) return NextResponse.json({ error: "Cuadre not found" }, { status: 404 });
 
   return NextResponse.json({ cuadre: { id: snap.id, ...snap.data() } as Cuadre });
 }
 
 // PATCH /api/cuadres/[id]
-// Body: { shopId, action?: "submit"|"approve"|"reject", entries?, expenses?, notes?, rejectionReason?, approvedBy? }
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const db = adminDb();
   if (!db) return NextResponse.json({ error: "DB unavailable" }, { status: 500 });
 
@@ -29,7 +30,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
     if (!shopId) return NextResponse.json({ error: "shopId is required" }, { status: 400 });
 
-    const ref = db.collection("shops").doc(shopId).collection("cuadres").doc(params.id);
+    const ref = db.collection("shops").doc(shopId).collection("cuadres").doc(id);
     const snap = await ref.get();
     if (!snap.exists) return NextResponse.json({ error: "Cuadre not found" }, { status: 404 });
 
@@ -48,12 +49,10 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       updates.status = "rejected" as CuadreStatus;
       updates.rejectionReason = rejectionReason || "";
     } else {
-      // Regular update (edit draft)
       if (entries !== undefined) updates.entries = entries;
       if (expenses !== undefined) updates.expenses = expenses;
       if (notes !== undefined) updates.notes = notes;
 
-      // Recalculate totals if entries/expenses changed
       if (entries !== undefined || expenses !== undefined) {
         const current = snap.data() as Cuadre;
         const e = entries ?? current.entries;
@@ -73,14 +72,15 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 }
 
 // DELETE /api/cuadres/[id]?shopId=xxx  (solo borradores)
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const shopId = new URL(request.url).searchParams.get("shopId");
   if (!shopId) return NextResponse.json({ error: "shopId is required" }, { status: 400 });
 
   const db = adminDb();
   if (!db) return NextResponse.json({ error: "DB unavailable" }, { status: 500 });
 
-  const ref = db.collection("shops").doc(shopId).collection("cuadres").doc(params.id);
+  const ref = db.collection("shops").doc(shopId).collection("cuadres").doc(id);
   const snap = await ref.get();
   if (!snap.exists) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
