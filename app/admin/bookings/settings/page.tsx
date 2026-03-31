@@ -268,7 +268,7 @@ export default function BookingSettingsPage() {
                 href="/admin/bookings"
                 className="p-2 rounded-lg hover:bg-white/10 transition-colors"
               >
-                <ArrowLeft className="w-5 h-5 text-slate-400" />
+                <ArrowLeft className="w-5 h-5 text-white/50" />
               </Link>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-primary to-orange-400 flex items-center justify-center">
@@ -278,7 +278,7 @@ export default function BookingSettingsPage() {
                   <h1 className="font-display text-2xl font-bold text-white">
                     Configuración del Calendario
                   </h1>
-                  <p className="text-slate-400 text-sm">
+                  <p className="text-white/50 text-sm">
                     Horarios, duración de citas y recordatorios
                   </p>
                 </div>
@@ -329,7 +329,7 @@ export default function BookingSettingsPage() {
                       "p-2 rounded-full",
                       config.enabled
                         ? "bg-green-500/20 text-green-400"
-                        : "bg-white/10 text-slate-400"
+                        : "bg-white/10 text-white/50"
                     )}
                   >
                     {config.enabled ? (
@@ -342,7 +342,7 @@ export default function BookingSettingsPage() {
                     <h2 className="text-white font-semibold">
                       Sistema de Reservaciones
                     </h2>
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-white/50">
                       {config.enabled
                         ? "Los clientes pueden agendar citas"
                         : "Las reservaciones están desactivadas"}
@@ -375,7 +375,7 @@ export default function BookingSettingsPage() {
               <div className="grid sm:grid-cols-2 gap-6">
                 {/* Open Time */}
                 <div>
-                  <label className="block text-sm text-slate-400 mb-2">
+                  <label className="block text-sm text-white/50 mb-2">
                     Hora de Apertura
                   </label>
                   <select
@@ -393,7 +393,7 @@ export default function BookingSettingsPage() {
 
                 {/* Close Time */}
                 <div>
-                  <label className="block text-sm text-slate-400 mb-2">
+                  <label className="block text-sm text-white/50 mb-2">
                     Hora de Cierre
                   </label>
                   <select
@@ -412,7 +412,7 @@ export default function BookingSettingsPage() {
 
               {/* Closed Days */}
               <div className="mt-6">
-                <label className="block text-sm text-slate-400 mb-3">
+                <label className="block text-sm text-white/50 mb-3">
                   Días Cerrados
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -426,7 +426,7 @@ export default function BookingSettingsPage() {
                           "px-4 py-2 rounded-lg border transition-all",
                           isClosed
                             ? "bg-red-500/20 border-red-500/30 text-red-400"
-                            : "bg-white/5 border-white/10 text-slate-300 hover:border-white/30"
+                            : "bg-white/5 border-white/10 text-white/70 hover:border-white/30"
                         )}
                       >
                         {day.short}
@@ -434,7 +434,7 @@ export default function BookingSettingsPage() {
                     );
                   })}
                 </div>
-                <p className="text-xs text-slate-500 mt-2">
+                <p className="text-xs text-white/40 mt-2">
                   Los días marcados no estarán disponibles para reservar
                 </p>
               </div>
@@ -449,7 +449,7 @@ export default function BookingSettingsPage() {
                     <Coffee className="w-5 h-5 text-amber-400" />
                     <div>
                       <p className="text-white font-medium">Horario de Descanso</p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-white/40">
                         {config.breakEnabled
                           ? `${config.breakStartTime} - ${config.breakEndTime}`
                           : "Sin horario de descanso configurado"}
@@ -474,7 +474,7 @@ export default function BookingSettingsPage() {
                 {config.breakEnabled && (
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm text-slate-400 mb-2">
+                      <label className="block text-sm text-white/50 mb-2">
                         Inicio del descanso
                       </label>
                       <select
@@ -490,7 +490,7 @@ export default function BookingSettingsPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm text-slate-400 mb-2">
+                      <label className="block text-sm text-white/50 mb-2">
                         Fin del descanso
                       </label>
                       <select
@@ -516,7 +516,7 @@ export default function BookingSettingsPage() {
                 <CalendarX className="w-4 h-4 text-gold" />
                 Cierres Temporales
               </h2>
-              <p className="text-sm text-slate-400 mb-4">
+              <p className="text-sm text-white/50 mb-4">
                 Cierra días específicos sin cambiar tu horario regular
               </p>
 
@@ -564,13 +564,13 @@ export default function BookingSettingsPage() {
                     ))}
                 </div>
               ) : (
-                <div className="text-center py-6 text-slate-500">
+                <div className="text-center py-6 text-white/40">
                   <CalendarX className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">No hay cierres temporales programados</p>
                 </div>
               )}
 
-              <p className="text-xs text-slate-500 mt-4">
+              <p className="text-xs text-white/40 mt-4">
                 Tip: También puedes cerrar días desde WhatsApp con el comando "Cerrar mañana" o "Cerrar 20 de febrero"
               </p>
             </div>
@@ -582,7 +582,7 @@ export default function BookingSettingsPage() {
                 Configuración de Citas
               </h2>
 
-              <p className="text-sm text-slate-400 mb-4">
+              <p className="text-sm text-white/50 mb-4">
                 Configura el tiempo promedio que tardas en atender a cada cliente.
                 Por ejemplo: uñas (2h), maquillaje (1.5h), corte de pelo (45min), etc.
               </p>
@@ -590,7 +590,7 @@ export default function BookingSettingsPage() {
               <div className="grid sm:grid-cols-2 gap-6">
                 {/* Slot Duration */}
                 <div>
-                  <label className="block text-sm text-slate-400 mb-2">
+                  <label className="block text-sm text-white/50 mb-2">
                     Duración promedio de cada cita
                   </label>
                   <select
@@ -606,14 +606,14 @@ export default function BookingSettingsPage() {
                       </option>
                     ))}
                   </select>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-white/40 mt-1">
                     Tiempo que dura atender a un cliente
                   </p>
                 </div>
 
                 {/* Buffer Time */}
                 <div>
-                  <label className="block text-sm text-slate-400 mb-2">
+                  <label className="block text-sm text-white/50 mb-2">
                     Tiempo de preparación
                   </label>
                   <select
@@ -629,7 +629,7 @@ export default function BookingSettingsPage() {
                       </option>
                     ))}
                   </select>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-white/40 mt-1">
                     Tiempo para preparar el espacio entre citas
                   </p>
                 </div>
@@ -640,7 +640,7 @@ export default function BookingSettingsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-white font-medium">Citas máximas por día</p>
-                    <p className="text-xs text-slate-400 mt-1">
+                    <p className="text-xs text-white/50 mt-1">
                       Jornada de {calculateWorkingHours()} con citas de {formatDuration(config.slotDurationMinutes)}
                       {config.bufferMinutes > 0 && ` + ${config.bufferMinutes}min preparación`}
                     </p>
@@ -662,7 +662,7 @@ export default function BookingSettingsPage() {
               <div className="grid sm:grid-cols-2 gap-6">
                 {/* Max Advance Days */}
                 <div>
-                  <label className="block text-sm text-slate-400 mb-2">
+                  <label className="block text-sm text-white/50 mb-2">
                     Máximo días de anticipación
                   </label>
                   <div className="relative">
@@ -678,18 +678,18 @@ export default function BookingSettingsPage() {
                       }
                       className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-primary/50 transition-colors"
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 text-sm">
                       días
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-white/40 mt-1">
                     Hasta cuántos días en el futuro se puede reservar
                   </p>
                 </div>
 
                 {/* Min Advance Hours */}
                 <div>
-                  <label className="block text-sm text-slate-400 mb-2">
+                  <label className="block text-sm text-white/50 mb-2">
                     Mínimo horas de anticipación
                   </label>
                   <div className="relative">
@@ -705,11 +705,11 @@ export default function BookingSettingsPage() {
                       }
                       className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-primary/50 transition-colors"
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 text-sm">
                       horas
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-white/40 mt-1">
                     Tiempo mínimo antes de la cita para reservar
                   </p>
                 </div>
@@ -734,7 +734,7 @@ export default function BookingSettingsPage() {
                   <p className="text-white font-medium">
                     Enviar recordatorios por WhatsApp
                   </p>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-white/40">
                     Notificar a los clientes antes de su cita
                   </p>
                 </div>
@@ -755,7 +755,7 @@ export default function BookingSettingsPage() {
 
               {config.reminderEnabled && (
                 <div>
-                  <label className="block text-sm text-slate-400 mb-2">
+                  <label className="block text-sm text-white/50 mb-2">
                     Enviar recordatorio
                   </label>
                   <div className="flex items-center gap-3">
@@ -775,7 +775,7 @@ export default function BookingSettingsPage() {
                       <option value="24" className="bg-slate-800">24 horas (1 día)</option>
                       <option value="48" className="bg-slate-800">48 horas (2 días)</option>
                     </select>
-                    <span className="text-slate-400">antes de la cita</span>
+                    <span className="text-white/50">antes de la cita</span>
                   </div>
                 </div>
               )}
@@ -790,7 +790,7 @@ export default function BookingSettingsPage() {
 
               {/* Phone Number */}
               <div className="mb-4">
-                <label className="block text-sm text-slate-400 mb-2">
+                <label className="block text-sm text-white/50 mb-2">
                   Teléfono para notificaciones
                 </label>
                 <input
@@ -802,7 +802,7 @@ export default function BookingSettingsPage() {
                   placeholder="521234567890"
                   className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors"
                 />
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-white/40 mt-1">
                   Número con código de país (ej: 521234567890)
                 </p>
               </div>
@@ -832,7 +832,7 @@ export default function BookingSettingsPage() {
                       } as Partial<BookingConfig>)
                     }
                   >
-                    <span className="text-sm text-slate-300">{item.label}</span>
+                    <span className="text-sm text-white/70">{item.label}</span>
                     <div
                       className={cn(
                         "relative w-10 h-5 rounded-full transition-colors",
@@ -867,7 +867,7 @@ export default function BookingSettingsPage() {
               <div className="space-y-4">
                 {/* Status */}
                 <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                  <span className="text-slate-400">Estado</span>
+                  <span className="text-white/50">Estado</span>
                   <span
                     className={cn(
                       "px-2 py-1 rounded-full text-xs font-medium",
@@ -882,7 +882,7 @@ export default function BookingSettingsPage() {
 
                 {/* Hours */}
                 <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                  <span className="text-slate-400">Horario</span>
+                  <span className="text-white/50">Horario</span>
                   <span className="text-white font-medium">
                     {config.openTime} - {config.closeTime}
                   </span>
@@ -891,7 +891,7 @@ export default function BookingSettingsPage() {
                 {/* Break Time */}
                 {config.breakEnabled && (
                   <div className="flex items-center justify-between p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                    <span className="text-slate-400 flex items-center gap-1">
+                    <span className="text-white/50 flex items-center gap-1">
                       <Coffee className="w-3 h-3 text-amber-400" />
                       Descanso
                     </span>
@@ -903,7 +903,7 @@ export default function BookingSettingsPage() {
 
                 {/* Slot Duration */}
                 <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                  <span className="text-slate-400">Duración cita</span>
+                  <span className="text-white/50">Duración cita</span>
                   <span className="text-white font-medium">
                     {formatDuration(config.slotDurationMinutes)}
                   </span>
@@ -911,7 +911,7 @@ export default function BookingSettingsPage() {
 
                 {/* Max Appointments */}
                 <div className="flex items-center justify-between p-3 rounded-lg bg-primary/10 border border-primary/20">
-                  <span className="text-slate-400">Citas por día</span>
+                  <span className="text-white/50">Citas por día</span>
                   <span className="text-primary font-bold text-lg">
                     {calculateMaxAppointments()}
                   </span>
@@ -919,10 +919,10 @@ export default function BookingSettingsPage() {
 
                 {/* Closed Days */}
                 <div className="p-3 rounded-lg bg-white/5">
-                  <span className="text-slate-400 block mb-2">Días cerrados</span>
+                  <span className="text-white/50 block mb-2">Días cerrados</span>
                   <div className="flex flex-wrap gap-1">
                     {config.closedDays.length === 0 ? (
-                      <span className="text-slate-500 text-sm">
+                      <span className="text-white/40 text-sm">
                         Abierto todos los días
                       </span>
                     ) : (
@@ -943,7 +943,7 @@ export default function BookingSettingsPage() {
                 {/* Temporary Closures */}
                 {config.closedDates && config.closedDates.filter(d => d >= getTodayDate()).length > 0 && (
                   <div className="p-3 rounded-lg bg-white/5">
-                    <span className="text-slate-400 block mb-2">Cierres temporales</span>
+                    <span className="text-white/50 block mb-2">Cierres temporales</span>
                     <div className="flex flex-wrap gap-1">
                       {config.closedDates
                         .filter(d => d >= getTodayDate())
@@ -957,7 +957,7 @@ export default function BookingSettingsPage() {
                           </span>
                         ))}
                       {config.closedDates.filter(d => d >= getTodayDate()).length > 3 && (
-                        <span className="px-2 py-0.5 rounded bg-white/10 text-slate-400 text-xs">
+                        <span className="px-2 py-0.5 rounded bg-white/10 text-white/50 text-xs">
                           +{config.closedDates.filter(d => d >= getTodayDate()).length - 3} más
                         </span>
                       )}
@@ -967,7 +967,7 @@ export default function BookingSettingsPage() {
 
                 {/* Reminders */}
                 <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                  <span className="text-slate-400">Recordatorios</span>
+                  <span className="text-white/50">Recordatorios</span>
                   <span className="text-white font-medium">
                     {config.reminderEnabled
                       ? `${config.reminderHoursBefore}h antes`
@@ -977,7 +977,7 @@ export default function BookingSettingsPage() {
 
                 {/* Booking Window */}
                 <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                  <span className="text-slate-400">Ventana de reserva</span>
+                  <span className="text-white/50">Ventana de reserva</span>
                   <span className="text-white font-medium text-sm">
                     {config.minAdvanceBookingHours}h - {config.maxAdvanceBookingDays}d
                   </span>
@@ -986,7 +986,7 @@ export default function BookingSettingsPage() {
 
               {/* Quick Actions */}
               <div className="mt-6 pt-6 border-t border-white/10">
-                <p className="text-slate-400 text-sm mb-3">Acciones rápidas</p>
+                <p className="text-white/50 text-sm mb-3">Acciones rápidas</p>
                 <div className="space-y-2">
                   <Link
                     href="/admin/bookings/services"

@@ -18,7 +18,7 @@ function QRCodeDisplay({ url, label }: { url: string; label: string }) {
         <div className="flex flex-col items-center p-4 bg-white rounded-xl border border-slate-200 shadow-sm print:shadow-none print:border-2 print:border-black">
             <h3 className="text-lg font-bold text-black mb-2">{label}</h3>
             <img src={qrUrl} alt={`QR for ${label}`} className="w-32 h-32 mb-2" />
-            <p className="text-xs text-slate-500 font-mono">{url}</p>
+            <p className="text-xs text-white/40 font-mono">{url}</p>
         </div>
     );
 }
@@ -35,7 +35,7 @@ export default function TablesPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold text-white">Mesas & QRs</h1>
-                    <p className="text-slate-400">Genera códigos QR para tus mesas</p>
+                    <p className="text-white/50">Genera códigos QR para tus mesas</p>
                 </div>
                 <Button
                     onClick={() => window.print()}
@@ -49,7 +49,7 @@ export default function TablesPage() {
             <div className="glass-panel p-6 rounded-2xl border border-white/10">
                 <div className="flex items-end gap-4 mb-8">
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">Cantidad de Mesas</label>
+                        <label className="block text-sm font-medium text-white/70 mb-2">Cantidad de Mesas</label>
                         <input
                             type="number"
                             value={tableCount}
@@ -57,7 +57,7 @@ export default function TablesPage() {
                             className="px-4 py-2 rounded-xl bg-black/20 border border-white/10 text-white w-32"
                         />
                     </div>
-                    <p className="text-sm text-slate-500 pb-3">
+                    <p className="text-sm text-white/40 pb-3">
                         Se generarán códigos para mesas del 1 al {tableCount}
                     </p>
                 </div>

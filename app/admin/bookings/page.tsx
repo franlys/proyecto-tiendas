@@ -38,7 +38,7 @@ const STATUS_CONFIG: Record<BookingStatus, { label: string; color: string; icon:
   confirmed: { label: "Confirmada", color: "bg-green-500/20 text-green-400 border-green-500/30", icon: <CheckCircle className="w-4 h-4" /> },
   rescheduled: { label: "Reagendada", color: "bg-blue-500/20 text-blue-400 border-blue-500/30", icon: <RefreshCw className="w-4 h-4" /> },
   cancelled: { label: "Cancelada", color: "bg-red-500/20 text-red-400 border-red-500/30", icon: <XCircle className="w-4 h-4" /> },
-  completed: { label: "Completada", color: "bg-slate-500/20 text-slate-400 border-slate-500/30", icon: <CheckCircle className="w-4 h-4" /> },
+  completed: { label: "Completada", color: "bg-slate-500/20 text-white/50 border-slate-500/30", icon: <CheckCircle className="w-4 h-4" /> },
   no_show: { label: "No asistió", color: "bg-red-500/20 text-red-400 border-red-500/30", icon: <UserX className="w-4 h-4" /> },
 };
 
@@ -90,7 +90,7 @@ function CalendarView({
           onClick={() => onMonthChange(-1)}
           className="p-2 rounded-lg hover:bg-white/10 transition-colors"
         >
-          <ChevronLeft className="w-5 h-5 text-slate-400" />
+          <ChevronLeft className="w-5 h-5 text-white/50" />
         </button>
         <h3 className="text-lg font-semibold text-white">
           {MONTH_NAMES[currentMonth.getMonth()]} {currentMonth.getFullYear()}
@@ -99,14 +99,14 @@ function CalendarView({
           onClick={() => onMonthChange(1)}
           className="p-2 rounded-lg hover:bg-white/10 transition-colors"
         >
-          <ChevronRight className="w-5 h-5 text-slate-400" />
+          <ChevronRight className="w-5 h-5 text-white/50" />
         </button>
       </div>
 
       {/* Day Headers */}
       <div className="grid grid-cols-7 gap-1 mb-2">
         {DAY_NAMES.map((day) => (
-          <div key={day} className="text-center text-xs font-medium text-slate-500 py-2">
+          <div key={day} className="text-center text-xs font-medium text-white/40 py-2">
             {day}
           </div>
         ))}
@@ -137,7 +137,7 @@ function CalendarView({
                     ? "bg-white/10 text-white font-bold"
                     : isPast
                       ? "text-slate-600 hover:bg-white/5"
-                      : "text-slate-300 hover:bg-white/10"
+                      : "text-white/70 hover:bg-white/10"
               )}
             >
               <span>{date.getDate()}</span>
@@ -202,7 +202,7 @@ function BookingCard({
           </div>
           <div>
             <p className="text-white font-medium">{booking.serviceName}</p>
-            <p className="text-xs text-slate-400">{booking.serviceDuration} min • ${booking.servicePrice}</p>
+            <p className="text-xs text-white/50">{booking.serviceDuration} min • ${booking.servicePrice}</p>
           </div>
         </div>
         <span className={cn("px-2 py-1 rounded-full text-xs font-medium border flex items-center gap-1", config.color)}>
@@ -212,16 +212,16 @@ function BookingCard({
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-3 text-sm">
-        <div className="flex items-center gap-2 text-slate-300">
-          <Clock className="w-4 h-4 text-slate-500" />
+        <div className="flex items-center gap-2 text-white/70">
+          <Clock className="w-4 h-4 text-white/40" />
           <span>{booking.time} - {booking.endTime}</span>
         </div>
-        <div className="flex items-center gap-2 text-slate-300">
-          <User className="w-4 h-4 text-slate-500" />
+        <div className="flex items-center gap-2 text-white/70">
+          <User className="w-4 h-4 text-white/40" />
           <span>{booking.customerName}</span>
         </div>
-        <div className="flex items-center gap-2 text-slate-300 col-span-2">
-          <Phone className="w-4 h-4 text-slate-500" />
+        <div className="flex items-center gap-2 text-white/70 col-span-2">
+          <Phone className="w-4 h-4 text-white/40" />
           <span>{booking.customerPhone}</span>
           <a
             href={`https://wa.me/${booking.customerPhone.replace(/\D/g, "")}`}
@@ -235,7 +235,7 @@ function BookingCard({
       </div>
 
       {booking.notes && (
-        <p className="text-xs text-slate-400 mb-3 p-2 rounded bg-white/5">
+        <p className="text-xs text-white/50 mb-3 p-2 rounded bg-white/5">
           📝 {booking.notes}
         </p>
       )}
@@ -481,7 +481,7 @@ function BookingsPageContent() {
   if (!shopId) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-slate-400">Cargando...</p>
+        <p className="text-white/50">Cargando...</p>
       </div>
     );
   }
@@ -493,14 +493,14 @@ function BookingsPageContent() {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/admin" className="p-2 rounded-lg hover:bg-white/10 transition-colors">
-              <ArrowLeft className="w-5 h-5 text-slate-400" />
+              <ArrowLeft className="w-5 h-5 text-white/50" />
             </Link>
             <div>
               <h1 className="text-xl font-bold text-white flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-primary" />
                 Calendario de Citas
               </h1>
-              <p className="text-xs text-slate-400">{shop?.name || "Mi Negocio"}</p>
+              <p className="text-xs text-white/50">{shop?.name || "Mi Negocio"}</p>
             </div>
           </div>
 
@@ -527,29 +527,29 @@ function BookingsPageContent() {
 
             {/* Quick Stats */}
             <div className="mt-6 glass-panel rounded-2xl p-6">
-              <h3 className="text-sm font-medium text-slate-400 mb-4">Resumen del día</h3>
+              <h3 className="text-sm font-medium text-white/50 mb-4">Resumen del día</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center p-3 rounded-xl bg-white/5">
                   <p className="text-2xl font-bold text-white">{bookings.length}</p>
-                  <p className="text-xs text-slate-400">Total citas</p>
+                  <p className="text-xs text-white/50">Total citas</p>
                 </div>
                 <div className="text-center p-3 rounded-xl bg-green-500/10">
                   <p className="text-2xl font-bold text-green-400">
                     {bookings.filter((b) => b.status === "confirmed").length}
                   </p>
-                  <p className="text-xs text-slate-400">Confirmadas</p>
+                  <p className="text-xs text-white/50">Confirmadas</p>
                 </div>
                 <div className="text-center p-3 rounded-xl bg-amber-500/10">
                   <p className="text-2xl font-bold text-amber-400">
                     {bookings.filter((b) => b.status === "pending").length}
                   </p>
-                  <p className="text-xs text-slate-400">Pendientes</p>
+                  <p className="text-xs text-white/50">Pendientes</p>
                 </div>
                 <div className="text-center p-3 rounded-xl bg-primary/10">
                   <p className="text-2xl font-bold text-primary">
                     ${bookings.filter((b) => !["cancelled", "no_show"].includes(b.status)).reduce((sum, b) => sum + b.servicePrice, 0)}
                   </p>
-                  <p className="text-xs text-slate-400">Ingresos est.</p>
+                  <p className="text-xs text-white/50">Ingresos est.</p>
                 </div>
               </div>
             </div>
@@ -564,14 +564,14 @@ function BookingsPageContent() {
                   <h2 className="text-lg font-semibold text-white capitalize">
                     {formatSelectedDate()}
                   </h2>
-                  <p className="text-sm text-slate-400">
+                  <p className="text-sm text-white/50">
                     {filteredBookings.length} cita{filteredBookings.length !== 1 ? "s" : ""}
                   </p>
                 </div>
 
                 {/* Status Filter */}
                 <div className="flex items-center gap-2">
-                  <Filter className="w-4 h-4 text-slate-400" />
+                  <Filter className="w-4 h-4 text-white/50" />
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value as BookingStatus | "all")}
@@ -591,13 +591,13 @@ function BookingsPageContent() {
               {isLoading ? (
                 <div className="text-center py-12">
                   <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto mb-4" />
-                  <p className="text-slate-400">Cargando citas...</p>
+                  <p className="text-white/50">Cargando citas...</p>
                 </div>
               ) : filteredBookings.length === 0 ? (
                 <div className="text-center py-12">
                   <Calendar className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                  <p className="text-slate-400 mb-2">No hay citas para este día</p>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-white/50 mb-2">No hay citas para este día</p>
+                  <p className="text-sm text-white/40">
                     Las citas aparecerán aquí cuando los clientes las agenden
                   </p>
                 </div>

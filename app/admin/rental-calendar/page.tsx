@@ -235,7 +235,7 @@ export default function RentalCalendarPage() {
       case "maintenance":
         return "bg-yellow-500/20 text-yellow-400";
       case "blocked":
-        return "bg-slate-500/20 text-slate-400";
+        return "bg-slate-500/20 text-white/50";
       case "partial":
         return "bg-orange-500/20 text-orange-400";
       default:
@@ -278,7 +278,7 @@ export default function RentalCalendarPage() {
             <Calendar className="h-6 w-6 text-cyan-400" />
             Calendario de Disponibilidad
           </h1>
-          <p className="text-slate-400">Vista de disponibilidad de vehículos por fecha</p>
+          <p className="text-white/50">Vista de disponibilidad de vehículos por fecha</p>
         </div>
       </div>
 
@@ -287,7 +287,7 @@ export default function RentalCalendarPage() {
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           {/* Selector de vehículo */}
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Car className="h-4 w-4 text-slate-400" />
+            <Car className="h-4 w-4 text-white/50" />
             <select
               value={selectedVehicle}
               onChange={(e) => setSelectedVehicle(e.target.value)}
@@ -306,7 +306,7 @@ export default function RentalCalendarPage() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigateMonth("prev")}
-              className="w-9 h-9 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 hover:text-white flex items-center justify-center transition-colors"
+              className="w-9 h-9 rounded-lg bg-slate-700 text-white/70 hover:bg-slate-600 hover:text-white flex items-center justify-center transition-colors"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -315,7 +315,7 @@ export default function RentalCalendarPage() {
             </span>
             <button
               onClick={() => navigateMonth("next")}
-              className="w-9 h-9 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 hover:text-white flex items-center justify-center transition-colors"
+              className="w-9 h-9 rounded-lg bg-slate-700 text-white/70 hover:bg-slate-600 hover:text-white flex items-center justify-center transition-colors"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -327,21 +327,21 @@ export default function RentalCalendarPage() {
       <div className="flex flex-wrap gap-4 text-sm">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded bg-green-500/20 border border-green-500/50" />
-          <span className="text-slate-300">Disponible</span>
+          <span className="text-white/70">Disponible</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded bg-red-500/20 border border-red-500/50" />
-          <span className="text-slate-300">Rentado</span>
+          <span className="text-white/70">Rentado</span>
         </div>
         {selectedVehicle === "all" && (
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded bg-orange-500/20 border border-orange-500/50" />
-            <span className="text-slate-300">Parcialmente disponible</span>
+            <span className="text-white/70">Parcialmente disponible</span>
           </div>
         )}
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded bg-yellow-500/20 border border-yellow-500/50" />
-          <span className="text-slate-300">En mantenimiento</span>
+          <span className="text-white/70">En mantenimiento</span>
         </div>
       </div>
 
@@ -350,7 +350,7 @@ export default function RentalCalendarPage() {
         {/* Encabezados de días */}
         <div className="grid grid-cols-7 gap-1 mb-2">
           {dayNames.map((day) => (
-            <div key={day} className="text-center font-medium text-slate-400 py-2">
+            <div key={day} className="text-center font-medium text-white/50 py-2">
               {day}
             </div>
           ))}
@@ -371,7 +371,7 @@ export default function RentalCalendarPage() {
               {day.isCurrentMonth && day.rentalInfo && (
                 <div className="mt-1 text-xs">
                   <div className="truncate font-medium">#{day.rentalInfo.rentalNumber}</div>
-                  <div className="truncate text-slate-400">{day.rentalInfo.customerName}</div>
+                  <div className="truncate text-white/50">{day.rentalInfo.customerName}</div>
                   {day.rentalInfo.isPickup && (
                     <span className="inline-block text-[10px] px-1 mt-1 bg-blue-500/20 text-blue-400 rounded">
                       Recogida
@@ -394,7 +394,7 @@ export default function RentalCalendarPage() {
         <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400">Días disponibles</p>
+              <p className="text-sm text-white/50">Días disponibles</p>
               <p className="text-2xl font-bold text-green-400">{monthStats.available}</p>
             </div>
             <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
@@ -406,7 +406,7 @@ export default function RentalCalendarPage() {
         <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400">Días rentados</p>
+              <p className="text-sm text-white/50">Días rentados</p>
               <p className="text-2xl font-bold text-red-400">{monthStats.rented}</p>
             </div>
             <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
@@ -419,7 +419,7 @@ export default function RentalCalendarPage() {
           <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-400">Parcial</p>
+                <p className="text-sm text-white/50">Parcial</p>
                 <p className="text-2xl font-bold text-orange-400">{monthStats.partial}</p>
               </div>
               <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
@@ -432,7 +432,7 @@ export default function RentalCalendarPage() {
         <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400">Mantenimiento</p>
+              <p className="text-sm text-white/50">Mantenimiento</p>
               <p className="text-2xl font-bold text-yellow-400">{monthStats.maintenance}</p>
             </div>
             <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
@@ -449,7 +449,7 @@ export default function RentalCalendarPage() {
         </div>
         <div className="p-4">
           {rentals.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">
+            <div className="text-center py-8 text-white/50">
               No hay reservas para este mes
             </div>
           ) : (
@@ -478,7 +478,7 @@ export default function RentalCalendarPage() {
                           <p className="font-medium text-white">
                             {vehicle?.brand} {vehicle?.model}
                           </p>
-                          <p className="text-sm text-slate-400">
+                          <p className="text-sm text-white/50">
                             {rental.customerName} - #{rental.rentalNumber}
                           </p>
                         </div>

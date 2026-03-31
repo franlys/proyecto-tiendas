@@ -97,7 +97,7 @@ function ServiceForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-1.5">
+        <label className="block text-sm font-medium text-white/70 mb-1.5">
           Nombre del servicio *
         </label>
         <input
@@ -111,7 +111,7 @@ function ServiceForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-1.5">
+        <label className="block text-sm font-medium text-white/70 mb-1.5">
           Descripción (opcional)
         </label>
         <textarea
@@ -125,11 +125,11 @@ function ServiceForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1.5">
-            Precio estimado <span className="text-slate-500 font-normal">(opcional)</span>
+          <label className="block text-sm font-medium text-white/70 mb-1.5">
+            Precio estimado <span className="text-white/40 font-normal">(opcional)</span>
           </label>
           <div className="relative">
-            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
             <input
               type="number"
               value={form.price}
@@ -144,11 +144,11 @@ function ServiceForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1.5">
+          <label className="block text-sm font-medium text-white/70 mb-1.5">
             Tiempo estimado (min)
           </label>
           <div className="relative">
-            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
             <input
               type="number"
               value={form.duration}
@@ -162,7 +162,7 @@ function ServiceForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-1.5">
+        <label className="block text-sm font-medium text-white/70 mb-1.5">
           Categoría
         </label>
         <div className="flex flex-wrap gap-2">
@@ -175,7 +175,7 @@ function ServiceForm({
                 "px-3 py-1.5 rounded-lg text-xs font-medium border transition-all",
                 form.category === cat
                   ? "border-orange-500 bg-orange-500/20 text-orange-300"
-                  : "border-white/10 bg-white/5 text-slate-400 hover:bg-white/10"
+                  : "border-white/10 bg-white/5 text-white/50 hover:bg-white/10"
               )}
             >
               {cat}
@@ -288,7 +288,7 @@ function ServicesContent({ shopId }: { shopId: string }) {
                 </div>
                 <div>
                   <h1 className="font-display text-2xl font-bold text-white">Servicios del Taller</h1>
-                  <p className="text-slate-400 text-sm">Configura los servicios que ofreces</p>
+                  <p className="text-white/50 text-sm">Configura los servicios que ofreces</p>
                 </div>
               </div>
             </div>
@@ -313,7 +313,7 @@ function ServicesContent({ shopId }: { shopId: string }) {
               <h2 className="text-lg font-semibold text-white">
                 {editingService ? "Editar servicio" : "Agregar nuevo servicio"}
               </h2>
-              <button onClick={handleCloseForm} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10">
+              <button onClick={handleCloseForm} className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -328,15 +328,15 @@ function ServicesContent({ shopId }: { shopId: string }) {
 
         {/* Loading */}
         {isLoading ? (
-          <div className="flex items-center justify-center py-16 text-slate-400">
+          <div className="flex items-center justify-center py-16 text-white/50">
             <Loader2 className="w-6 h-6 animate-spin mr-3" />
             Cargando servicios...
           </div>
         ) : services.length === 0 ? (
           <div className="text-center py-16 glass-panel rounded-2xl border border-white/10">
-            <Wrench className="w-12 h-12 text-slate-500 mx-auto mb-4" />
+            <Wrench className="w-12 h-12 text-white/40 mx-auto mb-4" />
             <p className="text-white font-medium mb-2">Sin servicios configurados</p>
-            <p className="text-slate-400 text-sm mb-6">
+            <p className="text-white/50 text-sm mb-6">
               Agrega los servicios de reparación que ofreces con su precio y tiempo estimado
             </p>
             <Button
@@ -353,11 +353,11 @@ function ServicesContent({ shopId }: { shopId: string }) {
             <div className="grid grid-cols-3 gap-4">
               <div className="glass-panel rounded-xl p-4 border border-white/10 text-center">
                 <p className="text-2xl font-bold text-white">{services.length}</p>
-                <p className="text-xs text-slate-400">Total</p>
+                <p className="text-xs text-white/50">Total</p>
               </div>
               <div className="glass-panel rounded-xl p-4 border border-green-500/20 text-center">
                 <p className="text-2xl font-bold text-green-400">{services.filter(s => s.isActive).length}</p>
-                <p className="text-xs text-slate-400">Activos</p>
+                <p className="text-xs text-white/50">Activos</p>
               </div>
               <div className="glass-panel rounded-xl p-4 border border-white/10 text-center">
                 <p className="text-2xl font-bold text-white">
@@ -365,7 +365,7 @@ function ServicesContent({ shopId }: { shopId: string }) {
                     ? `$${Math.min(...services.filter(s => s.price > 0).map(s => s.price))}+`
                     : "Cotización"}
                 </p>
-                <p className="text-xs text-slate-400">Desde</p>
+                <p className="text-xs text-white/50">Desde</p>
               </div>
             </div>
 
@@ -394,14 +394,14 @@ function ServicesContent({ shopId }: { shopId: string }) {
                         <div className="flex items-center gap-2">
                           <p className="text-white font-medium truncate">{service.name}</p>
                           {!service.isActive && (
-                            <span className="px-1.5 py-0.5 rounded text-xs bg-white/10 text-slate-500">Inactivo</span>
+                            <span className="px-1.5 py-0.5 rounded text-xs bg-white/10 text-white/40">Inactivo</span>
                           )}
                         </div>
                         {service.description && (
-                          <p className="text-xs text-slate-500 truncate mt-0.5">{service.description}</p>
+                          <p className="text-xs text-white/40 truncate mt-0.5">{service.description}</p>
                         )}
                         <div className="flex items-center gap-3 mt-1">
-                          <span className="text-xs text-slate-400 flex items-center gap-1">
+                          <span className="text-xs text-white/50 flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             {service.duration} min
                           </span>
@@ -411,7 +411,7 @@ function ServicesContent({ shopId }: { shopId: string }) {
                       <div className="flex-shrink-0 text-right">
                         {service.price > 0
                           ? <p className="text-white font-bold">${service.price.toLocaleString("es-MX")}</p>
-                          : <p className="text-slate-500 text-xs">Cotización</p>
+                          : <p className="text-white/40 text-xs">Cotización</p>
                         }
                       </div>
 
@@ -422,7 +422,7 @@ function ServicesContent({ shopId }: { shopId: string }) {
                             "p-2 rounded-lg transition-colors",
                             service.isActive
                               ? "text-green-400 hover:bg-green-500/10"
-                              : "text-slate-500 hover:bg-white/10"
+                              : "text-white/40 hover:bg-white/10"
                           )}
                           title={service.isActive ? "Desactivar" : "Activar"}
                         >
@@ -433,7 +433,7 @@ function ServicesContent({ shopId }: { shopId: string }) {
                         </button>
                         <button
                           onClick={() => handleEdit(service)}
-                          className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                          className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
                           title="Editar"
                         >
                           <Pencil className="w-4 h-4" />
@@ -441,7 +441,7 @@ function ServicesContent({ shopId }: { shopId: string }) {
                         <button
                           onClick={() => handleDelete(service.id)}
                           disabled={deletingId === service.id}
-                          className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                          className="p-2 rounded-lg text-white/50 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                           title="Eliminar"
                         >
                           {deletingId === service.id

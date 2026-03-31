@@ -129,7 +129,7 @@ export default function BeautyConsultationsPage() {
                         <Sparkles className="w-6 h-6 text-pink-500" />
                         Pre-Consultas de Belleza
                     </h1>
-                    <p className="text-slate-400 mt-1">
+                    <p className="text-white/50 mt-1">
                         Revisa las preferencias de tus clientas antes de cada cita
                     </p>
                 </div>
@@ -147,7 +147,7 @@ export default function BeautyConsultationsPage() {
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                                 filter === tab.id
                                     ? "bg-pink-500 text-white"
-                                    : "bg-white/10 text-slate-300 hover:bg-white/20"
+                                    : "bg-white/10 text-white/70 hover:bg-white/20"
                             }`}
                         >
                             {tab.label}
@@ -163,11 +163,11 @@ export default function BeautyConsultationsPage() {
 
             {filteredConsultations.length === 0 ? (
                 <div className="text-center py-16">
-                    <Sparkles className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                    <Sparkles className="w-16 h-16 text-white/50 mx-auto mb-4" />
                     <h3 className="text-xl font-medium text-white mb-2">
                         No hay pre-consultas
                     </h3>
-                    <p className="text-slate-400">
+                    <p className="text-white/50">
                         {filter === "pending"
                             ? "No tienes pre-consultas pendientes de revisar"
                             : filter === "reviewed"
@@ -200,7 +200,7 @@ export default function BeautyConsultationsPage() {
                                             <h3 className="font-semibold text-white">
                                                 {consultation.customerName}
                                             </h3>
-                                            <p className="text-sm text-slate-400 flex items-center gap-1">
+                                            <p className="text-sm text-white/50 flex items-center gap-1">
                                                 <Phone className="w-3 h-3" />
                                                 {consultation.customerPhone}
                                             </p>
@@ -216,7 +216,7 @@ export default function BeautyConsultationsPage() {
                                                     Pendiente
                                                 </span>
                                             )}
-                                            <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform ${isSelected ? "rotate-90" : ""}`} />
+                                            <ChevronRight className={`w-4 h-4 text-white/50 transition-transform ${isSelected ? "rotate-90" : ""}`} />
                                         </div>
                                     </div>
 
@@ -261,8 +261,8 @@ export default function BeautyConsultationsPage() {
                     ) : (
                         <div className="hidden lg:flex items-center justify-center bg-white/5 rounded-xl border border-white/10 min-h-[400px]">
                             <div className="text-center">
-                                <Eye className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-                                <p className="text-slate-400">
+                                <Eye className="w-12 h-12 text-white/50 mx-auto mb-3" />
+                                <p className="text-white/50">
                                     Selecciona una pre-consulta para ver los detalles
                                 </p>
                             </div>
@@ -298,7 +298,7 @@ function ConsultationDetail({
                     <h3 className="font-semibold text-white text-lg">
                         {consultation.customerName}
                     </h3>
-                    <p className="text-sm text-slate-400">{consultation.customerPhone}</p>
+                    <p className="text-sm text-white/50">{consultation.customerPhone}</p>
                 </div>
                 <div className="flex items-center gap-2">
                     {!consultation.reviewedAt && (
@@ -331,7 +331,7 @@ function ConsultationDetail({
                             {eventInfo?.label}
                         </p>
                         {consultation.eventDescription && (
-                            <p className="text-sm text-slate-400 mt-2">
+                            <p className="text-sm text-white/50 mt-2">
                                 {consultation.eventDescription}
                             </p>
                         )}
@@ -343,7 +343,7 @@ function ConsultationDetail({
                             <span className="text-xl">{styleInfo?.icon}</span>
                             {styleInfo?.label}
                         </p>
-                        <p className="text-xs text-slate-400 mt-1">
+                        <p className="text-xs text-white/50 mt-1">
                             Intensidad: {styleInfo?.intensity}/5
                         </p>
                     </div>
@@ -352,7 +352,7 @@ function ConsultationDetail({
                 {/* Skin Tone */}
                 {skinToneInfo && (
                     <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                        <p className="text-xs text-slate-400 mb-2">Tono de piel</p>
+                        <p className="text-xs text-white/50 mb-2">Tono de piel</p>
                         <div className="flex items-center gap-3">
                             <div
                                 className="w-10 h-10 rounded-full border-2 border-white/20"
@@ -360,7 +360,7 @@ function ConsultationDetail({
                             />
                             <div>
                                 <p className="text-white font-medium">{skinToneInfo.label}</p>
-                                <p className="text-xs text-slate-400">
+                                <p className="text-xs text-white/50">
                                     {consultation.undertone === "warm" && "Subtono cálido"}
                                     {consultation.undertone === "cool" && "Subtono frío"}
                                     {consultation.undertone === "neutral" && "Subtono neutro"}
@@ -375,7 +375,7 @@ function ConsultationDetail({
                     consultation.lipDetails?.length > 0 ||
                     consultation.skinDetails?.length > 0) && (
                     <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                        <p className="text-xs text-slate-400 mb-2">Preferencias de look</p>
+                        <p className="text-xs text-white/50 mb-2">Preferencias de look</p>
                         <div className="space-y-2">
                             {consultation.eyeDetails?.length > 0 && (
                                 <div>
@@ -429,7 +429,7 @@ function ConsultationDetail({
                 {/* Inspiration Images */}
                 {consultation.inspirationImages?.length > 0 && (
                     <div>
-                        <p className="text-xs text-slate-400 mb-2">Fotos de inspiración</p>
+                        <p className="text-xs text-white/50 mb-2">Fotos de inspiración</p>
                         <div className="grid grid-cols-3 gap-2">
                             {consultation.inspirationImages.map((url, i) => (
                                 <a
@@ -453,7 +453,7 @@ function ConsultationDetail({
                 {/* Social Links */}
                 {((consultation.pinterestLinks?.length ?? 0) > 0 || (consultation.instagramLinks?.length ?? 0) > 0) && (
                     <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                        <p className="text-xs text-slate-400 mb-2">Links de inspiración</p>
+                        <p className="text-xs text-white/50 mb-2">Links de inspiración</p>
                         <div className="space-y-2">
                             {consultation.pinterestLinks?.map((link, i) => (
                                 <a
@@ -526,7 +526,7 @@ function ConsultationDetail({
                 {/* Notes */}
                 {consultation.notes && (
                     <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                        <p className="text-xs text-slate-400 mb-1">Notas adicionales</p>
+                        <p className="text-xs text-white/50 mb-1">Notas adicionales</p>
                         <p className="text-white text-sm">{consultation.notes}</p>
                     </div>
                 )}

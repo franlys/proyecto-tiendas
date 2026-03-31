@@ -171,7 +171,7 @@ export default function PromoGeneratorPage() {
               <h1 className="font-display text-2xl font-bold text-white">
                 Generador de Promos
               </h1>
-              <p className="text-slate-400 text-sm">
+              <p className="text-white/50 text-sm">
                 Crea imágenes para Instagram Stories
               </p>
             </div>
@@ -196,7 +196,7 @@ export default function PromoGeneratorPage() {
                     "p-4 rounded-xl border transition-all text-left",
                     layout === "classic"
                       ? "bg-primary/20 border-primary text-white"
-                      : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                      : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"
                   )}
                 >
                   <Type className="w-5 h-5 mb-2" />
@@ -209,7 +209,7 @@ export default function PromoGeneratorPage() {
                     "p-4 rounded-xl border transition-all text-left",
                     layout === "hero-product"
                       ? "bg-gold/20 border-gold text-white"
-                      : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                      : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"
                   )}
                 >
                   <Package className="w-5 h-5 mb-2" />
@@ -229,7 +229,7 @@ export default function PromoGeneratorPage() {
 
                 {/* Shop Selector */}
                 <div className="mb-4">
-                  <label className="block text-sm text-slate-400 mb-2">
+                  <label className="block text-sm text-white/50 mb-2">
                     <Store className="w-4 h-4 inline mr-1" />
                     Tienda
                   </label>
@@ -252,11 +252,11 @@ export default function PromoGeneratorPage() {
                 {/* Product Grid */}
                 {selectedShopId && (
                   <div>
-                    <label className="block text-sm text-slate-400 mb-2">
+                    <label className="block text-sm text-white/50 mb-2">
                       Producto a promocionar
                     </label>
                     {shopProducts.length === 0 ? (
-                      <p className="text-slate-500 text-sm py-4 text-center">
+                      <p className="text-white/40 text-sm py-4 text-center">
                         Esta tienda no tiene productos en inventario
                       </p>
                     ) : (
@@ -296,7 +296,7 @@ export default function PromoGeneratorPage() {
                         <p className="text-white font-medium text-sm">
                           {selectedProduct.name}
                         </p>
-                        <p className="text-slate-400 text-xs">
+                        <p className="text-white/50 text-xs">
                           {PRODUCT_CATEGORY_LABELS[selectedProduct.category]} •{" "}
                           ${selectedProduct.price.toLocaleString()}
                         </p>
@@ -308,7 +308,7 @@ export default function PromoGeneratorPage() {
                 {/* Product Promo Templates */}
                 {selectedProduct && (
                   <div className="mt-4 pt-4 border-t border-white/10">
-                    <label className="block text-sm text-slate-400 mb-2">
+                    <label className="block text-sm text-white/50 mb-2">
                       <Tag className="w-4 h-4 inline mr-1" />
                       Tipo de descuento
                     </label>
@@ -327,7 +327,7 @@ export default function PromoGeneratorPage() {
                           <p className="text-white font-bold text-sm">
                             {template.discount}
                           </p>
-                          <p className="text-slate-400 text-xs">
+                          <p className="text-white/50 text-xs">
                             {template.badge}
                           </p>
                         </button>
@@ -337,7 +337,7 @@ export default function PromoGeneratorPage() {
                     {/* Custom Discount Input */}
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <div>
-                        <label className="block text-xs text-slate-500 mb-1">
+                        <label className="block text-xs text-white/40 mb-1">
                           Descuento
                         </label>
                         <input
@@ -349,7 +349,7 @@ export default function PromoGeneratorPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-slate-500 mb-1">
+                        <label className="block text-xs text-white/40 mb-1">
                           Etiqueta
                         </label>
                         <input
@@ -383,7 +383,7 @@ export default function PromoGeneratorPage() {
                       <p className="text-white font-bold text-sm">
                         {template.title}
                       </p>
-                      <p className="text-slate-400 text-xs">{template.subtitle}</p>
+                      <p className="text-white/50 text-xs">{template.subtitle}</p>
                     </button>
                   ))}
                 </div>
@@ -399,7 +399,7 @@ export default function PromoGeneratorPage() {
               <div className="space-y-4">
                 {layout === "classic" && (
                   <div>
-                    <label className="block text-sm text-slate-400 mb-2">
+                    <label className="block text-sm text-white/50 mb-2">
                       Título Principal
                     </label>
                     <input
@@ -412,7 +412,7 @@ export default function PromoGeneratorPage() {
                   </div>
                 )}
                 <div>
-                  <label className="block text-sm text-slate-400 mb-2">
+                  <label className="block text-sm text-white/50 mb-2">
                     {layout === "hero-product" ? "Nombre del Producto" : "Subtítulo"}
                   </label>
                   <input
@@ -424,7 +424,7 @@ export default function PromoGeneratorPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-400 mb-2">
+                  <label className="block text-sm text-white/50 mb-2">
                     Nombre de la Tienda
                   </label>
                   <input
@@ -447,7 +447,7 @@ export default function PromoGeneratorPage() {
                 </h2>
                 <button
                   onClick={randomizeBg}
-                  className="text-slate-400 hover:text-white transition-colors"
+                  className="text-white/50 hover:text-white transition-colors"
                 >
                   <RefreshCw className="w-4 h-4" />
                 </button>
@@ -628,7 +628,7 @@ export default function PromoGeneratorPage() {
                 </div>
               </div>
 
-              <p className="text-center text-slate-500 text-xs mt-4">
+              <p className="text-center text-white/40 text-xs mt-4">
                 Tamaño: 1080 × 1920 px (Instagram Story)
               </p>
             </div>

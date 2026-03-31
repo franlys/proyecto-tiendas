@@ -56,7 +56,7 @@ const STATUS_CONFIG: Record<EnrollmentStatus, { label: string; color: string; ic
   active:    { label: "Activo",     color: "bg-green-500/20 text-green-400 border-green-500/30",   icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
   paused:    { label: "Pausado",    color: "bg-blue-500/20 text-blue-400 border-blue-500/30",      icon: <PauseCircle className="w-3.5 h-3.5" /> },
   cancelled: { label: "Cancelado",  color: "bg-red-500/20 text-red-400 border-red-500/30",         icon: <XCircle className="w-3.5 h-3.5" /> },
-  expired:   { label: "Vencido",    color: "bg-slate-500/20 text-slate-400 border-slate-500/30",   icon: <XCircle className="w-3.5 h-3.5" /> },
+  expired:   { label: "Vencido",    color: "bg-slate-500/20 text-white/50 border-slate-500/30",   icon: <XCircle className="w-3.5 h-3.5" /> },
 };
 
 const DAY_SHORT: Record<DayOfWeek, string> = {
@@ -185,7 +185,7 @@ export default function TrainingEnrollmentsPage() {
                 </div>
                 <div>
                   <h1 className="font-display text-2xl font-bold text-white">Inscripciones</h1>
-                  <p className="text-slate-400 text-sm">Gestión de clientes de entrenamiento</p>
+                  <p className="text-white/50 text-sm">Gestión de clientes de entrenamiento</p>
                 </div>
               </div>
             </div>
@@ -208,7 +208,7 @@ export default function TrainingEnrollmentsPage() {
           ].map(stat => (
             <div key={stat.label} className="glass-panel rounded-xl p-4 border border-white/10 text-center">
               <p className={cn("text-2xl font-bold", stat.color)}>{stat.value}</p>
-              <p className="text-slate-400 text-sm">{stat.label}</p>
+              <p className="text-white/50 text-sm">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -216,13 +216,13 @@ export default function TrainingEnrollmentsPage() {
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Buscar por nombre, teléfono o plan..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-primary/50"
             />
           </div>
           <div className="flex gap-2">
@@ -234,7 +234,7 @@ export default function TrainingEnrollmentsPage() {
                   "px-3 py-2 rounded-xl text-xs font-medium border transition-all",
                   statusFilter === s
                     ? "bg-primary/20 border-primary text-primary"
-                    : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                    : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"
                 )}
               >
                 {s === "all" ? "Todos" : STATUS_CONFIG[s].label}
@@ -245,7 +245,7 @@ export default function TrainingEnrollmentsPage() {
 
         {/* List */}
         {filtered.length === 0 ? (
-          <div className="text-center py-16 text-slate-400">
+          <div className="text-center py-16 text-white/50">
             <Users className="w-12 h-12 mx-auto mb-3 opacity-40" />
             <p>{enrollments.length === 0 ? "Aún no hay inscripciones." : "Sin resultados para este filtro."}</p>
           </div>
@@ -270,8 +270,8 @@ export default function TrainingEnrollmentsPage() {
                           {sc.icon} {sc.label}
                         </span>
                       </div>
-                      <p className="text-slate-400 text-sm mt-0.5">{enrollment.packageName}</p>
-                      <div className="flex items-center gap-3 mt-2 text-xs text-slate-500 flex-wrap">
+                      <p className="text-white/50 text-sm mt-0.5">{enrollment.packageName}</p>
+                      <div className="flex items-center gap-3 mt-2 text-xs text-white/40 flex-wrap">
                         <span className="flex items-center gap-1">
                           <Phone className="w-3 h-3" /> {enrollment.customerPhone}
                         </span>
@@ -287,7 +287,7 @@ export default function TrainingEnrollmentsPage() {
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-primary font-bold">${enrollment.packagePrice?.toLocaleString()}</p>
-                      <p className="text-slate-500 text-xs">{enrollment.packageBillingCycle === "monthly" ? "/mes" : enrollment.packageBillingCycle === "weekly" ? "/sem" : "/quin"}</p>
+                      <p className="text-white/40 text-xs">{enrollment.packageBillingCycle === "monthly" ? "/mes" : enrollment.packageBillingCycle === "weekly" ? "/sem" : "/quin"}</p>
                     </div>
                   </div>
 
@@ -295,10 +295,10 @@ export default function TrainingEnrollmentsPage() {
                   {selected?.id === enrollment.id && (
                     <div className="mt-4 pt-4 border-t border-white/10 space-y-3" onClick={e => e.stopPropagation()}>
                       {enrollment.fitnessGoals && (
-                        <p className="text-slate-400 text-sm italic">"{enrollment.fitnessGoals}"</p>
+                        <p className="text-white/50 text-sm italic">"{enrollment.fitnessGoals}"</p>
                       )}
                       <div className="flex flex-wrap gap-2">
-                        <span className="text-xs text-slate-400">Cambiar estado:</span>
+                        <span className="text-xs text-white/50">Cambiar estado:</span>
                         {(["pending", "active", "paused", "cancelled"] as EnrollmentStatus[]).map(s => (
                           <button
                             key={s}
@@ -308,7 +308,7 @@ export default function TrainingEnrollmentsPage() {
                               "text-xs px-3 py-1.5 rounded-lg border transition-all disabled:opacity-50",
                               enrollment.status === s
                                 ? STATUS_CONFIG[s].color + " font-semibold"
-                                : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                                : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"
                             )}
                           >
                             {updating === enrollment.id ? <Loader2 className="w-3 h-3 animate-spin inline" /> : STATUS_CONFIG[s].label}

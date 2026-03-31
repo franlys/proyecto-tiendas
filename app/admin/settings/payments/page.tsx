@@ -275,7 +275,7 @@ export default function PaymentSettingsPage() {
                   <h1 className="font-display text-2xl font-bold text-white">
                     Métodos de Pago
                   </h1>
-                  <p className="text-slate-400 text-sm">
+                  <p className="text-white/50 text-sm">
                     Configura cómo tus clientes pueden pagarte
                   </p>
                 </div>
@@ -320,7 +320,7 @@ export default function PaymentSettingsPage() {
                 <CreditCard
                   className={cn(
                     "w-6 h-6",
-                    config.enabled ? "text-green-400" : "text-slate-400",
+                    config.enabled ? "text-green-400" : "text-white/50",
                   )}
                 />
               </div>
@@ -328,7 +328,7 @@ export default function PaymentSettingsPage() {
                 <h2 className="text-white font-semibold">
                   Sistema de Pagos Manuales
                 </h2>
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-white/50">
                   {config.enabled
                     ? "Los clientes pueden enviar comprobantes de pago"
                     : "Activa para recibir comprobantes de pago"}
@@ -362,7 +362,7 @@ export default function PaymentSettingsPage() {
                     </span>
                   )}
                 </h3>
-                <p className="text-sm text-slate-400 mt-1">
+                <p className="text-sm text-white/50 mt-1">
                   {config.requireUpfrontPayment
                     ? `Los clientes deberán pagar el ${config.upfrontPaymentPercentage || 50}% hoy y el resto al recibir.`
                     : "Los clientes pagan el monto total al momento de ordenar."}
@@ -387,7 +387,7 @@ export default function PaymentSettingsPage() {
                       }}
                       className="w-20 px-3 py-2 text-center rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-amber-500"
                     />
-                    <span className="text-slate-400 font-medium">%</span>
+                    <span className="text-white/50 font-medium">%</span>
                   </div>
                 )}
                 <div
@@ -448,7 +448,7 @@ export default function PaymentSettingsPage() {
               </h3>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-slate-400 mb-2">
+                  <label className="block text-sm text-white/50 mb-2">
                     Moneda Principal
                   </label>
                   <select
@@ -470,7 +470,7 @@ export default function PaymentSettingsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-400 mb-2">
+                  <label className="block text-sm text-white/50 mb-2">
                     Instrucciones Generales (opcional)
                   </label>
                   <input
@@ -483,7 +483,7 @@ export default function PaymentSettingsPage() {
                       }))
                     }
                     placeholder="Ej: Envía el comprobante por WhatsApp"
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-primary/50"
                   />
                 </div>
               </div>
@@ -500,7 +500,7 @@ export default function PaymentSettingsPage() {
               </div>
 
               {config.paymentMethods.length === 0 ? (
-                <div className="text-center py-12 text-slate-400">
+                <div className="text-center py-12 text-white/50">
                   <CreditCard className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>No hay métodos de pago configurados</p>
                   <p className="text-sm mt-1">
@@ -526,7 +526,7 @@ export default function PaymentSettingsPage() {
                         <p className="text-white font-medium truncate">
                           {method.name}
                         </p>
-                        <p className="text-sm text-slate-400 truncate">
+                        <p className="text-sm text-white/50 truncate">
                           {MANUAL_PAYMENT_METHOD_LABELS[method.type]}
                           {method.bankName && ` • ${method.bankName}`}
                           {method.email && ` • ${method.email}`}
@@ -541,7 +541,7 @@ export default function PaymentSettingsPage() {
                             "p-2 rounded-lg transition-colors",
                             method.isActive
                               ? "text-green-400 hover:bg-green-500/20"
-                              : "text-slate-500 hover:bg-white/10",
+                              : "text-white/40 hover:bg-white/10",
                           )}
                           title={method.isActive ? "Desactivar" : "Activar"}
                         >
@@ -553,14 +553,14 @@ export default function PaymentSettingsPage() {
                         </button>
                         <button
                           onClick={() => setEditingMethod(method)}
-                          className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                          className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
                           title="Editar"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => deleteMethod(method.id)}
-                          className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/20 transition-colors"
+                          className="p-2 rounded-lg text-white/50 hover:text-red-400 hover:bg-red-500/20 transition-colors"
                           title="Eliminar"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -643,7 +643,7 @@ function PaymentMethodModal({
           </h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-white/10 text-slate-400"
+            className="p-2 rounded-lg hover:bg-white/10 text-white/50"
           >
             ✕
           </button>
@@ -653,7 +653,7 @@ function PaymentMethodModal({
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           {/* Type Selection */}
           <div>
-            <label className="block text-sm text-slate-400 mb-2">
+            <label className="block text-sm text-white/50 mb-2">
               Tipo de Método
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -666,7 +666,7 @@ function PaymentMethodModal({
                     "flex items-center gap-3 p-3 rounded-xl border transition-all text-left",
                     formData.type === type.type
                       ? "bg-primary/20 border-primary text-white"
-                      : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10",
+                      : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10",
                   )}
                 >
                   <span className="text-xl">{type.icon}</span>
@@ -678,7 +678,7 @@ function PaymentMethodModal({
 
           {/* Name */}
           <div>
-            <label className="block text-sm text-slate-400 mb-2">
+            <label className="block text-sm text-white/50 mb-2">
               Nombre del Método *
             </label>
             <input
@@ -686,7 +686,7 @@ function PaymentMethodModal({
               value={formData.name}
               onChange={(e) => updateField("name", e.target.value)}
               placeholder="Ej: Banco Popular, Zelle Personal"
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-primary/50"
               required
             />
           </div>
@@ -695,7 +695,7 @@ function PaymentMethodModal({
           {formData.type === "bank_transfer" && (
             <>
               <div>
-                <label className="block text-sm text-slate-400 mb-2">
+                <label className="block text-sm text-white/50 mb-2">
                   Banco
                 </label>
                 <input
@@ -703,11 +703,11 @@ function PaymentMethodModal({
                   value={formData.bankName || ""}
                   onChange={(e) => updateField("bankName", e.target.value)}
                   placeholder="Ej: Banco Popular"
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-primary/50"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-2">
+                <label className="block text-sm text-white/50 mb-2">
                   Titular de la Cuenta
                 </label>
                 <input
@@ -715,11 +715,11 @@ function PaymentMethodModal({
                   value={formData.accountHolder || ""}
                   onChange={(e) => updateField("accountHolder", e.target.value)}
                   placeholder="Nombre completo"
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-primary/50"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-2">
+                <label className="block text-sm text-white/50 mb-2">
                   Número de Cuenta
                 </label>
                 <input
@@ -727,12 +727,12 @@ function PaymentMethodModal({
                   value={formData.accountNumber || ""}
                   onChange={(e) => updateField("accountNumber", e.target.value)}
                   placeholder="Número de cuenta bancaria"
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-primary/50"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-slate-400 mb-2">
+                  <label className="block text-sm text-white/50 mb-2">
                     Tipo de Cuenta
                   </label>
                   <select
@@ -745,7 +745,7 @@ function PaymentMethodModal({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-400 mb-2">
+                  <label className="block text-sm text-white/50 mb-2">
                     Cédula/RIF
                   </label>
                   <input
@@ -755,7 +755,7 @@ function PaymentMethodModal({
                       updateField("identificationNumber", e.target.value)
                     }
                     placeholder="V-12345678"
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-primary/50"
                   />
                 </div>
               </div>
@@ -766,7 +766,7 @@ function PaymentMethodModal({
           {formData.type === "mobile_payment" && (
             <>
               <div>
-                <label className="block text-sm text-slate-400 mb-2">
+                <label className="block text-sm text-white/50 mb-2">
                   Teléfono
                 </label>
                 <input
@@ -774,11 +774,11 @@ function PaymentMethodModal({
                   value={formData.phoneNumber || ""}
                   onChange={(e) => updateField("phoneNumber", e.target.value)}
                   placeholder="0412-1234567"
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-primary/50"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-2">
+                <label className="block text-sm text-white/50 mb-2">
                   Banco
                 </label>
                 <input
@@ -786,11 +786,11 @@ function PaymentMethodModal({
                   value={formData.bankName || ""}
                   onChange={(e) => updateField("bankName", e.target.value)}
                   placeholder="Ej: Banesco"
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-primary/50"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-2">
+                <label className="block text-sm text-white/50 mb-2">
                   Cédula
                 </label>
                 <input
@@ -800,7 +800,7 @@ function PaymentMethodModal({
                     updateField("identificationNumber", e.target.value)
                   }
                   placeholder="V-12345678"
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-primary/50"
                 />
               </div>
             </>
@@ -813,7 +813,7 @@ function PaymentMethodModal({
             formData.type === "google_pay") && (
             <>
               <div>
-                <label className="block text-sm text-slate-400 mb-2">
+                <label className="block text-sm text-white/50 mb-2">
                   {formData.type === "apple_pay"
                     ? "Apple ID / Email"
                     : formData.type === "google_pay"
@@ -825,11 +825,11 @@ function PaymentMethodModal({
                   value={formData.email || ""}
                   onChange={(e) => updateField("email", e.target.value)}
                   placeholder="correo@ejemplo.com"
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-primary/50"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-2">
+                <label className="block text-sm text-white/50 mb-2">
                   Nombre del Beneficiario
                 </label>
                 <input
@@ -837,7 +837,7 @@ function PaymentMethodModal({
                   value={formData.accountHolder || ""}
                   onChange={(e) => updateField("accountHolder", e.target.value)}
                   placeholder="Nombre completo"
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-primary/50"
                 />
               </div>
             </>
@@ -847,7 +847,7 @@ function PaymentMethodModal({
           {formData.type === "crypto" && (
             <>
               <div>
-                <label className="block text-sm text-slate-400 mb-2">
+                <label className="block text-sm text-white/50 mb-2">
                   Dirección de Wallet
                 </label>
                 <input
@@ -855,11 +855,11 @@ function PaymentMethodModal({
                   value={formData.walletAddress || ""}
                   onChange={(e) => updateField("walletAddress", e.target.value)}
                   placeholder="0x..."
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-mono text-sm placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-mono text-sm placeholder:text-white/40 focus:outline-none focus:border-primary/50"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-2">
+                <label className="block text-sm text-white/50 mb-2">
                   Red / Network
                 </label>
                 <input
@@ -867,7 +867,7 @@ function PaymentMethodModal({
                   value={formData.network || ""}
                   onChange={(e) => updateField("network", e.target.value)}
                   placeholder="Ej: BEP20, TRC20, ERC20"
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-primary/50"
                 />
               </div>
             </>
@@ -877,7 +877,7 @@ function PaymentMethodModal({
           {formData.type === "payment_link" && (
             <>
               <div>
-                <label className="block text-sm text-slate-400 mb-2">
+                <label className="block text-sm text-white/50 mb-2">
                   Enlace de Pago *
                 </label>
                 <input
@@ -885,10 +885,10 @@ function PaymentMethodModal({
                   value={formData.paymentLink || ""}
                   onChange={(e) => updateField("paymentLink", e.target.value)}
                   placeholder="https://bpay.binance.com/... o tu enlace"
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-primary/50"
                 />
                 <div className="flex items-center justify-between mt-1">
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-white/40">
                     Ej: Binance Pay, PayPal.me, Nequi, etc.
                   </p>
                   {formData.paymentLink && (
@@ -905,7 +905,7 @@ function PaymentMethodModal({
                 </div>
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-2">
+                <label className="block text-sm text-white/50 mb-2">
                   Código QR (opcional)
                 </label>
                 {shopId ? (
@@ -929,7 +929,7 @@ function PaymentMethodModal({
                       value={formData.qrCodeUrl || ""}
                       onChange={(e) => updateField("qrCodeUrl", e.target.value)}
                       placeholder="https://... (imagen PNG o JPG del QR)"
-                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-primary/50"
                     />
                     {formData.qrCodeUrl && (
                       <div className="mt-3 flex justify-center">
@@ -951,7 +951,7 @@ function PaymentMethodModal({
 
           {/* Instructions (for all) */}
           <div>
-            <label className="block text-sm text-slate-400 mb-2">
+            <label className="block text-sm text-white/50 mb-2">
               Instrucciones Adicionales (opcional)
             </label>
             <textarea
@@ -959,7 +959,7 @@ function PaymentMethodModal({
               onChange={(e) => updateField("instructions", e.target.value)}
               placeholder="Instrucciones especiales para este método..."
               rows={2}
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 resize-none"
+              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-primary/50 resize-none"
             />
           </div>
 

@@ -65,7 +65,7 @@ function CRMContent() {
             </div>
             <div>
               <p className="text-2xl font-bold text-white">{totalClients}</p>
-              <p className="text-xs text-slate-400">Clientes Totales</p>
+              <p className="text-xs text-white/50">Clientes Totales</p>
             </div>
           </div>
         </div>
@@ -77,7 +77,7 @@ function CRMContent() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gold">{vipClients}</p>
-              <p className="text-xs text-slate-400">Clientes VIP</p>
+              <p className="text-xs text-white/50">Clientes VIP</p>
             </div>
           </div>
         </div>
@@ -91,7 +91,7 @@ function CRMContent() {
               <p className="text-2xl font-bold text-white">
                 ${totalRevenue.toLocaleString()}
               </p>
-              <p className="text-xs text-slate-400">Revenue Total</p>
+              <p className="text-xs text-white/50">Revenue Total</p>
             </div>
           </div>
         </div>
@@ -100,7 +100,7 @@ function CRMContent() {
       {/* Search & Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1 relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
           <input
             type="text"
             value={searchQuery}
@@ -114,7 +114,7 @@ function CRMContent() {
           onClick={() => setFilterVIP(!filterVIP)}
           className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-all ${filterVIP
             ? "bg-gold/20 border-gold/30 text-gold"
-            : "bg-white/5 border-white/10 text-slate-400 hover:border-gold/30"
+            : "bg-white/5 border-white/10 text-white/50 hover:border-gold/30"
             }`}
         >
           <Star className={`w-4 h-4 ${filterVIP && "fill-current"}`} />
@@ -150,7 +150,7 @@ function CRMContent() {
       {/* Help Text */}
       {clients.length === 0 && (
         <div className="text-center py-8">
-          <p className="text-slate-400 text-sm">
+          <p className="text-white/50 text-sm">
             💡 <strong>Tip:</strong> Ve a{" "}
             <Link href={`/${user?.shopId || "tu-tienda"}`} className="text-primary hover:underline">
               tu tienda
@@ -187,7 +187,7 @@ export default function AdminClientsPage() {
               <div className="flex items-center gap-3">
                 <Link
                   href="/admin"
-                  className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                  className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </Link>
@@ -198,7 +198,7 @@ export default function AdminClientsPage() {
                   <h1 className="font-display text-2xl font-bold text-white">
                     CRM Clientes
                   </h1>
-                  <p className="text-slate-400 text-sm">
+                  <p className="text-white/50 text-sm">
                     Gestiona tus clientes y notas privadas
                   </p>
                 </div>

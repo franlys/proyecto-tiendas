@@ -48,7 +48,7 @@ const STATUS_CONFIG: Record<VehicleStatus, { label: string; color: string; icon:
   rented: { label: "Rentado", color: "text-blue-400 bg-blue-500/20", icon: Car },
   reserved: { label: "Reservado", color: "text-yellow-400 bg-yellow-500/20", icon: Calendar },
   maintenance: { label: "Mantenimiento", color: "text-orange-400 bg-orange-500/20", icon: Wrench },
-  inactive: { label: "Inactivo", color: "text-slate-400 bg-slate-500/20", icon: AlertCircle },
+  inactive: { label: "Inactivo", color: "text-white/50 bg-slate-500/20", icon: AlertCircle },
 };
 
 // Mock data inicial
@@ -319,7 +319,7 @@ export default function VehiclesPage() {
             <Car className="text-cyan-400" />
             Gestión de Vehículos
           </h1>
-          <p className="text-slate-400 text-sm">Administra tu flota de vehículos</p>
+          <p className="text-white/50 text-sm">Administra tu flota de vehículos</p>
         </div>
         <Button onClick={handleAddNew} className="bg-cyan-600 hover:bg-cyan-500">
           <Plus className="w-4 h-4 mr-2" />
@@ -331,32 +331,32 @@ export default function VehiclesPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="p-4 rounded-xl bg-white/5 border border-white/10">
           <div className="text-2xl font-bold text-white">{stats.total}</div>
-          <div className="text-sm text-slate-400">Total Vehículos</div>
+          <div className="text-sm text-white/50">Total Vehículos</div>
         </div>
         <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/30">
           <div className="text-2xl font-bold text-green-400">{stats.available}</div>
-          <div className="text-sm text-slate-400">Disponibles</div>
+          <div className="text-sm text-white/50">Disponibles</div>
         </div>
         <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/30">
           <div className="text-2xl font-bold text-blue-400">{stats.rented}</div>
-          <div className="text-sm text-slate-400">Rentados</div>
+          <div className="text-sm text-white/50">Rentados</div>
         </div>
         <div className="p-4 rounded-xl bg-orange-500/10 border border-orange-500/30">
           <div className="text-2xl font-bold text-orange-400">{stats.maintenance}</div>
-          <div className="text-sm text-slate-400">Mantenimiento</div>
+          <div className="text-sm text-white/50">Mantenimiento</div>
         </div>
       </div>
 
       {/* Filters */}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
           <input
             type="text"
             placeholder="Buscar por nombre, placa o marca..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-cyan-500"
           />
         </div>
 
@@ -410,7 +410,7 @@ export default function VehiclesPage() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-slate-500">
+                  <div className="w-full h-full flex items-center justify-center text-white/40">
                     <Car className="w-16 h-16" />
                   </div>
                 )}
@@ -445,16 +445,16 @@ export default function VehiclesPage() {
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <h3 className="font-bold text-white">{vehicle.name}</h3>
-                    <p className="text-sm text-slate-400">{vehicle.plate}</p>
+                    <p className="text-sm text-white/50">{vehicle.plate}</p>
                   </div>
-                  <span className="text-xs px-2 py-1 rounded-full bg-white/10 text-slate-300">
+                  <span className="text-xs px-2 py-1 rounded-full bg-white/10 text-white/70">
                     {VEHICLE_CATEGORIES.find(c => c.value === vehicle.category)?.icon}{" "}
                     {VEHICLE_CATEGORIES.find(c => c.value === vehicle.category)?.label}
                   </span>
                 </div>
 
                 {/* Specs */}
-                <div className="flex gap-4 text-sm text-slate-400 mb-3">
+                <div className="flex gap-4 text-sm text-white/50 mb-3">
                   <span className="flex items-center gap-1">
                     <Users className="w-4 h-4" />
                     {vehicle.seats}
@@ -477,13 +477,13 @@ export default function VehiclesPage() {
                     <span className="text-2xl font-bold text-cyan-400">
                       ${vehicle.dailyRate.toLocaleString()}
                     </span>
-                    <span className="text-slate-400 text-sm"> /día</span>
+                    <span className="text-white/50 text-sm"> /día</span>
                   </div>
                   {vehicle.weeklyRate && (
                     <div className="text-right text-sm">
-                      <div className="text-slate-300">${vehicle.weeklyRate.toLocaleString()}/sem</div>
+                      <div className="text-white/70">${vehicle.weeklyRate.toLocaleString()}/sem</div>
                       {vehicle.monthlyRate && (
-                        <div className="text-slate-400">${vehicle.monthlyRate.toLocaleString()}/mes</div>
+                        <div className="text-white/50">${vehicle.monthlyRate.toLocaleString()}/mes</div>
                       )}
                     </div>
                   )}
@@ -515,7 +515,7 @@ export default function VehiclesPage() {
         })}
 
         {filteredVehicles.length === 0 && (
-          <div className="col-span-full text-center py-12 text-slate-500">
+          <div className="col-span-full text-center py-12 text-white/40">
             <Car className="w-16 h-16 mx-auto mb-4 opacity-50" />
             <p>No se encontraron vehículos</p>
             <Button onClick={handleAddNew} className="mt-4">
@@ -537,7 +537,7 @@ export default function VehiclesPage() {
               </h2>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-white/50 hover:text-white"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -547,7 +547,7 @@ export default function VehiclesPage() {
             <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
               {/* Image Gallery */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-white/70 mb-2">
                   Fotos del Vehículo
                 </label>
 
@@ -608,7 +608,7 @@ export default function VehiclesPage() {
                       ))}
                       <button
                         onClick={handleAddImage}
-                        className="flex-shrink-0 w-20 h-20 rounded-lg border-2 border-dashed border-white/20 flex items-center justify-center text-slate-400 hover:text-white hover:border-white/40"
+                        className="flex-shrink-0 w-20 h-20 rounded-lg border-2 border-dashed border-white/20 flex items-center justify-center text-white/50 hover:text-white hover:border-white/40"
                       >
                         <Plus className="w-6 h-6" />
                       </button>
@@ -617,7 +617,7 @@ export default function VehiclesPage() {
                 ) : (
                   <button
                     onClick={handleAddImage}
-                    className="w-full h-48 rounded-xl border-2 border-dashed border-white/20 flex flex-col items-center justify-center text-slate-400 hover:text-white hover:border-white/40 transition-all"
+                    className="w-full h-48 rounded-xl border-2 border-dashed border-white/20 flex flex-col items-center justify-center text-white/50 hover:text-white hover:border-white/40 transition-all"
                   >
                     <Upload className="w-12 h-12 mb-2" />
                     <span>Agregar fotos del vehículo</span>
@@ -628,18 +628,18 @@ export default function VehiclesPage() {
 
               {/* Video URL */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-white/70 mb-2">
                   Video (opcional)
                 </label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <Video className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Video className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
                     <input
                       type="url"
                       placeholder="URL de YouTube o video..."
                       value={formData.videoUrl || ""}
                       onChange={(e) => setFormData(prev => ({ ...prev, videoUrl: e.target.value }))}
-                      className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                      className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                     />
                   </div>
                 </div>
@@ -648,7 +648,7 @@ export default function VehiclesPage() {
               {/* Basic Info */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                  <label className="block text-sm font-medium text-white/70 mb-2">
                     Nombre del Vehículo *
                   </label>
                   <input
@@ -656,13 +656,13 @@ export default function VehiclesPage() {
                     placeholder="Toyota Corolla 2024"
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                  <label className="block text-sm font-medium text-white/70 mb-2">
                     Placa *
                   </label>
                   <input
@@ -670,13 +670,13 @@ export default function VehiclesPage() {
                     placeholder="ABC-1234"
                     value={formData.plate}
                     onChange={(e) => setFormData(prev => ({ ...prev, plate: e.target.value.toUpperCase() }))}
-                    className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                  <label className="block text-sm font-medium text-white/70 mb-2">
                     Marca
                   </label>
                   <input
@@ -684,12 +684,12 @@ export default function VehiclesPage() {
                     placeholder="Toyota"
                     value={formData.brand}
                     onChange={(e) => setFormData(prev => ({ ...prev, brand: e.target.value }))}
-                    className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                  <label className="block text-sm font-medium text-white/70 mb-2">
                     Modelo
                   </label>
                   <input
@@ -697,12 +697,12 @@ export default function VehiclesPage() {
                     placeholder="Corolla"
                     value={formData.model}
                     onChange={(e) => setFormData(prev => ({ ...prev, model: e.target.value }))}
-                    className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                  <label className="block text-sm font-medium text-white/70 mb-2">
                     Año
                   </label>
                   <input
@@ -711,12 +711,12 @@ export default function VehiclesPage() {
                     max="2030"
                     value={formData.year}
                     onChange={(e) => setFormData(prev => ({ ...prev, year: parseInt(e.target.value) }))}
-                    className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                  <label className="block text-sm font-medium text-white/70 mb-2">
                     Color
                   </label>
                   <input
@@ -724,12 +724,12 @@ export default function VehiclesPage() {
                     placeholder="Blanco"
                     value={formData.color}
                     onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
-                    className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                  <label className="block text-sm font-medium text-white/70 mb-2">
                     Categoría
                   </label>
                   <select
@@ -746,7 +746,7 @@ export default function VehiclesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                  <label className="block text-sm font-medium text-white/70 mb-2">
                     Transmisión
                   </label>
                   <select
@@ -760,7 +760,7 @@ export default function VehiclesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                  <label className="block text-sm font-medium text-white/70 mb-2">
                     Combustible
                   </label>
                   <select
@@ -777,7 +777,7 @@ export default function VehiclesPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-white/70 mb-2">
                       Asientos
                     </label>
                     <input
@@ -790,7 +790,7 @@ export default function VehiclesPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-white/70 mb-2">
                       Puertas
                     </label>
                     <input
@@ -814,7 +814,7 @@ export default function VehiclesPage() {
                     onChange={(e) => setFormData(prev => ({ ...prev, airConditioning: e.target.checked }))}
                     className="w-4 h-4 rounded bg-white/10 border-white/20 text-cyan-500 focus:ring-cyan-500"
                   />
-                  <span className="text-slate-300">Aire Acondicionado</span>
+                  <span className="text-white/70">Aire Acondicionado</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -823,7 +823,7 @@ export default function VehiclesPage() {
                     onChange={(e) => setFormData(prev => ({ ...prev, bluetooth: e.target.checked }))}
                     className="w-4 h-4 rounded bg-white/10 border-white/20 text-cyan-500 focus:ring-cyan-500"
                   />
-                  <span className="text-slate-300">Bluetooth</span>
+                  <span className="text-white/70">Bluetooth</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -832,7 +832,7 @@ export default function VehiclesPage() {
                     onChange={(e) => setFormData(prev => ({ ...prev, featured: e.target.checked }))}
                     className="w-4 h-4 rounded bg-white/10 border-white/20 text-yellow-500 focus:ring-yellow-500"
                   />
-                  <span className="text-slate-300">⭐ Destacar</span>
+                  <span className="text-white/70">⭐ Destacar</span>
                 </label>
               </div>
 
@@ -844,11 +844,11 @@ export default function VehiclesPage() {
                 </h3>
                 <div className="grid md:grid-cols-4 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-white/70 mb-2">
                       Por Día *
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50">$</span>
                       <input
                         type="number"
                         min="0"
@@ -860,11 +860,11 @@ export default function VehiclesPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-white/70 mb-2">
                       Por Semana
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50">$</span>
                       <input
                         type="number"
                         min="0"
@@ -875,11 +875,11 @@ export default function VehiclesPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-white/70 mb-2">
                       Por Mes
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50">$</span>
                       <input
                         type="number"
                         min="0"
@@ -890,11 +890,11 @@ export default function VehiclesPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                    <label className="block text-sm font-medium text-white/70 mb-2">
                       Depósito
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50">$</span>
                       <input
                         type="number"
                         min="0"
@@ -909,7 +909,7 @@ export default function VehiclesPage() {
 
               {/* Mileage */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-white/70 mb-2">
                   Kilometraje Actual
                 </label>
                 <input
@@ -923,7 +923,7 @@ export default function VehiclesPage() {
 
               {/* Notes */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-white/70 mb-2">
                   Notas Internas
                 </label>
                 <textarea
@@ -931,7 +931,7 @@ export default function VehiclesPage() {
                   placeholder="Notas sobre el vehículo..."
                   value={formData.notes || ""}
                   onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
+                  className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
                 />
               </div>
             </div>
@@ -1008,7 +1008,7 @@ export default function VehiclesPage() {
 
           <div className="absolute bottom-4 left-4 text-white">
             <h3 className="font-bold">{galleryVehicle.name}</h3>
-            <p className="text-sm text-slate-400">{galleryVehicle.plate}</p>
+            <p className="text-sm text-white/50">{galleryVehicle.plate}</p>
           </div>
         </div>
       )}

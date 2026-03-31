@@ -328,9 +328,9 @@ export default function TemplatesPage() {
                                     </div>
                                     <p className="text-zinc-400 text-sm mt-1">{template.description}</p>
                                     {template.notes && (
-                                        <p className="text-zinc-500 text-xs mt-1 italic">📝 {template.notes}</p>
+                                        <p className="text-white/40 text-xs mt-1 italic">📝 {template.notes}</p>
                                     )}
-                                    <p className="text-zinc-600 text-xs mt-1">ID: <code className="text-zinc-500">{template.id}</code></p>
+                                    <p className="text-white/30 text-xs mt-1">ID: <code className="text-white/40">{template.id}</code></p>
 
                                     {/* Tiendas que la usan */}
                                     {usedByShops.length > 0 && (

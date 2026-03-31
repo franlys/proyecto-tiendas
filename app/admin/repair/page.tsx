@@ -81,7 +81,7 @@ function ServiceFormModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-md glass-panel rounded-2xl p-6 border border-white/10">
-        <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10">
+        <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10">
           <X className="w-5 h-5" />
         </button>
 
@@ -94,18 +94,18 @@ function ServiceFormModal({
 
         <form onSubmit={(e) => { e.preventDefault(); onSave(form); }} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Nombre *</label>
+            <label className="block text-sm font-medium text-white/70 mb-2">Nombre *</label>
             <input required type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ej: Cambio de pantalla" className={inputClass} />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Descripción</label>
+            <label className="block text-sm font-medium text-white/70 mb-2">Descripción</label>
             <input type="text" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Ej: Pantalla original con garantía" className={inputClass} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Dispositivo</label>
+              <label className="block text-sm font-medium text-white/70 mb-2">Dispositivo</label>
               <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className={inputClass}>
                 <option value="Smartphone" className="bg-zinc-900 text-white">Smartphone</option>
                 <option value="Laptop" className="bg-zinc-900 text-white">Laptop</option>
@@ -116,7 +116,7 @@ function ServiceFormModal({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Precio ($)</label>
+              <label className="block text-sm font-medium text-white/70 mb-2">Precio ($)</label>
               <input required type="number" min="0" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="0.00" className={inputClass} />
             </div>
           </div>
@@ -184,7 +184,7 @@ function NewTicketModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-lg glass-panel rounded-2xl p-6 border border-white/10 max-h-[90vh] overflow-y-auto">
-        <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10">
+        <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10">
           <X className="w-5 h-5" />
         </button>
 
@@ -194,14 +194,14 @@ function NewTicketModal({
           </div>
           <div>
             <h2 className="text-xl font-bold text-white">Nuevo Ticket</h2>
-            <p className="text-sm text-slate-400">Registrar dispositivo para reparación</p>
+            <p className="text-sm text-white/50">Registrar dispositivo para reparación</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Nombre del Cliente *</label>
+              <label className="block text-sm font-medium text-white/70 mb-2">Nombre del Cliente *</label>
               <input
                 type="text"
                 required
@@ -212,7 +212,7 @@ function NewTicketModal({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Teléfono *</label>
+              <label className="block text-sm font-medium text-white/70 mb-2">Teléfono *</label>
               <input
                 type="tel"
                 required
@@ -226,7 +226,7 @@ function NewTicketModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Tipo de Dispositivo</label>
+              <label className="block text-sm font-medium text-white/70 mb-2">Tipo de Dispositivo</label>
               <select
                 value={formData.deviceType}
                 onChange={(e) => setFormData({ ...formData, deviceType: e.target.value })}
@@ -241,7 +241,7 @@ function NewTicketModal({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Modelo *</label>
+              <label className="block text-sm font-medium text-white/70 mb-2">Modelo *</label>
               <input
                 type="text"
                 required
@@ -254,7 +254,7 @@ function NewTicketModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Descripción del Problema *</label>
+            <label className="block text-sm font-medium text-white/70 mb-2">Descripción del Problema *</label>
             <textarea
               required
               rows={3}
@@ -266,9 +266,9 @@ function NewTicketModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Costo Estimado (opcional)</label>
+            <label className="block text-sm font-medium text-white/70 mb-2">Costo Estimado (opcional)</label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50">$</span>
               <input
                 type="number"
                 value={formData.estimatedCost}
@@ -351,7 +351,7 @@ function TicketDetailModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-lg glass-panel rounded-2xl p-6 border border-white/10 max-h-[90vh] overflow-y-auto">
-        <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10">
+        <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10">
           <X className="w-5 h-5" />
         </button>
 
@@ -364,17 +364,17 @@ function TicketDetailModal({
             )}
           </div>
           <div className="flex-1">
-            <code className="px-2 py-0.5 rounded bg-white/10 text-xs text-slate-300 font-mono">
+            <code className="px-2 py-0.5 rounded bg-white/10 text-xs text-white/70 font-mono">
               {ticket.folio}
             </code>
             <h2 className="text-xl font-bold text-white mt-1">{ticket.deviceModel}</h2>
-            <p className="text-slate-400 text-sm">{ticket.customerName} • {ticket.customerPhone}</p>
+            <p className="text-white/50 text-sm">{ticket.customerName} • {ticket.customerPhone}</p>
           </div>
         </div>
 
         <div className="p-4 rounded-xl bg-white/5 mb-6">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-slate-400 text-sm">Estado actual</span>
+            <span className="text-white/50 text-sm">Estado actual</span>
             <span
               className={cn(
                 "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium",
@@ -382,7 +382,7 @@ function TicketDetailModal({
                 REPAIR_STATUS_CONFIG[ticket.status].color === "purple" && "bg-purple-500/20 text-purple-400",
                 REPAIR_STATUS_CONFIG[ticket.status].color === "amber" && "bg-amber-500/20 text-amber-400",
                 REPAIR_STATUS_CONFIG[ticket.status].color === "green" && "bg-green-500/20 text-green-400",
-                REPAIR_STATUS_CONFIG[ticket.status].color === "slate" && "bg-slate-500/20 text-slate-400"
+                REPAIR_STATUS_CONFIG[ticket.status].color === "slate" && "bg-slate-500/20 text-white/50"
               )}
             >
               <span>{REPAIR_STATUS_CONFIG[ticket.status].icon}</span>
@@ -394,7 +394,7 @@ function TicketDetailModal({
 
         <div className="space-y-4 mb-6">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Notas / Actualización</label>
+            <label className="block text-sm font-medium text-white/70 mb-2">Notas / Actualización</label>
             <textarea
               rows={2}
               value={notes}
@@ -405,7 +405,7 @@ function TicketDetailModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-white/70 mb-2">
               Cotización / Costo
               {ticket.quoteSentAt && (
                 <span className="ml-2 text-xs text-green-400 font-normal">
@@ -414,7 +414,7 @@ function TicketDetailModal({
               )}
             </label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50">$</span>
               <input
                 type="number"
                 value={finalCost}
@@ -546,7 +546,7 @@ function ServicesTab({ shopId }: { shopId: string }) {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-bold text-white">Catálogo de Servicios</h2>
-          <p className="text-slate-400 text-sm mt-1">Los servicios que aparecen en tu página pública para que los clientes los soliciten</p>
+          <p className="text-white/50 text-sm mt-1">Los servicios que aparecen en tu página pública para que los clientes los soliciten</p>
         </div>
         <Button onClick={() => { setEditing(undefined); setShowForm(true); }}>
           <Plus className="w-4 h-4 mr-2" />
@@ -566,7 +566,7 @@ function ServicesTab({ shopId }: { shopId: string }) {
               "px-3 py-1.5 rounded-full text-sm transition-colors",
               filterDevice === dt
                 ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                : "bg-white/5 text-slate-400 border border-white/10 hover:bg-white/10"
+                : "bg-white/5 text-white/50 border border-white/10 hover:bg-white/10"
             )}
           >
             {dt === "all" ? "Todos" : dt}
@@ -576,13 +576,13 @@ function ServicesTab({ shopId }: { shopId: string }) {
 
       {isLoading ? (
         <div className="flex justify-center py-16">
-          <Loader2 className="w-8 h-8 text-slate-500 animate-spin" />
+          <Loader2 className="w-8 h-8 text-white/40 animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
         <div className="glass-panel rounded-2xl border border-white/10 py-16 text-center">
-          <Wrench className="w-12 h-12 text-slate-500 mx-auto mb-4" />
-          <p className="text-slate-400 mb-2">No hay servicios en el catálogo</p>
-          <p className="text-slate-500 text-sm">Agrega los servicios que ofrece tu taller para que los clientes los vean</p>
+          <Wrench className="w-12 h-12 text-white/40 mx-auto mb-4" />
+          <p className="text-white/50 mb-2">No hay servicios en el catálogo</p>
+          <p className="text-white/40 text-sm">Agrega los servicios que ofrece tu taller para que los clientes los vean</p>
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -591,19 +591,19 @@ function ServicesTab({ shopId }: { shopId: string }) {
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-medium leading-tight">{service.name}</p>
-                  {service.category && <p className="text-slate-500 text-xs mt-1">{service.category}</p>}
+                  {service.category && <p className="text-white/40 text-xs mt-1">{service.category}</p>}
                 </div>
                 <div className="flex gap-1 shrink-0">
-                  <button onClick={() => { setEditing(service); setShowForm(true); }} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                  <button onClick={() => { setEditing(service); setShowForm(true); }} className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors">
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={() => handleDelete(service.id)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                  <button onClick={() => handleDelete(service.id)} className="p-1.5 rounded-lg text-white/50 hover:text-red-400 hover:bg-red-500/10 transition-colors">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
 
-              {service.description && <p className="text-slate-400 text-sm leading-snug">{service.description}</p>}
+              {service.description && <p className="text-white/50 text-sm leading-snug">{service.description}</p>}
 
               <div className="flex items-center justify-between mt-auto pt-2 border-t border-white/5">
                 <span className="text-green-400 font-semibold text-lg">${service.price.toLocaleString()}</span>
@@ -613,7 +613,7 @@ function ServicesTab({ shopId }: { shopId: string }) {
                     "px-2 py-0.5 rounded-full text-xs transition-colors",
                     service.isActive
                       ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                      : "bg-slate-500/20 text-slate-400 border border-slate-500/30"
+                      : "bg-slate-500/20 text-white/50 border border-slate-500/30"
                   )}
                 >
                   {service.isActive ? "Activo" : "Inactivo"}
@@ -681,7 +681,7 @@ function RepairAdminContent({ shopId }: { shopId: string }) {
                 </div>
                 <div>
                   <h1 className="font-display text-2xl font-bold text-white">Taller</h1>
-                  <p className="text-slate-400 text-sm">Gestión de reparaciones</p>
+                  <p className="text-white/50 text-sm">Gestión de reparaciones</p>
                 </div>
               </div>
             </div>
@@ -704,7 +704,7 @@ function RepairAdminContent({ shopId }: { shopId: string }) {
               "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
               tab === "tickets"
                 ? "bg-white/10 text-white"
-                : "text-slate-400 hover:text-white"
+                : "text-white/50 hover:text-white"
             )}
           >
             <Ticket className="w-4 h-4" />
@@ -716,7 +716,7 @@ function RepairAdminContent({ shopId }: { shopId: string }) {
               "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
               tab === "services"
                 ? "bg-white/10 text-white"
-                : "text-slate-400 hover:text-white"
+                : "text-white/50 hover:text-white"
             )}
           >
             <Settings className="w-4 h-4" />
@@ -732,26 +732,26 @@ function RepairAdminContent({ shopId }: { shopId: string }) {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               <div className="glass-panel rounded-xl p-4 border border-white/10">
                 <p className="text-2xl font-bold text-white">{stats.total}</p>
-                <p className="text-xs text-slate-400">Total Tickets</p>
+                <p className="text-xs text-white/50">Total Tickets</p>
               </div>
               <div className="glass-panel rounded-xl p-4 border border-blue-500/20">
                 <p className="text-2xl font-bold text-blue-400">{stats.active}</p>
-                <p className="text-xs text-slate-400">En Proceso</p>
+                <p className="text-xs text-white/50">En Proceso</p>
               </div>
               <div className="glass-panel rounded-xl p-4 border border-amber-500/20">
                 <p className="text-2xl font-bold text-amber-400">{stats.repairing}</p>
-                <p className="text-xs text-slate-400">Reparando</p>
+                <p className="text-xs text-white/50">Reparando</p>
               </div>
               <div className="glass-panel rounded-xl p-4 border border-green-500/20">
                 <p className="text-2xl font-bold text-green-400">{stats.ready}</p>
-                <p className="text-xs text-slate-400">Listos</p>
+                <p className="text-xs text-white/50">Listos</p>
               </div>
             </div>
 
             {/* Filters */}
             <div className="flex flex-col sm:flex-row gap-4 mb-6">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
                 <input
                   type="text"
                   value={searchTerm}
@@ -780,12 +780,12 @@ function RepairAdminContent({ shopId }: { shopId: string }) {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-white/10 text-left">
-                      <th className="px-6 py-4 text-sm font-medium text-slate-400">Folio</th>
-                      <th className="px-6 py-4 text-sm font-medium text-slate-400">Dispositivo</th>
-                      <th className="px-6 py-4 text-sm font-medium text-slate-400">Cliente</th>
-                      <th className="px-6 py-4 text-sm font-medium text-slate-400">Estado</th>
-                      <th className="px-6 py-4 text-sm font-medium text-slate-400">Costo</th>
-                      <th className="px-6 py-4 text-sm font-medium text-slate-400">Fecha</th>
+                      <th className="px-6 py-4 text-sm font-medium text-white/50">Folio</th>
+                      <th className="px-6 py-4 text-sm font-medium text-white/50">Dispositivo</th>
+                      <th className="px-6 py-4 text-sm font-medium text-white/50">Cliente</th>
+                      <th className="px-6 py-4 text-sm font-medium text-white/50">Estado</th>
+                      <th className="px-6 py-4 text-sm font-medium text-white/50">Costo</th>
+                      <th className="px-6 py-4 text-sm font-medium text-white/50">Fecha</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -803,9 +803,9 @@ function RepairAdminContent({ shopId }: { shopId: string }) {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
                             {ticket.deviceType.toLowerCase().includes("laptop") ? (
-                              <Laptop className="w-4 h-4 text-slate-400" />
+                              <Laptop className="w-4 h-4 text-white/50" />
                             ) : (
-                              <Smartphone className="w-4 h-4 text-slate-400" />
+                              <Smartphone className="w-4 h-4 text-white/50" />
                             )}
                             <span className="text-white">{ticket.deviceModel}</span>
                           </div>
@@ -813,7 +813,7 @@ function RepairAdminContent({ shopId }: { shopId: string }) {
                         <td className="px-6 py-4">
                           <div>
                             <p className="text-white text-sm">{ticket.customerName}</p>
-                            <p className="text-xs text-slate-500">{ticket.customerPhone}</p>
+                            <p className="text-xs text-white/40">{ticket.customerPhone}</p>
                           </div>
                         </td>
                         <td className="px-6 py-4">
@@ -824,7 +824,7 @@ function RepairAdminContent({ shopId }: { shopId: string }) {
                               REPAIR_STATUS_CONFIG[ticket.status].color === "purple" && "bg-purple-500/20 text-purple-400",
                               REPAIR_STATUS_CONFIG[ticket.status].color === "amber" && "bg-amber-500/20 text-amber-400",
                               REPAIR_STATUS_CONFIG[ticket.status].color === "green" && "bg-green-500/20 text-green-400",
-                              REPAIR_STATUS_CONFIG[ticket.status].color === "slate" && "bg-slate-500/20 text-slate-400"
+                              REPAIR_STATUS_CONFIG[ticket.status].color === "slate" && "bg-slate-500/20 text-white/50"
                             )}
                           >
                             {REPAIR_STATUS_CONFIG[ticket.status].icon} {REPAIR_STATUS_CONFIG[ticket.status].label}
@@ -833,7 +833,7 @@ function RepairAdminContent({ shopId }: { shopId: string }) {
                         <td className="px-6 py-4 text-white">
                           ${ticket.finalCost || ticket.estimatedCost || "-"}
                         </td>
-                        <td className="px-6 py-4 text-slate-400 text-sm">
+                        <td className="px-6 py-4 text-white/50 text-sm">
                           {new Date(ticket.createdAt).toLocaleDateString("es-MX")}
                         </td>
                       </tr>
@@ -844,8 +844,8 @@ function RepairAdminContent({ shopId }: { shopId: string }) {
 
               {filteredTickets.length === 0 && (
                 <div className="text-center py-12">
-                  <Wrench className="w-12 h-12 text-slate-500 mx-auto mb-4" />
-                  <p className="text-slate-400">No hay tickets que coincidan</p>
+                  <Wrench className="w-12 h-12 text-white/40 mx-auto mb-4" />
+                  <p className="text-white/50">No hay tickets que coincidan</p>
                 </div>
               )}
             </div>

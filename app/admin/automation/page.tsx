@@ -50,7 +50,7 @@ export default function AutomationPage() {
                 <h1 className="font-display text-2xl font-bold text-white">
                   Centro de Automatizacion
                 </h1>
-                <p className="text-slate-400 text-sm">
+                <p className="text-white/50 text-sm">
                   Configura WhatsApp, pedidos y reservaciones
                 </p>
               </div>

@@ -420,9 +420,9 @@ function MealPrepSettingsContent() {
 
                         {packages.length === 0 ? (
                             <div className="py-12 text-center border-2 border-dashed border-zinc-800 rounded-xl">
-                                <Package className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
+                                <Package className="w-12 h-12 text-white/30 mx-auto mb-3" />
                                 <h3 className="text-lg font-medium text-zinc-400">No hay paquetes configurados</h3>
-                                <p className="text-sm text-zinc-500 mb-4">Empieza agregando tu primer paquete base.</p>
+                                <p className="text-sm text-white/40 mb-4">Empieza agregando tu primer paquete base.</p>
                                 <Button onClick={addPackage} variant="outline" className="text-white border-zinc-700">Agregar Paquete</Button>
                             </div>
                         ) : (
@@ -431,7 +431,7 @@ function MealPrepSettingsContent() {
                                     <div key={pkg.id} className="p-4 bg-zinc-950 border border-zinc-800 rounded-xl flex flex-col md:flex-row items-end md:items-start justify-between gap-4">
                                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
                                             <div>
-                                                <label className="text-xs text-zinc-500 mb-1 block">Nombre del Paquete</label>
+                                                <label className="text-xs text-white/40 mb-1 block">Nombre del Paquete</label>
                                                 <input
                                                     type="text"
                                                     value={pkg.name}
@@ -441,7 +441,7 @@ function MealPrepSettingsContent() {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="text-xs text-zinc-500 mb-1 block">Comidas por semana</label>
+                                                <label className="text-xs text-white/40 mb-1 block">Comidas por semana</label>
                                                 <input
                                                     type="number"
                                                     value={pkg.mealsPerWeek}
@@ -450,7 +450,7 @@ function MealPrepSettingsContent() {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="text-xs text-zinc-500 mb-1 block">Días de Entrega</label>
+                                                <label className="text-xs text-white/40 mb-1 block">Días de Entrega</label>
                                                 <input
                                                     type="number"
                                                     value={pkg.daysPerWeek}
@@ -459,7 +459,7 @@ function MealPrepSettingsContent() {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="text-xs text-zinc-500 mb-1 block">Precio Total ($)</label>
+                                                <label className="text-xs text-white/40 mb-1 block">Precio Total ($)</label>
                                                 <input
                                                     type="number"
                                                     value={pkg.price}
@@ -501,9 +501,9 @@ function MealPrepSettingsContent() {
 
                         {categories.length === 0 ? (
                             <div className="py-12 text-center border-2 border-dashed border-zinc-800 rounded-xl">
-                                <MenuSquare className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
+                                <MenuSquare className="w-12 h-12 text-white/30 mx-auto mb-3" />
                                 <h3 className="text-lg font-medium text-zinc-400">No hay categorías</h3>
-                                <p className="text-sm text-zinc-500 mb-4">Empieza agregando tu primera categoría de inventario.</p>
+                                <p className="text-sm text-white/40 mb-4">Empieza agregando tu primera categoría de inventario.</p>
                                 <Button onClick={addCategory} variant="outline" className="text-white border-zinc-700">Agregar Categoría</Button>
                             </div>
                         ) : (
@@ -521,7 +521,7 @@ function MealPrepSettingsContent() {
                                         <div className="flex flex-col md:flex-row items-end md:items-start justify-between gap-4 pb-4 border-b border-zinc-800">
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
                                                 <div>
-                                                    <label className="text-xs text-zinc-500 mb-1 block">Nombre de Categoría</label>
+                                                    <label className="text-xs text-white/40 mb-1 block">Nombre de Categoría</label>
                                                     <input
                                                         type="text"
                                                         list="catalog-categories"
@@ -532,7 +532,7 @@ function MealPrepSettingsContent() {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="text-xs text-zinc-500 mb-1 block">Límite de Selección (por plato)</label>
+                                                    <label className="text-xs text-white/40 mb-1 block">Límite de Selección (por plato)</label>
                                                     <input
                                                         type="number"
                                                         value={cat.selectionLimit || 1}
@@ -561,9 +561,9 @@ function MealPrepSettingsContent() {
                                                     </label>
                                                 </div>
                                                 <div>
-                                                    <label className="text-xs text-zinc-500 mb-1 block">Precio Botón "Añadir Extra" (+$)</label>
+                                                    <label className="text-xs text-white/40 mb-1 block">Precio Botón "Añadir Extra" (+$)</label>
                                                     <div className="relative">
-                                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">$</span>
+                                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm">$</span>
                                                         <input
                                                             type="number"
                                                             value={cat.extraPrice || 0}
@@ -572,7 +572,7 @@ function MealPrepSettingsContent() {
                                                             placeholder="0"
                                                         />
                                                     </div>
-                                                    <p className="text-[10px] text-zinc-500 mt-1">Si es mayor a 0, aparecerá un botón (+) para añadir esta categoría como un extra pagado.</p>
+                                                    <p className="text-[10px] text-white/40 mt-1">Si es mayor a 0, aparecerá un botón (+) para añadir esta categoría como un extra pagado.</p>
                                                 </div>
                                             </div>
                                             <Button
@@ -601,7 +601,7 @@ function MealPrepSettingsContent() {
                                                         ))}
                                                     </div>
                                                 ) : (
-                                                    <div className="text-xs text-zinc-500 space-y-1">
+                                                    <div className="text-xs text-white/40 space-y-1">
                                                         <p className="italic">No hay productos en tu catálogo con la categoría "{cat.name || "..."}".</p>
                                                         <p>Para que los productos aparezcan aquí, ve a tu <span className="text-zinc-400 font-medium">Inventario</span> y asígnales la categoría exacta: <span className="text-primary-400 font-mono">"{cat.name || "frutas"}"</span>.</p>
                                                     </div>
@@ -624,7 +624,7 @@ function MealPrepSettingsContent() {
                                                 </Button>
                                             </div>
 
-                                            <p className="text-[11px] text-zinc-500 mb-4 bg-zinc-900/30 p-2 rounded border border-zinc-800/50">
+                                            <p className="text-[11px] text-white/40 mb-4 bg-zinc-900/30 p-2 rounded border border-zinc-800/50">
                                                 Usa esta sección solo para cobrar recargos adicionales (ej: "Extra Pollo", "Aguacate")
                                                 o para opciones que NO están en tu catálogo regular.
                                             </p>
@@ -642,7 +642,7 @@ function MealPrepSettingsContent() {
                                                                 placeholder="Nombre..."
                                                             />
                                                             <div className="relative w-24 shrink-0">
-                                                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">$</span>
+                                                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-white/40 text-sm">$</span>
                                                                 <input
                                                                     type="number"
                                                                     value={extra.price}
@@ -655,7 +655,7 @@ function MealPrepSettingsContent() {
                                                                 onClick={() => deleteExtra(extra.id)}
                                                                 variant="ghost"
                                                                 size="sm"
-                                                                className="h-8 w-8 p-0 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 shrink-0"
+                                                                className="h-8 w-8 p-0 text-white/40 hover:text-red-400 hover:bg-red-400/10 shrink-0"
                                                             >
                                                                 <Trash2 className="w-4 h-4" />
                                                             </Button>
@@ -702,9 +702,9 @@ function MealPrepSettingsContent() {
 
                         {rules.length === 0 ? (
                             <div className="py-12 text-center border-2 border-dashed border-zinc-800 rounded-xl">
-                                <Zap className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
+                                <Zap className="w-12 h-12 text-white/30 mx-auto mb-3" />
                                 <h3 className="text-lg font-medium text-zinc-400">No hay reglas condicionales</h3>
-                                <p className="text-sm text-zinc-500 mb-4">Haz tu menú dinámico con exclusiones o cobros extra condicionales.</p>
+                                <p className="text-sm text-white/40 mb-4">Haz tu menú dinámico con exclusiones o cobros extra condicionales.</p>
                                 <Button onClick={addRule} variant="outline" className="text-white border-zinc-700">Agregar Regla</Button>
                             </div>
                         ) : (
@@ -751,7 +751,7 @@ function MealPrepSettingsContent() {
 
                                             {rule.type === "surcharge" && (
                                                 <div className="relative w-full md:w-auto md:ml-2">
-                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">$</span>
+                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm">$</span>
                                                     <input
                                                         type="number"
                                                         value={rule.surchargeAmount || 0}
@@ -767,7 +767,7 @@ function MealPrepSettingsContent() {
                                             onClick={() => deleteRule(rule.id)}
                                             variant="ghost"
                                             size="sm"
-                                            className="w-8 h-8 p-0 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 shrink-0 self-end md:self-center"
+                                            className="w-8 h-8 p-0 text-white/40 hover:text-red-400 hover:bg-red-400/10 shrink-0 self-end md:self-center"
                                         >
                                             <Trash2 className="w-5 h-5" />
                                         </Button>
@@ -796,11 +796,11 @@ function MealPrepSettingsContent() {
                             <p className="text-sm text-zinc-400">
                                 Si agregas áreas aquí, solo los clientes cuya dirección contenga estos nombres podrán pedir para delivery.
                                 <br />
-                                <span className="text-zinc-500 italic text-xs">Para Sculpt Love NJ: "Bergen County, Hudson County, Passaic County"</span>
+                                <span className="text-white/40 italic text-xs">Para Sculpt Love NJ: "Bergen County, Hudson County, Passaic County"</span>
                             </p>
 
                             <div className="space-y-2">
-                                <label className="text-xs text-zinc-500 block">Nombres de Áreas Permitidas (Separados por coma)</label>
+                                <label className="text-xs text-white/40 block">Nombres de Áreas Permitidas (Separados por coma)</label>
                                 <textarea
                                     value={delivery.allowedAreas?.join(", ") || ""}
                                     onChange={(e) => setDelivery({
@@ -810,7 +810,7 @@ function MealPrepSettingsContent() {
                                     placeholder="Ej: Bergen County, Hudson County, Passaic County, NY"
                                     className="w-full h-24 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary transition-colors"
                                 />
-                                <p className="text-[10px] text-zinc-500">
+                                <p className="text-[10px] text-white/40">
                                     Nota: El sistema busca que estas palabras aparezcan en la dirección real de Google Maps que el cliente carga.
                                 </p>
                             </div>
@@ -825,12 +825,12 @@ function MealPrepSettingsContent() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-4 p-4 border border-zinc-900 bg-zinc-900/40 rounded-lg">
-                                    <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Regla Escalde (Recomendado)</h4>
+                                    <h4 className="text-xs font-bold text-white/40 uppercase tracking-wider">Regla Escalde (Recomendado)</h4>
                                     <div className="grid grid-cols-1 gap-4">
                                         <div>
-                                            <label className="text-xs text-zinc-500 mb-1 block">Cargar Pago Extra de ($)</label>
+                                            <label className="text-xs text-white/40 mb-1 block">Cargar Pago Extra de ($)</label>
                                             <div className="relative">
-                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">$</span>
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm">$</span>
                                                 <input
                                                     type="number"
                                                     value={delivery.feeScaling?.amount || 0}
@@ -847,7 +847,7 @@ function MealPrepSettingsContent() {
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="text-xs text-zinc-500 mb-1 block">Por cada cuántas millas (Distancia)</label>
+                                            <label className="text-xs text-white/40 mb-1 block">Por cada cuántas millas (Distancia)</label>
                                             <div className="relative">
                                                 <input
                                                     type="number"
@@ -862,7 +862,7 @@ function MealPrepSettingsContent() {
                                                     className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
                                                     placeholder="10"
                                                 />
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">millas</span>
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 text-sm">millas</span>
                                             </div>
                                         </div>
                                     </div>
@@ -875,23 +875,23 @@ function MealPrepSettingsContent() {
                                 </div>
 
                                 <div className="space-y-4 p-4 border border-zinc-900 bg-zinc-900/40 rounded-lg opacity-50 grayscale hover:grayscale-0 transition-all cursor-not-allowed">
-                                    <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Regla Simple (Inactiva si hay escala)</h4>
+                                    <h4 className="text-xs font-bold text-white/40 uppercase tracking-wider">Regla Simple (Inactiva si hay escala)</h4>
                                     <div>
-                                        <label className="text-xs text-zinc-500 mb-1 block">Millas Gratis hasta</label>
+                                        <label className="text-xs text-white/40 mb-1 block">Millas Gratis hasta</label>
                                         <input
                                             type="number"
                                             disabled
                                             value={delivery.freeDistanceMiles || 10}
-                                            className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-zinc-500 text-sm"
+                                            className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white/40 text-sm"
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-zinc-500 mb-1 block">Cargo fijo si es mayor ($)</label>
+                                        <label className="text-xs text-white/40 mb-1 block">Cargo fijo si es mayor ($)</label>
                                         <input
                                             type="number"
                                             disabled
                                             value={delivery.surchargeAmount || 30}
-                                            className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-zinc-500 text-sm"
+                                            className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white/40 text-sm"
                                         />
                                     </div>
                                 </div>
@@ -923,7 +923,7 @@ function MealPrepSettingsContent() {
                                         >
                                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${!schedule[day].closed ? "translate-x-6" : "translate-x-1"}`} />
                                         </div>
-                                        <span className={`text-sm font-medium capitalize w-24 ${!schedule[day].closed ? "text-white" : "text-zinc-500"}`}>
+                                        <span className={`text-sm font-medium capitalize w-24 ${!schedule[day].closed ? "text-white" : "text-white/40"}`}>
                                             {day === "monday" ? "Lunes" :
                                                 day === "tuesday" ? "Martes" :
                                                     day === "wednesday" ? "Miércoles" :
@@ -936,7 +936,7 @@ function MealPrepSettingsContent() {
                                     {!schedule[day].closed ? (
                                         <div className="flex items-center gap-3 w-full md:w-auto">
                                             <div className="flex flex-col gap-1 flex-1 md:flex-none">
-                                                <label className="text-[10px] text-zinc-500 uppercase font-bold">Abre</label>
+                                                <label className="text-[10px] text-white/40 uppercase font-bold">Abre</label>
                                                 <input
                                                     type="time"
                                                     value={schedule[day].open}
@@ -947,11 +947,11 @@ function MealPrepSettingsContent() {
                                                     className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-primary w-full"
                                                 />
                                             </div>
-                                            <div className="pt-4 text-zinc-600">
+                                            <div className="pt-4 text-white/30">
                                                 <Minus className="w-4 h-4 rotate-90 md:rotate-0" />
                                             </div>
                                             <div className="flex flex-col gap-1 flex-1 md:flex-none">
-                                                <label className="text-[10px] text-zinc-500 uppercase font-bold">Cierra</label>
+                                                <label className="text-[10px] text-white/40 uppercase font-bold">Cierra</label>
                                                 <input
                                                     type="time"
                                                     value={schedule[day].close}
@@ -964,7 +964,7 @@ function MealPrepSettingsContent() {
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="text-zinc-500 text-sm italic flex-1 text-center md:text-right">
+                                        <div className="text-white/40 text-sm italic flex-1 text-center md:text-right">
                                             Cerrado - No se realizan entregas
                                         </div>
                                     )}

@@ -86,7 +86,7 @@ function PhonePreview({ message, mediaType, mediaUrl }: {
                       <FileText className="w-8 h-8 text-red-400" />
                       <div className="flex-1 min-w-0">
                         <p className="text-white text-xs truncate">documento.pdf</p>
-                        <p className="text-[10px] text-slate-400">PDF • 2.3 MB</p>
+                        <p className="text-[10px] text-white/50">PDF • 2.3 MB</p>
                       </div>
                     </div>
                   )}
@@ -100,7 +100,7 @@ function PhonePreview({ message, mediaType, mediaUrl }: {
               )}>
                 {message || "Tu mensaje aparecerá aquí..."}
                 <div className="flex items-center justify-end gap-1 mt-1">
-                  <span className="text-[10px] text-slate-400">12:00</span>
+                  <span className="text-[10px] text-white/50">12:00</span>
                   <CheckCircle className="w-3 h-3 text-blue-400" />
                 </div>
               </div>
@@ -252,7 +252,7 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
       <div className="relative w-full max-w-4xl glass-panel rounded-2xl border border-white/10 max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 z-10"
+          className="absolute top-4 right-4 p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 z-10"
         >
           <X className="w-5 h-5" />
         </button>
@@ -267,7 +267,7 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
               <h2 className="text-xl font-bold text-white">
                 {editCampaign ? "Editar Campaña" : "Nueva Campaña"}
               </h2>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-white/50">
                 Paso {step} de 3: {step === 1 ? "Contenido" : step === 2 ? "Audiencia" : "Confirmar"}
               </p>
             </div>
@@ -293,7 +293,7 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
             <div className="grid lg:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                  <label className="block text-sm font-medium text-white/70 mb-2">
                     Nombre de la Campaña
                   </label>
                   <input
@@ -306,7 +306,7 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                  <label className="block text-sm font-medium text-white/70 mb-2">
                     Mensaje
                   </label>
                   <textarea
@@ -316,13 +316,13 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
                     className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/50 resize-none"
                     placeholder="Escribe tu mensaje aquí... Usa {shopUrl} para insertar el link de tu tienda"
                   />
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-white/40 mt-1">
                     Tip: Usa emojis 🎉 y {"{shopUrl}"} para el link de tu tienda
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                  <label className="block text-sm font-medium text-white/70 mb-2">
                     Adjuntar Multimedia
                   </label>
                   <div className="grid grid-cols-4 gap-2">
@@ -334,7 +334,7 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
                           "p-3 rounded-xl border transition-all text-center",
                           formData.mediaType === type
                             ? "border-purple-500 bg-purple-500/20 text-purple-400"
-                            : "border-white/10 bg-white/5 text-slate-400 hover:bg-white/10"
+                            : "border-white/10 bg-white/5 text-white/50 hover:bg-white/10"
                         )}
                       >
                         {type === "none" && <X className="w-5 h-5 mx-auto mb-1" />}
@@ -348,8 +348,8 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
 
                   {formData.mediaType !== "none" && (
                     <div className="mt-3 p-4 rounded-xl border-2 border-dashed border-white/20 text-center">
-                      <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                      <p className="text-sm text-slate-400">
+                      <Upload className="w-8 h-8 text-white/50 mx-auto mb-2" />
+                      <p className="text-sm text-white/50">
                         Arrastra o haz clic para subir {formData.mediaType === "image" ? "imagen" : formData.mediaType === "video" ? "video" : "documento"}
                       </p>
                       <input
@@ -366,7 +366,7 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
 
               {/* Preview */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-white/70 mb-2">
                   Vista Previa
                 </label>
                 <PhonePreview
@@ -399,7 +399,7 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
                     "flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all",
                     selectionMode === "segment"
                       ? "bg-purple-500/30 text-purple-300 border border-purple-500/30"
-                      : "text-slate-400 hover:text-white"
+                      : "text-white/50 hover:text-white"
                   )}
                 >
                   <Users className="w-4 h-4" />
@@ -411,7 +411,7 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
                     "flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all",
                     selectionMode === "individual"
                       ? "bg-purple-500/30 text-purple-300 border border-purple-500/30"
-                      : "text-slate-400 hover:text-white"
+                      : "text-white/50 hover:text-white"
                   )}
                 >
                   <UserCheck className="w-4 h-4" />
@@ -440,13 +440,13 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
                             <span className="text-2xl">{segment.icon}</span>
                             <span className={cn(
                               "px-2 py-0.5 rounded-full text-xs font-medium",
-                              formData.segment === key ? "bg-purple-500/30 text-purple-300" : "bg-white/10 text-slate-400"
+                              formData.segment === key ? "bg-purple-500/30 text-purple-300" : "bg-white/10 text-white/50"
                             )}>
                               {count}
                             </span>
                           </div>
                           <p className="text-white font-medium mt-2">{segment.label}</p>
-                          <p className="text-xs text-slate-400 mt-1">{segment.description}</p>
+                          <p className="text-xs text-white/50 mt-1">{segment.description}</p>
                         </button>
                       );
                     }
@@ -459,7 +459,7 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
                 <div className="space-y-3">
                   {/* Search */}
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
                     <input
                       type="text"
                       value={searchQuery}
@@ -471,7 +471,7 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
 
                   {/* Select all / deselect */}
                   {filteredCustomers.length > 0 && (
-                    <div className="flex items-center justify-between text-xs text-slate-400">
+                    <div className="flex items-center justify-between text-xs text-white/50">
                       <span>{formData.customPhones.length} seleccionados de {customers.length}</span>
                       <div className="flex gap-3">
                         <button
@@ -485,7 +485,7 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
                         </button>
                         <button
                           onClick={() => setFormData((prev) => ({ ...prev, customPhones: [] }))}
-                          className="text-slate-500 hover:text-slate-300"
+                          className="text-white/40 hover:text-white/70"
                         >
                           Limpiar
                         </button>
@@ -496,12 +496,12 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
                   {/* Customer list */}
                   <div className="max-h-64 overflow-y-auto space-y-1 pr-1">
                     {customersLoading ? (
-                      <div className="flex items-center justify-center py-8 text-slate-400">
+                      <div className="flex items-center justify-center py-8 text-white/50">
                         <Loader2 className="w-5 h-5 animate-spin mr-2" />
                         Cargando clientes...
                       </div>
                     ) : filteredCustomers.length === 0 ? (
-                      <div className="text-center py-8 text-slate-400 text-sm">
+                      <div className="text-center py-8 text-white/50 text-sm">
                         {customers.length === 0
                           ? "No hay clientes registrados"
                           : "Sin resultados para tu búsqueda"}
@@ -530,7 +530,7 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm text-white truncate">{customer.name}</p>
-                              <p className="text-xs text-slate-500">{customer.phone}</p>
+                              <p className="text-xs text-white/40">{customer.phone}</p>
                             </div>
                           </button>
                         );
@@ -541,9 +541,9 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
               )}
 
               <div className="p-4 rounded-xl bg-white/5 text-center">
-                <p className="text-slate-400 text-sm">Esta campaña se enviará a</p>
+                <p className="text-white/50 text-sm">Esta campaña se enviará a</p>
                 <p className="text-3xl font-bold text-white mt-1">{audienceCount} personas</p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-white/40 mt-1">
                   Tiempo estimado: ~{Math.ceil(audienceCount * 15 / 60)} minutos
                 </p>
               </div>
@@ -558,16 +558,16 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
                   <Send className="w-10 h-10 text-purple-400" />
                 </div>
                 <h3 className="text-xl font-bold text-white">¿Todo listo?</h3>
-                <p className="text-slate-400 mt-2">Revisa los detalles antes de enviar</p>
+                <p className="text-white/50 mt-2">Revisa los detalles antes de enviar</p>
               </div>
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="p-4 rounded-xl bg-white/5">
-                  <p className="text-xs text-slate-400 mb-1">Campaña</p>
+                  <p className="text-xs text-white/50 mb-1">Campaña</p>
                   <p className="text-white font-medium">{formData.name || "Sin nombre"}</p>
                 </div>
                 <div className="p-4 rounded-xl bg-white/5">
-                  <p className="text-xs text-slate-400 mb-1">Audiencia</p>
+                  <p className="text-xs text-white/50 mb-1">Audiencia</p>
                   <p className="text-white font-medium">
                     {selectionMode === "individual"
                       ? `👤 Selección Individual`
@@ -575,11 +575,11 @@ function CampaignWizard({ onClose, editCampaign, shopId }: {
                   </p>
                 </div>
                 <div className="p-4 rounded-xl bg-white/5">
-                  <p className="text-xs text-slate-400 mb-1">Destinatarios</p>
+                  <p className="text-xs text-white/50 mb-1">Destinatarios</p>
                   <p className="text-white font-medium">{audienceCount} personas</p>
                 </div>
                 <div className="p-4 rounded-xl bg-white/5">
-                  <p className="text-xs text-slate-400 mb-1">Multimedia</p>
+                  <p className="text-xs text-white/50 mb-1">Multimedia</p>
                   <p className="text-white font-medium capitalize">
                     {formData.mediaType === "none" ? "Sin archivo" : formData.mediaType}
                   </p>
@@ -672,14 +672,14 @@ function CampaignCard({ campaign, onEdit }: { campaign: Campaign; onEdit: () => 
           <span className="text-xl">{AUDIENCE_SEGMENTS[campaign.segment].icon}</span>
           <div>
             <p className="text-white font-medium">{campaign.name}</p>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-white/50">
               {campaign.audienceCount} destinatarios
             </p>
           </div>
         </div>
         <span className={cn(
           "px-2 py-1 rounded-full text-xs font-medium",
-          statusConfig.color === "slate" && "bg-slate-500/20 text-slate-400",
+          statusConfig.color === "slate" && "bg-slate-500/20 text-white/50",
           statusConfig.color === "blue" && "bg-blue-500/20 text-blue-400",
           statusConfig.color === "amber" && "bg-amber-500/20 text-amber-400",
           statusConfig.color === "green" && "bg-green-500/20 text-green-400",
@@ -694,7 +694,7 @@ function CampaignCard({ campaign, onEdit }: { campaign: Campaign; onEdit: () => 
       {(campaign.status === "sending" || campaign.status === "paused") && (
         <div className="mb-3">
           <div className="flex items-center justify-between text-xs mb-1">
-            <span className="text-slate-400">Progreso</span>
+            <span className="text-white/50">Progreso</span>
             <span className="text-white">{campaign.progress.sent}/{campaign.progress.total}</span>
           </div>
           <div className="h-2 bg-white/10 rounded-full overflow-hidden">
@@ -725,11 +725,11 @@ function CampaignCard({ campaign, onEdit }: { campaign: Campaign; onEdit: () => 
       )}
 
       {/* Message preview */}
-      <p className="text-sm text-slate-400 line-clamp-2 mb-3">{campaign.message}</p>
+      <p className="text-sm text-white/50 line-clamp-2 mb-3">{campaign.message}</p>
 
       {/* Actions */}
       <div className="flex items-center justify-between pt-3 border-t border-white/10">
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-white/40">
           {new Date(campaign.createdAt).toLocaleDateString("es-MX")}
         </span>
 
@@ -756,7 +756,7 @@ function CampaignCard({ campaign, onEdit }: { campaign: Campaign; onEdit: () => 
             <>
               <button
                 onClick={onEdit}
-                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
+                className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10"
                 title="Editar"
               >
                 <Eye className="w-4 h-4" />
@@ -813,7 +813,7 @@ function MarketingContent({ shopId }: { shopId: string }) {
                 </div>
                 <div>
                   <h1 className="font-display text-2xl font-bold text-white">Marketing</h1>
-                  <p className="text-slate-400 text-sm">Campañas y difusión masiva</p>
+                  <p className="text-white/50 text-sm">Campañas y difusión masiva</p>
                 </div>
               </div>
             </div>
@@ -830,21 +830,21 @@ function MarketingContent({ shopId }: { shopId: string }) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="glass-panel rounded-xl p-4 border border-white/10">
             <p className="text-2xl font-bold text-white">{campaigns.length}</p>
-            <p className="text-xs text-slate-400">Total Campañas</p>
+            <p className="text-xs text-white/50">Total Campañas</p>
           </div>
           <div className="glass-panel rounded-xl p-4 border border-purple-500/20">
             <p className="text-2xl font-bold text-purple-400">{activeCampaigns}</p>
-            <p className="text-xs text-slate-400">Activas</p>
+            <p className="text-xs text-white/50">Activas</p>
           </div>
           <div className="glass-panel rounded-xl p-4 border border-green-500/20">
             <p className="text-2xl font-bold text-green-400">{totalSent}</p>
-            <p className="text-xs text-slate-400">Mensajes Enviados</p>
+            <p className="text-xs text-white/50">Mensajes Enviados</p>
           </div>
           <div className="glass-panel rounded-xl p-4 border border-amber-500/20">
             <p className="text-2xl font-bold text-amber-400">
               {currentJob ? `${Math.round((currentJob.currentIndex / currentJob.phones.length) * 100)}%` : "0%"}
             </p>
-            <p className="text-xs text-slate-400">Progreso Actual</p>
+            <p className="text-xs text-white/50">Progreso Actual</p>
           </div>
         </div>
 
@@ -857,7 +857,7 @@ function MarketingContent({ shopId }: { shopId: string }) {
               </div>
               <div className="flex-1">
                 <p className="text-amber-400 font-medium">Enviando campaña...</p>
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-white/50">
                   No cierres esta pestaña • {currentJob.currentIndex} de {currentJob.phones.length}
                 </p>
               </div>
@@ -865,7 +865,7 @@ function MarketingContent({ shopId }: { shopId: string }) {
                 <p className="text-2xl font-bold text-white">
                   {Math.round((currentJob.currentIndex / currentJob.phones.length) * 100)}%
                 </p>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-white/50">
                   ~{Math.ceil((currentJob.phones.length - currentJob.currentIndex) * 15 / 60)} min restantes
                 </p>
               </div>
@@ -885,9 +885,9 @@ function MarketingContent({ shopId }: { shopId: string }) {
 
           {campaigns.length === 0 ? (
             <div className="text-center py-12 glass-panel rounded-2xl border border-white/10">
-              <Megaphone className="w-12 h-12 text-slate-500 mx-auto mb-4" />
+              <Megaphone className="w-12 h-12 text-white/40 mx-auto mb-4" />
               <p className="text-white font-medium mb-2">Sin campañas todavía</p>
-              <p className="text-slate-400 text-sm mb-4">
+              <p className="text-white/50 text-sm mb-4">
                 Crea tu primera campaña para empezar a difundir
               </p>
               <Button onClick={() => setShowWizard(true)}>
@@ -934,7 +934,7 @@ function MarketingWithAuth() {
   if (authLoading || shopsLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4 text-slate-400">
+        <div className="flex flex-col items-center gap-4 text-white/50">
           <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
           <p>Cargando marketing...</p>
         </div>
@@ -949,7 +949,7 @@ function MarketingWithAuth() {
         <div className="glass-panel rounded-2xl p-8 text-center max-w-md">
           <AlertTriangle className="w-12 h-12 text-amber-400 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-white mb-2">Acceso Requerido</h2>
-          <p className="text-slate-400 mb-6">
+          <p className="text-white/50 mb-6">
             Necesitas iniciar sesión para acceder al módulo de marketing.
           </p>
           <Button onClick={() => router.push("/login")}>

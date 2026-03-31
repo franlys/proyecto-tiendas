@@ -231,7 +231,7 @@ function ServicesContent({ shopId }: { shopId: string }) {
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">{combinedFeatures.labels?.services || "Servicios"}</h1>
           <p className="text-zinc-400 mt-1">
-            Gestión de {(combinedFeatures.labels?.services || "servicios").toLowerCase()} y precios <span className="text-xs text-zinc-600 bg-zinc-900 px-2 py-0.5 rounded ml-2">Tienda: {shopId}</span>
+            Gestión de {(combinedFeatures.labels?.services || "servicios").toLowerCase()} y precios <span className="text-xs text-white/30 bg-zinc-900 px-2 py-0.5 rounded ml-2">Tienda: {shopId}</span>
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -255,21 +255,21 @@ function ServicesContent({ shopId }: { shopId: string }) {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
-          <p className="text-zinc-500 text-xs uppercase font-medium mb-1">Total {combinedFeatures.labels?.services || "Servicios"}</p>
+          <p className="text-white/40 text-xs uppercase font-medium mb-1">Total {combinedFeatures.labels?.services || "Servicios"}</p>
           <p className="text-2xl font-bold text-white">{services.length}</p>
         </div>
         <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
-          <p className="text-zinc-500 text-xs uppercase font-medium mb-1">Promedio Precio</p>
+          <p className="text-white/40 text-xs uppercase font-medium mb-1">Promedio Precio</p>
           <p className="text-2xl font-bold text-emerald-400">
             ${services.length > 0 ? Math.round(totalValue / services.length).toLocaleString() : 0}
           </p>
         </div>
         <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
-          <p className="text-zinc-500 text-xs uppercase font-medium mb-1">Activos</p>
+          <p className="text-white/40 text-xs uppercase font-medium mb-1">Activos</p>
           <p className="text-2xl font-bold text-green-400">{activeCount}</p>
         </div>
         <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
-          <p className="text-zinc-500 text-xs uppercase font-medium mb-1">Categorías</p>
+          <p className="text-white/40 text-xs uppercase font-medium mb-1">Categorías</p>
           <p className="text-2xl font-bold text-blue-400">
             {new Set(services.map(s => s.category || "Sin categoría")).size}
           </p>
@@ -279,13 +279,13 @@ function ServicesContent({ shopId }: { shopId: string }) {
       {/* Search */}
       <div className="flex gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={18} />
           <input
             type="text"
             placeholder="Buscar servicios..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl pl-11 pr-4 py-3 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 outline-none transition-all"
+            className="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl pl-11 pr-4 py-3 text-white placeholder:text-white/40 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 outline-none transition-all"
           />
         </div>
       </div>
@@ -433,7 +433,7 @@ function ServicesContent({ shopId }: { shopId: string }) {
                     ${service.price.toLocaleString()}
                   </span>
                   {service.category && (
-                    <span className="text-zinc-500">{service.category}</span>
+                    <span className="text-white/40">{service.category}</span>
                   )}
                 </div>
               </div>
@@ -465,7 +465,7 @@ function ServicesContent({ shopId }: { shopId: string }) {
       ) : (
         <div className="text-center py-20">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-zinc-800 flex items-center justify-center">
-            <Scissors className="w-8 h-8 text-zinc-500" />
+            <Scissors className="w-8 h-8 text-white/40" />
           </div>
           <p className="text-zinc-400 mb-2">
             {searchTerm ? "No se encontraron servicios." : "No hay servicios todavía."}
@@ -548,7 +548,7 @@ function ProductsContent({ shopId, businessType = "" }: { shopId: string; busine
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">{combinedFeatures.labels?.products || "Productos"}</h1>
           <p className="text-zinc-400 mt-1">
-            Gestión de {(combinedFeatures.labels?.products || "productos").toLowerCase()} y existencias <span className="text-xs text-zinc-600 bg-zinc-900 px-2 py-0.5 rounded ml-2">Tienda: {shopId}</span>
+            Gestión de {(combinedFeatures.labels?.products || "productos").toLowerCase()} y existencias <span className="text-xs text-white/30 bg-zinc-900 px-2 py-0.5 rounded ml-2">Tienda: {shopId}</span>
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -572,23 +572,23 @@ function ProductsContent({ shopId, businessType = "" }: { shopId: string; busine
       {/* Stats Cards */}
       <div className={`grid grid-cols-2 ${isMenuOnly ? 'md:grid-cols-2' : 'md:grid-cols-4'} gap-4`}>
         <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
-          <p className="text-zinc-500 text-xs uppercase font-medium mb-1">Total {combinedFeatures.labels?.products || "Productos"}</p>
+          <p className="text-white/40 text-xs uppercase font-medium mb-1">Total {combinedFeatures.labels?.products || "Productos"}</p>
           <p className="text-2xl font-bold text-white">{products.length}</p>
         </div>
         {!isMenuOnly && (
           <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
-            <p className="text-zinc-500 text-xs uppercase font-medium mb-1">Valor Inventario</p>
+            <p className="text-white/40 text-xs uppercase font-medium mb-1">Valor Inventario</p>
             <p className="text-2xl font-bold text-emerald-400">${totalValue.toLocaleString()}</p>
           </div>
         )}
         {!isMenuOnly && (
           <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
-            <p className="text-zinc-500 text-xs uppercase font-medium mb-1">Bajo Stock</p>
+            <p className="text-white/40 text-xs uppercase font-medium mb-1">Bajo Stock</p>
             <p className="text-2xl font-bold text-red-400">{lowStockCount}</p>
           </div>
         )}
         <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
-          <p className="text-zinc-500 text-xs uppercase font-medium mb-1">Categorías</p>
+          <p className="text-white/40 text-xs uppercase font-medium mb-1">Categorías</p>
           <p className="text-2xl font-bold text-blue-400">{new Set(products.map(p => p.category)).size}</p>
         </div>
       </div>
@@ -596,13 +596,13 @@ function ProductsContent({ shopId, businessType = "" }: { shopId: string; busine
       {/* Search & Toolbar */}
       <div className="flex gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={18} />
           <input
             type="text"
             placeholder="Buscar por nombre, categoría o SKU..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl pl-11 pr-4 py-3 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 outline-none transition-all"
+            className="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl pl-11 pr-4 py-3 text-white placeholder:text-white/40 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 outline-none transition-all"
           />
         </div>
         <button className="px-4 py-3 bg-zinc-900/80 border border-zinc-700 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors">
@@ -622,7 +622,7 @@ function ProductsContent({ shopId, businessType = "" }: { shopId: string; busine
       ) : (
         <div className="text-center py-20">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-zinc-800 flex items-center justify-center">
-            <Package className="w-8 h-8 text-zinc-500" />
+            <Package className="w-8 h-8 text-white/40" />
           </div>
           <p className="text-zinc-400 mb-2">
             {searchTerm ? "No se encontraron productos." : "No hay productos todavía."}
@@ -674,7 +674,7 @@ function SmartInventoryContent({ shopId, businessType }: { shopId: string; busin
         {/* View Toggle for Hybrid Businesses */}
         <div className="border-b border-zinc-800 px-6 py-3">
           <div className="max-w-7xl mx-auto flex items-center gap-4">
-            <span className="text-zinc-500 text-sm">Vista:</span>
+            <span className="text-white/40 text-sm">Vista:</span>
             <div className="flex bg-zinc-900 rounded-lg p-1">
               <button
                 onClick={() => setViewMode("products")}
@@ -736,7 +736,7 @@ function ServicesTabRedirect({ shopId, businessType }: { shopId: string, busines
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center">
-          <Store className="w-8 h-8 text-zinc-500" />
+          <Store className="w-8 h-8 text-white/40" />
         </div>
         <h2 className="text-xl font-bold text-white">Gestión de Entrenamientos</h2>
         <p className="text-zinc-400 text-center max-w-md">
@@ -756,7 +756,7 @@ function ServicesTabRedirect({ shopId, businessType }: { shopId: string, busines
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center">
-          <Package className="w-8 h-8 text-zinc-500" />
+          <Package className="w-8 h-8 text-white/40" />
         </div>
         <h2 className="text-xl font-bold text-white">Configuración de Meal Prep</h2>
         <p className="text-zinc-400 text-center max-w-md">
@@ -792,7 +792,7 @@ function ShopSelector({ onSelect }: { onSelect: (shopId: string, businessType: s
   if (shops.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <Store className="w-16 h-16 text-zinc-500" />
+        <Store className="w-16 h-16 text-white/40" />
         <h2 className="text-xl font-bold text-white">No hay tiendas</h2>
         <p className="text-zinc-400 text-center max-w-md">
           Crea una tienda primero desde el panel de agencia para poder gestionar su inventario.
@@ -833,16 +833,16 @@ function ShopSelector({ onSelect }: { onSelect: (shopId: string, businessType: s
             )}
             <div className="flex-1 min-w-0">
               <h3 className="text-white font-medium truncate">{shop.name}</h3>
-              <p className="text-sm text-zinc-500 truncate">/{shop.slug}</p>
+              <p className="text-sm text-white/40 truncate">/{shop.slug}</p>
             </div>
-            <ChevronDown className="w-5 h-5 text-zinc-500 group-hover:text-cyan-400 -rotate-90 transition-all" />
+            <ChevronDown className="w-5 h-5 text-white/40 group-hover:text-cyan-400 -rotate-90 transition-all" />
           </button>
         ))}
       </div>
 
       <Link
         href="/agency"
-        className="text-sm text-zinc-500 hover:text-white flex items-center gap-2 mt-4"
+        className="text-sm text-white/40 hover:text-white flex items-center gap-2 mt-4"
       >
         <ArrowLeft className="w-4 h-4" />
         Volver al Panel de Agencia
@@ -891,7 +891,7 @@ function InventoryPageInner() {
     // Shop owner without shopId - error state
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <Package className="w-16 h-16 text-zinc-500" />
+        <Package className="w-16 h-16 text-white/40" />
         <h2 className="text-xl font-bold text-white">Error de Configuración</h2>
         <p className="text-zinc-400 text-center max-w-md">
           Tu cuenta no tiene una tienda asociada. Contacta al administrador.

@@ -167,7 +167,7 @@ export default function PaymentReceiptsPage() {
                                     <h1 className="font-display text-2xl font-bold text-white">
                                         Comprobantes de Pago
                                     </h1>
-                                    <p className="text-slate-400 text-sm">
+                                    <p className="text-white/50 text-sm">
                                         Valida los pagos de tus clientes
                                     </p>
                                 </div>
@@ -204,7 +204,7 @@ export default function PaymentReceiptsPage() {
                             </div>
                             <div>
                                 <p className="text-2xl font-bold text-white">{stats.pending}</p>
-                                <p className="text-xs text-slate-400">Pendientes</p>
+                                <p className="text-xs text-white/50">Pendientes</p>
                             </div>
                         </div>
                     </button>
@@ -221,7 +221,7 @@ export default function PaymentReceiptsPage() {
                             </div>
                             <div>
                                 <p className="text-2xl font-bold text-white">{stats.approved}</p>
-                                <p className="text-xs text-slate-400">Aprobados</p>
+                                <p className="text-xs text-white/50">Aprobados</p>
                             </div>
                         </div>
                     </button>
@@ -238,7 +238,7 @@ export default function PaymentReceiptsPage() {
                             </div>
                             <div>
                                 <p className="text-2xl font-bold text-white">{stats.rejected}</p>
-                                <p className="text-xs text-slate-400">Rechazados</p>
+                                <p className="text-xs text-white/50">Rechazados</p>
                             </div>
                         </div>
                     </button>
@@ -247,13 +247,13 @@ export default function PaymentReceiptsPage() {
                 {/* Search and Filter */}
                 <div className="flex items-center gap-4 mb-6">
                     <div className="flex-1 relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Buscar por nombre, teléfono u orden..."
-                            className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50"
+                            className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-primary/50"
                         />
                     </div>
                     <button
@@ -262,7 +262,7 @@ export default function PaymentReceiptsPage() {
                             "px-4 py-3 rounded-xl border transition-colors",
                             filterStatus === "all"
                                 ? "bg-primary/20 border-primary text-white"
-                                : "bg-white/5 border-white/10 text-slate-400 hover:text-white"
+                                : "bg-white/5 border-white/10 text-white/50 hover:text-white"
                         )}
                     >
                         Ver Todos
@@ -272,7 +272,7 @@ export default function PaymentReceiptsPage() {
                 {/* Receipts List */}
                 <div className="glass-panel rounded-2xl border border-white/10 overflow-hidden">
                     {filteredReceipts.length === 0 ? (
-                        <div className="text-center py-16 text-slate-400">
+                        <div className="text-center py-16 text-white/50">
                             <CreditCard className="w-12 h-12 mx-auto mb-3 opacity-50" />
                             <p>No hay comprobantes {filterStatus !== "all" ? RECEIPT_STATUS_LABELS[filterStatus].toLowerCase() : ""}</p>
                         </div>
@@ -306,7 +306,7 @@ export default function PaymentReceiptsPage() {
                                                     {RECEIPT_STATUS_LABELS[receipt.status]}
                                                 </span>
                                             </div>
-                                            <p className="text-sm text-slate-400 truncate">
+                                            <p className="text-sm text-white/50 truncate">
                                                 {receipt.paymentMethodName} • {new Date(receipt.submittedAt).toLocaleDateString("es", {
                                                     day: "numeric",
                                                     month: "short",
@@ -321,13 +321,13 @@ export default function PaymentReceiptsPage() {
                                             <p className="text-white font-bold">
                                                 ${receipt.amount.toLocaleString()}
                                             </p>
-                                            <p className="text-xs text-slate-400">
+                                            <p className="text-xs text-white/50">
                                                 {receipt.currency}
                                             </p>
                                         </div>
 
                                         {/* Expand Icon */}
-                                        <div className="text-slate-400">
+                                        <div className="text-white/50">
                                             {selectedReceipt?.id === receipt.id ? (
                                                 <ChevronUp className="w-5 h-5" />
                                             ) : (
@@ -362,7 +362,7 @@ export default function PaymentReceiptsPage() {
                                             <div className="grid sm:grid-cols-2 gap-4">
                                                 <div className="space-y-2">
                                                     <div className="flex items-center gap-2 text-sm">
-                                                        <Phone className="w-4 h-4 text-slate-400" />
+                                                        <Phone className="w-4 h-4 text-white/50" />
                                                         <a
                                                             href={`https://wa.me/${receipt.customerPhone.replace(/\D/g, '')}`}
                                                             target="_blank"
@@ -374,13 +374,13 @@ export default function PaymentReceiptsPage() {
                                                     </div>
                                                     {receipt.customerEmail && (
                                                         <div className="flex items-center gap-2 text-sm">
-                                                            <Mail className="w-4 h-4 text-slate-400" />
-                                                            <span className="text-slate-300">{receipt.customerEmail}</span>
+                                                            <Mail className="w-4 h-4 text-white/50" />
+                                                            <span className="text-white/70">{receipt.customerEmail}</span>
                                                         </div>
                                                     )}
                                                     {receipt.orderId && (
                                                         <div className="flex items-center gap-2 text-sm">
-                                                            <FileText className="w-4 h-4 text-slate-400" />
+                                                            <FileText className="w-4 h-4 text-white/50" />
                                                             <Link
                                                                 href={`/admin/orders?orderId=${receipt.orderId}`}
                                                                 className="text-primary hover:underline"
@@ -394,14 +394,14 @@ export default function PaymentReceiptsPage() {
                                                 <div className="space-y-2">
                                                     {receipt.referenceNumber && (
                                                         <div className="flex items-center gap-2 text-sm">
-                                                            <span className="text-slate-400">Referencia:</span>
+                                                            <span className="text-white/50">Referencia:</span>
                                                             <span className="text-white font-mono">{receipt.referenceNumber}</span>
                                                         </div>
                                                     )}
                                                     {receipt.customerNote && (
                                                         <div className="text-sm">
-                                                            <span className="text-slate-400">Nota:</span>
-                                                            <p className="text-slate-300 mt-1">{receipt.customerNote}</p>
+                                                            <span className="text-white/50">Nota:</span>
+                                                            <p className="text-white/70 mt-1">{receipt.customerNote}</p>
                                                         </div>
                                                     )}
                                                 </div>

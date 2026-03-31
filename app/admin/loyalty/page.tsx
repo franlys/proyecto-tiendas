@@ -134,7 +134,7 @@ export default function LoyaltyAdminPage() {
                 <h1 className="font-display text-2xl font-bold text-white">
                   Programa de Lealtad
                 </h1>
-                <p className="text-slate-400 text-sm">
+                <p className="text-white/50 text-sm">
                   {shop?.name || "Mi Tienda"} - Tarjeta de fidelidad
                 </p>
               </div>
@@ -171,7 +171,7 @@ export default function LoyaltyAdminPage() {
                 "px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-px",
                 activeTab === "config"
                   ? "text-white border-primary"
-                  : "text-slate-400 border-transparent hover:text-white"
+                  : "text-white/50 border-transparent hover:text-white"
               )}
             >
               <Settings className="w-4 h-4 inline mr-2" />
@@ -186,7 +186,7 @@ export default function LoyaltyAdminPage() {
                 "px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-px",
                 activeTab === "customers"
                   ? "text-white border-primary"
-                  : "text-slate-400 border-transparent hover:text-white"
+                  : "text-white/50 border-transparent hover:text-white"
               )}
             >
               <Users className="w-4 h-4 inline mr-2" />
@@ -215,7 +215,7 @@ export default function LoyaltyAdminPage() {
                     <Heart
                       className={cn(
                         "w-6 h-6",
-                        config.enabled ? "text-primary" : "text-slate-400"
+                        config.enabled ? "text-primary" : "text-white/50"
                       )}
                     />
                   </div>
@@ -223,7 +223,7 @@ export default function LoyaltyAdminPage() {
                     <h3 className="text-white font-semibold">
                       Activar Programa de Lealtad
                     </h3>
-                    <p className="text-slate-400 text-sm">
+                    <p className="text-white/50 text-sm">
                       Los clientes ganarán sellos con cada compra
                     </p>
                   </div>
@@ -255,7 +255,7 @@ export default function LoyaltyAdminPage() {
 
                   <div className="grid sm:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm text-slate-400 mb-2">
+                      <label className="block text-sm text-white/50 mb-2">
                         Sellos para recompensa
                       </label>
                       <input
@@ -268,13 +268,13 @@ export default function LoyaltyAdminPage() {
                         }
                         className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-primary/50"
                       />
-                      <p className="text-xs text-slate-500 mt-1">
+                      <p className="text-xs text-white/40 mt-1">
                         Cuántos sellos necesita para canjear
                       </p>
                     </div>
 
                     <div>
-                      <label className="block text-sm text-slate-400 mb-2">
+                      <label className="block text-sm text-white/50 mb-2">
                         Sellos por compra
                       </label>
                       <input
@@ -287,18 +287,18 @@ export default function LoyaltyAdminPage() {
                         }
                         className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-primary/50"
                       />
-                      <p className="text-xs text-slate-500 mt-1">
+                      <p className="text-xs text-white/40 mt-1">
                         Sellos que gana por cada compra
                       </p>
                     </div>
                   </div>
 
                   <div className="mt-6">
-                    <label className="block text-sm text-slate-400 mb-2">
+                    <label className="block text-sm text-white/50 mb-2">
                       Monto mínimo de compra (opcional)
                     </label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50">
                         $
                       </span>
                       <input
@@ -312,7 +312,7 @@ export default function LoyaltyAdminPage() {
                         placeholder="0"
                       />
                     </div>
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="text-xs text-white/40 mt-1">
                       Deja en 0 para dar sellos en cualquier compra
                     </p>
                   </div>
@@ -326,7 +326,7 @@ export default function LoyaltyAdminPage() {
                   </h3>
 
                   <div className="mb-4">
-                    <label className="block text-sm text-slate-400 mb-3">
+                    <label className="block text-sm text-white/50 mb-3">
                       Tipo de recompensa
                     </label>
                     <div className="grid grid-cols-2 gap-3">
@@ -351,13 +351,13 @@ export default function LoyaltyAdminPage() {
                             <Icon
                               className={cn(
                                 "w-5 h-5",
-                                isSelected ? "text-primary" : "text-slate-400"
+                                isSelected ? "text-primary" : "text-white/50"
                               )}
                             />
                             <span
                               className={cn(
                                 "text-sm font-medium",
-                                isSelected ? "text-white" : "text-slate-300"
+                                isSelected ? "text-white" : "text-white/70"
                               )}
                             >
                               {type.label}
@@ -370,7 +370,7 @@ export default function LoyaltyAdminPage() {
 
                   <div className="grid sm:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm text-slate-400 mb-2">
+                      <label className="block text-sm text-white/50 mb-2">
                         Descripción de la recompensa
                       </label>
                       <input
@@ -384,7 +384,7 @@ export default function LoyaltyAdminPage() {
 
                     {config.rewardType === "discount" && (
                       <div>
-                        <label className="block text-sm text-slate-400 mb-2">
+                        <label className="block text-sm text-white/50 mb-2">
                           Porcentaje de descuento
                         </label>
                         <div className="relative">
@@ -398,7 +398,7 @@ export default function LoyaltyAdminPage() {
                             }
                             className="w-full pr-8 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-primary/50"
                           />
-                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50">
                             %
                           </span>
                         </div>
@@ -461,7 +461,7 @@ export default function LoyaltyAdminPage() {
                 <h3 className="text-white font-semibold mb-2">
                   Sin clientes aún
                 </h3>
-                <p className="text-slate-400">
+                <p className="text-white/50">
                   Los clientes aparecerán aquí cuando hagan compras
                 </p>
               </div>
@@ -480,7 +480,7 @@ export default function LoyaltyAdminPage() {
                         <p className="text-white font-medium">
                           {customer.phone}
                         </p>
-                        <p className="text-slate-400 text-sm">
+                        <p className="text-white/50 text-sm">
                           {customer.totalStampsEarned} sellos totales •{" "}
                           {customer.totalRewardsRedeemed} canjes
                         </p>
@@ -490,7 +490,7 @@ export default function LoyaltyAdminPage() {
                       <p className="text-2xl font-bold text-white">
                         {customer.currentStamps}
                       </p>
-                      <p className="text-slate-400 text-xs">sellos actuales</p>
+                      <p className="text-white/50 text-xs">sellos actuales</p>
                       {customer.currentStamps >= config.stampsRequired && (
                         <span className="inline-block mt-1 px-2 py-0.5 bg-gold/20 text-gold text-xs rounded-full">
                           Listo para canjear

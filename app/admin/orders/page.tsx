@@ -273,7 +273,7 @@ function OrderDetailModal({
         <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm p-6 border-b border-white/10">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
+            className="absolute top-4 right-4 p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10"
           >
             <X className="w-5 h-5" />
           </button>
@@ -302,7 +302,7 @@ function OrderDetailModal({
                 )}
               </div>
               <h2 className="text-xl font-bold text-white mt-1">{order.customerName}</h2>
-              <p className="text-slate-400 text-sm">{order.customerPhone}</p>
+              <p className="text-white/50 text-sm">{order.customerPhone}</p>
             </div>
           </div>
         </div>
@@ -339,13 +339,13 @@ function OrderDetailModal({
 
           {/* Items */}
           <div>
-            <h3 className="text-sm font-medium text-slate-400 mb-3">Productos</h3>
+            <h3 className="text-sm font-medium text-white/50 mb-3">Productos</h3>
             <div className="space-y-2">
               {order.items.map((item, idx) => (
                 <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-white/5">
                   <div>
                     <p className="text-white font-medium">{item.productName}</p>
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-white/50">
                       {item.quantity} x ${item.unitPrice.toFixed(2)}
                     </p>
                   </div>
@@ -357,11 +357,11 @@ function OrderDetailModal({
 
           {/* Totals */}
           <div className="p-4 rounded-xl bg-white/5 space-y-2">
-            <div className="flex justify-between text-slate-400">
+            <div className="flex justify-between text-white/50">
               <span>Subtotal</span>
               <span>${order.subtotal.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-slate-400">
+            <div className="flex justify-between text-white/50">
               <span>IVA (16%)</span>
               <span>${order.tax.toFixed(2)}</span>
             </div>
@@ -380,11 +380,11 @@ function OrderDetailModal({
               </h4>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-slate-400">Fecha</p>
+                  <p className="text-white/50">Fecha</p>
                   <p className="text-white font-medium">{order.scheduledDate || "No especificada"}</p>
                 </div>
                 <div>
-                  <p className="text-slate-400">Horario</p>
+                  <p className="text-white/50">Horario</p>
                   <p className="text-white font-medium">{order.scheduledTime || "No especificado"}</p>
                 </div>
               </div>
@@ -395,8 +395,8 @@ function OrderDetailModal({
           <div className="p-4 rounded-xl bg-white/5 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <DollarSign className="w-5 h-5 text-slate-400" />
-                <span className="text-slate-400">Estado de pago</span>
+                <DollarSign className="w-5 h-5 text-white/50" />
+                <span className="text-white/50">Estado de pago</span>
               </div>
               <span className={cn(
                 "px-2 py-1 rounded-full text-xs font-medium",
@@ -415,11 +415,11 @@ function OrderDetailModal({
             {(order.upfrontAmount ?? 0) > 0 && (
               <div className="grid grid-cols-2 gap-4 text-sm border-t border-white/5 pt-3">
                 <div>
-                  <p className="text-slate-400">Pagado (Adelanto)</p>
+                  <p className="text-white/50">Pagado (Adelanto)</p>
                   <p className="text-emerald-400 font-bold">${(order.upfrontAmount ?? 0).toLocaleString()}</p>
                 </div>
                 <div>
-                  <p className="text-slate-400">Restante</p>
+                  <p className="text-white/50">Restante</p>
                   <p className="text-white font-bold">${(order.remainingBalance || (order.total - (order.upfrontAmount ?? 0))).toLocaleString()}</p>
                 </div>
               </div>
@@ -520,11 +520,11 @@ function OrderDetailModal({
 
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div>
-                  <p className="text-slate-400">Método</p>
+                  <p className="text-white/50">Método</p>
                   <p className="text-white font-medium">{order.paymentInfo.paymentMethodName || "Manual"}</p>
                 </div>
                 <div>
-                  <p className="text-slate-400">Tipo</p>
+                  <p className="text-white/50">Tipo</p>
                   <p className="text-white font-medium uppercase text-[10px]">{order.paymentInfo.paymentMethodType || "-"}</p>
                 </div>
               </div>
@@ -533,7 +533,7 @@ function OrderDetailModal({
               {order.paymentInfo.receiptUrl && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <p className="text-xs text-slate-400">Comprobante de Pago</p>
+                    <p className="text-xs text-white/50">Comprobante de Pago</p>
                     {order.paymentInfo.status === "verified" && (
                       <button
                         onClick={() => window.open(order.paymentInfo?.receiptUrl, '_blank')}
@@ -622,16 +622,16 @@ function OrderDetailModal({
           {showDetails && (
             <div className="p-4 rounded-xl bg-slate-800/50 border border-white/10 space-y-3">
               <h4 className="font-medium text-white flex items-center gap-2">
-                <FileText className="w-4 h-4 text-slate-400" />
+                <FileText className="w-4 h-4 text-white/50" />
                 Detalles del Pedido
               </h4>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-slate-400">Número de Orden</p>
+                  <p className="text-white/50">Número de Orden</p>
                   <p className="text-white font-mono">{order.orderNumber}</p>
                 </div>
                 <div>
-                  <p className="text-slate-400">Fecha</p>
+                  <p className="text-white/50">Fecha</p>
                   <p className="text-white">
                     {new Date(order.createdAt).toLocaleDateString("es-MX", {
                       weekday: "long",
@@ -642,7 +642,7 @@ function OrderDetailModal({
                   </p>
                 </div>
                 <div>
-                  <p className="text-slate-400">Hora</p>
+                  <p className="text-white/50">Hora</p>
                   <p className="text-white">
                     {new Date(order.createdAt).toLocaleTimeString("es-MX", {
                       hour: "2-digit",
@@ -651,15 +651,15 @@ function OrderDetailModal({
                   </p>
                 </div>
                 <div>
-                  <p className="text-slate-400">Origen</p>
+                  <p className="text-white/50">Origen</p>
                   <p className="text-white capitalize">{order.source || "web"}</p>
                 </div>
                 <div>
-                  <p className="text-slate-400">Cliente</p>
+                  <p className="text-white/50">Cliente</p>
                   <p className="text-white">{order.customerName}</p>
                 </div>
                 <div>
-                  <p className="text-slate-400">Teléfono</p>
+                  <p className="text-white/50">Teléfono</p>
                   <p className="text-white">{order.customerPhone || "No registrado"}</p>
                 </div>
               </div>
@@ -685,7 +685,7 @@ function OrderDetailModal({
             <div className="flex items-center justify-between p-4 rounded-xl bg-white/5">
               <div className="flex items-center gap-2">
                 <MessageCircle className="w-5 h-5 text-green-400" />
-                <span className="text-slate-400">Notificar al cliente automáticamente</span>
+                <span className="text-white/50">Notificar al cliente automáticamente</span>
               </div>
               <button
                 onClick={() => setAutoNotify(!autoNotify)}
@@ -751,7 +751,7 @@ function OrderDetailModal({
                 onClick={() => setShowDetails(!showDetails)}
                 className={cn(
                   "border-slate-500/30",
-                  showDetails ? "bg-slate-500/20 text-white" : "text-slate-400 hover:bg-slate-500/10"
+                  showDetails ? "bg-slate-500/20 text-white" : "text-white/50 hover:bg-slate-500/10"
                 )}
               >
                 <FileText className="w-4 h-4 mr-2" />
@@ -799,7 +799,7 @@ function OrderCard({ order, onClick }: { order: SalesOrder; onClick: () => void 
     >
       <div className="flex items-start justify-between mb-3">
         <div>
-          <code className="text-xs text-slate-400 font-mono">{order.orderNumber}</code>
+          <code className="text-xs text-white/50 font-mono">{order.orderNumber}</code>
           <p className="text-white font-medium">{order.customerName}</p>
         </div>
         {order.isWholesale && (
@@ -810,7 +810,7 @@ function OrderCard({ order, onClick }: { order: SalesOrder; onClick: () => void 
       </div>
 
       <div className="flex items-center justify-between text-sm">
-        <span className="text-slate-400">
+        <span className="text-white/50">
           {order.items.length} producto{order.items.length > 1 ? "s" : ""}
         </span>
         <span className="text-white font-bold">${order.total.toFixed(2)}</span>
@@ -824,7 +824,7 @@ function OrderCard({ order, onClick }: { order: SalesOrder; onClick: () => void 
         )}>
           {order.paymentStatus === "paid" ? "💰 Pagado" : "⏳ Por pagar"}
         </span>
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-white/40">
           {new Date(order.createdAt).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
         </span>
       </div>
@@ -872,7 +872,7 @@ function KanbanColumn({ status, orders, onOrderClick }: {
         ))}
 
         {orders.length === 0 && (
-          <div className="p-8 text-center text-slate-500 border-2 border-dashed border-white/10 rounded-xl">
+          <div className="p-8 text-center text-white/40 border-2 border-dashed border-white/10 rounded-xl">
             <p className="text-sm">Sin pedidos</p>
           </div>
         )}
@@ -885,7 +885,7 @@ function KanbanColumn({ status, orders, onOrderClick }: {
 function HistoryTable({ orders, onOrderClick }: { orders: SalesOrder[]; onOrderClick: (order: SalesOrder) => void }) {
   if (orders.length === 0) {
     return (
-      <div className="p-12 text-center text-slate-500 border-2 border-dashed border-white/10 rounded-xl">
+      <div className="p-12 text-center text-white/40 border-2 border-dashed border-white/10 rounded-xl">
         <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
         <p className="text-lg font-medium">No hay historial de pedidos</p>
         <p className="text-sm">Los pedidos entregados y cancelados aparecerán aquí.</p>
@@ -896,7 +896,7 @@ function HistoryTable({ orders, onOrderClick }: { orders: SalesOrder[]; onOrderC
   return (
     <div className="overflow-x-auto rounded-xl border border-white/10">
       <table className="w-full text-left text-sm">
-        <thead className="bg-white/5 text-slate-400 font-medium">
+        <thead className="bg-white/5 text-white/50 font-medium">
           <tr>
             <th className="p-4">Orden</th>
             <th className="p-4">Fecha</th>
@@ -916,8 +916,8 @@ function HistoryTable({ orders, onOrderClick }: { orders: SalesOrder[]; onOrderC
                 className="hover:bg-white/5 transition-colors cursor-pointer"
                 onClick={() => onOrderClick(order)}
               >
-                <td className="p-4 font-mono text-slate-300">{order.orderNumber}</td>
-                <td className="p-4 text-slate-300">
+                <td className="p-4 font-mono text-white/70">{order.orderNumber}</td>
+                <td className="p-4 text-white/70">
                   {new Date(order.createdAt).toLocaleDateString("es-MX", {
                     day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
                   })}
@@ -1000,7 +1000,7 @@ function OrdersContent({ shopId }: { shopId: string }) {
                 </div>
                 <div>
                   <h1 className="font-display text-2xl font-bold text-white">Pedidos</h1>
-                  <p className="text-slate-400 text-sm">Centro de comandos</p>
+                  <p className="text-white/50 text-sm">Centro de comandos</p>
                 </div>
               </div>
             </div>
@@ -1013,7 +1013,7 @@ function OrdersContent({ shopId }: { shopId: string }) {
                   onClick={() => setViewMode("active")}
                   className={cn(
                     "px-4 py-1.5 rounded-md text-sm font-medium transition-all",
-                    viewMode === "active" ? "bg-amber-500 text-white shadow-lg" : "text-slate-400 hover:text-white"
+                    viewMode === "active" ? "bg-amber-500 text-white shadow-lg" : "text-white/50 hover:text-white"
                   )}
                 >
                   Activos
@@ -1022,7 +1022,7 @@ function OrdersContent({ shopId }: { shopId: string }) {
                   onClick={() => setViewMode("history")}
                   className={cn(
                     "px-4 py-1.5 rounded-md text-sm font-medium transition-all",
-                    viewMode === "history" ? "bg-slate-700 text-white shadow-lg" : "text-slate-400 hover:text-white"
+                    viewMode === "history" ? "bg-slate-700 text-white shadow-lg" : "text-white/50 hover:text-white"
                   )}
                 >
                   Historial
@@ -1034,7 +1034,7 @@ function OrdersContent({ shopId }: { shopId: string }) {
                 onClick={() => setSoundEnabled(!soundEnabled)}
                 className={cn(
                   "p-2 rounded-lg transition-colors",
-                  soundEnabled ? "text-amber-400 bg-amber-500/10" : "text-slate-400 bg-white/5"
+                  soundEnabled ? "text-amber-400 bg-amber-500/10" : "text-white/50 bg-white/5"
                 )}
                 title={soundEnabled ? "Sonido activado" : "Sonido desactivado"}
               >
@@ -1084,23 +1084,23 @@ function OrdersContent({ shopId }: { shopId: string }) {
                   <p className="text-2xl font-bold text-green-400">
                     {getOrdersByStatus("delivered").length}
                   </p>
-                  <p className="text-xs text-slate-400">Entregados</p>
+                  <p className="text-xs text-white/50">Entregados</p>
                 </div>
                 <div className="p-4 rounded-xl bg-red-500/10">
                   <p className="text-2xl font-bold text-red-400">
                     {getOrdersByStatus("cancelled").length}
                   </p>
-                  <p className="text-xs text-slate-400">Cancelados</p>
+                  <p className="text-xs text-white/50">Cancelados</p>
                 </div>
                 <div className="p-4 rounded-xl bg-blue-500/10">
                   <p className="text-2xl font-bold text-blue-400">{orders.length}</p>
-                  <p className="text-xs text-slate-400">Total pedidos</p>
+                  <p className="text-xs text-white/50">Total pedidos</p>
                 </div>
                 <div className="p-4 rounded-xl bg-gold/10">
                   <p className="text-2xl font-bold text-gold">
                     {orders.filter((o) => o.isWholesale).length}
                   </p>
-                  <p className="text-xs text-slate-400">Mayoristas</p>
+                  <p className="text-xs text-white/50">Mayoristas</p>
                 </div>
               </div>
             </div>
@@ -1110,7 +1110,7 @@ function OrdersContent({ shopId }: { shopId: string }) {
           <div className="space-y-6 animate-in fade-in duration-300">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-white">Historial de Pedidos</h2>
-              <div className="text-sm text-slate-400">
+              <div className="text-sm text-white/50">
                 Mostrando últimos {historyOrders.length} pedidos finalizados
               </div>
             </div>
@@ -1130,12 +1130,12 @@ function ShopSelector({ selectedShopId, onSelect }: { selectedShopId: string; on
   const { shops, isLoading } = useShops();
 
   if (isLoading) {
-    return <div className="text-slate-400">Cargando tiendas...</div>;
+    return <div className="text-white/50">Cargando tiendas...</div>;
   }
 
   return (
     <div className="flex items-center gap-3">
-      <Store className="w-5 h-5 text-slate-400" />
+      <Store className="w-5 h-5 text-white/50" />
       <select
         value={selectedShopId}
         onChange={(e) => onSelect(e.target.value)}
@@ -1156,7 +1156,7 @@ function OrdersPage() {
   const { user, isSuperAdmin } = useAuth();
   const [selectedShopId, setSelectedShopId] = useState<string>("");
 
-  if (!user) return <div className="p-8 text-center text-slate-400">Cargando sesión...</div>;
+  if (!user) return <div className="p-8 text-center text-white/50">Cargando sesión...</div>;
 
   // Super Admin needs to select a shop
   const shopId = isSuperAdmin ? selectedShopId : (user.shopId || "");
@@ -1171,7 +1171,7 @@ function OrdersPage() {
               <Package className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-2xl font-bold text-white mb-2">Centro de Pedidos</h1>
-            <p className="text-slate-400">Como Super Admin, selecciona una tienda para ver sus pedidos</p>
+            <p className="text-white/50">Como Super Admin, selecciona una tienda para ver sus pedidos</p>
           </div>
           <ShopSelector selectedShopId={selectedShopId} onSelect={setSelectedShopId} />
         </div>
@@ -1183,7 +1183,7 @@ function OrdersPage() {
   if (!shopId) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center text-slate-400">
+        <div className="text-center text-white/50">
           <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
           <p>No hay tienda asignada a tu cuenta</p>
         </div>

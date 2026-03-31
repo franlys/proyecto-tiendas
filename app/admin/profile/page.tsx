@@ -50,7 +50,7 @@ function ProfileRedirect() {
     return (
         <div className="min-h-screen bg-[#0F172A] flex flex-col items-center justify-center gap-4">
             <Loader2 className="w-10 h-10 text-cyan-500 animate-spin" />
-            <p className="text-slate-400">Redirigiendo al panel de configuración...</p>
+            <p className="text-white/50">Redirigiendo al panel de configuración...</p>
         </div>
     );
 }

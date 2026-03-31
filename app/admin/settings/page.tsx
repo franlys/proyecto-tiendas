@@ -318,7 +318,7 @@ export default function AdminSettingsPage() {
                 <h1 className="font-display text-2xl font-bold text-white">
                   Configuración de Tienda
                 </h1>
-                <p className="text-slate-400 text-sm">
+                <p className="text-white/50 text-sm">
                   Personaliza tu marca, diseño y redes sociales
                 </p>
               </div>
@@ -357,7 +357,7 @@ export default function AdminSettingsPage() {
                   "flex items-center gap-2 px-4 py-3 border-b-2 transition-colors",
                   activeTab === tab.id
                     ? "border-primary text-primary"
-                    : "border-transparent text-slate-400 hover:text-white"
+                    : "border-transparent text-white/50 hover:text-white"
                 )}
               >
                 <tab.icon className="w-4 h-4" />
@@ -390,7 +390,7 @@ export default function AdminSettingsPage() {
                         Tech 3D Breakout activo
                         <span className="bg-gradient-to-r from-violet-500 to-cyan-500 text-white text-[9px] px-2 py-0.5 rounded-full font-black">3D</span>
                       </p>
-                      <p className="text-slate-400 text-xs mt-0.5">
+                      <p className="text-white/50 text-xs mt-0.5">
                         Ve a <strong className="text-cyan-400">Diseño Visual</strong> para subir la foto del producto hero (la imagen que "rompe la pantalla")
                       </p>
                     </div>
@@ -406,7 +406,7 @@ export default function AdminSettingsPage() {
                   </h2>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm text-slate-400 mb-2">
+                      <label className="block text-sm text-white/50 mb-2">
                         Nombre de la Tienda
                       </label>
                       <input
@@ -418,7 +418,7 @@ export default function AdminSettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm text-slate-400 mb-2">
+                      <label className="block text-sm text-white/50 mb-2">
                         Slogan / Frase Corta
                       </label>
                       <input
@@ -430,7 +430,7 @@ export default function AdminSettingsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm text-slate-400 mb-2">
+                      <label className="block text-sm text-white/50 mb-2">
                         Descripción
                       </label>
                       <textarea
@@ -452,7 +452,7 @@ export default function AdminSettingsPage() {
                   </h2>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm text-slate-400 mb-2">Dirección</label>
+                      <label className="block text-sm text-white/50 mb-2">Dirección</label>
                       <AddressInput
                         value={config.address}
                         onChange={(val) => updateConfig({ address: val })}
@@ -460,7 +460,7 @@ export default function AdminSettingsPage() {
                     </div>
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm text-slate-400 mb-2">WhatsApp</label>
+                        <label className="block text-sm text-white/50 mb-2">WhatsApp</label>
                         <input
                           type="tel"
                           value={config.whatsapp}
@@ -470,7 +470,7 @@ export default function AdminSettingsPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm text-slate-400 mb-2">Teléfono</label>
+                        <label className="block text-sm text-white/50 mb-2">Teléfono</label>
                         <input
                           type="tel"
                           value={config.phone}
@@ -527,7 +527,7 @@ export default function AdminSettingsPage() {
                   <div className="grid sm:grid-cols-2 gap-6 mb-6">
                     {/* Primary Color */}
                     <div>
-                      <label className="block text-sm text-slate-400 mb-2">
+                      <label className="block text-sm text-white/50 mb-2">
                         Color Principal
                       </label>
                       <div className="flex items-center gap-3">
@@ -557,7 +557,7 @@ export default function AdminSettingsPage() {
 
                     {/* Accent Color */}
                     <div>
-                      <label className="block text-sm text-slate-400 mb-2">
+                      <label className="block text-sm text-white/50 mb-2">
                         Color de Acento
                       </label>
                       <div className="flex items-center gap-3">
@@ -588,7 +588,7 @@ export default function AdminSettingsPage() {
 
                   {/* Preset Themes */}
                   <div>
-                    <label className="block text-sm text-slate-400 mb-3">
+                    <label className="block text-sm text-white/50 mb-3">
                       Temas Predefinidos
                     </label>
                     <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
@@ -620,7 +620,7 @@ export default function AdminSettingsPage() {
                               />
                             </div>
                             <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                              <span className="text-xs text-slate-400">{preset.label}</span>
+                              <span className="text-xs text-white/50">{preset.label}</span>
                             </div>
                             {isSelected && (
                               <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white flex items-center justify-center">
@@ -642,7 +642,7 @@ export default function AdminSettingsPage() {
                   </h2>
                   {isSuperAdmin ? (
                     <>
-                      <p className="text-sm text-slate-400 mb-6 font-medium">
+                      <p className="text-sm text-white/50 mb-6 font-medium">
                         Elige el estilo visual. Usa <strong className="text-white">/admin/templates</strong> para gestión avanzada.
                       </p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -669,7 +669,7 @@ export default function AdminSettingsPage() {
                                 )}
                               </div>
                             </div>
-                            <p className="text-[11px] text-slate-500 leading-relaxed font-medium">{tpl.description}</p>
+                            <p className="text-[11px] text-white/40 leading-relaxed font-medium">{tpl.description}</p>
                             {config.templateType === tpl.id && (
                               <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
                                 <Check className="w-3 h-3 text-white" />
@@ -688,7 +688,7 @@ export default function AdminSettingsPage() {
                         <p className="text-white font-medium">
                           Plantilla actual: <span className="text-primary">{config.templateType || "Estándar"}</span>
                         </p>
-                        <p className="text-slate-400 text-xs mt-0.5">
+                        <p className="text-white/50 text-xs mt-0.5">
                           El diseño de tu tienda es gestionado por el equipo. Contacta a soporte para solicitar cambios.
                         </p>
                       </div>
@@ -706,7 +706,7 @@ export default function AdminSettingsPage() {
                         Tech 3D
                       </span>
                     </h2>
-                    <p className="text-sm text-slate-400 mb-5 leading-relaxed">
+                    <p className="text-sm text-white/50 mb-5 leading-relaxed">
                       Esta imagen es la que <span className="text-cyan-300 font-semibold">"rompe la pantalla"</span> en la animación Screen Breakout del hero. Sube una foto de tu producto estrella — un celular, tablet, laptop, etc. Idealmente con fondo oscuro o transparente (PNG).
                     </p>
 
@@ -723,15 +723,15 @@ export default function AdminSettingsPage() {
 
                       <div className="space-y-3">
                         <div className="p-4 rounded-xl bg-black/40 border border-white/8 space-y-3">
-                          <p className="text-xs text-slate-400 font-semibold uppercase tracking-widest">Recomendaciones</p>
-                          <ul className="space-y-2 text-xs text-slate-500 leading-relaxed">
+                          <p className="text-xs text-white/50 font-semibold uppercase tracking-widest">Recomendaciones</p>
+                          <ul className="space-y-2 text-xs text-white/40 leading-relaxed">
                             <li className="flex items-start gap-2">
                               <span className="text-cyan-400 mt-0.5">✦</span>
-                              <span>Formato <strong className="text-slate-300">PNG con fondo transparente</strong> para el mejor efecto 3D</span>
+                              <span>Formato <strong className="text-white/70">PNG con fondo transparente</strong> para el mejor efecto 3D</span>
                             </li>
                             <li className="flex items-start gap-2">
                               <span className="text-cyan-400 mt-0.5">✦</span>
-                              <span>Resolución mínima <strong className="text-slate-300">500×500px</strong></span>
+                              <span>Resolución mínima <strong className="text-white/70">500×500px</strong></span>
                             </li>
                             <li className="flex items-start gap-2">
                               <span className="text-cyan-400 mt-0.5">✦</span>
@@ -751,7 +751,7 @@ export default function AdminSettingsPage() {
                             </div>
                             <div>
                               <p className="text-emerald-400 text-xs font-black uppercase tracking-widest">Imagen cargada</p>
-                              <p className="text-slate-500 text-[10px] mt-0.5">Aparecerá en la animación Screen Breakout</p>
+                              <p className="text-white/40 text-[10px] mt-0.5">Aparecerá en la animación Screen Breakout</p>
                             </div>
                           </div>
                         )}
@@ -766,13 +766,13 @@ export default function AdminSettingsPage() {
                     <div className="flex items-center gap-3">
                       <div className={cn(
                         "p-2 rounded-xl transition-colors",
-                        config.requestQuoteEnabled ? "bg-cyan-500/20 text-cyan-400" : "bg-white/5 text-slate-500"
+                        config.requestQuoteEnabled ? "bg-cyan-500/20 text-cyan-400" : "bg-white/5 text-white/40"
                       )}>
                         <HelpCircle className="w-5 h-5" />
                       </div>
                       <div>
                         <h3 className="text-white font-bold tracking-tight">¿No ves lo que buscas?</h3>
-                        <p className="text-xs text-slate-500">Habilita una sección para pedidos personalizados de tecnología.</p>
+                        <p className="text-xs text-white/40">Habilita una sección para pedidos personalizados de tecnología.</p>
                       </div>
                     </div>
                     <button
@@ -797,13 +797,13 @@ export default function AdminSettingsPage() {
                     <div className="flex items-center gap-3">
                       <div className={cn(
                         "p-2 rounded-xl transition-colors",
-                        config.wholesaleEnabled ? "bg-amber-500/20 text-amber-400" : "bg-white/5 text-slate-500"
+                        config.wholesaleEnabled ? "bg-amber-500/20 text-amber-400" : "bg-white/5 text-white/40"
                       )}>
                         <ShoppingBag className="w-5 h-5" />
                       </div>
                       <div>
                         <h3 className="text-white font-bold tracking-tight">Modo Mayorista</h3>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-white/40">
                           {config.wholesaleEnabled
                             ? "El botón de mayoristas aparece en tu tienda. Ve a Mayoristas para gestionar distribuidores."
                             : "Activa precios especiales para distribuidores registrados."}
@@ -841,7 +841,7 @@ export default function AdminSettingsPage() {
                         "flex items-center gap-2 px-4 py-2 rounded-lg transition-all",
                         config.backgroundType === "preset"
                           ? "bg-primary text-white"
-                          : "bg-white/5 text-slate-400 hover:bg-white/10"
+                          : "bg-white/5 text-white/50 hover:bg-white/10"
                       )}
                     >
                       <Layers className="w-4 h-4" />
@@ -853,7 +853,7 @@ export default function AdminSettingsPage() {
                         "flex items-center gap-2 px-4 py-2 rounded-lg transition-all",
                         config.backgroundType === "image"
                           ? "bg-primary text-white"
-                          : "bg-white/5 text-slate-400 hover:bg-white/10"
+                          : "bg-white/5 text-white/50 hover:bg-white/10"
                       )}
                     >
                       <ImageIcon className="w-4 h-4" />
@@ -865,7 +865,7 @@ export default function AdminSettingsPage() {
                         "flex items-center gap-2 px-4 py-2 rounded-lg transition-all",
                         config.backgroundType === "video"
                           ? "bg-primary text-white"
-                          : "bg-white/5 text-slate-400 hover:bg-white/10"
+                          : "bg-white/5 text-white/50 hover:bg-white/10"
                       )}
                     >
                       <Video className="w-4 h-4" />
@@ -895,7 +895,7 @@ export default function AdminSettingsPage() {
                             </div>
                             <div className="flex-1">
                               <p className="text-white font-medium">{option.name}</p>
-                              <p className="text-sm text-slate-400">{option.description}</p>
+                              <p className="text-sm text-white/50">{option.description}</p>
                             </div>
                             {isSelected && (
                               <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center flex-shrink-0">
@@ -912,7 +912,7 @@ export default function AdminSettingsPage() {
                   {config.backgroundType === "image" && (
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm text-slate-400 mb-3">
+                        <label className="block text-sm text-white/50 mb-3">
                           Imágenes de ejemplo
                         </label>
                         <div className="grid grid-cols-4 gap-3">
@@ -950,7 +950,7 @@ export default function AdminSettingsPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm text-slate-400 mb-2">
+                        <label className="block text-sm text-white/50 mb-2">
                           <Upload className="w-4 h-4 inline mr-1" />
                           Sube tu propia imagen
                         </label>
@@ -970,13 +970,13 @@ export default function AdminSettingsPage() {
                           <div className="w-full border-t border-white/10"></div>
                         </div>
                         <div className="relative flex justify-center">
-                          <span className="px-3 bg-surface text-xs text-slate-500">o pega una URL</span>
+                          <span className="px-3 bg-surface text-xs text-white/40">o pega una URL</span>
                         </div>
                       </div>
 
                       <div className="flex gap-2">
                         <div className="flex-1 relative">
-                          <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                          <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
                           <input
                             type="url"
                             value={config.backgroundUrl}
@@ -993,7 +993,7 @@ export default function AdminSettingsPage() {
                   {config.backgroundType === "video" && (
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm text-slate-400 mb-3">
+                        <label className="block text-sm text-white/50 mb-3">
                           Videos de ejemplo
                         </label>
                         <div className="grid grid-cols-3 gap-3">
@@ -1034,7 +1034,7 @@ export default function AdminSettingsPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm text-slate-400 mb-2">
+                        <label className="block text-sm text-white/50 mb-2">
                           <Upload className="w-4 h-4 inline mr-1" />
                           Sube tu propio video
                         </label>
@@ -1054,13 +1054,13 @@ export default function AdminSettingsPage() {
                           <div className="w-full border-t border-white/10"></div>
                         </div>
                         <div className="relative flex justify-center">
-                          <span className="px-3 bg-surface text-xs text-slate-500">o pega una URL</span>
+                          <span className="px-3 bg-surface text-xs text-white/40">o pega una URL</span>
                         </div>
                       </div>
 
                       <div className="flex gap-2">
                         <div className="flex-1 relative">
-                          <Video className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                          <Video className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
                           <input
                             type="url"
                             value={config.backgroundUrl}
@@ -1077,7 +1077,7 @@ export default function AdminSettingsPage() {
                   {(config.backgroundType === "image" || config.backgroundType === "video") && config.backgroundUrl && (
                     <div className="mt-6 pt-6 border-t border-white/10">
                       <div className="flex items-center justify-between mb-3">
-                        <label className="text-sm text-slate-400 flex items-center gap-2">
+                        <label className="text-sm text-white/50 flex items-center gap-2">
                           <Sun className="w-4 h-4" />
                           Oscurecer Fondo (Legibilidad)
                         </label>
@@ -1094,7 +1094,7 @@ export default function AdminSettingsPage() {
                         onChange={(e) => updateConfig({ overlayOpacity: parseInt(e.target.value) })}
                         className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-lg"
                       />
-                      <div className="flex justify-between text-xs text-slate-500 mt-1">
+                      <div className="flex justify-between text-xs text-white/40 mt-1">
                         <span>Sin overlay</span>
                         <span>Muy oscuro</span>
                       </div>
@@ -1109,7 +1109,7 @@ export default function AdminSettingsPage() {
                     Audio de Fondo
                   </h2>
 
-                  <p className="text-sm text-slate-400 mb-4">
+                  <p className="text-sm text-white/50 mb-4">
                     Agrega música ambiental a tu tienda. El usuario puede silenciarlo con un botón flotante.
                   </p>
 
@@ -1118,12 +1118,12 @@ export default function AdminSettingsPage() {
                     onClick={() => updateConfig({ audioEnabled: !config.audioEnabled })}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={cn("p-2 rounded-full", config.audioEnabled ? "bg-primary/20 text-primary" : "bg-white/10 text-slate-400")}>
+                      <div className={cn("p-2 rounded-full", config.audioEnabled ? "bg-primary/20 text-primary" : "bg-white/10 text-white/50")}>
                         <Volume2 className="w-5 h-5" />
                       </div>
                       <div>
                         <p className="text-white font-medium">Habilitar Audio de Fondo</p>
-                        <p className="text-xs text-slate-500">Reproducir música automáticamente</p>
+                        <p className="text-xs text-white/40">Reproducir música automáticamente</p>
                       </div>
                     </div>
                     <div
@@ -1144,11 +1144,11 @@ export default function AdminSettingsPage() {
                   {config.audioEnabled && (
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm text-slate-400 mb-2">
+                        <label className="block text-sm text-white/50 mb-2">
                           URL del Audio (MP3, WAV, OGG)
                         </label>
                         <div className="relative">
-                          <Music className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                          <Music className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
                           <input
                             type="url"
                             value={config.audioUrl}
@@ -1157,14 +1157,14 @@ export default function AdminSettingsPage() {
                             className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 transition-colors text-sm"
                           />
                         </div>
-                        <p className="text-xs text-slate-500 mt-2">
+                        <p className="text-xs text-white/40 mt-2">
                           Usa enlaces directos a archivos de audio (no YouTube). Recomendamos archivos MP3 ligeros.
                         </p>
                       </div>
 
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <label className="text-sm text-slate-400 flex items-center gap-2">
+                          <label className="text-sm text-white/50 flex items-center gap-2">
                             <Volume2 className="w-4 h-4" />
                             Volumen
                           </label>
@@ -1179,14 +1179,14 @@ export default function AdminSettingsPage() {
                           onChange={(e) => updateConfig({ audioVolume: parseInt(e.target.value) })}
                           className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-lg"
                         />
-                        <div className="flex justify-between text-xs text-slate-500 mt-1">
+                        <div className="flex justify-between text-xs text-white/40 mt-1">
                           <span>Bajo</span>
                           <span>Alto</span>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                        <span className="text-sm text-slate-300">Repetir en bucle</span>
+                        <span className="text-sm text-white/70">Repetir en bucle</span>
                         <button
                           onClick={() => updateConfig({ audioLoop: !config.audioLoop })}
                           className={cn(
@@ -1215,14 +1215,14 @@ export default function AdminSettingsPage() {
                   <Globe className="w-4 h-4 text-gold" />
                   Redes Sociales
                 </h2>
-                <p className="text-sm text-slate-400 mb-6">
+                <p className="text-sm text-white/50 mb-6">
                   Conecta tus redes sociales para que tus clientes puedan seguirte.
                 </p>
 
                 <div className="space-y-4">
                   {/* Instagram */}
                   <div>
-                    <label className="block text-sm text-slate-400 mb-2">
+                    <label className="block text-sm text-white/50 mb-2">
                       Instagram
                     </label>
                     <div className="relative">
@@ -1239,7 +1239,7 @@ export default function AdminSettingsPage() {
 
                   {/* Facebook */}
                   <div>
-                    <label className="block text-sm text-slate-400 mb-2">
+                    <label className="block text-sm text-white/50 mb-2">
                       Facebook
                     </label>
                     <div className="relative">
@@ -1256,11 +1256,11 @@ export default function AdminSettingsPage() {
 
                   {/* TikTok */}
                   <div>
-                    <label className="block text-sm text-slate-400 mb-2">
+                    <label className="block text-sm text-white/50 mb-2">
                       TikTok
                     </label>
                     <div className="relative">
-                      <Music className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Music className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
                       <input
                         type="text"
                         value={config.tiktok}
@@ -1273,7 +1273,7 @@ export default function AdminSettingsPage() {
 
                   {/* Website */}
                   <div>
-                    <label className="block text-sm text-slate-400 mb-2">
+                    <label className="block text-sm text-white/50 mb-2">
                       Sitio Web
                     </label>
                     <div className="relative">
@@ -1415,20 +1415,20 @@ export default function AdminSettingsPage() {
                     className="w-8 h-8 rounded-full mx-auto mb-1 shadow-lg"
                     style={{ backgroundColor: config.primaryColor }}
                   />
-                  <span className="text-xs text-slate-500">Principal</span>
+                  <span className="text-xs text-white/40">Principal</span>
                 </div>
                 <div className="text-center">
                   <div
                     className="w-8 h-8 rounded-full mx-auto mb-1 shadow-lg"
                     style={{ backgroundColor: config.accentColor }}
                   />
-                  <span className="text-xs text-slate-500">Acento</span>
+                  <span className="text-xs text-white/40">Acento</span>
                 </div>
               </div>
 
               {/* Background Type Badge */}
               <div className="mt-4 text-center">
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/10 text-xs text-slate-300">
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/10 text-xs text-white/70">
                   {config.backgroundType === "preset" && <Layers className="w-3 h-3" />}
                   {config.backgroundType === "image" && <ImageIcon className="w-3 h-3" />}
                   {config.backgroundType === "video" && <Video className="w-3 h-3" />}
@@ -1438,14 +1438,14 @@ export default function AdminSettingsPage() {
                 </span>
               </div>
 
-              <p className="text-center text-slate-500 text-xs mt-4">
+              <p className="text-center text-white/40 text-xs mt-4">
                 Vista previa en tiempo real
               </p>
             </div>
 
             {/* Quick Actions */}
             <div className="mt-4 glass-panel rounded-2xl p-4">
-              <p className="text-slate-400 text-sm mb-3">Acciones rápidas</p>
+              <p className="text-white/50 text-sm mb-3">Acciones rápidas</p>
               <div className="space-y-2">
                 <a
                   href={`/${user?.shopId || "demo"}`}

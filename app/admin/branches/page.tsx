@@ -321,7 +321,7 @@ export default function BranchesPage() {
           </div>
         ) : sortedBranches.length === 0 ? (
           <div className="glass-panel rounded-2xl border border-white/10 py-20 text-center">
-            <Store className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+            <Store className="w-16 h-16 text-white/30 mx-auto mb-4" />
             <h3 className="text-white font-semibold text-lg mb-2">Sin sucursales registradas</h3>
             <p className="text-white/50 text-sm mb-6">Crea tu primera sucursal para activar el sistema multi-ubicación</p>
             <Button onClick={() => setShowForm(true)}>

@@ -213,7 +213,7 @@ function ShopCoordinatesConfig({ shopId: inputId }: ShopCoordinatesProps) {
 
             {/* Manual coordinates input */}
             <div className="pt-4 border-t border-zinc-800">
-                <p className="text-xs text-zinc-500 mb-2">O ingresa las coordenadas manualmente:</p>
+                <p className="text-xs text-white/40 mb-2">O ingresa las coordenadas manualmente:</p>
                 <div className="flex gap-2">
                     <input
                         type="number"
@@ -407,7 +407,7 @@ function PackageEditor({ package_, onSave, onClose, isSaving = false }: PackageE
                             <div>
                                 <label className="block text-sm text-zinc-400 mb-1">Precio</label>
                                 <div className="relative">
-                                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                                     <input
                                         type="number"
                                         value={price}
@@ -471,7 +471,7 @@ function PackageEditor({ package_, onSave, onClose, isSaving = false }: PackageE
                                 folder="training-packages"
                                 shopId="admin" // Using admin or resolve proper shopId if needed
                             />
-                            <p className="text-xs text-zinc-500 mt-2">
+                            <p className="text-xs text-white/40 mt-2">
                                 Una imagen atractiva ayuda a que los clientes se interesen más.
                             </p>
                         </div>
@@ -495,7 +495,7 @@ function PackageEditor({ package_, onSave, onClose, isSaving = false }: PackageE
                                         Cargo por milla extra
                                     </label>
                                     <div className="relative">
-                                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                                         <input
                                             type="number"
                                             value={extraMileFee}
@@ -627,7 +627,7 @@ function PackageCard({ package_, onEdit, onDelete, onToggleActive }: PackageCard
                         <p className="text-2xl font-bold text-primary">
                             ${package_.price.toLocaleString()}
                         </p>
-                        <p className="text-xs text-zinc-500">
+                        <p className="text-xs text-white/40">
                             {BILLING_CYCLE_LABELS[package_.billingCycle]}
                         </p>
                     </div>
@@ -665,7 +665,7 @@ function PackageCard({ package_, onEdit, onDelete, onToggleActive }: PackageCard
                             </div>
                         ))}
                         {package_.includes.length > 3 && (
-                            <p className="text-xs text-zinc-500 pl-6">
+                            <p className="text-xs text-white/40 pl-6">
                                 +{package_.includes.length - 3} más
                             </p>
                         )}
@@ -674,7 +674,7 @@ function PackageCard({ package_, onEdit, onDelete, onToggleActive }: PackageCard
 
                 {/* Distance info */}
                 {package_.locationType !== "online" && package_.maxDistanceMiles && (
-                    <div className="text-xs text-zinc-500 mb-4 p-2 bg-zinc-800/50 rounded-lg">
+                    <div className="text-xs text-white/40 mb-4 p-2 bg-zinc-800/50 rounded-lg">
                         {package_.maxDistanceMiles} millas incluidas
                         {package_.extraMileFee ? ` · $${package_.extraMileFee}/milla extra` : ""}
                     </div>
@@ -873,7 +873,7 @@ function TrainingPackagesContent({ shopId: inputId }: { shopId: string }) {
             {/* Packages Grid */}
             {packages.length === 0 ? (
                 <div className="text-center py-16 bg-zinc-900 rounded-xl border border-zinc-800">
-                    <Dumbbell className="w-16 h-16 text-zinc-600 mx-auto mb-4" />
+                    <Dumbbell className="w-16 h-16 text-white/30 mx-auto mb-4" />
                     <h2 className="text-xl font-bold text-white mb-2">Sin paquetes</h2>
                     <p className="text-zinc-400 mb-6 max-w-md mx-auto">
                         Aún no tienes paquetes de entrenamiento. Crea uno nuevo o carga los paquetes predeterminados.
@@ -949,7 +949,7 @@ function ShopSelector({ onSelect }: { onSelect: (shopId: string) => void }) {
     if (shops.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-                <Store className="w-16 h-16 text-zinc-500" />
+                <Store className="w-16 h-16 text-white/40" />
                 <h2 className="text-xl font-bold text-white">No hay tiendas</h2>
                 <p className="text-zinc-400 text-center max-w-md">
                     No hay tiendas disponibles.
@@ -984,16 +984,16 @@ function ShopSelector({ onSelect }: { onSelect: (shopId: string) => void }) {
                         )}
                         <div className="flex-1 min-w-0">
                             <h3 className="text-white font-medium truncate">{shop.name}</h3>
-                            <p className="text-sm text-zinc-500 truncate">/{shop.slug}</p>
+                            <p className="text-sm text-white/40 truncate">/{shop.slug}</p>
                         </div>
-                        <ChevronDown className="w-5 h-5 text-zinc-500 group-hover:text-primary -rotate-90 transition-all" />
+                        <ChevronDown className="w-5 h-5 text-white/40 group-hover:text-primary -rotate-90 transition-all" />
                     </button>
                 ))}
             </div>
 
             <Link
                 href="/admin"
-                className="text-sm text-zinc-500 hover:text-white flex items-center gap-2 mt-4"
+                className="text-sm text-white/40 hover:text-white flex items-center gap-2 mt-4"
             >
                 <ArrowLeft className="w-4 h-4" />
                 Volver al Panel
@@ -1022,7 +1022,7 @@ function TrainingPackagesPageInner() {
 
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-                <Package className="w-16 h-16 text-zinc-500" />
+                <Package className="w-16 h-16 text-white/40" />
                 <h2 className="text-xl font-bold text-white">Error de Configuración</h2>
                 <p className="text-zinc-400 text-center max-w-md">
                     Tu cuenta no tiene una tienda asociada. Contacta al administrador.

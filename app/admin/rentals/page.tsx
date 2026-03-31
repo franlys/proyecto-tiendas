@@ -54,7 +54,7 @@ const STATUS_CONFIG: Record<RentalStatus, {
   },
   completed: {
     label: "Completada",
-    color: "text-slate-400",
+    color: "text-white/50",
     bgColor: "bg-slate-500/20",
     icon: Square,
   },
@@ -291,7 +291,7 @@ export default function RentalsPage() {
             <Key className="text-cyan-400" />
             Gestión de Rentas
           </h1>
-          <p className="text-slate-400 text-sm">Administra reservaciones y entregas</p>
+          <p className="text-white/50 text-sm">Administra reservaciones y entregas</p>
         </div>
       </header>
 
@@ -299,36 +299,36 @@ export default function RentalsPage() {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         <div className="p-4 rounded-xl bg-white/5 border border-white/10">
           <div className="text-2xl font-bold text-white">{stats.total}</div>
-          <div className="text-sm text-slate-400">Total Rentas</div>
+          <div className="text-sm text-white/50">Total Rentas</div>
         </div>
         <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/30">
           <div className="text-2xl font-bold text-yellow-400">{stats.pending}</div>
-          <div className="text-sm text-slate-400">Pendientes</div>
+          <div className="text-sm text-white/50">Pendientes</div>
         </div>
         <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/30">
           <div className="text-2xl font-bold text-blue-400">{stats.confirmed}</div>
-          <div className="text-sm text-slate-400">Confirmadas</div>
+          <div className="text-sm text-white/50">Confirmadas</div>
         </div>
         <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/30">
           <div className="text-2xl font-bold text-green-400">{stats.active}</div>
-          <div className="text-sm text-slate-400">En Curso</div>
+          <div className="text-sm text-white/50">En Curso</div>
         </div>
         <div className="p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/30">
           <div className="text-2xl font-bold text-cyan-400">${stats.revenue.toLocaleString()}</div>
-          <div className="text-sm text-slate-400">Ingresos</div>
+          <div className="text-sm text-white/50">Ingresos</div>
         </div>
       </div>
 
       {/* Filters */}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
           <input
             type="text"
             placeholder="Buscar por cliente, teléfono, reserva o vehículo..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-cyan-500"
           />
         </div>
 
@@ -388,7 +388,7 @@ export default function RentalsPage() {
                         <h3 className="font-bold text-white mt-1">
                           {rental.vehicleSnapshot.name}
                         </h3>
-                        <p className="text-sm text-slate-400">
+                        <p className="text-sm text-white/50">
                           {rental.vehicleSnapshot.plate}
                         </p>
                       </div>
@@ -397,7 +397,7 @@ export default function RentalsPage() {
                         <div className="text-2xl font-bold text-white">
                           ${rental.total.toLocaleString()}
                         </div>
-                        <div className="text-sm text-slate-400">
+                        <div className="text-sm text-white/50">
                           {rental.totalDays} días
                         </div>
                       </div>
@@ -407,25 +407,25 @@ export default function RentalsPage() {
                     <div className="grid md:grid-cols-2 gap-4 mt-4">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 text-sm">
-                          <User className="w-4 h-4 text-slate-400" />
+                          <User className="w-4 h-4 text-white/50" />
                           <span className="text-white">{rental.customerName}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm">
-                          <Phone className="w-4 h-4 text-slate-400" />
-                          <span className="text-slate-300">{rental.customerPhone}</span>
+                          <Phone className="w-4 h-4 text-white/50" />
+                          <span className="text-white/70">{rental.customerPhone}</span>
                         </div>
                       </div>
 
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 text-sm">
-                          <Calendar className="w-4 h-4 text-slate-400" />
+                          <Calendar className="w-4 h-4 text-white/50" />
                           <span className="text-white">
                             {formatRentalDates(rental.pickupDate, rental.returnDate)}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 text-sm">
-                          <MapPin className="w-4 h-4 text-slate-400" />
-                          <span className="text-slate-300">
+                          <MapPin className="w-4 h-4 text-white/50" />
+                          <span className="text-white/70">
                             {rental.pickupLocation}
                             {rental.returnLocation !== rental.pickupLocation && (
                               <> → {rental.returnLocation}</>
@@ -521,7 +521,7 @@ export default function RentalsPage() {
         })}
 
         {filteredRentals.length === 0 && (
-          <div className="text-center py-12 text-slate-500">
+          <div className="text-center py-12 text-white/40">
             <Key className="w-16 h-16 mx-auto mb-4 opacity-50" />
             <p>No se encontraron rentas</p>
           </div>
@@ -537,13 +537,13 @@ export default function RentalsPage() {
                 <h2 className="text-xl font-bold">
                   Reserva {selectedRental.rentalNumber}
                 </h2>
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-white/50">
                   {STATUS_CONFIG[selectedRental.status].label}
                 </p>
               </div>
               <button
                 onClick={() => setShowDetails(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-white/50 hover:text-white"
               >
                 <XCircle className="w-6 h-6" />
               </button>
@@ -561,7 +561,7 @@ export default function RentalsPage() {
                   <h3 className="font-bold text-white text-lg">
                     {selectedRental.vehicleSnapshot.name}
                   </h3>
-                  <p className="text-slate-400">{selectedRental.vehicleSnapshot.plate}</p>
+                  <p className="text-white/50">{selectedRental.vehicleSnapshot.plate}</p>
                 </div>
               </div>
 
@@ -573,28 +573,28 @@ export default function RentalsPage() {
                 </h4>
                 <div className="grid md:grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-slate-400">Nombre:</span>
+                    <span className="text-white/50">Nombre:</span>
                     <span className="ml-2 text-white">{selectedRental.customerName}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400">Teléfono:</span>
+                    <span className="text-white/50">Teléfono:</span>
                     <span className="ml-2 text-white">{selectedRental.customerPhone}</span>
                   </div>
                   {selectedRental.customerEmail && (
                     <div>
-                      <span className="text-slate-400">Email:</span>
+                      <span className="text-white/50">Email:</span>
                       <span className="ml-2 text-white">{selectedRental.customerEmail}</span>
                     </div>
                   )}
                   {selectedRental.customerIdNumber && (
                     <div>
-                      <span className="text-slate-400">ID:</span>
+                      <span className="text-white/50">ID:</span>
                       <span className="ml-2 text-white">{selectedRental.customerIdNumber}</span>
                     </div>
                   )}
                   {selectedRental.customerLicenseNumber && (
                     <div>
-                      <span className="text-slate-400">Licencia:</span>
+                      <span className="text-white/50">Licencia:</span>
                       <span className="ml-2 text-white">{selectedRental.customerLicenseNumber}</span>
                     </div>
                   )}
@@ -609,20 +609,20 @@ export default function RentalsPage() {
                 </h4>
                 <div className="grid md:grid-cols-2 gap-4 text-sm">
                   <div className="p-3 rounded-lg bg-white/5">
-                    <div className="text-slate-400 mb-1">Recogida</div>
+                    <div className="text-white/50 mb-1">Recogida</div>
                     <div className="text-white font-medium">
                       {selectedRental.pickupDate} a las {selectedRental.pickupTime}
                     </div>
-                    <div className="text-slate-300 text-xs mt-1">
+                    <div className="text-white/70 text-xs mt-1">
                       📍 {selectedRental.pickupLocation}
                     </div>
                   </div>
                   <div className="p-3 rounded-lg bg-white/5">
-                    <div className="text-slate-400 mb-1">Devolución</div>
+                    <div className="text-white/50 mb-1">Devolución</div>
                     <div className="text-white font-medium">
                       {selectedRental.returnDate} a las {selectedRental.returnTime}
                     </div>
-                    <div className="text-slate-300 text-xs mt-1">
+                    <div className="text-white/70 text-xs mt-1">
                       📍 {selectedRental.returnLocation}
                     </div>
                   </div>
@@ -637,14 +637,14 @@ export default function RentalsPage() {
                 </h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-slate-400">
+                    <span className="text-white/50">
                       {selectedRental.totalDays} días x ${selectedRental.dailyRate.toLocaleString()}
                     </span>
                     <span className="text-white">${selectedRental.subtotal.toLocaleString()}</span>
                   </div>
                   {selectedRental.extras.map(extra => (
                     <div key={extra.extraId} className="flex justify-between">
-                      <span className="text-slate-400">{extra.name}</span>
+                      <span className="text-white/50">{extra.name}</span>
                       <span className="text-white">${extra.totalCost.toLocaleString()}</span>
                     </div>
                   ))}
@@ -653,10 +653,10 @@ export default function RentalsPage() {
                     <span className="text-cyan-400">${selectedRental.total.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">
+                    <span className="text-white/50">
                       Depósito ({selectedRental.depositStatus})
                     </span>
-                    <span className="text-slate-300">
+                    <span className="text-white/70">
                       ${selectedRental.depositAmount.toLocaleString()}
                     </span>
                   </div>
@@ -673,7 +673,7 @@ export default function RentalsPage() {
                   <div className="grid md:grid-cols-2 gap-4 text-sm">
                     {selectedRental.mileageAtPickup && (
                       <div>
-                        <span className="text-slate-400">Al entregar:</span>
+                        <span className="text-white/50">Al entregar:</span>
                         <span className="ml-2 text-white">
                           {selectedRental.mileageAtPickup.toLocaleString()} km
                         </span>
@@ -681,7 +681,7 @@ export default function RentalsPage() {
                     )}
                     {selectedRental.mileageAtReturn && (
                       <div>
-                        <span className="text-slate-400">Al devolver:</span>
+                        <span className="text-white/50">Al devolver:</span>
                         <span className="ml-2 text-white">
                           {selectedRental.mileageAtReturn.toLocaleString()} km
                         </span>
@@ -689,7 +689,7 @@ export default function RentalsPage() {
                     )}
                     {selectedRental.mileageAtPickup && selectedRental.mileageAtReturn && (
                       <div>
-                        <span className="text-slate-400">Recorrido:</span>
+                        <span className="text-white/50">Recorrido:</span>
                         <span className="ml-2 text-green-400 font-bold">
                           {(selectedRental.mileageAtReturn - selectedRental.mileageAtPickup).toLocaleString()} km
                         </span>

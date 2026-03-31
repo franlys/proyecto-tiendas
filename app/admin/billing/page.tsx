@@ -48,7 +48,7 @@ function BillingContent() {
   if (authLoading || !isLoaded) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-slate-400">Cargando...</div>
+        <div className="animate-pulse text-white/50">Cargando...</div>
       </div>
     );
   }
@@ -58,7 +58,7 @@ function BillingContent() {
   if (!shop) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-slate-400">Tienda no encontrada</p>
+        <p className="text-white/50">Tienda no encontrada</p>
       </div>
     );
   }
@@ -116,7 +116,7 @@ function BillingContent() {
                   <h1 className="font-display text-2xl font-bold text-white">
                     Facturación
                   </h1>
-                  <p className="text-slate-400 text-sm">
+                  <p className="text-white/50 text-sm">
                     Gestiona tu suscripción
                   </p>
                 </div>
@@ -142,7 +142,7 @@ function BillingContent() {
                   <p className="text-2xl font-bold text-white mb-1">
                     Plan Profesional
                   </p>
-                  <p className="text-slate-400">
+                  <p className="text-white/50">
                     Todas las funciones incluidas
                   </p>
                 </div>
@@ -162,20 +162,20 @@ function BillingContent() {
 
               <div className="grid sm:grid-cols-2 gap-4 mb-6">
                 <div className="p-4 rounded-xl bg-white/5">
-                  <div className="flex items-center gap-2 text-slate-400 mb-1">
+                  <div className="flex items-center gap-2 text-white/50 mb-1">
                     <CreditCard className="w-4 h-4" />
                     <span className="text-sm">Precio mensual</span>
                   </div>
                   <p className="text-2xl font-bold text-white">
                     {shop.currency === "USD" ? "$" : shop.currency === "MXN" ? "MX$" : "RD$"} {shop.monthlyPrice || 0}{" "}
-                    <span className="text-sm text-slate-400 font-normal">
+                    <span className="text-sm text-white/50 font-normal">
                       {shop.currency || "DOP"}/mes
                     </span>
                   </p>
                 </div>
 
                 <div className="p-4 rounded-xl bg-white/5">
-                  <div className="flex items-center gap-2 text-slate-400 mb-1">
+                  <div className="flex items-center gap-2 text-white/50 mb-1">
                     <Calendar className="w-4 h-4" />
                     <span className="text-sm">Próximo cobro</span>
                   </div>
@@ -217,7 +217,7 @@ function BillingContent() {
                         <p className="text-white font-medium">
                           Pago mensual
                         </p>
-                        <p className="text-sm text-slate-400">
+                        <p className="text-sm text-white/50">
                           {new Date(payment.date).toLocaleDateString("es-MX", {
                             day: "numeric",
                             month: "long",
@@ -235,7 +235,7 @@ function BillingContent() {
               </div>
 
               {paymentHistory.length === 0 && (
-                <div className="text-center py-8 text-slate-400">
+                <div className="text-center py-8 text-white/50">
                   <Receipt className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>No hay pagos registrados</p>
                 </div>
@@ -247,7 +247,7 @@ function BillingContent() {
           <div className="space-y-6">
             {/* Shop Info */}
             <div className="glass-panel rounded-2xl p-6 border border-white/10">
-              <h3 className="text-sm font-medium text-slate-400 mb-3">
+              <h3 className="text-sm font-medium text-white/50 mb-3">
                 Tu Tienda
               </h3>
               <div className="flex items-center gap-3 mb-4">
@@ -256,7 +256,7 @@ function BillingContent() {
                 </div>
                 <div>
                   <p className="text-white font-medium">{shop.name}</p>
-                  <p className="text-sm text-slate-400">/{shop.slug}</p>
+                  <p className="text-sm text-white/50">/{shop.slug}</p>
                 </div>
               </div>
               <Link href={`/${shop.slug}`} target="_blank">
@@ -268,7 +268,7 @@ function BillingContent() {
 
             {/* Support */}
             <div className="glass-panel rounded-2xl p-6 border border-white/10">
-              <h3 className="text-sm font-medium text-slate-400 mb-3">
+              <h3 className="text-sm font-medium text-white/50 mb-3">
                 ¿Necesitas ayuda?
               </h3>
               <p className="text-white text-sm mb-4">
@@ -296,7 +296,7 @@ function BillingContent() {
 
             {/* Plan Features */}
             <div className="glass-panel rounded-2xl p-6 border border-white/10">
-              <h3 className="text-sm font-medium text-slate-400 mb-3">
+              <h3 className="text-sm font-medium text-white/50 mb-3">
                 Plan incluye
               </h3>
               <ul className="space-y-2">

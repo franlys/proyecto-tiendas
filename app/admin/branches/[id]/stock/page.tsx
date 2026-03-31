@@ -127,7 +127,7 @@ export default function BranchStockPage() {
               </Link>
               <div>
                 <h1 className="font-bold text-white text-lg">{branch?.name || "Sucursal"} — Inventario</h1>
-                <p className="text-slate-400 text-sm">{branch?.address || "Cargando..."}</p>
+                <p className="text-white/50 text-sm">{branch?.address || "Cargando..."}</p>
               </div>
             </div>
             <Button onClick={handleSaveAll} disabled={!hasChanges || isSaving}>
@@ -141,12 +141,12 @@ export default function BranchStockPage() {
       <main className="container mx-auto px-4 py-8 max-w-3xl">
         {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
 
-        <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10 text-sm text-slate-300">
+        <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10 text-sm text-white/70">
           Ajusta el stock disponible en <span className="text-white font-medium">{branch?.name}</span>. Los precios y descripciones son del catálogo compartido y no cambian por sucursal.
         </div>
 
         <div className="relative mb-6">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
           <input
             type="text"
             value={searchTerm}
@@ -157,9 +157,9 @@ export default function BranchStockPage() {
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-slate-500 animate-spin" /></div>
+          <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-white/40 animate-spin" /></div>
         ) : filteredProducts.length === 0 ? (
-          <div className="text-center py-16 text-slate-500">
+          <div className="text-center py-16 text-white/40">
             <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
             <p>No hay productos en el catálogo</p>
           </div>
@@ -178,7 +178,7 @@ export default function BranchStockPage() {
                 >
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-medium text-sm truncate">{product.name}</p>
-                    <p className="text-slate-500 text-xs">${product.price?.toLocaleString()}</p>
+                    <p className="text-white/40 text-xs">${product.price?.toLocaleString()}</p>
                   </div>
 
                   <div className="flex items-center gap-2">

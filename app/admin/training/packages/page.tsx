@@ -258,7 +258,7 @@ export default function TrainingPackagesPage() {
                 </div>
                 <div>
                   <h1 className="font-display text-2xl font-bold text-white">Planes de Entrenamiento</h1>
-                  <p className="text-slate-400 text-sm">Configura los planes que ofreces</p>
+                  <p className="text-white/50 text-sm">Configura los planes que ofreces</p>
                 </div>
               </div>
             </div>
@@ -278,7 +278,7 @@ export default function TrainingPackagesPage() {
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         {packages.length === 0 && !showForm ? (
-          <div className="text-center py-16 text-slate-400">
+          <div className="text-center py-16 text-white/50">
             <Dumbbell className="w-12 h-12 mx-auto mb-3 opacity-40" />
             <p className="mb-4">No hay planes configurados.</p>
             <div className="flex gap-3 justify-center">
@@ -306,18 +306,18 @@ export default function TrainingPackagesPage() {
                     <div className="flex items-center gap-2">
                       <h3 className="text-white font-bold text-lg">{pkg.name}</h3>
                       {!pkg.isActive && (
-                        <span className="text-xs bg-white/10 text-slate-400 px-2 py-0.5 rounded-full">Inactivo</span>
+                        <span className="text-xs bg-white/10 text-white/50 px-2 py-0.5 rounded-full">Inactivo</span>
                       )}
                     </div>
-                    {pkg.description && <p className="text-slate-400 text-sm mt-1">{pkg.description}</p>}
+                    {pkg.description && <p className="text-white/50 text-sm mt-1">{pkg.description}</p>}
                     <div className="flex flex-wrap gap-2 mt-2">
                       <span className="text-xs bg-primary/15 text-primary px-2.5 py-1 rounded-full flex items-center gap-1">
                         <Users className="w-3 h-3" /> {FREQUENCY_LABELS[pkg.sessionsPerWeek]}
                       </span>
-                      <span className="text-xs bg-white/10 text-slate-300 px-2.5 py-1 rounded-full flex items-center gap-1">
+                      <span className="text-xs bg-white/10 text-white/70 px-2.5 py-1 rounded-full flex items-center gap-1">
                         <Clock className="w-3 h-3" /> {DURATION_LABELS[pkg.sessionDuration]}
                       </span>
-                      <span className="text-xs bg-white/10 text-slate-300 px-2.5 py-1 rounded-full flex items-center gap-1">
+                      <span className="text-xs bg-white/10 text-white/70 px-2.5 py-1 rounded-full flex items-center gap-1">
                         {pkg.locationType === "online" ? <Monitor className="w-3 h-3" /> :
                          pkg.locationType === "both" ? <Sparkles className="w-3 h-3" /> : <MapPin className="w-3 h-3" />}
                         {pkg.locationType === "in_person" ? "Presencial" : pkg.locationType === "online" ? "Virtual" : "Presencial / Virtual"}
@@ -326,7 +326,7 @@ export default function TrainingPackagesPage() {
                     {pkg.includes?.length > 0 && (
                       <ul className="mt-2 space-y-0.5">
                         {pkg.includes.map((item, i) => (
-                          <li key={i} className="flex items-center gap-1.5 text-xs text-slate-400">
+                          <li key={i} className="flex items-center gap-1.5 text-xs text-white/50">
                             <Check className="w-3 h-3 text-green-400" /> {item}
                           </li>
                         ))}
@@ -335,19 +335,19 @@ export default function TrainingPackagesPage() {
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-primary font-bold text-xl">${pkg.price.toLocaleString()}</p>
-                    <p className="text-slate-500 text-xs">{BILLING_CYCLE_LABELS[pkg.billingCycle]}</p>
+                    <p className="text-white/40 text-xs">{BILLING_CYCLE_LABELS[pkg.billingCycle]}</p>
                     <div className="flex items-center gap-1 mt-3 justify-end">
                       <button
                         onClick={() => toggleActive(pkg)}
-                        className={cn("p-1.5 rounded-lg transition-colors", pkg.isActive ? "text-green-400 hover:bg-green-500/20" : "text-slate-500 hover:bg-white/10")}
+                        className={cn("p-1.5 rounded-lg transition-colors", pkg.isActive ? "text-green-400 hover:bg-green-500/20" : "text-white/40 hover:bg-white/10")}
                         title={pkg.isActive ? "Desactivar" : "Activar"}
                       >
                         {pkg.isActive ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
                       </button>
-                      <button onClick={() => openEdit(pkg)} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                      <button onClick={() => openEdit(pkg)} className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors">
                         <Edit2 className="w-4 h-4" />
                       </button>
-                      <button onClick={() => deletePkg(pkg.id)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/20 transition-colors">
+                      <button onClick={() => deletePkg(pkg.id)} className="p-1.5 rounded-lg text-white/50 hover:text-red-400 hover:bg-red-500/20 transition-colors">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -366,13 +366,13 @@ export default function TrainingPackagesPage() {
               </div>
               <div>
                 <h2 className="text-white font-bold text-lg">Horarios Disponibles</h2>
-                <p className="text-slate-400 text-sm">Días y horarios en que ofreces entrenamiento</p>
+                <p className="text-white/50 text-sm">Días y horarios en que ofreces entrenamiento</p>
               </div>
             </div>
 
             {/* Days */}
             <div className="mb-6">
-              <p className="text-slate-400 text-sm mb-3 font-medium">Días disponibles</p>
+              <p className="text-white/50 text-sm mb-3 font-medium">Días disponibles</p>
               <div className="grid grid-cols-7 gap-2">
                 {ALL_DAYS.map(day => {
                   const active = availableDays.includes(day);
@@ -384,7 +384,7 @@ export default function TrainingPackagesPage() {
                         "flex flex-col items-center py-3 rounded-xl border text-xs font-semibold transition-all",
                         active
                           ? "bg-primary border-primary text-white"
-                          : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                          : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"
                       )}
                     >
                       <span>{DAY_SHORT[day]}</span>
@@ -397,7 +397,7 @@ export default function TrainingPackagesPage() {
 
             {/* Time slots */}
             <div className="mb-6">
-              <p className="text-slate-400 text-sm mb-3 font-medium">Horarios disponibles</p>
+              <p className="text-white/50 text-sm mb-3 font-medium">Horarios disponibles</p>
               <div className="grid grid-cols-5 sm:grid-cols-7 gap-2">
                 {ALL_TIME_SLOTS.map(slot => {
                   const active = timeSlots.includes(slot);
@@ -409,7 +409,7 @@ export default function TrainingPackagesPage() {
                         "py-2.5 rounded-xl text-xs font-medium border transition-all",
                         active
                           ? "bg-primary border-primary text-white"
-                          : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                          : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"
                       )}
                     >
                       {slot}
@@ -440,35 +440,35 @@ export default function TrainingPackagesPage() {
               <h2 className="text-lg font-bold text-white">
                 {editingId ? "Editar Plan" : "Nuevo Plan de Entrenamiento"}
               </h2>
-              <button onClick={closeForm} className="p-2 rounded-lg hover:bg-white/10 text-slate-400"><X className="w-4 h-4" /></button>
+              <button onClick={closeForm} className="p-2 rounded-lg hover:bg-white/10 text-white/50"><X className="w-4 h-4" /></button>
             </div>
 
             <div className="p-5 space-y-4">
               {/* Name */}
               <div>
-                <label className="block text-sm text-slate-400 mb-1.5">Nombre del plan *</label>
+                <label className="block text-sm text-white/50 mb-1.5">Nombre del plan *</label>
                 <input type="text" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
                   placeholder="Ej: Plan Transforma 3x"
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50" />
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-primary/50" />
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-sm text-slate-400 mb-1.5">Descripción (opcional)</label>
+                <label className="block text-sm text-white/50 mb-1.5">Descripción (opcional)</label>
                 <input type="text" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
                   placeholder="Breve descripción del plan"
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50" />
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-primary/50" />
               </div>
 
               {/* Price + Billing */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1.5">Precio *</label>
+                  <label className="block text-sm text-white/50 mb-1.5">Precio *</label>
                   <input type="number" min={0} value={form.price} onChange={e => setForm(p => ({ ...p, price: Number(e.target.value) }))}
                     className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-primary/50" />
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1.5">Ciclo de cobro</label>
+                  <label className="block text-sm text-white/50 mb-1.5">Ciclo de cobro</label>
                   <select value={form.billingCycle} onChange={e => setForm(p => ({ ...p, billingCycle: e.target.value as any }))}
                     className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-primary/50">
                     <option value="monthly">Mensual</option>
@@ -481,14 +481,14 @@ export default function TrainingPackagesPage() {
               {/* Sessions/week + Duration */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1.5">Sesiones por semana</label>
+                  <label className="block text-sm text-white/50 mb-1.5">Sesiones por semana</label>
                   <select value={form.sessionsPerWeek} onChange={e => setForm(p => ({ ...p, sessionsPerWeek: Number(e.target.value) as any }))}
                     className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-primary/50">
                     {[1,2,3,4,5,6,7].map(n => <option key={n} value={n}>{n} día{n > 1 ? "s" : ""}/semana</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1.5">Duración por sesión</label>
+                  <label className="block text-sm text-white/50 mb-1.5">Duración por sesión</label>
                   <select value={form.sessionDuration} onChange={e => setForm(p => ({ ...p, sessionDuration: Number(e.target.value) as any }))}
                     className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-primary/50">
                     {[30,45,60,90,120].map(n => <option key={n} value={n}>{DURATION_LABELS[n as SessionDuration]}</option>)}
@@ -498,7 +498,7 @@ export default function TrainingPackagesPage() {
 
               {/* Modality */}
               <div>
-                <label className="block text-sm text-slate-400 mb-1.5">Modalidad</label>
+                <label className="block text-sm text-white/50 mb-1.5">Modalidad</label>
                 <div className="grid grid-cols-3 gap-2">
                   {([
                     { value: "in_person", label: "Presencial", icon: <MapPin className="w-4 h-4" /> },
@@ -511,7 +511,7 @@ export default function TrainingPackagesPage() {
                         "flex flex-col items-center gap-1 py-3 rounded-xl border text-xs font-medium transition-all",
                         form.locationType === opt.value
                           ? "bg-primary/20 border-primary text-white"
-                          : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                          : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"
                       )}>
                       {opt.icon} {opt.label}
                     </button>
@@ -521,12 +521,12 @@ export default function TrainingPackagesPage() {
 
               {/* Includes */}
               <div>
-                <label className="block text-sm text-slate-400 mb-1.5">Qué incluye</label>
+                <label className="block text-sm text-white/50 mb-1.5">Qué incluye</label>
                 <div className="flex gap-2 mb-2">
                   <input type="text" value={newInclude} onChange={e => setNewInclude(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addInclude())}
                     placeholder="Ej: Rutina personalizada"
-                    className="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-primary/50" />
+                    className="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder:text-white/40 focus:outline-none focus:border-primary/50" />
                   <button type="button" onClick={addInclude} className="px-3 py-2 bg-primary/20 text-primary rounded-xl text-sm hover:bg-primary/30 transition-colors">
                     <Plus className="w-4 h-4" />
                   </button>
@@ -534,9 +534,9 @@ export default function TrainingPackagesPage() {
                 {form.includes.length > 0 && (
                   <ul className="space-y-1">
                     {form.includes.map((item, i) => (
-                      <li key={i} className="flex items-center justify-between gap-2 text-sm text-slate-300 bg-white/5 px-3 py-2 rounded-lg">
+                      <li key={i} className="flex items-center justify-between gap-2 text-sm text-white/70 bg-white/5 px-3 py-2 rounded-lg">
                         <span className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-green-400" />{item}</span>
-                        <button onClick={() => removeInclude(i)} className="text-slate-500 hover:text-red-400"><X className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => removeInclude(i)} className="text-white/40 hover:text-red-400"><X className="w-3.5 h-3.5" /></button>
                       </li>
                     ))}
                   </ul>

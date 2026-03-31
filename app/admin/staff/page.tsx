@@ -258,7 +258,7 @@ function StaffModal({
         <div className="p-6 border-b border-white/10">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
+            className="absolute top-4 right-4 p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10"
           >
             <X className="w-5 h-5" />
           </button>
@@ -271,7 +271,7 @@ function StaffModal({
               <h2 className="text-xl font-bold text-white">
                 {editStaff ? "Editar Empleado" : "Nuevo Empleado"}
               </h2>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-white/50">
                 {editStaff ? "Modifica los datos del empleado" : "Agrega un nuevo miembro al equipo"}
               </p>
             </div>
@@ -292,7 +292,7 @@ function StaffModal({
                   "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
                   activeTab === tab.id
                     ? "bg-primary text-white"
-                    : "text-slate-400 hover:text-white hover:bg-white/10"
+                    : "text-white/50 hover:text-white hover:bg-white/10"
                 )}
               >
                 <tab.icon className="w-4 h-4" />
@@ -309,7 +309,7 @@ function StaffModal({
             <div className="space-y-4">
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-white/70 mb-2">
                   Nombre completo *
                 </label>
                 <input
@@ -325,7 +325,7 @@ function StaffModal({
               {/* Email & Phone */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                  <label className="block text-sm font-medium text-white/70 mb-2">
                     Email
                   </label>
                   <input
@@ -348,7 +348,7 @@ function StaffModal({
 
               {/* Role */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-white/70 mb-2">
                   Rol *
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -369,7 +369,7 @@ function StaffModal({
                           <span className="text-lg">{role.icon}</span>
                           <span className="text-white font-medium text-sm">{role.label}</span>
                         </div>
-                        <p className="text-xs text-slate-400 mt-1">{role.description}</p>
+                        <p className="text-xs text-white/50 mt-1">{role.description}</p>
                       </button>
                     )
                   )}
@@ -378,7 +378,7 @@ function StaffModal({
 
               {/* Commission Rate */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-white/70 mb-2">
                   Tasa de Comisión (%)
                 </label>
                 <input
@@ -399,15 +399,15 @@ function StaffModal({
           {/* Tab: Services */}
           {activeTab === "services" && (
             <div className="space-y-4">
-              <p className="text-slate-400 text-sm mb-4">
+              <p className="text-white/50 text-sm mb-4">
                 Selecciona los servicios que este empleado puede realizar:
               </p>
 
               {availableServices.length === 0 ? (
                 <div className="text-center py-8">
-                  <Sparkles className="w-12 h-12 text-slate-500 mx-auto mb-3" />
-                  <p className="text-slate-400">No hay servicios configurados</p>
-                  <p className="text-slate-500 text-sm mt-1">
+                  <Sparkles className="w-12 h-12 text-white/40 mx-auto mb-3" />
+                  <p className="text-white/50">No hay servicios configurados</p>
+                  <p className="text-white/40 text-sm mt-1">
                     Primero configura los servicios en la sección de citas
                   </p>
                 </div>
@@ -431,7 +431,7 @@ function StaffModal({
                           <span className="text-white font-medium">{service.name}</span>
                           {isSelected && <Check className="w-5 h-5 text-primary" />}
                         </div>
-                        <div className="flex gap-3 mt-2 text-xs text-slate-400">
+                        <div className="flex gap-3 mt-2 text-xs text-white/50">
                           <span>{service.duration} min</span>
                           <span>${service.price}</span>
                         </div>
@@ -442,7 +442,7 @@ function StaffModal({
               )}
 
               <div className="mt-4 p-4 rounded-xl bg-primary/10 border border-primary/20">
-                <p className="text-sm text-slate-300">
+                <p className="text-sm text-white/70">
                   <strong className="text-white">{formData.services.length}</strong> servicios seleccionados
                 </p>
               </div>
@@ -452,7 +452,7 @@ function StaffModal({
           {/* Tab: Schedule */}
           {activeTab === "schedule" && (
             <div className="space-y-4">
-              <p className="text-slate-400 text-sm mb-4">
+              <p className="text-white/50 text-sm mb-4">
                 Configura el horario de trabajo semanal:
               </p>
 
@@ -472,7 +472,7 @@ function StaffModal({
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-white font-medium">{DAY_NAMES[day]}</span>
                         <label className="flex items-center gap-2 cursor-pointer">
-                          <span className="text-xs text-slate-400">
+                          <span className="text-xs text-white/50">
                             {daySchedule.isWorking ? "Trabaja" : "Libre"}
                           </span>
                           <div
@@ -495,7 +495,7 @@ function StaffModal({
                       {daySchedule.isWorking && (
                         <div className="flex gap-4">
                           <div className="flex-1">
-                            <label className="block text-xs text-slate-400 mb-1">Entrada</label>
+                            <label className="block text-xs text-white/50 mb-1">Entrada</label>
                             <input
                               type="time"
                               value={daySchedule.open || "09:00"}
@@ -504,7 +504,7 @@ function StaffModal({
                             />
                           </div>
                           <div className="flex-1">
-                            <label className="block text-xs text-slate-400 mb-1">Salida</label>
+                            <label className="block text-xs text-white/50 mb-1">Salida</label>
                             <input
                               type="time"
                               value={daySchedule.close || "18:00"}
@@ -524,7 +524,7 @@ function StaffModal({
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-white font-medium">Hora de descanso</span>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-white/50">
                       {formData.schedule.breakEnabled ? "Activo" : "Sin descanso"}
                     </span>
                     <div
@@ -552,7 +552,7 @@ function StaffModal({
                 {formData.schedule.breakEnabled && (
                   <div className="flex gap-4">
                     <div className="flex-1">
-                      <label className="block text-xs text-slate-400 mb-1">Inicio</label>
+                      <label className="block text-xs text-white/50 mb-1">Inicio</label>
                       <input
                         type="time"
                         value={formData.schedule.breakStartTime || "13:00"}
@@ -566,7 +566,7 @@ function StaffModal({
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="block text-xs text-slate-400 mb-1">Fin</label>
+                      <label className="block text-xs text-white/50 mb-1">Fin</label>
                       <input
                         type="time"
                         value={formData.schedule.breakEndTime || "14:00"}
@@ -589,7 +589,7 @@ function StaffModal({
           {activeTab === "timeoff" && editStaff && (
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-4">
-                <p className="text-slate-400 text-sm">
+                <p className="text-white/50 text-sm">
                   Gestiona las ausencias del empleado:
                 </p>
                 {!isAddingTimeOff && (
@@ -615,13 +615,13 @@ function StaffModal({
                       onClick={() => setIsAddingTimeOff(false)}
                       className="p-1 rounded hover:bg-white/10"
                     >
-                      <X className="w-4 h-4 text-slate-400" />
+                      <X className="w-4 h-4 text-white/50" />
                     </button>
                   </div>
 
                   {/* Type */}
                   <div>
-                    <label className="block text-xs text-slate-400 mb-2">Tipo</label>
+                    <label className="block text-xs text-white/50 mb-2">Tipo</label>
                     <div className="grid grid-cols-3 gap-2">
                       {(Object.entries(TIME_OFF_TYPES) as [TimeOffType, typeof TIME_OFF_TYPES.vacation][]).map(
                         ([key, config]) => (
@@ -647,7 +647,7 @@ function StaffModal({
                   {/* Dates */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Desde</label>
+                      <label className="block text-xs text-white/50 mb-1">Desde</label>
                       <input
                         type="date"
                         value={newTimeOff.startDate}
@@ -656,7 +656,7 @@ function StaffModal({
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Hasta</label>
+                      <label className="block text-xs text-white/50 mb-1">Hasta</label>
                       <input
                         type="date"
                         value={newTimeOff.endDate}
@@ -668,7 +668,7 @@ function StaffModal({
 
                   {/* Reason */}
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">Motivo (opcional)</label>
+                    <label className="block text-xs text-white/50 mb-1">Motivo (opcional)</label>
                     <input
                       type="text"
                       value={newTimeOff.reason}
@@ -697,8 +697,8 @@ function StaffModal({
               {/* List of time-offs */}
               {timeOffList.length === 0 ? (
                 <div className="text-center py-8">
-                  <Palmtree className="w-12 h-12 text-slate-500 mx-auto mb-3" />
-                  <p className="text-slate-400">No hay ausencias registradas</p>
+                  <Palmtree className="w-12 h-12 text-white/40 mx-auto mb-3" />
+                  <p className="text-white/50">No hay ausencias registradas</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -738,7 +738,7 @@ function StaffModal({
                                   <AlertTriangle className="w-4 h-4 text-yellow-400" />
                                 )}
                               </div>
-                              <p className="text-xs text-slate-400">
+                              <p className="text-xs text-white/50">
                                 {startDate.toLocaleDateString("es-MX", {
                                   day: "numeric",
                                   month: "short",
@@ -751,14 +751,14 @@ function StaffModal({
                                 })}
                               </p>
                               {timeOff.reason && (
-                                <p className="text-xs text-slate-500 mt-1">{timeOff.reason}</p>
+                                <p className="text-xs text-white/40 mt-1">{timeOff.reason}</p>
                               )}
                             </div>
                           </div>
                           <button
                             type="button"
                             onClick={() => handleDeleteTimeOff(timeOff.id)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+                            className="p-1.5 rounded-lg text-white/50 hover:text-red-400 hover:bg-red-500/10"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -845,7 +845,7 @@ function StaffCard({
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
+            className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10"
           >
             <MoreVertical className="w-4 h-4" />
           </button>
@@ -859,7 +859,7 @@ function StaffCard({
                     onEdit();
                     setShowMenu(false);
                   }}
-                  className="w-full px-3 py-2 text-left text-sm text-slate-300 hover:bg-white/10 flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-sm text-white/70 hover:bg-white/10 flex items-center gap-2"
                 >
                   <Edit className="w-4 h-4" />
                   Editar
@@ -869,7 +869,7 @@ function StaffCard({
                     onToggle();
                     setShowMenu(false);
                   }}
-                  className="w-full px-3 py-2 text-left text-sm text-slate-300 hover:bg-white/10 flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-sm text-white/70 hover:bg-white/10 flex items-center gap-2"
                 >
                   <Power className="w-4 h-4" />
                   {staff.isActive ? "Desactivar" : "Activar"}
@@ -895,13 +895,13 @@ function StaffCard({
       {/* Contact Info */}
       <div className="mt-3 space-y-1">
         {staff.email && (
-          <div className="flex items-center gap-2 text-xs text-slate-400">
+          <div className="flex items-center gap-2 text-xs text-white/50">
             <Mail className="w-3 h-3" />
             <span className="truncate">{staff.email}</span>
           </div>
         )}
         {staff.phone && (
-          <div className="flex items-center gap-2 text-xs text-slate-400">
+          <div className="flex items-center gap-2 text-xs text-white/50">
             <Phone className="w-3 h-3" />
             <span>{staff.phone}</span>
           </div>
@@ -911,7 +911,7 @@ function StaffCard({
       {/* Services */}
       {staff.services && staff.services.length > 0 && (
         <div className="mt-3 pt-3 border-t border-white/10">
-          <div className="flex items-center gap-1 text-xs text-slate-400 mb-2">
+          <div className="flex items-center gap-1 text-xs text-white/50 mb-2">
             <Sparkles className="w-3 h-3" />
             <span>{staff.services.length} servicios</span>
           </div>
@@ -923,7 +923,7 @@ function StaffCard({
         <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-white/10">
           <div className="text-center">
             <p className="text-lg font-bold text-primary">{staff.totalBookings}</p>
-            <p className="text-[10px] text-slate-500">Citas</p>
+            <p className="text-[10px] text-white/40">Citas</p>
           </div>
           {staff.rating && (
             <div className="text-center">
@@ -931,7 +931,7 @@ function StaffCard({
                 <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                 <span className="text-lg font-bold text-white">{staff.rating.toFixed(1)}</span>
               </div>
-              <p className="text-[10px] text-slate-500">{staff.reviewCount} reseñas</p>
+              <p className="text-[10px] text-white/40">{staff.reviewCount} reseñas</p>
             </div>
           )}
         </div>
@@ -1028,9 +1028,9 @@ export default function StaffPage() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <Users className="w-12 h-12 text-slate-500 mx-auto mb-4" />
+          <Users className="w-12 h-12 text-white/40 mx-auto mb-4" />
           <p className="text-white font-medium mb-2">No se encontró tienda</p>
-          <p className="text-slate-400 text-sm">Inicia sesión o selecciona una tienda</p>
+          <p className="text-white/50 text-sm">Inicia sesión o selecciona una tienda</p>
         </div>
       </div>
     );
@@ -1054,7 +1054,7 @@ export default function StaffPage() {
                 </div>
                 <div>
                   <h1 className="font-display text-2xl font-bold text-white">Personal</h1>
-                  <p className="text-slate-400 text-sm">Gestión de empleados y horarios</p>
+                  <p className="text-white/50 text-sm">Gestión de empleados y horarios</p>
                 </div>
               </div>
             </div>
@@ -1080,14 +1080,14 @@ export default function StaffPage() {
                   <Users className="w-5 h-5 text-pink-400" />
                   <span className="text-2xl font-bold text-white">{activeStaff}</span>
                 </div>
-                <p className="text-xs text-slate-400 mt-1">Empleados Activos</p>
+                <p className="text-xs text-white/50 mt-1">Empleados Activos</p>
               </div>
               <div className="glass-panel rounded-xl p-4 border border-white/10">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-primary" />
                   <span className="text-2xl font-bold text-white">{services.length}</span>
                 </div>
-                <p className="text-xs text-slate-400 mt-1">Servicios Disponibles</p>
+                <p className="text-xs text-white/50 mt-1">Servicios Disponibles</p>
               </div>
               <div className="glass-panel rounded-xl p-4 border border-white/10">
                 <div className="flex items-center gap-2">
@@ -1096,14 +1096,14 @@ export default function StaffPage() {
                     {staff.reduce((sum, s) => sum + s.totalBookings, 0)}
                   </span>
                 </div>
-                <p className="text-xs text-slate-400 mt-1">Citas Totales</p>
+                <p className="text-xs text-white/50 mt-1">Citas Totales</p>
               </div>
             </div>
 
             {/* Filters */}
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
                 <input
                   type="text"
                   value={searchTerm}
@@ -1144,9 +1144,9 @@ export default function StaffPage() {
 
             {filteredStaff.length === 0 && (
               <div className="text-center py-12 glass-panel rounded-2xl border border-white/10">
-                <Users className="w-12 h-12 text-slate-500 mx-auto mb-4" />
+                <Users className="w-12 h-12 text-white/40 mx-auto mb-4" />
                 <p className="text-white font-medium mb-2">Sin empleados</p>
-                <p className="text-slate-400 text-sm">
+                <p className="text-white/50 text-sm">
                   {searchTerm || filterRole !== "all"
                     ? "No hay empleados que coincidan con los filtros"
                     : "Agrega tu primer empleado al equipo"}
