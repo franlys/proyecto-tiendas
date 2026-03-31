@@ -19,14 +19,28 @@ interface BranchesMapProps {
   fallbackAddress?: string;
 }
 
-// Geocode an address using Nominatim (free, no API key)
+// Geocode an address using Nominatim (free, no API key).
+// Tries multiple variants so business-prefixed strings like
+// "ACME Corp, Calle X 12, Ciudad" still resolve correctly.
 async function geocode(address: string): Promise<{ lat: number; lon: number } | null> {
-  try {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
-    const res = await fetch(url, { headers: { "Accept-Language": "es" } });
-    const data = await res.json();
-    if (data?.[0]) return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
-  } catch { /* silent */ }
+  // Build candidate queries: strip anything before the first comma (business name)
+  // and also try appending "República Dominicana" as a country hint.
+  const stripped = address.includes(",") ? address.split(",").slice(1).join(",").trim() : address;
+  const candidates = Array.from(new Set([
+    address,
+    stripped,
+    `${stripped}, República Dominicana`,
+    `${address}, República Dominicana`,
+  ]));
+
+  for (const q of candidates) {
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1&countrycodes=do`;
+      const res = await fetch(url, { headers: { "Accept-Language": "es" } });
+      const data = await res.json();
+      if (data?.[0]) return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+    } catch { /* silent */ }
+  }
   return null;
 }
 
