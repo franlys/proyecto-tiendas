@@ -36,7 +36,8 @@ export async function POST(request: NextRequest) {
 
     const branch = await createBranchAdmin(shopId, input);
     return NextResponse.json({ branch }, { status: 201 });
-  } catch {
+  } catch (err) {
+    console.error("[POST /api/branches]", err);
     return NextResponse.json({ error: "Failed to create branch" }, { status: 500 });
   }
 }

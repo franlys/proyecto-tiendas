@@ -1,5 +1,3 @@
-"use server";
-
 import { adminDb } from "@/lib/firebase-admin";
 import type { Branch, BranchStockEntry, CreateBranchInput } from "@/lib/types/branch.types";
 
