@@ -648,6 +648,7 @@ function generateDemoData() {
 }
 
 function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: boolean; shop?: any | null; features: CombinedBusinessFeatures }) {
+  const { user } = useAuth();
   const { orders, getTodayOrders } = useSalesOrders();
   const [isClient, setIsClient] = useState(false);
 
