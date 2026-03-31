@@ -45,7 +45,7 @@ function CuadreCard({ cuadre, index }: { cuadre: Cuadre; index: number }) {
           </div>
           <div className="min-w-0">
             <p className="text-sm font-black text-white truncate">{cuadre.employeeName}</p>
-            <p className="text-[10px] text-white/30 flex items-center gap-1 mt-0.5 truncate">
+            <p className="text-[10px] text-white/50 flex items-center gap-1 mt-0.5 truncate">
               <Building2 className="w-3 h-3 flex-shrink-0" />
               {cuadre.branchName || "Sucursal"} · {cuadre.weekLabel}
             </p>
@@ -62,21 +62,21 @@ function CuadreCard({ cuadre, index }: { cuadre: Cuadre; index: number }) {
       <div className="grid grid-cols-3 gap-2 mb-3">
         <div className="bg-white/3 rounded-xl px-3 py-2 text-center">
           <p className="text-xs font-black text-green-400">{fmt(totals.totalIncome)}</p>
-          <p className="text-[9px] text-white/25 uppercase tracking-wide mt-0.5">Ingresos</p>
+          <p className="text-[9px] text-white/50 uppercase tracking-wide mt-0.5">Ingresos</p>
         </div>
         <div className="bg-white/3 rounded-xl px-3 py-2 text-center">
           <p className="text-xs font-black text-red-400">{fmt(totals.totalExpenses)}</p>
-          <p className="text-[9px] text-white/25 uppercase tracking-wide mt-0.5">Gastos</p>
+          <p className="text-[9px] text-white/50 uppercase tracking-wide mt-0.5">Gastos</p>
         </div>
         <div className="bg-white/3 rounded-xl px-3 py-2 text-center">
           <p className={cn("text-xs font-black", totals.net >= 0 ? "text-white" : "text-red-400")}>
             {fmt(totals.net)}
           </p>
-          <p className="text-[9px] text-white/25 uppercase tracking-wide mt-0.5">Neto</p>
+          <p className="text-[9px] text-white/50 uppercase tracking-wide mt-0.5">Neto</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-3 text-[10px] text-white/25">
+      <div className="flex items-center gap-3 text-[10px] text-white/45">
         {totals.totalVentas > 0 && <span>📦 {fmt(totals.totalVentas)}</span>}
         {totals.totalReparaciones > 0 && <span>🔧 {fmt(totals.totalReparaciones)}</span>}
         {totals.totalServicios > 0 && <span>⚙️ {fmt(totals.totalServicios)}</span>}
@@ -147,7 +147,7 @@ export default function CuadresPage() {
           <ClipboardList className="w-4 h-4 text-white/30 flex-shrink-0" />
           <div className="flex-1">
             <h1 className="text-base font-black tracking-tight">Cuadres</h1>
-            <p className="text-[11px] text-white/25">Actividad semanal por empleado</p>
+            <p className="text-[11px] text-white/45">Actividad semanal por empleado</p>
           </div>
           {pendingCount > 0 && (
             <span className="px-2.5 py-1 bg-amber-400/12 border border-amber-400/25 text-amber-400 text-[9px] font-black rounded-full uppercase tracking-[0.12em]">
@@ -164,19 +164,19 @@ export default function CuadresPage() {
             <div className="bg-white/3 border border-white/8 rounded-2xl p-4">
               <TrendingUp className="w-3.5 h-3.5 text-green-400 mb-2" />
               <p className="text-lg font-black text-white leading-none">{fmt(allTotals.income)}</p>
-              <p className="text-[9px] text-white/25 uppercase tracking-[0.12em] mt-1.5">Ingresos</p>
+              <p className="text-[9px] text-white/50 uppercase tracking-[0.12em] mt-1.5">Ingresos</p>
             </div>
             <div className="bg-white/3 border border-white/8 rounded-2xl p-4">
               <DollarSign className="w-3.5 h-3.5 text-red-400 mb-2" />
               <p className="text-lg font-black text-white leading-none">{fmt(allTotals.expenses)}</p>
-              <p className="text-[9px] text-white/25 uppercase tracking-[0.12em] mt-1.5">Gastos</p>
+              <p className="text-[9px] text-white/50 uppercase tracking-[0.12em] mt-1.5">Gastos</p>
             </div>
             <div className="bg-white/3 border border-white/8 rounded-2xl p-4">
               <CheckCircle className="w-3.5 h-3.5 text-amber-400 mb-2" />
               <p className={cn("text-lg font-black leading-none", allTotals.net >= 0 ? "text-green-400" : "text-red-400")}>
                 {fmt(allTotals.net)}
               </p>
-              <p className="text-[9px] text-white/25 uppercase tracking-[0.12em] mt-1.5">Neto</p>
+              <p className="text-[9px] text-white/50 uppercase tracking-[0.12em] mt-1.5">Neto</p>
             </div>
           </div>
 
@@ -215,7 +215,7 @@ export default function CuadresPage() {
               <div className="w-14 h-14 rounded-2xl border border-white/8 bg-white/3 flex items-center justify-center">
                 <ClipboardList className="w-6 h-6 text-white/15" />
               </div>
-              <p className="text-sm text-white/25">
+              <p className="text-sm text-white/45">
                 No hay cuadres {filter !== "all" ? `con estado "${FILTERS.find(f => f.key === filter)?.label}"` : "aún"}
               </p>
             </div>

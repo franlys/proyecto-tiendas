@@ -104,7 +104,7 @@ export default function CuadreDetailPage({ params }: { params: { id: string } })
         </Link>
         <div className="flex-1 min-w-0">
           <h1 className="text-base font-black text-white truncate">{cuadre.employeeName}</h1>
-          <p className="text-[11px] text-white/30">{cuadre.weekLabel}</p>
+          <p className="text-[11px] text-white/50">{cuadre.weekLabel}</p>
         </div>
         <span className={cn(
           "px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border flex-shrink-0",
@@ -139,24 +139,24 @@ export default function CuadreDetailPage({ params }: { params: { id: string } })
           <div className="bg-white/3 border border-white/8 rounded-2xl p-4 text-center">
             <TrendingUp className="w-4 h-4 text-green-400 mx-auto mb-1.5" />
             <p className="text-lg font-black text-white">{fmt(totals.totalIncome)}</p>
-            <p className="text-[9px] text-white/30 uppercase tracking-widest">Ingresos</p>
+            <p className="text-[9px] text-white/55 uppercase tracking-widest">Ingresos</p>
           </div>
           <div className="bg-white/3 border border-white/8 rounded-2xl p-4 text-center">
             <DollarSign className="w-4 h-4 text-red-400 mx-auto mb-1.5" />
             <p className="text-lg font-black text-white">{fmt(totals.totalExpenses)}</p>
-            <p className="text-[9px] text-white/30 uppercase tracking-widest">Gastos</p>
+            <p className="text-[9px] text-white/55 uppercase tracking-widest">Gastos</p>
           </div>
           <div className="bg-white/3 border border-white/8 rounded-2xl p-4 text-center">
             <p className={cn("text-lg font-black", totals.net >= 0 ? "text-green-400" : "text-red-400")}>
               {fmt(totals.net)}
             </p>
-            <p className="text-[9px] text-white/30 uppercase tracking-widest">Neto</p>
+            <p className="text-[9px] text-white/55 uppercase tracking-widest">Neto</p>
           </div>
         </div>
 
         {/* Desglose por tipo */}
         <div>
-          <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-3">Por tipo de actividad</p>
+          <p className="text-[10px] font-black text-white/55 uppercase tracking-widest mb-3">Por tipo de actividad</p>
           <div className="grid grid-cols-2 gap-2">
             {([
               ["Ventas", totals.totalVentas, "📦"],
@@ -177,7 +177,7 @@ export default function CuadreDetailPage({ params }: { params: { id: string } })
 
         {/* Por método de pago */}
         <div>
-          <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-3">Por método de pago</p>
+          <p className="text-[10px] font-black text-white/55 uppercase tracking-widest mb-3">Por método de pago</p>
           <div className="grid grid-cols-2 gap-2">
             {([
               ["Efectivo", totals.totalEfectivo, "💵"],
@@ -198,7 +198,7 @@ export default function CuadreDetailPage({ params }: { params: { id: string } })
 
         {/* Registros detallados */}
         <div>
-          <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-3">
+          <p className="text-[10px] font-black text-white/55 uppercase tracking-widest mb-3">
             Registros ({cuadre.entries.length})
           </p>
           <div className="space-y-2">
@@ -222,7 +222,7 @@ export default function CuadreDetailPage({ params }: { params: { id: string } })
         {/* Gastos */}
         {cuadre.expenses.length > 0 && (
           <div>
-            <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-3">
+            <p className="text-[10px] font-black text-white/55 uppercase tracking-widest mb-3">
               Gastos ({cuadre.expenses.length})
             </p>
             <div className="space-y-2">
@@ -243,7 +243,7 @@ export default function CuadreDetailPage({ params }: { params: { id: string } })
         {/* Notas del empleado */}
         {cuadre.notes && (
           <div className="bg-white/3 border border-white/8 rounded-xl px-4 py-3">
-            <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-1">Notas del empleado</p>
+            <p className="text-[10px] font-black text-white/55 uppercase tracking-widest mb-1">Notas del empleado</p>
             <p className="text-sm text-white/70">{cuadre.notes}</p>
           </div>
         )}
@@ -307,7 +307,7 @@ export default function CuadreDetailPage({ params }: { params: { id: string } })
             <div>
               <p className="text-sm font-bold text-green-400">Aprobado por {cuadre.approvedBy}</p>
               {cuadre.approvedAt && (
-                <p className="text-[11px] text-white/30">
+                <p className="text-[11px] text-white/50">
                   {new Date(cuadre.approvedAt).toLocaleDateString("es-DO", { dateStyle: "long" })}
                 </p>
               )}

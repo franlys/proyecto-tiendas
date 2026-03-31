@@ -163,7 +163,7 @@ export default function BeautyConsultationsPage() {
 
             {filteredConsultations.length === 0 ? (
                 <div className="text-center py-16">
-                    <Sparkles className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+                    <Sparkles className="w-16 h-16 text-slate-400 mx-auto mb-4" />
                     <h3 className="text-xl font-medium text-white mb-2">
                         No hay pre-consultas
                     </h3>
@@ -261,7 +261,7 @@ export default function BeautyConsultationsPage() {
                     ) : (
                         <div className="hidden lg:flex items-center justify-center bg-white/5 rounded-xl border border-white/10 min-h-[400px]">
                             <div className="text-center">
-                                <Eye className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                                <Eye className="w-12 h-12 text-slate-400 mx-auto mb-3" />
                                 <p className="text-slate-400">
                                     Selecciona una pre-consulta para ver los detalles
                                 </p>

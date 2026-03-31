@@ -87,7 +87,7 @@ function BranchRow({
             </p>
           </div>
           <ProgressBar value={summary.totalIncome} max={maxIncome} color="bg-green-500/70" />
-          <p className="text-[9px] text-white/25">
+          <p className="text-[9px] text-white/45">
             {summary.employeeCount} empleado{summary.employeeCount !== 1 ? "s" : ""} · {summary.cuadreCount} cuadre{summary.cuadreCount !== 1 ? "s" : ""} · {fmt(summary.totalIncome)} ingresos
           </p>
         </div>
@@ -104,7 +104,7 @@ function BranchRow({
         <div className="border-t border-white/6 px-4 py-4 space-y-4 bg-white/1">
           {/* Por tipo */}
           <div>
-            <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.15em] mb-2">Por tipo</p>
+            <p className="text-[9px] font-black text-white/55 uppercase tracking-[0.15em] mb-2">Por tipo</p>
             <div className="space-y-2">
               {([
                 { label: "Ventas", val: summary.totalVentas, icon: "📦", color: "bg-blue-500/60" },
@@ -124,7 +124,7 @@ function BranchRow({
 
           {/* Por método de pago */}
           <div>
-            <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.15em] mb-2">Por método de pago</p>
+            <p className="text-[9px] font-black text-white/55 uppercase tracking-[0.15em] mb-2">Por método de pago</p>
             <div className="grid grid-cols-3 gap-2">
               {([
                 ["💵", "Efectivo", summary.totalEfectivo],
@@ -133,7 +133,7 @@ function BranchRow({
               ] as const).map(([icon, label, val]) => (
                 <div key={label} className="bg-white/3 rounded-xl px-3 py-2.5 text-center">
                   <p className="text-xs font-black text-white">{fmt(val)}</p>
-                  <p className="text-[9px] text-white/25 mt-0.5">{icon} {label}</p>
+                  <p className="text-[9px] text-white/45 mt-0.5">{icon} {label}</p>
                 </div>
               ))}
             </div>
@@ -142,7 +142,7 @@ function BranchRow({
           {/* Empleados */}
           {branchEmployees.length > 0 && (
             <div>
-              <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.15em] mb-2">Empleados</p>
+              <p className="text-[9px] font-black text-white/55 uppercase tracking-[0.15em] mb-2">Empleados</p>
               <div className="space-y-1.5">
                 {branchEmployees.map(emp => (
                   <div key={emp.employeeId} className="flex items-center justify-between px-3 py-2.5 bg-white/3 rounded-xl">
@@ -263,7 +263,7 @@ export default function FinanzasPage() {
           <BarChart3 className="w-4 h-4 text-white/30" />
           <div>
             <h1 className="text-base font-black tracking-tight">Finanzas</h1>
-            <p className="text-[11px] text-white/25">Resumen de cuadres aprobados</p>
+            <p className="text-[11px] text-white/45">Resumen de cuadres aprobados</p>
           </div>
         </div>
 
@@ -296,12 +296,12 @@ export default function FinanzasPage() {
                 )}
                 style={{ animation: "fadeUp 320ms cubic-bezier(0.23,1,0.32,1) 50ms both" }}
               >
-                <p className="text-[9px] font-black text-white/30 uppercase tracking-[0.15em] mb-1">Neto consolidado</p>
+                <p className="text-[9px] font-black text-white/55 uppercase tracking-[0.15em] mb-1">Neto consolidado</p>
                 <div className="flex items-end justify-between gap-4">
                   <p className={cn("text-4xl font-black leading-none", globalTotals.net >= 0 ? "text-green-400" : "text-red-400")}>
                     {fmt(globalTotals.net)}
                   </p>
-                  <p className="text-[10px] text-white/20 mb-1">
+                  <p className="text-[10px] text-white/40 mb-1">
                     {filteredCuadres.length} cuadre{filteredCuadres.length !== 1 ? "s" : ""} aprobado{filteredCuadres.length !== 1 ? "s" : ""}
                   </p>
                 </div>
@@ -313,19 +313,19 @@ export default function FinanzasPage() {
                 <div className="bg-white/3 border border-white/8 rounded-2xl p-4">
                   <TrendingUp className="w-3.5 h-3.5 text-green-400 mb-2" />
                   <p className="text-xl font-black text-white">{fmt(globalTotals.income)}</p>
-                  <p className="text-[9px] text-white/25 uppercase tracking-[0.12em] mt-1">Ingresos totales</p>
+                  <p className="text-[9px] text-white/50 uppercase tracking-[0.12em] mt-1">Ingresos totales</p>
                 </div>
                 <div className="bg-white/3 border border-white/8 rounded-2xl p-4">
                   <DollarSign className="w-3.5 h-3.5 text-red-400 mb-2" />
                   <p className="text-xl font-black text-white">{fmt(globalTotals.expenses)}</p>
-                  <p className="text-[9px] text-white/25 uppercase tracking-[0.12em] mt-1">Gastos totales</p>
+                  <p className="text-[9px] text-white/50 uppercase tracking-[0.12em] mt-1">Gastos totales</p>
                 </div>
               </div>
 
               {/* Desglose por tipo */}
               <div className="bg-white/3 border border-white/8 rounded-2xl p-4 space-y-3"
                 style={{ animation: "fadeUp 320ms cubic-bezier(0.23,1,0.32,1) 90ms both" }}>
-                <p className="text-[9px] font-black text-white/25 uppercase tracking-[0.15em]">Por tipo de actividad</p>
+                <p className="text-[9px] font-black text-white/55 uppercase tracking-[0.15em]">Por tipo de actividad</p>
                 {([
                   { label: "Ventas", val: globalTotals.ventas, icon: "📦", color: "bg-blue-500/60" },
                   { label: "Reparaciones", val: globalTotals.reparaciones, icon: "🔧", color: "bg-orange-500/60" },
@@ -344,7 +344,7 @@ export default function FinanzasPage() {
               {/* Por sucursal */}
               {branchSummaries.length > 0 && (
                 <div style={{ animation: "fadeUp 320ms cubic-bezier(0.23,1,0.32,1) 110ms both" }}>
-                  <p className="text-[9px] font-black text-white/25 uppercase tracking-[0.15em] mb-3">Por sucursal</p>
+                  <p className="text-[9px] font-black text-white/55 uppercase tracking-[0.15em] mb-3">Por sucursal</p>
                   <div className="space-y-2.5">
                     {branchSummaries.map((b, i) => (
                       <BranchRow
@@ -364,7 +364,7 @@ export default function FinanzasPage() {
               {/* Top empleados */}
               {topEmployees.length > 0 && (
                 <div style={{ animation: "fadeUp 320ms cubic-bezier(0.23,1,0.32,1) 130ms both" }}>
-                  <p className="text-[9px] font-black text-white/25 uppercase tracking-[0.15em] mb-3">Top empleados</p>
+                  <p className="text-[9px] font-black text-white/55 uppercase tracking-[0.15em] mb-3">Top empleados</p>
                   <div className="space-y-1.5">
                     {topEmployees.slice(0, 5).map((emp, i) => (
                       <div key={emp.employeeId} className="flex items-center gap-3 bg-white/3 border border-white/8 rounded-xl px-4 py-3">
@@ -374,11 +374,11 @@ export default function FinanzasPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-bold text-white truncate">{emp.employeeName}</p>
-                          <p className="text-[9px] text-white/30">{emp.branchName}</p>
+                          <p className="text-[9px] text-white/45">{emp.branchName}</p>
                         </div>
                         <div className="text-right flex-shrink-0">
                           <p className="text-sm font-black text-green-400">{fmt(emp.totalIncome)}</p>
-                          <p className="text-[9px] text-white/25">{emp.cuadreCount} cuadre{emp.cuadreCount !== 1 ? "s" : ""}</p>
+                          <p className="text-[9px] text-white/45">{emp.cuadreCount} cuadre{emp.cuadreCount !== 1 ? "s" : ""}</p>
                         </div>
                       </div>
                     ))}
@@ -391,8 +391,8 @@ export default function FinanzasPage() {
                   <div className="w-14 h-14 rounded-2xl border border-white/8 bg-white/3 flex items-center justify-center">
                     <BarChart3 className="w-6 h-6 text-white/15" />
                   </div>
-                  <p className="text-sm text-white/25">Sin cuadres aprobados en este período</p>
-                  <p className="text-xs text-white/15">Los datos aparecen una vez que el dueño aprueba los cuadres</p>
+                  <p className="text-sm text-white/50">Sin cuadres aprobados en este período</p>
+                  <p className="text-xs text-white/35">Los datos aparecen una vez que el dueño aprueba los cuadres</p>
                 </div>
               )}
             </>

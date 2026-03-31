@@ -152,9 +152,9 @@ function CategoryManagerContent({ shopId }: { shopId: string }) {
             <div className="space-y-3 mb-8">
                 {categories.length === 0 ? (
                     <div className="text-center py-12 bg-zinc-900 rounded-xl border border-zinc-800">
-                        <Tag className="w-12 h-12 text-zinc-600 mx-auto mb-4" />
+                        <Tag className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
                         <p className="text-zinc-400 mb-2">No tienes categorías personalizadas</p>
-                        <p className="text-zinc-500 text-sm">
+                        <p className="text-zinc-400 text-sm">
                             Crea categorías al agregar productos o usa el botón de abajo
                         </p>
                     </div>
@@ -177,7 +177,7 @@ function CategoryManagerContent({ shopId }: { shopId: string }) {
                                     >
                                         {category.name}
                                     </span>
-                                    <span className="text-xs text-zinc-500 font-mono">
+                                    <span className="text-xs text-zinc-400 font-mono">
                                         ID: {category.id}
                                     </span>
                                 </div>
@@ -220,7 +220,7 @@ function CategoryManagerContent({ shopId }: { shopId: string }) {
                                         exit={{ height: 0, opacity: 0 }}
                                         className="mt-4 pt-4 border-t border-zinc-800"
                                     >
-                                        <p className="text-xs text-zinc-500 mb-2">Elige un color:</p>
+                                        <p className="text-xs text-zinc-400 mb-2">Elige un color:</p>
                                         <div className="flex flex-wrap gap-2 mb-3">
                                             {CATEGORY_COLOR_PRESETS.map((preset) => (
                                                 <button
@@ -244,7 +244,7 @@ function CategoryManagerContent({ shopId }: { shopId: string }) {
                                             ))}
                                         </div>
                                         <div className="flex gap-2 items-center">
-                                            <label className="text-xs text-zinc-500">Color personalizado:</label>
+                                            <label className="text-xs text-zinc-400">Color personalizado:</label>
                                             <input
                                                 type="color"
                                                 value={editBgColor}
@@ -287,7 +287,7 @@ function CategoryManagerContent({ shopId }: { shopId: string }) {
 
                     {/* Name input */}
                     <div className="relative">
-                        <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                        <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                         <input
                             type="text"
                             value={newName}
@@ -300,7 +300,7 @@ function CategoryManagerContent({ shopId }: { shopId: string }) {
 
                     {/* Color presets */}
                     <div>
-                        <p className="text-xs text-zinc-500 mb-2">Elige un color:</p>
+                        <p className="text-xs text-zinc-400 mb-2">Elige un color:</p>
                         <div className="flex flex-wrap gap-2 mb-3">
                             {CATEGORY_COLOR_PRESETS.map((preset) => (
                                 <button
@@ -324,7 +324,7 @@ function CategoryManagerContent({ shopId }: { shopId: string }) {
                             ))}
                         </div>
                         <div className="flex gap-2 items-center">
-                            <label className="text-xs text-zinc-500">Color personalizado:</label>
+                            <label className="text-xs text-zinc-400">Color personalizado:</label>
                             <input
                                 type="color"
                                 value={newBgColor}
@@ -344,7 +344,7 @@ function CategoryManagerContent({ shopId }: { shopId: string }) {
 
                     {/* Preview */}
                     <div className="flex items-center gap-2">
-                        <span className="text-xs text-zinc-500">Vista previa:</span>
+                        <span className="text-xs text-zinc-400">Vista previa:</span>
                         <span
                             className="px-3 py-1 rounded-full text-sm font-medium"
                             style={{
@@ -367,7 +367,7 @@ function CategoryManagerContent({ shopId }: { shopId: string }) {
                         <button
                             onClick={handleAddCategory}
                             disabled={!newName.trim()}
-                            className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-700 disabled:text-zinc-500 text-white rounded-lg font-medium transition-colors"
+                            className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-700 disabled:text-zinc-400 text-white rounded-lg font-medium transition-colors"
                         >
                             Crear
                         </button>
@@ -393,7 +393,7 @@ function ShopSelector({ onSelect }: { onSelect: (shopId: string) => void }) {
     if (shops.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-                <Store className="w-16 h-16 text-zinc-500" />
+                <Store className="w-16 h-16 text-zinc-400" />
                 <h2 className="text-xl font-bold text-white">No hay tiendas</h2>
                 <p className="text-zinc-400 text-center max-w-md">
                     No hay tiendas disponibles para gestionar categorías.
@@ -428,16 +428,16 @@ function ShopSelector({ onSelect }: { onSelect: (shopId: string) => void }) {
                         )}
                         <div className="flex-1 min-w-0">
                             <h3 className="text-white font-medium truncate">{shop.name}</h3>
-                            <p className="text-sm text-zinc-500 truncate">/{shop.slug}</p>
+                            <p className="text-sm text-zinc-400 truncate">/{shop.slug}</p>
                         </div>
-                        <ChevronDown className="w-5 h-5 text-zinc-500 group-hover:text-cyan-400 -rotate-90 transition-all" />
+                        <ChevronDown className="w-5 h-5 text-zinc-400 group-hover:text-cyan-400 -rotate-90 transition-all" />
                     </button>
                 ))}
             </div>
 
             <Link
                 href="/admin/inventory"
-                className="text-sm text-zinc-500 hover:text-white flex items-center gap-2 mt-4"
+                className="text-sm text-zinc-400 hover:text-white flex items-center gap-2 mt-4"
             >
                 <ArrowLeft className="w-4 h-4" />
                 Volver al Inventario
@@ -465,7 +465,7 @@ function CategoryPageInner() {
 
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-                <Tag className="w-16 h-16 text-zinc-500" />
+                <Tag className="w-16 h-16 text-zinc-400" />
                 <h2 className="text-xl font-bold text-white">Error de Configuración</h2>
                 <p className="text-zinc-400 text-center max-w-md">
                     Tu cuenta no tiene una tienda asociada. Contacta al administrador.

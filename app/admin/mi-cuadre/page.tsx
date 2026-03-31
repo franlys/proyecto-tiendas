@@ -78,7 +78,7 @@ function AddEntryModal({
         <form onSubmit={handleSubmit} className="p-5 space-y-5">
           {/* Tipo */}
           <div className="space-y-2">
-            <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.15em]">Tipo de registro</label>
+            <label className="text-[9px] font-black text-white/55 uppercase tracking-[0.15em]">Tipo de registro</label>
             <div className="grid grid-cols-5 gap-1.5">
               {(Object.keys(ENTRY_TYPE_CONFIG) as CuadreEntryType[]).map((t, i) => (
                 <button
@@ -100,7 +100,7 @@ function AddEntryModal({
 
           {/* Descripción */}
           <div className="space-y-1.5">
-            <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.15em]">Descripción</label>
+            <label className="text-[9px] font-black text-white/55 uppercase tracking-[0.15em]">Descripción</label>
             <input
               type="text"
               value={description}
@@ -118,7 +118,7 @@ function AddEntryModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.15em]">Monto RD$</label>
+              <label className="text-[9px] font-black text-white/55 uppercase tracking-[0.15em]">Monto RD$</label>
               <input
                 type="number"
                 value={amount}
@@ -131,7 +131,7 @@ function AddEntryModal({
             </div>
             {type === "venta" ? (
               <div className="space-y-1.5">
-                <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.15em]">Cantidad</label>
+                <label className="text-[9px] font-black text-white/55 uppercase tracking-[0.15em]">Cantidad</label>
                 <input
                   type="number"
                   value={quantity}
@@ -142,7 +142,7 @@ function AddEntryModal({
               </div>
             ) : (
               <div className="space-y-1.5">
-                <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.15em]">Cliente (opcional)</label>
+                <label className="text-[9px] font-black text-white/55 uppercase tracking-[0.15em]">Cliente (opcional)</label>
                 <input
                   type="text"
                   value={clientName}
@@ -156,7 +156,7 @@ function AddEntryModal({
 
           {/* Pago */}
           <div className="space-y-2">
-            <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.15em]">Método de pago</label>
+            <label className="text-[9px] font-black text-white/55 uppercase tracking-[0.15em]">Método de pago</label>
             <div className="grid grid-cols-4 gap-1.5">
               {(Object.keys(PAYMENT_METHOD_CONFIG) as PaymentMethod[]).map(m => (
                 <button
@@ -228,7 +228,7 @@ function AddExpenseModal({
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div className="space-y-2">
-            <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.15em]">Categoría</label>
+            <label className="text-[9px] font-black text-white/55 uppercase tracking-[0.15em]">Categoría</label>
             <div className="grid grid-cols-2 gap-2">
               {(Object.keys(EXPENSE_CATEGORY_CONFIG) as ExpenseCategory[]).map(c => (
                 <button
@@ -247,11 +247,11 @@ function AddExpenseModal({
             </div>
           </div>
           <div className="space-y-1.5">
-            <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.15em]">Descripción</label>
+            <label className="text-[9px] font-black text-white/55 uppercase tracking-[0.15em]">Descripción</label>
             <input type="text" value={description} onChange={e => setDescription(e.target.value)} placeholder="Ej: Compra de repuestos" required autoFocus className="w-full bg-white/4 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-white/25 transition-colors" />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.15em]">Monto RD$</label>
+            <label className="text-[9px] font-black text-white/55 uppercase tracking-[0.15em]">Monto RD$</label>
             <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0" min="1" required className="w-full bg-white/4 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-white/25 transition-colors" />
           </div>
           <button type="submit" className="w-full py-3.5 bg-red-500/15 border border-red-500/25 text-red-400 rounded-xl font-black text-[11px] uppercase tracking-[0.15em] hover:bg-red-500/22 active:scale-[0.98] transition-all">
@@ -415,7 +415,7 @@ export default function MiCuadrePage() {
               <h1 className="text-base font-black tracking-tight">Mi Cuadre</h1>
               {isSaving && <Loader2 className="w-3.5 h-3.5 text-white/20 animate-spin ml-1" />}
             </div>
-            <p className="text-[11px] text-white/25 pl-6">{weekRange.weekLabel}</p>
+            <p className="text-[11px] text-white/45 pl-6">{weekRange.weekLabel}</p>
           </div>
           {cuadre && (
             <span className={cn(
@@ -442,7 +442,7 @@ export default function MiCuadrePage() {
               </div>
               <div className="text-center space-y-1">
                 <p className="text-sm font-bold text-white/50">Sin cuadre esta semana</p>
-                <p className="text-xs text-white/20">Inicia tu registro de actividad semanal</p>
+                <p className="text-xs text-white/40">Inicia tu registro de actividad semanal</p>
               </div>
               <button
                 onClick={createCuadre}
@@ -482,18 +482,18 @@ export default function MiCuadrePage() {
                 <div className="bg-white/3 border border-white/8 rounded-2xl p-4">
                   <TrendingUp className="w-3.5 h-3.5 text-green-400 mb-2" />
                   <p className="text-xl font-black text-white leading-none">{fmt(totals?.totalIncome ?? 0)}</p>
-                  <p className="text-[9px] text-white/25 uppercase tracking-[0.12em] mt-1.5">Ingresos</p>
+                  <p className="text-[9px] text-white/50 uppercase tracking-[0.12em] mt-1.5">Ingresos</p>
                 </div>
                 <div className="bg-white/3 border border-white/8 rounded-2xl p-4">
                   <DollarSign className="w-3.5 h-3.5 text-red-400 mb-2" />
                   <p className="text-xl font-black text-white leading-none">{fmt(totals?.totalExpenses ?? 0)}</p>
-                  <p className="text-[9px] text-white/25 uppercase tracking-[0.12em] mt-1.5">Gastos</p>
+                  <p className="text-[9px] text-white/50 uppercase tracking-[0.12em] mt-1.5">Gastos</p>
                 </div>
                 <div className="bg-white/3 border border-white/8 rounded-2xl p-4">
                   <p className={cn("text-xl font-black leading-none mt-5", (totals?.net ?? 0) >= 0 ? "text-green-400" : "text-red-400")}>
                     {fmt(totals?.net ?? 0)}
                   </p>
-                  <p className="text-[9px] text-white/25 uppercase tracking-[0.12em] mt-1.5">Neto</p>
+                  <p className="text-[9px] text-white/50 uppercase tracking-[0.12em] mt-1.5">Neto</p>
                 </div>
               </div>
 
@@ -518,7 +518,7 @@ export default function MiCuadrePage() {
               {/* Registros */}
               <div className="fade-up" style={{ animationDelay: "100ms" }}>
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-[9px] font-black text-white/25 uppercase tracking-[0.15em]">
+                  <p className="text-[9px] font-black text-white/50 uppercase tracking-[0.15em]">
                     Registros · {cuadre.entries.length}
                   </p>
                   {!isReadOnly && (
@@ -540,7 +540,7 @@ export default function MiCuadrePage() {
                     )}
                   >
                     <Plus className="w-5 h-5 text-white/15" />
-                    <p className="text-xs text-white/20">Agrega tu primer registro</p>
+                    <p className="text-xs text-white/40">Agrega tu primer registro</p>
                   </div>
                 ) : (
                   <div className="space-y-1.5">
@@ -583,7 +583,7 @@ export default function MiCuadrePage() {
               {/* Gastos */}
               <div className="fade-up" style={{ animationDelay: "120ms" }}>
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-[9px] font-black text-white/25 uppercase tracking-[0.15em]">
+                  <p className="text-[9px] font-black text-white/50 uppercase tracking-[0.15em]">
                     Gastos · {cuadre.expenses.length}
                   </p>
                   {!isReadOnly && (
@@ -633,7 +633,7 @@ export default function MiCuadrePage() {
               {/* Notas */}
               {!isReadOnly && (
                 <div className="fade-up space-y-2" style={{ animationDelay: "140ms" }}>
-                  <label className="text-[9px] font-black text-white/25 uppercase tracking-[0.15em]">
+                  <label className="text-[9px] font-black text-white/50 uppercase tracking-[0.15em]">
                     Notas para el dueño
                   </label>
                   <textarea
@@ -647,7 +647,7 @@ export default function MiCuadrePage() {
               )}
               {isReadOnly && cuadre.notes && (
                 <div className="bg-white/3 border border-white/8 rounded-xl px-4 py-3 fade-up">
-                  <p className="text-[9px] font-black text-white/25 uppercase tracking-[0.15em] mb-1.5">Notas</p>
+                  <p className="text-[9px] font-black text-white/50 uppercase tracking-[0.15em] mb-1.5">Notas</p>
                   <p className="text-sm text-white/60">{cuadre.notes}</p>
                 </div>
               )}
