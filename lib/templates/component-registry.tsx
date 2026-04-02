@@ -22,6 +22,7 @@ import { CosmicDropLayout } from "@/components/shop/templates/cosmic-drop-layout
 import { TechDropLayout } from "@/components/shop/templates/tech-drop-layout";
 import { Tech3DLayout } from "@/components/shop/templates/tech-3d-layout";
 import { TechPremiumV2Layout } from "@/components/shop/templates/tech-premium-v2-layout";
+import { VioraLayout } from "@/components/shop/templates/custom/viora-layout";
 
 // Custom templates (uncomment/add when ready)
 // import { MiClienteLayout } from "@/components/shop/templates/custom/mi-cliente-layout";
@@ -48,6 +49,7 @@ export const TEMPLATE_REGISTRY: Record<string, React.ComponentType<any>> = {
     "tech-drop-v1":     TechDropLayout,
     "tech-3d-v1":       Tech3DLayout,
     "tech-premium-v2":  TechPremiumV2Layout,
+    "viora-premium":    VioraLayout,
 
     // --- Custom (per-client) ---
     // "mi-cliente-v1": MiClienteLayout,

@@ -88,6 +88,15 @@ export const BUILT_IN_TEMPLATES: TemplateDefinition[] = [
         isPremium: true,
         createdAt: "2024-10-01",
     },
+    {
+        id: "viora-premium",
+        name: "Viora Premium",
+        description: "Minimalismo extremo editorial estilo Zara. Múltiples vistas dinámicas.",
+        category: "premium",
+        status: "active",
+        isPremium: true,
+        createdAt: "2026-04-02",
+    },
 ];
 
 /** IDs de plantillas activas (no ocultas ni eliminadas) */
