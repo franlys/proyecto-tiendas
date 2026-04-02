@@ -2199,7 +2199,7 @@ function ShopDetailContent() {
                                                 banner,
                                                 slogan,
                                                 description,
-                                                templateType,
+                                                templateType: templateType as any,
                                                 // Save Drop Theme for street-drop, cosmic-drop and tech-drop templates
                                                 dropTheme: (templateType === "street-drop-v1" || templateType === "cosmic-drop-v1" || templateType === "tech-drop-v1") ? dropTheme : undefined,
                                                 theme: {
