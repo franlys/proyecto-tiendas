@@ -84,6 +84,7 @@ export interface FirestoreShop {
 
   // Configuración de negocio
   wholesaleEnabled: boolean;
+  financingEnabled?: boolean;
 
   // Personalización avanzada (nuevo)
   media?: ShopMedia;
@@ -134,6 +135,7 @@ export interface CreateShopInput {
   businessType: BusinessType;
   phone: string;
   wholesaleEnabled?: boolean;
+  financingEnabled?: boolean;
   enabledFeatures?: FeatureId[];  // Features iniciales
   monthlyPrice?: number;
 }
@@ -152,6 +154,7 @@ export interface UpdateShopInput {
   city?: string;
   mapLink?: string;
   wholesaleEnabled?: boolean;
+  financingEnabled?: boolean;
   theme?: Partial<ShopTheme>;
   monthlyPrice?: number;
   // Nuevos campos de personalización
