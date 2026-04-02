@@ -216,7 +216,7 @@ function ShopDetailContent() {
     const [logo, setLogo] = useState("");
     const [banner, setBanner] = useState("");
     const [slogan, setSlogan] = useState("");
-    const [templateType, setTemplateType] = useState<"standard" | "premium-drop-v1" | "street-drop-v1" | "cosmic-drop-v1" | "tech-drop-v1" | "tech-3d-v1" | "tech-premium-v2">("standard");
+    const [templateType, setTemplateType] = useState<"standard" | "premium-drop-v1" | "street-drop-v1" | "cosmic-drop-v1" | "tech-drop-v1" | "tech-3d-v1" | "tech-premium-v2" | "viora-premium">("standard");
     const [description, setDescription] = useState("");
     const [primaryColor, setPrimaryColor] = useState("#22D3EE");
     const [accentColor, setAccentColor] = useState("#3B82F6");
