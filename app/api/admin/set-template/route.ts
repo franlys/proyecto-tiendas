@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Validate templateType
-        const validTemplates = ["standard", "premium-drop-v1", "street-drop-v1"];
+        const validTemplates = ["standard", "premium-drop-v1", "street-drop-v1", "cosmic-drop-v1", "tech-drop-v1", "tech-3d-v1", "tech-premium-v2", "viora-premium"];
         if (!validTemplates.includes(templateType)) {
             return NextResponse.json(
                 { error: `Invalid templateType. Must be one of: ${validTemplates.join(", ")}` },
