@@ -29,6 +29,7 @@ function docToShop(id: string, data: FirestoreShop): Shop {
     featureToggles: data.featureToggles,
     limits: data.limits,
     wholesaleEnabled: data.wholesaleEnabled,
+    financingEnabled: data.financingEnabled,
     media: data.media,
     links: data.links,
     branding: data.branding,

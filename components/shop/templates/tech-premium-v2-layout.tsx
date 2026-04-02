@@ -332,22 +332,26 @@ export function TechPremiumV2Layout({ shop, products, services, loadingData, sho
 
                     {/* Actions + Search + Cart */}
                     <div className="flex items-center gap-1.5">
-                        <button
-                            type="button"
-                            onClick={() => setIsFinancingOpen(true)}
-                            className="hidden lg:flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold text-white/45 hover:text-white hover:bg-white/8 transition-all uppercase tracking-widest"
-                        >
-                            <CreditCard className="w-3.5 h-3.5" />
-                            Financiamiento
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setIsQuoteOpen(true)}
-                            className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold text-white/45 hover:text-white hover:bg-white/8 transition-all uppercase tracking-widest"
-                        >
-                            <MessageSquarePlus className="w-3.5 h-3.5" />
-                            Cotizar
-                        </button>
+                        {shop.financingEnabled && (
+                            <button
+                                type="button"
+                                onClick={() => setIsFinancingOpen(true)}
+                                className="hidden lg:flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold text-white/45 hover:text-white hover:bg-white/8 transition-all uppercase tracking-widest"
+                            >
+                                <CreditCard className="w-3.5 h-3.5" />
+                                Financiamiento
+                            </button>
+                        )}
+                        {shop.requestQuoteEnabled && (
+                            <button
+                                type="button"
+                                onClick={() => setIsQuoteOpen(true)}
+                                className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold text-white/45 hover:text-white hover:bg-white/8 transition-all uppercase tracking-widest"
+                            >
+                                <MessageSquarePlus className="w-3.5 h-3.5" />
+                                Cotizar
+                            </button>
+                        )}
                         {shop.wholesaleEnabled && (
                             <WholesaleButton
                                 shopId={shop.id}
@@ -574,39 +578,47 @@ export function TechPremiumV2Layout({ shop, products, services, loadingData, sho
             `}</style>
 
             {/* Mobile FAB — Cotizar */}
-            <button
-                type="button"
-                onClick={() => setIsQuoteOpen(true)}
-                className="sm:hidden fixed bottom-24 right-4 z-40 flex items-center gap-2 px-4 py-2.5 bg-white/10 border border-white/15 backdrop-blur-md rounded-full text-xs font-bold text-white shadow-xl"
-            >
-                <MessageSquarePlus className="w-4 h-4" />
-                Cotizar
-            </button>
+            {shop.requestQuoteEnabled && (
+                <button
+                    type="button"
+                    onClick={() => setIsQuoteOpen(true)}
+                    className="sm:hidden fixed bottom-24 right-4 z-40 flex items-center gap-2 px-4 py-2.5 bg-white/10 border border-white/15 backdrop-blur-md rounded-full text-xs font-bold text-white shadow-xl"
+                >
+                    <MessageSquarePlus className="w-4 h-4" />
+                    Cotizar
+                </button>
+            )}
 
             {/* Quote Request Modal */}
-            <QuoteRequestModal
-                isOpen={isQuoteOpen}
-                onClose={() => setIsQuoteOpen(false)}
-                shopId={shop.id}
-                categories={categories}
-            />
+            {shop.requestQuoteEnabled && (
+                <QuoteRequestModal
+                    isOpen={isQuoteOpen}
+                    onClose={() => setIsQuoteOpen(false)}
+                    shopId={shop.id}
+                    categories={categories}
+                />
+            )}
 
             {/* Financing Modal */}
-            <FinancingModal
-                isOpen={isFinancingOpen}
-                onClose={() => setIsFinancingOpen(false)}
-                shopId={shop.id}
-            />
+            {shop.financingEnabled && (
+                <FinancingModal
+                    isOpen={isFinancingOpen}
+                    onClose={() => setIsFinancingOpen(false)}
+                    shopId={shop.id}
+                />
+            )}
 
             {/* Mobile FAB — Financiamiento */}
-            <button
-                type="button"
-                onClick={() => setIsFinancingOpen(true)}
-                className="lg:hidden fixed bottom-36 right-4 z-40 flex items-center gap-2 px-4 py-2.5 bg-white/10 border border-white/15 backdrop-blur-md rounded-full text-xs font-bold text-white shadow-xl"
-            >
-                <CreditCard className="w-4 h-4" />
-                Financiamiento
-            </button>
+            {shop.financingEnabled && (
+                <button
+                    type="button"
+                    onClick={() => setIsFinancingOpen(true)}
+                    className="lg:hidden fixed bottom-36 right-4 z-40 flex items-center gap-2 px-4 py-2.5 bg-white/10 border border-white/15 backdrop-blur-md rounded-full text-xs font-bold text-white shadow-xl"
+                >
+                    <CreditCard className="w-4 h-4" />
+                    Financiamiento
+                </button>
+            )}
 
             {/* Live Chat Widget */}
             <LiveChatWidget shopId={shop.id} shopName={shop.name} />

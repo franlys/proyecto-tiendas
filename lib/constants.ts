@@ -284,6 +284,7 @@ export interface ShopConfig {
   businessTypes?: string[]; // Multi-type support
   wholesaleCode?: string;
   wholesaleEnabled?: boolean;
+  financingEnabled?: boolean;
   // Meal Prep
   mealPrepConfig?: MealPrepShopConfig;
   // Auth (for Mock/Seeding purposes)
