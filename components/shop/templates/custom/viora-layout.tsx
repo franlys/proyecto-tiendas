@@ -21,8 +21,7 @@ export function VioraLayout({ shop, products }: ShopLayoutProps) {
   // Scroll-aware navbar
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const { cart } = useCart();
-  const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
+  const { totalItems } = useCart();
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 60);
