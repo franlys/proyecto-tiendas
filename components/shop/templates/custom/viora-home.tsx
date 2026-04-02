@@ -34,7 +34,6 @@ function useReveal(threshold = 0.15) {
 // ─── HOME ────────────────────────────────────────────────────────────────────
 
 export function VioraHome({ shop }: { shop: ManagedShop }) {
-  const [heroLoaded, setHeroLoaded] = useState(false);
   const editorial = useReveal(0.1);
   const story = useReveal(0.12);
   const newArrivals = useReveal(0.08);
@@ -102,7 +101,7 @@ export function VioraHome({ shop }: { shop: ManagedShop }) {
         .arrivals-label:nth-child(3) { transition-delay: 160ms; }
         .arrivals-label:nth-child(4) { transition-delay: 240ms; }
 
-        /* CTA button: flat with hover invert */
+        /* CTA button: flat with explicit hover invert per variant */
         .viora-btn {
           display: inline-block;
           padding: 13px 32px;
@@ -113,16 +112,28 @@ export function VioraHome({ shop }: { shop: ManagedShop }) {
           border: 1px solid currentColor;
           transition:
             background-color 220ms ease,
-            color 220ms ease;
+            color 220ms ease,
+            border-color 220ms ease;
         }
+        /* light = white text on dark bg → hover = white bg + black text */
         @media (hover: hover) and (pointer: fine) {
-          .viora-btn:hover {
-            background-color: currentColor;
+          .viora-btn.light:hover {
+            background-color: #fff;
+            color: #000;
+            border-color: #fff;
           }
-          .viora-btn.light:hover { color: #fff; }
-          .viora-btn.dark:hover  { color: #000; }
+          /* dark = black text on light bg → hover = black bg + white text */
+          .viora-btn.dark:hover {
+            background-color: #000;
+            color: #fff;
+            border-color: #000;
+          }
         }
-        .viora-btn:active { transform: scale(0.97); transition: transform 120ms cubic-bezier(0.23,1,0.32,1); }
+        /* Press feedback — 120ms, scale(0.97) */
+        .viora-btn:active {
+          transform: scale(0.97);
+          transition: transform 120ms cubic-bezier(0.23, 1, 0.32, 1);
+        }
 
         @media (prefers-reduced-motion: reduce) {
           .hero-line-1, .hero-line-2, .hero-cta,
@@ -142,7 +153,6 @@ export function VioraHome({ shop }: { shop: ManagedShop }) {
           src={shop?.logo && shop.logo.startsWith("http") && !shop.logo.includes("firebase") ? shop.logo : HERO_IMAGE}
           alt="Nueva Colección"
           className="absolute inset-0 w-full h-full object-cover object-center"
-          onLoad={() => setHeroLoaded(true)}
           fetchPriority="high"
         />
         {/* Gradient: stronger at bottom for text legibility */}
@@ -209,13 +219,13 @@ export function VioraHome({ shop }: { shop: ManagedShop }) {
         ref={editorial.ref as any}
         className="w-full py-24 md:py-36 px-5 md:px-10 flex flex-col md:flex-row items-start md:items-end justify-between gap-8 max-w-screen-xl mx-auto"
       >
-        <div className={`transition-all duration-[800ms] cubic-bezier(0.23,1,0.32,1) ${editorial.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}>
+        <div style={{ transition: "opacity 800ms cubic-bezier(0.23,1,0.32,1), transform 800ms cubic-bezier(0.23,1,0.32,1)" }} className={editorial.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}>
           <p className="text-[10px] tracking-[0.3em] uppercase text-black/30 mb-5">Filosofía</p>
           <blockquote className="viora-serif text-[clamp(30px,5vw,58px)] font-light leading-[1.1] tracking-[-0.01em] italic max-w-2xl">
             "La moda no es sólo ropa — es el lenguaje silencioso de quién eres."
           </blockquote>
         </div>
-        <div className={`transition-all duration-[800ms] delay-200 cubic-bezier(0.23,1,0.32,1) shrink-0 ${editorial.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}>
+        <div style={{ transition: "opacity 800ms cubic-bezier(0.23,1,0.32,1) 200ms, transform 800ms cubic-bezier(0.23,1,0.32,1) 200ms" }} className={`shrink-0 ${editorial.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}>
           <a href="?view=collection" className="viora-btn dark text-black">Explorar</a>
         </div>
       </section>

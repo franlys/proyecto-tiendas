@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import type { ShopLayoutProps } from "@/lib/templates/component-registry";
 import { VioraHome } from "./viora-home";
