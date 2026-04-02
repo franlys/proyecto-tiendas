@@ -1,0 +1,11 @@
+{
+  "projectType": "Next.js Web Application",
+  "defaultLanguage": "es",
+  "autoInvokeSkills": true,
+  "telemetry": false,
+  "agentPermissions": {
+    "runTerminalCommands": true,
+    "editFiles": true,
+    "deleteFiles": true
+  }
+}
