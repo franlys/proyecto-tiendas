@@ -1,18 +1,31 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import type { ManagedShop } from "@/components/shared";
 
-// ─── HERO IMAGES (fashion editorial — swimwear/clothing) ─────────────────────
-const HERO_IMAGE =
-  "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=2400&auto=format&fit=crop";
-const GRID_IMAGES = [
-  "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=1600&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1554568218-0f1715e72254?q=80&w=1200&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=1200&auto=format&fit=crop",
-];
-const EDITORIAL_IMAGE =
-  "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?q=80&w=1800&auto=format&fit=crop";
+interface VioraMedia {
+  heroImage?: string;
+  gridImage1?: string;
+  gridImage2?: string;
+  gridImage3?: string;
+  editorialImage?: string;
+}
+
+// ─── DEFAULT IMAGES (fashion editorial — swimwear/clothing) ──────────────────
+const DEFAULTS = {
+  heroImage:
+    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=2400&auto=format&fit=crop",
+  gridImage1:
+    "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=1600&auto=format&fit=crop",
+  gridImage2:
+    "https://images.unsplash.com/photo-1554568218-0f1715e72254?q=80&w=1200&auto=format&fit=crop",
+  gridImage3:
+    "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=1200&auto=format&fit=crop",
+  editorialImage:
+    "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?q=80&w=1800&auto=format&fit=crop",
+};
 
 // ─── INTERSECTION REVEAL HOOK ────────────────────────────────────────────────
 function useReveal(threshold = 0.15) {
@@ -37,6 +50,21 @@ export function VioraHome({ shop }: { shop: ManagedShop }) {
   const editorial = useReveal(0.1);
   const story = useReveal(0.12);
   const newArrivals = useReveal(0.08);
+
+  // Load custom photos from Firestore (set via /admin/viora-fotos)
+  const [media, setMedia] = useState<VioraMedia>({});
+  useEffect(() => {
+    if (!shop?.id) return;
+    getDoc(doc(db, "shops", shop.id, "settings", "viora"))
+      .then(snap => { if (snap.exists()) setMedia(snap.data() as VioraMedia); })
+      .catch(() => {});
+  }, [shop?.id]);
+
+  const heroImage    = media.heroImage    || DEFAULTS.heroImage;
+  const gridImage1   = media.gridImage1   || DEFAULTS.gridImage1;
+  const gridImage2   = media.gridImage2   || DEFAULTS.gridImage2;
+  const gridImage3   = media.gridImage3   || DEFAULTS.gridImage3;
+  const editorialImage = media.editorialImage || DEFAULTS.editorialImage;
 
   return (
     <>
@@ -150,7 +178,7 @@ export function VioraHome({ shop }: { shop: ManagedShop }) {
       {/* ── HERO ──────────────────────────────────────────────────────── */}
       <section className="relative w-full h-screen overflow-hidden viora-img-zoom">
         <img
-          src={shop?.logo && shop.logo.startsWith("http") && !shop.logo.includes("firebase") ? shop.logo : HERO_IMAGE}
+          src={heroImage}
           alt="Nueva Colección"
           className="absolute inset-0 w-full h-full object-cover object-center"
           fetchPriority="high"
@@ -187,7 +215,7 @@ export function VioraHome({ shop }: { shop: ManagedShop }) {
 
         {/* Tall left panel */}
         <div className="col-span-1 md:col-span-1 viora-img-zoom overflow-hidden relative" style={{ aspectRatio: "3/4" }}>
-          <img src={GRID_IMAGES[0]} alt="Mujer" className="w-full h-full object-cover object-top" />
+          <img src={gridImage1} alt="Mujer" className="w-full h-full object-cover object-top" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
           <div className="absolute bottom-6 left-6">
             <a href="?view=collection" className="viora-serif text-white text-xl font-light italic">Mujer</a>
@@ -197,7 +225,7 @@ export function VioraHome({ shop }: { shop: ManagedShop }) {
         {/* Right: stacked 2 shorter panels */}
         <div className="col-span-1 md:col-span-2 grid grid-rows-2 gap-[2px]">
           <div className="viora-img-zoom overflow-hidden relative" style={{ aspectRatio: "16/9" }}>
-            <img src={GRID_IMAGES[1]} alt="Nueva llegada" className="w-full h-full object-cover object-center" />
+            <img src={gridImage2} alt="Nueva llegada" className="w-full h-full object-cover object-center" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
             <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between">
               <span className="viora-serif text-white text-lg font-light italic">Nueva Llegada</span>
@@ -205,7 +233,7 @@ export function VioraHome({ shop }: { shop: ManagedShop }) {
             </div>
           </div>
           <div className="viora-img-zoom overflow-hidden relative" style={{ aspectRatio: "16/9" }}>
-            <img src={GRID_IMAGES[2]} alt="Trajes de baño" className="w-full h-full object-cover object-center" />
+            <img src={gridImage3} alt="Trajes de baño" className="w-full h-full object-cover object-center" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
             <div className="absolute bottom-5 left-5">
               <span className="viora-serif text-white text-lg font-light italic">Trajes de Baño</span>
@@ -238,7 +266,7 @@ export function VioraHome({ shop }: { shop: ManagedShop }) {
       >
         <div className={`viora-reveal ${story.visible ? "is-visible" : ""} w-full h-full`}>
           <img
-            src={EDITORIAL_IMAGE}
+            src={editorialImage}
             alt="Viora Editorial"
             className="w-full h-full object-cover object-top"
           />

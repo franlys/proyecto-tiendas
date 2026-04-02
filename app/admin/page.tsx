@@ -38,6 +38,7 @@ import {
   MessageCircle,
   ClipboardList,
   BarChart3,
+  ImageIcon,
 } from "lucide-react";
 import { useAuth, ShopsProvider, useShops, AgencyProvider, SalesOrdersProvider, useSalesOrders, ORDER_STATUS_CONFIG, type OrderStatus, type SalesOrder } from "@/components/shared";
 import { DashboardKPIs, SalesChart, SubscriptionLock, SupportWidget, AgencyContactCard } from "@/components/admin";
@@ -1360,6 +1361,16 @@ function AdminDashboardWithSubscription() {
                     <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-violet-400 hover:text-violet-300">
                       <LayoutDashboard className="w-4 h-4" />
                       <span className="hidden sm:inline ml-1">Inicio</span>
+                    </Button>
+                  </Link>
+                )}
+
+                {/* Fotos — Solo Viora Premium */}
+                {shop?.templateType === "viora-premium" && (
+                  <Link href="/admin/viora-fotos">
+                    <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-pink-400 hover:text-pink-300">
+                      <ImageIcon className="w-4 h-4" />
+                      <span className="hidden sm:inline ml-1">Fotos</span>
                     </Button>
                   </Link>
                 )}
