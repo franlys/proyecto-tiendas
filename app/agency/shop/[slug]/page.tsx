@@ -1318,6 +1318,26 @@ function ShopDetailContent() {
                                                 Minimalismo tipo Apple/Nothing. Negro profundo y tipografía enorme.
                                             </p>
                                         </button>
+
+                                        {/* Viora Premium Template */}
+                                        <button
+                                            onClick={() => setTemplateType("viora-premium")}
+                                            className={`p-4 rounded-xl border-2 transition-all text-left ${templateType === "viora-premium"
+                                                ? "border-black bg-black/10"
+                                                : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                                                }`}
+                                        >
+                                            <div className="w-full h-16 rounded-lg mb-3 flex items-center justify-center relative overflow-hidden bg-white border border-zinc-200">
+                                                <span className="text-black font-light text-base tracking-[0.3em] uppercase" style={{ fontFamily: "Georgia, serif", fontStyle: "italic" }}>Viora</span>
+                                            </div>
+                                            <div className="flex justify-between items-start mb-1">
+                                                <h4 className="text-white font-medium text-sm">Viora Premium</h4>
+                                                <span className="text-[9px] bg-gradient-to-r from-violet-500 to-cyan-500 text-white px-1.5 py-0.5 rounded-full font-bold ml-1 shrink-0">Fashion</span>
+                                            </div>
+                                            <p className="text-xs text-slate-400">
+                                                Editorial estilo Zara. Moda, trajes de baño y ropa.
+                                            </p>
+                                        </button>
                                     </div>
 
                                 </div>
