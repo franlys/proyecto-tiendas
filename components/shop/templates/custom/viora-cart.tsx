@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X, Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
-import { useCart, useShop } from "@/components/shared";
-import { formatPhoneForWhatsApp } from "@/lib/utils";
+import { useCart } from "@/components/shared";
+import { CheckoutDrawer } from "@/components/shop/checkout-drawer";
 
 function fmt(n: number) {
   return `RD$${n.toLocaleString("es-DO")}`;
@@ -15,7 +15,7 @@ interface VioraCartProps {
 
 export function VioraCart({ onClose }: VioraCartProps) {
   const { products, totalItems, totalPrice, updateProductQuantity, removeItem } = useCart();
-  const shop = useShop();
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   // Close on Escape
   useEffect(() => {
@@ -30,25 +30,8 @@ export function VioraCart({ onClose }: VioraCartProps) {
     return () => { document.body.style.overflow = ""; };
   }, []);
 
-  const handleWhatsApp = () => {
-    if (!shop?.contact?.whatsapp) return;
-    const phone = formatPhoneForWhatsApp(shop.contact.whatsapp);
-
-    const lines = products.map(p => {
-      const variant = p.variantName ? ` (${p.variantName})` : "";
-      return `• ${p.quantity}x ${p.name}${variant} — ${fmt(p.price * p.quantity)}`;
-    });
-
-    const message = [
-      `Hola ${shop?.name || "Viora"}, quiero hacer un pedido:`,
-      "",
-      ...lines,
-      "",
-      `*Total: ${fmt(totalPrice)}*`,
-    ].join("\n");
-
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
-    onClose();
+  const handleCheckout = () => {
+    setCheckoutOpen(true);
   };
 
   return (
@@ -103,65 +86,63 @@ export function VioraCart({ onClose }: VioraCartProps) {
             </div>
           ) : (
             <div className="divide-y divide-black/6">
-              {products.map((item) => {
-                return (
-                  <div key={`${item.id}-${item.variantId ?? "base"}`} className="flex gap-4 px-6 py-5">
-                    {/* Thumbnail */}
-                    <div className="relative shrink-0 overflow-hidden bg-[#f4f4f4]" style={{ width: 72, height: 96 }}>
-                      <img
-                        src={item.image || "https://placehold.co/144x192/f4f4f4/999?text=V"}
-                        alt={item.name}
-                        className="w-full h-full object-cover object-top"
-                      />
+              {products.map((item) => (
+                <div key={`${item.id}-${item.variantId ?? "base"}`} className="flex gap-4 px-6 py-5">
+                  {/* Thumbnail */}
+                  <div className="relative shrink-0 overflow-hidden bg-[#f4f4f4]" style={{ width: 72, height: 96 }}>
+                    <img
+                      src={item.image || "https://placehold.co/144x192/f4f4f4/999?text=V"}
+                      alt={item.name}
+                      className="w-full h-full object-cover object-top"
+                    />
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                    <div>
+                      <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-black leading-snug line-clamp-2">
+                        {item.name}
+                      </p>
+                      {item.variantName && (
+                        <p className="text-[9px] text-black/40 mt-1 tracking-wide">Talla: {item.variantName}</p>
+                      )}
+                      <div className="mt-1.5">
+                        <span className="text-xs font-medium text-black">
+                          {fmt(item.price * item.quantity)}
+                        </span>
+                      </div>
                     </div>
 
-                    {/* Info */}
-                    <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-                      <div>
-                        <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-black leading-snug line-clamp-2">
-                          {item.name}
-                        </p>
-                        {item.variantName && (
-                          <p className="text-[9px] text-black/40 mt-1 tracking-wide">Talla: {item.variantName}</p>
-                        )}
-                        <div className="mt-1.5">
-                          <span className="text-xs font-medium text-black">
-                            {fmt(item.price * item.quantity)}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Qty controls */}
-                      <div className="flex items-center justify-between mt-3">
-                        <div className="flex items-center gap-3 border border-black/12 px-3 py-1.5">
-                          <button
-                            onClick={() => updateProductQuantity(item.id, item.quantity - 1, item.variantId)}
-                            className="text-black/40 hover:text-black transition-colors duration-100"
-                            aria-label="Reducir"
-                          >
-                            <Minus className="w-3 h-3" />
-                          </button>
-                          <span className="text-[11px] font-medium w-4 text-center">{item.quantity}</span>
-                          <button
-                            onClick={() => updateProductQuantity(item.id, item.quantity + 1, item.variantId)}
-                            className="text-black/40 hover:text-black transition-colors duration-100"
-                            aria-label="Aumentar"
-                          >
-                            <Plus className="w-3 h-3" />
-                          </button>
-                        </div>
+                    {/* Qty controls */}
+                    <div className="flex items-center justify-between mt-3">
+                      <div className="flex items-center gap-3 border border-black/12 px-3 py-1.5">
                         <button
-                          onClick={() => removeItem(item.id, item.variantId)}
-                          className="text-black/20 hover:text-red-400 transition-colors duration-150 p-1"
-                          aria-label="Eliminar"
+                          onClick={() => updateProductQuantity(item.id, item.quantity - 1, item.variantId)}
+                          className="text-black/40 hover:text-black transition-colors duration-100"
+                          aria-label="Reducir"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <span className="text-[11px] font-medium w-4 text-center">{item.quantity}</span>
+                        <button
+                          onClick={() => updateProductQuantity(item.id, item.quantity + 1, item.variantId)}
+                          className="text-black/40 hover:text-black transition-colors duration-100"
+                          aria-label="Aumentar"
+                        >
+                          <Plus className="w-3 h-3" />
                         </button>
                       </div>
+                      <button
+                        onClick={() => removeItem(item.id, item.variantId)}
+                        className="text-black/20 hover:text-red-400 transition-colors duration-150 p-1"
+                        aria-label="Eliminar"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -176,10 +157,10 @@ export function VioraCart({ onClose }: VioraCartProps) {
             <p className="text-[9px] text-black/30 tracking-wide -mt-2">Envío calculado al confirmar pedido</p>
 
             <button
-              onClick={handleWhatsApp}
+              onClick={handleCheckout}
               className="w-full h-12 bg-black text-white text-[10px] font-medium uppercase tracking-[0.18em] hover:bg-black/80 transition-colors duration-200 flex items-center justify-center gap-2"
             >
-              Confirmar pedido por WhatsApp
+              Confirmar pedido
             </button>
 
             <button
@@ -191,6 +172,9 @@ export function VioraCart({ onClose }: VioraCartProps) {
           </div>
         )}
       </div>
+
+      {/* Internal checkout flow */}
+      <CheckoutDrawer isOpen={checkoutOpen} onClose={() => setCheckoutOpen(false)} />
     </>
   );
 }

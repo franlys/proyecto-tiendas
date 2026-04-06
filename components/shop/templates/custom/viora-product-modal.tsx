@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { X, ShoppingBag, ChevronRight } from "lucide-react";
 import type { Product, ProductVariant } from "@/lib/constants";
 import { useCart } from "@/components/shared";
@@ -72,6 +72,7 @@ interface VioraProductModalProps {
 
 export function VioraProductModal({ product, allProducts, onClose }: VioraProductModalProps) {
   const { addProduct } = useCart();
+  const panelRef = useRef<HTMLDivElement>(null);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
     product.variants && product.variants.length === 1 ? product.variants[0] : null
   );
@@ -102,10 +103,15 @@ export function VioraProductModal({ product, allProducts, onClose }: VioraProduc
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
-  // Prevent body scroll
+  // Prevent body scroll + focus panel so trackpad scroll works
   useEffect(() => {
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
+    // Delay focus so the animation doesn't conflict
+    const t = setTimeout(() => panelRef.current?.focus(), 50);
+    return () => {
+      clearTimeout(t);
+      document.body.style.overflow = "";
+    };
   }, []);
 
   const handleAddToCart = useCallback(() => {
@@ -181,8 +187,10 @@ export function VioraProductModal({ product, allProducts, onClose }: VioraProduc
           Desktop: panel fijo derecha, altura completa, sin border-radius
       */}
       <div
+        ref={panelRef}
         id="viora-modal-scroll"
-        className="viora-modal-panel fixed z-[90] bg-white overflow-y-auto overscroll-contain"
+        tabIndex={-1}
+        className="viora-modal-panel fixed z-[90] bg-white overflow-y-auto overscroll-contain outline-none"
         style={{
           // Mobile
           bottom: 0, left: 0, right: 0,
