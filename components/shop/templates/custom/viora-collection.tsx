@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import type { Product } from "@/lib/constants";
+import { VioraProductModal } from "./viora-product-modal";
 
 interface VioraCollectionProps {
   products: Product[];
@@ -42,7 +43,7 @@ function FilterBar({
 
 // ─── PRODUCT CARD ─────────────────────────────────────────────────────────────
 
-function ProductCard({ product, priority = false }: { product: Product; priority?: boolean }) {
+function ProductCard({ product, priority = false, onClick }: { product: Product; priority?: boolean; onClick: () => void }) {
   const hasPromo = !!(product.promoPrice && Number(product.promoPrice) < Number(product.price));
   const discount = hasPromo
     ? Math.round((1 - Number(product.promoPrice) / Number(product.price)) * 100)
@@ -52,6 +53,7 @@ function ProductCard({ product, priority = false }: { product: Product; priority
   return (
     <article
       className="viora-card group flex flex-col cursor-pointer"
+      onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -135,6 +137,7 @@ export function VioraCollection({ products, isDiscountView = false }: VioraColle
   const urlCategory = searchParams.get("category") || "todos";
   const [activeCategory, setActiveCategory] = useState(urlCategory);
   const [sortBy, setSortBy] = useState<"default" | "price-asc" | "price-desc" | "promo">("default");
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const headerRef = useRef<HTMLDivElement>(null);
 
   // Sync category when URL param changes (e.g. navigating from home grid)
@@ -277,7 +280,12 @@ export function VioraCollection({ products, isDiscountView = false }: VioraColle
           {filtered.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 md:gap-x-4 gap-y-10 md:gap-y-14">
               {filtered.map((product, i) => (
-                <ProductCard key={product.id} product={product} priority={i < 4} />
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  priority={i < 4}
+                  onClick={() => setSelectedProduct(product)}
+                />
               ))}
             </div>
           ) : (
@@ -303,6 +311,15 @@ export function VioraCollection({ products, isDiscountView = false }: VioraColle
           )}
         </div>
       </div>
+
+      {/* Product modal */}
+      {selectedProduct && (
+        <VioraProductModal
+          product={selectedProduct}
+          allProducts={products}
+          onClose={() => setSelectedProduct(null)}
+        />
+      )}
     </>
   );
 }
