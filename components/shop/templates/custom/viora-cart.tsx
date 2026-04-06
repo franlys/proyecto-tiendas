@@ -31,8 +31,8 @@ export function VioraCart({ onClose }: VioraCartProps) {
   }, []);
 
   const handleWhatsApp = () => {
-    if (!shop?.whatsapp && !shop?.contact?.whatsapp) return;
-    const phone = formatPhoneForWhatsApp(shop.whatsapp || shop.contact?.whatsapp || "");
+    if (!shop?.contact?.whatsapp) return;
+    const phone = formatPhoneForWhatsApp(shop.contact.whatsapp);
 
     const lines = products.map(p => {
       const variant = p.variantName ? ` (${p.variantName})` : "";
