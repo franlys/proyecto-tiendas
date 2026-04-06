@@ -6,6 +6,7 @@ import type { ShopLayoutProps } from "@/lib/templates/component-registry";
 import type { Product } from "@/lib/constants";
 import { VioraHome } from "./viora-home";
 import { VioraCollection } from "./viora-collection";
+import { VioraCart } from "./viora-cart";
 import { useCart } from "@/components/shared";
 import { ShoppingBag, X, Search } from "lucide-react";
 
@@ -262,6 +263,7 @@ export function VioraLayout({ shop, products }: ShopLayoutProps) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
   const { totalItems } = useCart();
 
   useEffect(() => {
@@ -398,7 +400,7 @@ export function VioraLayout({ shop, products }: ShopLayoutProps) {
             {/* Right */}
             <div className="flex items-center gap-4 md:gap-6 w-1/3 justify-end">
               <button onClick={() => setSearchOpen(true)} className="viora-navlink hidden md:block">Búsqueda</button>
-              <button className="relative p-1" aria-label={`Bolsa (${totalItems})`}>
+              <button onClick={() => setCartOpen(true)} className="relative p-1" aria-label={`Bolsa (${totalItems})`}>
                 <ShoppingBag className="w-4 h-4 stroke-[1.5]" />
                 {totalItems > 0 && (
                   <span
@@ -423,6 +425,9 @@ export function VioraLayout({ shop, products }: ShopLayoutProps) {
 
         {/* ─── SEARCH OVERLAY ──────────────────────────────────────────── */}
         {searchOpen && <VioraSearch products={products} onClose={() => setSearchOpen(false)} />}
+
+        {/* ─── CART ────────────────────────────────────────────────────── */}
+        {cartOpen && <VioraCart onClose={() => setCartOpen(false)} />}
 
         {/* ─── CONTENT ─────────────────────────────────────────────────── */}
         <main className={isHome ? "w-full" : "w-full pt-14 md:pt-16"}>
