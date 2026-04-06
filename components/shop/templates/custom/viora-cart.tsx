@@ -35,9 +35,8 @@ export function VioraCart({ onClose }: VioraCartProps) {
     const phone = formatPhoneForWhatsApp(shop.whatsapp || shop.contact?.whatsapp || "");
 
     const lines = products.map(p => {
-      const variant = p.selectedVariant ? ` (${p.selectedVariant.name})` : "";
-      const price = p.selectedVariant ? p.selectedVariant.price : (p.promoPrice || p.price);
-      return `• ${p.quantity}x ${p.name}${variant} — ${fmt(Number(price) * p.quantity)}`;
+      const variant = p.variantName ? ` (${p.variantName})` : "";
+      return `• ${p.quantity}x ${p.name}${variant} — ${fmt(p.price * p.quantity)}`;
     });
 
     const message = [
@@ -105,14 +104,8 @@ export function VioraCart({ onClose }: VioraCartProps) {
           ) : (
             <div className="divide-y divide-black/6">
               {products.map((item) => {
-                const variantName = item.selectedVariant?.name;
-                const unitPrice = item.selectedVariant
-                  ? item.selectedVariant.price
-                  : (item.promoPrice || item.price);
-                const hasPromo = !item.selectedVariant && !!(item.promoPrice && Number(item.promoPrice) < Number(item.price));
-
                 return (
-                  <div key={`${item.id}-${item.selectedVariant?.id ?? "base"}`} className="flex gap-4 px-6 py-5">
+                  <div key={`${item.id}-${item.variantId ?? "base"}`} className="flex gap-4 px-6 py-5">
                     {/* Thumbnail */}
                     <div className="relative shrink-0 overflow-hidden bg-[#f4f4f4]" style={{ width: 72, height: 96 }}>
                       <img
@@ -125,22 +118,16 @@ export function VioraCart({ onClose }: VioraCartProps) {
                     {/* Info */}
                     <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                       <div>
-                        {item.category && (
-                          <p className="text-[8px] uppercase tracking-[0.14em] text-black/30 mb-0.5">{item.category}</p>
-                        )}
                         <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-black leading-snug line-clamp-2">
                           {item.name}
                         </p>
-                        {variantName && (
-                          <p className="text-[9px] text-black/40 mt-1 tracking-wide">Talla: {variantName}</p>
+                        {item.variantName && (
+                          <p className="text-[9px] text-black/40 mt-1 tracking-wide">Talla: {item.variantName}</p>
                         )}
-                        <div className="mt-1.5 flex items-baseline gap-2">
-                          <span className={`text-xs font-medium ${hasPromo ? "text-red-500" : "text-black"}`}>
-                            {fmt(Number(unitPrice) * item.quantity)}
+                        <div className="mt-1.5">
+                          <span className="text-xs font-medium text-black">
+                            {fmt(item.price * item.quantity)}
                           </span>
-                          {hasPromo && (
-                            <span className="text-[9px] text-black/25 line-through">{fmt(Number(item.price) * item.quantity)}</span>
-                          )}
                         </div>
                       </div>
 
@@ -148,7 +135,7 @@ export function VioraCart({ onClose }: VioraCartProps) {
                       <div className="flex items-center justify-between mt-3">
                         <div className="flex items-center gap-3 border border-black/12 px-3 py-1.5">
                           <button
-                            onClick={() => updateProductQuantity(item.id, item.quantity - 1, item.selectedVariant?.id)}
+                            onClick={() => updateProductQuantity(item.id, item.quantity - 1, item.variantId)}
                             className="text-black/40 hover:text-black transition-colors duration-100"
                             aria-label="Reducir"
                           >
@@ -156,7 +143,7 @@ export function VioraCart({ onClose }: VioraCartProps) {
                           </button>
                           <span className="text-[11px] font-medium w-4 text-center">{item.quantity}</span>
                           <button
-                            onClick={() => updateProductQuantity(item.id, item.quantity + 1, item.selectedVariant?.id)}
+                            onClick={() => updateProductQuantity(item.id, item.quantity + 1, item.variantId)}
                             className="text-black/40 hover:text-black transition-colors duration-100"
                             aria-label="Aumentar"
                           >
@@ -164,7 +151,7 @@ export function VioraCart({ onClose }: VioraCartProps) {
                           </button>
                         </div>
                         <button
-                          onClick={() => removeItem(item.id, item.selectedVariant?.id)}
+                          onClick={() => removeItem(item.id, item.variantId)}
                           className="text-black/20 hover:text-red-400 transition-colors duration-150 p-1"
                           aria-label="Eliminar"
                         >
