@@ -30,6 +30,7 @@ function docToShop(id: string, data: FirestoreShop): Shop {
     limits: data.limits,
     wholesaleEnabled: data.wholesaleEnabled,
     financingEnabled: data.financingEnabled,
+    requestQuoteEnabled: data.requestQuoteEnabled,
     media: data.media,
     links: data.links,
     branding: data.branding,

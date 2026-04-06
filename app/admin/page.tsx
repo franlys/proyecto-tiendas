@@ -960,35 +960,39 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
             </Link>
           )}
 
-          {/* Solicitudes Mayoristas - Siempre visible */}
-          <Link
-            href="/admin/wholesale-requests"
-            className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
-          >
-            <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
-              <Users className="w-5 h-5 text-amber-400" />
-            </div>
-            <div className="flex-1">
-              <p className="text-white font-medium">Solicitudes Mayoristas</p>
-              <p className="text-xs text-white/60">Nuevos distribuidores</p>
-            </div>
-            <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
-          </Link>
+          {/* Solicitudes Mayoristas - Solo si tiene wholesale */}
+          {features.hasWholesale && (
+            <Link
+              href="/admin/wholesale-requests"
+              className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                <Users className="w-5 h-5 text-amber-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-white font-medium">Solicitudes Mayoristas</p>
+                <p className="text-xs text-white/60">Nuevos distribuidores</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
+            </Link>
+          )}
 
-          {/* Cotizaciones - Siempre visible */}
-          <Link
-            href="/admin/quote-requests"
-            className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
-          >
-            <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-              <MessageSquarePlus className="w-5 h-5 text-emerald-400" />
-            </div>
-            <div className="flex-1">
-              <p className="text-white font-medium">Cotizaciones</p>
-              <p className="text-xs text-white/60">Solicitudes de clientes</p>
-            </div>
-            <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
-          </Link>
+          {/* Cotizaciones - Solo si está habilitado */}
+          {shop?.requestQuoteEnabled && (
+            <Link
+              href="/admin/quote-requests"
+              className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                <MessageSquarePlus className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-white font-medium">Cotizaciones</p>
+                <p className="text-xs text-white/60">Solicitudes de clientes</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
+            </Link>
+          )}
 
           {/* Chat en Vivo - Siempre visible */}
           <Link
@@ -1005,20 +1009,22 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
             <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
           </Link>
 
-          {/* Financiamiento - Siempre visible */}
-          <Link
-            href="/admin/financing"
-            className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
-          >
-            <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-              <CreditCard className="w-5 h-5 text-blue-400" />
-            </div>
-            <div className="flex-1">
-              <p className="text-white font-medium">Financiamiento</p>
-              <p className="text-xs text-white/60">Solicitudes BANFONDESA</p>
-            </div>
-            <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
-          </Link>
+          {/* Financiamiento - Solo si está habilitado */}
+          {shop?.financingEnabled && (
+            <Link
+              href="/admin/financing"
+              className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                <CreditCard className="w-5 h-5 text-blue-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-white font-medium">Financiamiento</p>
+                <p className="text-xs text-white/60">Solicitudes BANFONDESA</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
+            </Link>
+          )}
 
           {/* Página de Inicio - Visible si usa tech-premium-v2 */}
           {shop?.templateType === "tech-premium-v2" && (
@@ -1184,6 +1190,23 @@ function DashboardContent({ isSuperAdmin, shop, features }: { isSuperAdmin: bool
             <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
           </Link>
 
+          {/* Fotos — Solo Viora Premium */}
+          {shop?.templateType === "viora-premium" && (
+            <Link
+              href="/admin/viora-fotos"
+              className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-pink-500/20 hover:border-pink-500/40 transition-all group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center">
+                <ImageIcon className="w-5 h-5 text-pink-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-white font-medium">Fotos del Sitio</p>
+                <p className="text-xs text-white/60">Cambiar fotos de portada y secciones</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
+            </Link>
+          )}
+
           {/* Billing - Solo para Shop Owner */}
           {!isSuperAdmin && (
             <Link
@@ -1331,13 +1354,15 @@ function AdminDashboardWithSubscription() {
                   </Link>
                 )}
 
-                {/* Cotizaciones */}
-                <Link href="/admin/quote-requests">
-                  <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-emerald-400 hover:text-emerald-300">
-                    <MessageSquarePlus className="w-4 h-4" />
-                    <span className="hidden sm:inline ml-1">Cotizaciones</span>
-                  </Button>
-                </Link>
+                {/* Cotizaciones - Solo si está habilitado */}
+                {shop?.requestQuoteEnabled && (
+                  <Link href="/admin/quote-requests">
+                    <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-emerald-400 hover:text-emerald-300">
+                      <MessageSquarePlus className="w-4 h-4" />
+                      <span className="hidden sm:inline ml-1">Cotizaciones</span>
+                    </Button>
+                  </Link>
+                )}
 
                 {/* Chat en Vivo */}
                 <Link href="/admin/chat">
@@ -1347,13 +1372,15 @@ function AdminDashboardWithSubscription() {
                   </Button>
                 </Link>
 
-                {/* Financiamiento */}
-                <Link href="/admin/financing">
-                  <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-blue-400 hover:text-blue-300">
-                    <CreditCard className="w-4 h-4" />
-                    <span className="hidden sm:inline ml-1">Financiamiento</span>
-                  </Button>
-                </Link>
+                {/* Financiamiento - Solo si está habilitado */}
+                {shop?.financingEnabled && (
+                  <Link href="/admin/financing">
+                    <Button variant="ghost" size="sm" className="px-2 sm:px-3 text-blue-400 hover:text-blue-300">
+                      <CreditCard className="w-4 h-4" />
+                      <span className="hidden sm:inline ml-1">Financiamiento</span>
+                    </Button>
+                  </Link>
+                )}
 
                 {/* Página de Inicio */}
                 {shop?.templateType === "tech-premium-v2" && (
