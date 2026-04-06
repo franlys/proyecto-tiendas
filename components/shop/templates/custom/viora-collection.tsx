@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import type { Product } from "@/lib/constants";
 
 interface VioraCollectionProps {
@@ -130,9 +131,16 @@ function ProductCard({ product, priority = false }: { product: Product; priority
 // ─── COLLECTION ──────────────────────────────────────────────────────────────
 
 export function VioraCollection({ products, isDiscountView = false }: VioraCollectionProps) {
-  const [activeCategory, setActiveCategory] = useState("todos");
+  const searchParams = useSearchParams();
+  const urlCategory = searchParams.get("category") || "todos";
+  const [activeCategory, setActiveCategory] = useState(urlCategory);
   const [sortBy, setSortBy] = useState<"default" | "price-asc" | "price-desc" | "promo">("default");
   const headerRef = useRef<HTMLDivElement>(null);
+
+  // Sync category when URL param changes (e.g. navigating from home grid)
+  useEffect(() => {
+    setActiveCategory(searchParams.get("category") || "todos");
+  }, [searchParams]);
 
   const categories = useMemo(() => {
     return Array.from(

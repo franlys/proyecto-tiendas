@@ -220,32 +220,32 @@ export function VioraHome({ shop }: { shop: ManagedShop }) {
       {/* ── EDITORIAL GRID: asymmetric 3-panel ───────────────────────── */}
       <section className="w-full grid grid-cols-2 md:grid-cols-3 gap-[2px] mt-[2px]">
 
-        {/* Tall left panel */}
-        <div className="col-span-1 md:col-span-1 viora-img-zoom overflow-hidden relative" style={{ aspectRatio: "3/4" }}>
+        {/* Tall left panel — toda la imagen es clickable */}
+        <a href="?view=collection" className="col-span-1 md:col-span-1 viora-img-zoom overflow-hidden relative block cursor-pointer" style={{ aspectRatio: "3/4" }}>
           <img src={gridImage1} alt="Mujer" className="w-full h-full object-cover object-top" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
           <div className="absolute bottom-6 left-6">
-            <a href="?view=collection" className="viora-serif text-white text-xl font-light italic">Mujer</a>
+            <span className="viora-serif text-white text-xl font-light italic">Mujer</span>
           </div>
-        </div>
+        </a>
 
         {/* Right: stacked 2 shorter panels */}
         <div className="col-span-1 md:col-span-2 grid grid-rows-2 gap-[2px]">
-          <div className="viora-img-zoom overflow-hidden relative" style={{ aspectRatio: "4/3" }}>
+          <a href="?view=collection" className="viora-img-zoom overflow-hidden relative block cursor-pointer" style={{ aspectRatio: "4/3" }}>
             <img src={gridImage2} alt="Nueva llegada" className="w-full h-full object-cover object-center" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
             <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
               <span className="viora-serif text-white text-base md:text-lg font-light italic">Nueva Llegada</span>
-              <a href="?view=collection" className="viora-btn light text-white">Ver Todo</a>
+              <span className="viora-btn light text-white pointer-events-none">Ver Todo</span>
             </div>
-          </div>
-          <div className="viora-img-zoom overflow-hidden relative" style={{ aspectRatio: "4/3" }}>
+          </a>
+          <a href="?view=collection&category=Trajes+de+Ba%C3%B1o" className="viora-img-zoom overflow-hidden relative block cursor-pointer" style={{ aspectRatio: "4/3" }}>
             <img src={gridImage3} alt="Trajes de baño" className="w-full h-full object-cover object-center" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
             <div className="absolute bottom-4 left-4">
               <span className="viora-serif text-white text-base md:text-lg font-light italic">Trajes de Baño</span>
             </div>
-          </div>
+          </a>
         </div>
       </section>
 
