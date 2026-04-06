@@ -151,19 +151,22 @@ export function VioraProductModal({ product, allProducts, onClose }: VioraProduc
         .viora-modal-backdrop {
           animation: vioraModalFadeIn 200ms ease both;
         }
-        .viora-modal-panel-mobile {
+        /* Mobile: slide up from bottom */
+        .viora-modal-panel {
           animation: vioraModalSlideUp 380ms cubic-bezier(0.32, 0.72, 0, 1) both;
         }
-        .viora-modal-panel-desktop {
-          animation: vioraModalSlideRight 360ms cubic-bezier(0.32, 0.72, 0, 1) both;
+        /* Desktop: slide from right */
+        @media (min-width: 768px) {
+          .viora-modal-panel {
+            animation: vioraModalSlideRight 360ms cubic-bezier(0.32, 0.72, 0, 1) both;
+          }
         }
         .viora-size-shake {
           animation: vioraShake 400ms cubic-bezier(0.23, 1, 0.32, 1);
         }
         @media (prefers-reduced-motion: reduce) {
           .viora-modal-backdrop,
-          .viora-modal-panel-mobile,
-          .viora-modal-panel-desktop { animation: none !important; }
+          .viora-modal-panel { animation: none !important; }
         }
       `}</style>
 
@@ -173,12 +176,35 @@ export function VioraProductModal({ product, allProducts, onClose }: VioraProduc
         onClick={onClose}
       />
 
-      {/* Panel — mobile: drawer from bottom, desktop: panel from right */}
+      {/* Panel
+          Mobile: drawer desde abajo, altura máx 92vh, bordes redondeados arriba
+          Desktop: panel fijo derecha, altura completa, sin border-radius
+      */}
       <div
         id="viora-modal-scroll"
-        className="viora-modal-panel-mobile md:viora-modal-panel-desktop fixed bottom-0 left-0 right-0 md:bottom-0 md:top-0 md:left-auto md:right-0 md:w-[480px] z-[90] bg-white overflow-y-auto"
-        style={{ maxHeight: "92vh", borderRadius: "20px 20px 0 0" }}
+        className="viora-modal-panel fixed z-[90] bg-white overflow-y-auto overscroll-contain"
+        style={{
+          // Mobile
+          bottom: 0, left: 0, right: 0,
+          maxHeight: "92dvh",
+          borderRadius: "20px 20px 0 0",
+          // Desktop override via media query inline workaround — see className below
+        }}
       >
+        {/* Desktop override — full right panel */}
+        <style>{`
+          @media (min-width: 768px) {
+            #viora-modal-scroll {
+              top: 0 !important;
+              bottom: 0 !important;
+              left: auto !important;
+              right: 0 !important;
+              width: 480px !important;
+              max-height: 100dvh !important;
+              border-radius: 0 !important;
+            }
+          }
+        `}</style>
         {/* Close button */}
         <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm flex items-center justify-between px-6 md:px-8 py-4 border-b border-black/6">
           <p className="text-[9px] uppercase tracking-[0.22em] font-medium text-black/40">
@@ -193,8 +219,8 @@ export function VioraProductModal({ product, allProducts, onClose }: VioraProduc
           </button>
         </div>
 
-        {/* Product image */}
-        <div className="relative overflow-hidden bg-[#f4f4f4]" style={{ aspectRatio: "3/4", maxHeight: "55vw" }}>
+        {/* Product image — 3/4 ratio sin restricción de altura */}
+        <div className="relative overflow-hidden bg-[#f4f4f4]" style={{ aspectRatio: "3/4" }}>
           <img
             src={currentProduct.image || "https://placehold.co/600x800/f4f4f4/999?text=Viora"}
             alt={currentProduct.name}
