@@ -132,16 +132,23 @@ export function VioraHome({ shop }: { shop: ManagedShop }) {
         /* CTA button: flat with explicit hover invert per variant */
         .viora-btn {
           display: inline-block;
-          padding: 13px 32px;
-          font-size: 10px;
+          padding: 10px 22px;
+          font-size: 9px;
           font-weight: 500;
-          letter-spacing: 0.18em;
+          letter-spacing: 0.15em;
           text-transform: uppercase;
           border: 1px solid currentColor;
           transition:
             background-color 220ms ease,
             color 220ms ease,
             border-color 220ms ease;
+        }
+        @media (min-width: 640px) {
+          .viora-btn {
+            padding: 13px 32px;
+            font-size: 10px;
+            letter-spacing: 0.18em;
+          }
         }
         /* light = white text on dark bg → hover = white bg + black text */
         @media (hover: hover) and (pointer: fine) {
@@ -191,10 +198,10 @@ export function VioraHome({ shop }: { shop: ManagedShop }) {
           <p className="hero-line-1 viora-serif text-white text-[10px] tracking-[0.3em] uppercase mb-3 font-light">
             {new Date().getFullYear()} — Nueva Temporada
           </p>
-          <h1 className="hero-line-2 viora-serif text-white text-[clamp(52px,9vw,110px)] font-light leading-[0.9] tracking-[-0.01em] italic mb-10">
+          <h1 className="hero-line-2 viora-serif text-white text-[clamp(44px,9vw,110px)] font-light leading-[0.9] tracking-[-0.01em] italic mb-6 md:mb-10">
             Verano<br />eterno.
           </h1>
-          <div className="hero-cta flex gap-4 flex-wrap">
+          <div className="hero-cta flex gap-3 md:gap-4 flex-wrap">
             <a href="?view=collection" className="viora-btn light text-white">
               Ver Colección
             </a>
@@ -224,19 +231,19 @@ export function VioraHome({ shop }: { shop: ManagedShop }) {
 
         {/* Right: stacked 2 shorter panels */}
         <div className="col-span-1 md:col-span-2 grid grid-rows-2 gap-[2px]">
-          <div className="viora-img-zoom overflow-hidden relative" style={{ aspectRatio: "16/9" }}>
+          <div className="viora-img-zoom overflow-hidden relative" style={{ aspectRatio: "4/3" }}>
             <img src={gridImage2} alt="Nueva llegada" className="w-full h-full object-cover object-center" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-            <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between">
-              <span className="viora-serif text-white text-lg font-light italic">Nueva Llegada</span>
-              <a href="?view=collection" className="viora-btn light text-white text-[9px] px-4 py-2.5">Ver Todo</a>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+            <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
+              <span className="viora-serif text-white text-base md:text-lg font-light italic">Nueva Llegada</span>
+              <a href="?view=collection" className="viora-btn light text-white">Ver Todo</a>
             </div>
           </div>
-          <div className="viora-img-zoom overflow-hidden relative" style={{ aspectRatio: "16/9" }}>
+          <div className="viora-img-zoom overflow-hidden relative" style={{ aspectRatio: "4/3" }}>
             <img src={gridImage3} alt="Trajes de baño" className="w-full h-full object-cover object-center" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-            <div className="absolute bottom-5 left-5">
-              <span className="viora-serif text-white text-lg font-light italic">Trajes de Baño</span>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+            <div className="absolute bottom-4 left-4">
+              <span className="viora-serif text-white text-base md:text-lg font-light italic">Trajes de Baño</span>
             </div>
           </div>
         </div>
@@ -268,7 +275,7 @@ export function VioraHome({ shop }: { shop: ManagedShop }) {
           <img
             src={editorialImage}
             alt="Viora Editorial"
-            className="w-full h-full object-cover object-top"
+            className="w-full h-full object-cover object-center"
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent" />
@@ -287,14 +294,21 @@ export function VioraHome({ shop }: { shop: ManagedShop }) {
         className="w-full border-y border-black/8 py-6 px-5 md:px-10 overflow-hidden"
       >
         <div className="flex items-center gap-8 md:gap-16 whitespace-nowrap">
-          {["Nueva Colección", "Trajes de Baño", "Vestidos", "Accesorios", "Sale — Hasta 50%"].map((label, i) => (
-            <span
+          {[
+            { label: "Nueva Colección",   href: "?view=collection" },
+            { label: "Trajes de Baño",    href: "?view=collection&category=trajes" },
+            { label: "Vestidos",          href: "?view=collection&category=vestidos" },
+            { label: "Accesorios",        href: "?view=collection&category=accesorios" },
+            { label: "Sale — Hasta 50%",  href: "?view=discounts" },
+          ].map(({ label, href }, i) => (
+            <a
               key={label}
+              href={href}
               className={`arrivals-label viora-serif italic text-base font-light tracking-wide ${i === 4 ? "text-red-500" : "text-black/60"} ${newArrivals.visible ? "is-visible" : ""}`}
             >
               {label}
               {i < 4 && <span className="mx-8 md:mx-16 text-black/20 not-italic font-light">·</span>}
-            </span>
+            </a>
           ))}
         </div>
       </section>
