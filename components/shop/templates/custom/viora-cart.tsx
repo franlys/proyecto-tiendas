@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { X, Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { useCart } from "@/components/shared";
-import { CheckoutDrawer } from "@/components/shop/checkout-drawer";
+import { VioraCheckout } from "./viora-checkout";
 
 function fmt(n: number) {
   return `RD$${n.toLocaleString("es-DO")}`;
@@ -173,8 +173,8 @@ export function VioraCart({ onClose }: VioraCartProps) {
         )}
       </div>
 
-      {/* Internal checkout flow */}
-      <CheckoutDrawer isOpen={checkoutOpen} onClose={() => setCheckoutOpen(false)} />
+      {/* Viora-native checkout */}
+      {checkoutOpen && <VioraCheckout onClose={() => { setCheckoutOpen(false); }} />}
     </>
   );
 }
